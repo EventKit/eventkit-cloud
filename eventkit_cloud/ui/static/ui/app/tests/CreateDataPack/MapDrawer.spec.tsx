@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { mount } from 'enzyme';
+import {mount} from 'enzyme';
 import Drawer from '@material-ui/core/Drawer';
 import {MapDrawer, VerticalTabs} from "../../components/CreateDataPack/MapDrawer";
 import CustomScrollbar from "../../components/common/CustomScrollbar";
@@ -13,10 +13,22 @@ jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
-jest.mock('../../styles/eventkit_theme.js', () => ({eventkit: {
+
+jest.mock("../../components/CreateDataPack/MapDrawerOptions", () => {
+    const React = require('react');
+    return (props) => {
+        props.setProviders(props.providers);
+        return (
+            <div id="mapdraweroptions">options</div>
+        );
+    }
+});
+jest.mock('../../styles/eventkit_theme.js', () => ({
+        eventkit: {
             images: {},
             colors: {}
-            }})
+        }
+    })
 );
 
 describe('FilterDrawer component', () => {
@@ -68,19 +80,19 @@ describe('FilterDrawer component', () => {
     ];
 
     const sources = [
-            {
-                url: '/url/path/1',
-                name: 'source a',
-                type: 'type a',
-                thumbnail_url: '/thumbnail/url/path/1'
-            },
-            {
-                url: '/url/path/2',
-                name: 'source b',
-                type: 'type b',
-                thumbnail_url: '/thumbnail/url/path/2'
-            }
-        ];
+        {
+            url: '/url/path/1',
+            name: 'source a',
+            type: 'type a',
+            thumbnail_url: '/thumbnail/url/path/1'
+        },
+        {
+            url: '/url/path/2',
+            name: 'source b',
+            type: 'type b',
+            thumbnail_url: '/thumbnail/url/path/2'
+        }
+    ];
 
     const getProps = () => ({
         providers,
