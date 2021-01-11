@@ -70,6 +70,7 @@ from eventkit_cloud.api.serializers import (
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.api.utils import get_run_zip_file
+from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
@@ -243,6 +244,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
 
+    @requires_oauth_authentication
     def create(self, request, *args, **kwargs):
         """
         Create a Job from the supplied request data.

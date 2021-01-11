@@ -4,13 +4,15 @@ import urllib
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.urls import reverse
-from django.test import Client, override_settings
+from django.test import Client, override_settings, RequestFactory
 from django.test import TestCase
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 
+from eventkit_cloud.auth.auth import OAuthError
 from eventkit_cloud.auth.models import OAuth
-from eventkit_cloud.auth.views import callback, oauth
+from eventkit_cloud.auth.views import callback, oauth, check_oauth_authentication
 
 import base64
 
@@ -30,7 +32,7 @@ class TestAuthViews(TestCase):
         with self.settings(OAUTH_NAME=oauth_name):
             example_token = "token"
 
-            request = Mock(GET={"code": "1234"})
+            request = MagicMock(GET={"code": "1234"})
             group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
             with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
                 mock_group.objects.get.return_value = group
@@ -49,7 +51,7 @@ class TestAuthViews(TestCase):
 
             mock_login.reset_mock()
             example_state = base64.b64encode("/status/12345".encode())
-            request = Mock(GET={"code": "1234", "state": example_state})
+            request = MagicMock(GET={"code": "1234", "state": example_state})
             mock_get_token.return_value = example_token
             mock_get_user.return_value = user
             response = callback(request)
@@ -142,3 +144,33 @@ class TestAuthViews(TestCase):
             self.client.get(reverse("callback"), params={"code": example_auth_code}, follow=True)
             response = self.client.get(reverse("logout"))
             self.assertEqual(response.json().get("OAUTH_LOGOUT_URL"), settings.OAUTH_LOGOUT_URL)
+
+    @patch("eventkit_cloud.auth.views.redirect")
+    @patch("eventkit_cloud.auth.views.fetch_user_from_token")
+    def test_check_oauth_authentication(self, mock_fetch_user, mock_redirect):
+        invalid_token = "invalid_token"
+        example_token = "token"
+
+        request = RequestFactory().get("/")
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        request.session.save()
+
+        # Test with no token.
+        check_oauth_authentication(request)
+        mock_redirect.assert_called_with("/oauth")
+
+        # Test with the return value from fetch_user_from_token being OAuthError aka an invalid token.
+        request.session["access_token"] = invalid_token
+        mock_fetch_user.side_effect = OAuthError(401)
+        check_oauth_authentication(request)
+        mock_fetch_user.assert_called_with(invalid_token)
+        mock_redirect.assert_called_with("/oauth")
+        self.assertRaises(OAuthError)
+
+        # Test with a mocked return value of a valid user from fetch_user_from_token
+        mock_fetch_user.reset_mock(side_effect=True)
+        request.session["access_token"] = example_token
+        is_authenticated = check_oauth_authentication(request)
+        mock_fetch_user.assert_called_with(example_token)
+        self.assertEqual(is_authenticated, True)
