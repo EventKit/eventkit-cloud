@@ -268,8 +268,8 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
-    @patch("eventkit_cloud.tasks.helpers.download_concurrently")
-    @patch("eventkit_cloud.tasks.helpers.download_data")
+    @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
+    @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
@@ -700,8 +700,8 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
-    @patch("eventkit_cloud.tasks.helpers.download_concurrently")
-    @patch("eventkit_cloud.tasks.helpers.download_data")
+    @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
+    @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
