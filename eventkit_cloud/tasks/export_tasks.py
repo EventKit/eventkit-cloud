@@ -1058,11 +1058,16 @@ def wfs_export_task(
     configuration = load_provider_config(config)
 
     if "layers" in configuration:
-        layers = download_layers_concurrently(
-            configuration, bbox, stage_dir, job_name, projection, provider_slug, "gpkg"
-        )
+        layers = {}
 
-        for layer in layers:
+        for layer in configuration.get("layers"):
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
+            url = get_wfs_query_url(name, layer.get("url"), layer.get("name"), projection)
+            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+
+        download_concurrently(layers.values(), configuration.get("concurrency"))
+
+        for layer_name, layer in layers.items():
             out = gdalutils.convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
@@ -1070,7 +1075,7 @@ def wfs_export_task(
                 task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
-                layer_name=layer.get("name"),
+                layer_name=layer_name,
                 access_mode="append",
             )
 
@@ -1235,11 +1240,16 @@ def arcgis_feature_service_export_task(
     configuration = load_provider_config(config)
 
     if "layers" in configuration:
-        layers = download_layers_concurrently(
-            configuration, bbox, stage_dir, job_name, projection, provider_slug, "json"
-        )
+        layers = {}
 
-        for layer in layers:
+        for layer in configuration.get("layers"):
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
+            url = get_arcgis_query_url(layer.get("url"), bbox)
+            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+
+        download_concurrently(layers.values(), configuration.get("concurrency"))
+
+        for layer_name, layer in layers.items():
             out = gdalutils.convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
@@ -1247,7 +1257,7 @@ def arcgis_feature_service_export_task(
                 task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
-                layer_name=layer.get("name"),
+                layer_name=layer_name,
                 access_mode="append",
             )
 
@@ -1272,40 +1282,14 @@ def arcgis_feature_service_export_task(
     return result
 
 
-def download_layers_concurrently(
-    configuration: dict,
-    bbox: Union[str, dict, list],
-    stage_dir: str,
-    job_name: str,
-    projection: int,
-    provider_slug: str,
-    file_extension: str,
-    name: str = None,
-) -> List[dict]:
+def download_concurrently(layers, concurrency=None):
     """
-    Function concurrently downloads each layer in a given provider configuration.
-    Returns a list of dictionaries, each containing the layer's name, download path, and url.
+    Function concurrently downloads data from a given list URLs and download paths.
     """
-    layers = []
-
-    for layer in configuration.get("layers"):
-        layer_name = layer.get("name")
-        path = get_export_filepath(stage_dir, job_name, f"{layer_name}-{projection}", provider_slug, file_extension)
-
-        if file_extension == "json":
-            url = get_arcgis_query_url(layer.get("url"), bbox)
-        else:
-            url = get_wfs_query_url(name, layer.get("url"), layer_name, projection)
-
-        layers.append({"name": layer_name, "url": url, "path": path})
 
     try:
-        max_workers = 3  # TODO: what's the key in the provider config for this?
-        executor = futures.ThreadPoolExecutor(max_workers)
-        futures_list = [
-            executor.submit(download_data, layer["url"], layer["path"], configuration.get("cert_var"))
-            for layer in layers
-        ]
+        executor = futures.ThreadPoolExecutor(max_workers=concurrency)
+        futures_list = [executor.submit(download_data, *layer.values()) for layer in layers]
 
         futures.wait(futures_list)
 

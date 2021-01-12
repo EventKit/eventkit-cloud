@@ -6,7 +6,6 @@ import os
 import pickle
 import sys
 import uuid
-import yaml
 
 import celery
 from billiard.einfo import ExceptionInfo
@@ -269,13 +268,13 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
-    @patch("eventkit_cloud.tasks.export_tasks.download_layers_concurrently")
+    @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(
-        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_layers_concurrently
+        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_concurrently
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -359,16 +358,20 @@ class TestExportTasks(ExportTaskBase):
             - name: '{layer_2}'
               url: '{url_2}'
         """
-        configuration = yaml.safe_load(config)
-        expected_input_file_1 = "1"
-        expected_input_file_2 = "2"
+        expected_path_1 = f"{stage_dir}{job_name}-{layer_1}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_path_2 = f"{stage_dir}{job_name}-{layer_2}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_url_1 = (
+            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}&SRSNAME=EPSG:{projection}"
+        )
+        expected_url_2 = (
+            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}&SRSNAME=EPSG:{projection}"
+        )
+        expected_layers = {
+            layer_1: {"url": expected_url_1, "path": expected_path_1, "cert_var": None},
+            layer_2: {"url": expected_url_2, "path": expected_path_2, "cert_var": None},
+        }
 
-        expected_layers = [
-            {"name": layer_1, "url": url_1, "path": expected_input_file_1},
-            {"name": layer_2, "url": url_2, "path": expected_input_file_2},
-        ]
-
-        mock_download_layers_concurrently.return_value = expected_layers
+        mock_download_concurrently.return_value = expected_layers
         mock_convert.reset_mock()
 
         # test with multiple layers
@@ -384,15 +387,13 @@ class TestExportTasks(ExportTaskBase):
             config=config,
         )
 
-        mock_download_layers_concurrently.assert_called_once_with(
-            configuration, None, stage_dir, job_name, projection, expected_provider_slug, "gpkg"
-        )
-
+        _, args, _ = mock_download_concurrently.mock_calls[0]
+        self.assertEqual(list(args[0]), list(expected_layers.values()))
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_input_file_1,
+            input_file=expected_path_1,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -403,7 +404,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_input_file_2,
+            input_file=expected_path_2,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -699,12 +700,12 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
-    @patch("eventkit_cloud.tasks.export_tasks.download_layers_concurrently")
+    @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
-        self, mock_request, mock_convert, mock_download_data, mock_download_layers_concurrently
+        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -800,17 +801,17 @@ class TestExportTasks(ExportTaskBase):
             - name: '{layer_name_2}'
               url: '{url_2}'
         """
-        configuration = yaml.safe_load(config)
 
-        expected_input_file_1 = "1"
-        expected_input_file_2 = "2"
+        expected_path_1 = f"{stage_dir}{job_name}-{layer_name_1}-{projection}-{expected_provider_slug}-{date}.json"
+        expected_path_2 = f"{stage_dir}{job_name}-{layer_name_2}-{projection}-{expected_provider_slug}-{date}.json"
+        expected_url_1 = f"{url_1}/{query_string}"
+        expected_url_2 = f"{url_2}/{query_string}"
+        expected_layers = {
+            layer_name_1: {"url": expected_url_1, "path": expected_path_1, "cert_var": None},
+            layer_name_2: {"url": expected_url_2, "path": expected_path_2, "cert_var": None},
+        }
 
-        expected_layers = [
-            {"name": layer_name_1, "url": url_1, "path": expected_input_file_1},
-            {"name": layer_name_2, "url": url_2, "path": expected_input_file_2},
-        ]
-
-        mock_download_layers_concurrently.return_value = expected_layers
+        mock_download_concurrently.return_value = expected_layers
         mock_convert.reset_mock()
         mock_download_data.reset_mock()
 
@@ -827,15 +828,14 @@ class TestExportTasks(ExportTaskBase):
             config=config,
         )
 
-        mock_download_layers_concurrently.assert_called_once_with(
-            configuration, bbox, stage_dir, job_name, projection, expected_provider_slug, "json"
-        )
+        _, args, _ = mock_download_concurrently.mock_calls[0]
+        self.assertEqual(list(args[0]), list(expected_layers.values()))
 
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_input_file_1,
+            input_file=expected_path_1,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -846,7 +846,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_input_file_2,
+            input_file=expected_path_2,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
