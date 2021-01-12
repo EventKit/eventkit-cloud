@@ -63,6 +63,8 @@ from eventkit_cloud.tasks.helpers import (
     normalize_name,
     pickle_exception,
     progressive_kill,
+    download_data,
+    download_concurrently,
 )
 from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -84,8 +86,6 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.jobs.models import DataProviderTask
 import yaml
-import requests
-from concurrent import futures
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1282,47 +1282,6 @@ def arcgis_feature_service_export_task(
     result["result"] = out
     result["source"] = out
     return result
-
-
-def download_concurrently(layers, concurrency=None):
-    """
-    Function concurrently downloads data from a given list URLs and download paths.
-    """
-
-    try:
-        executor = futures.ThreadPoolExecutor(max_workers=concurrency)
-        futures_list = [executor.submit(download_data, *layer.values()) for layer in layers]
-
-        futures.wait(futures_list)
-
-    except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
-        logger.error(f"Unable to execute concurrent downloads: {e}")
-
-    return layers
-
-
-def download_data(input_url, out_file, cert_var=None):
-    """
-    Function for downloading data, optionally using a certificate.
-    """
-
-    try:
-        response = auth_requests.get(
-            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
-        )
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
-
-    CHUNK = 1024 * 1024 * 2  # 2MB chunks
-    from audit_logging.file_logging import logging_open
-
-    with logging_open(out_file, "wb") as file_:
-        for chunk in response.iter_content(CHUNK):
-            file_.write(chunk)
-
-    if not os.path.isfile(out_file):
-        raise Exception("Nothing was returned from the vector feature service.")
 
 
 def get_arcgis_query_url(service_url: str, bbox: list) -> str:

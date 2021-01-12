@@ -22,6 +22,7 @@ from numpy import linspace
 from operator import itemgetter
 from typing import List, Optional
 from xml.dom import minidom
+from concurrent import futures
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
@@ -826,3 +827,44 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     with open(manifest_file, "w") as open_file:
         open_file.write(manifest)
     return manifest_file
+
+
+def download_concurrently(layers, concurrency=None):
+    """
+    Function concurrently downloads data from a given list URLs and download paths.
+    """
+
+    try:
+        executor = futures.ThreadPoolExecutor(max_workers=concurrency)
+        futures_list = [executor.submit(download_data, *layer.values()) for layer in layers]
+
+        futures.wait(futures_list)
+
+    except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
+        logger.error(f"Unable to execute concurrent downloads: {e}")
+
+    return layers
+
+
+def download_data(input_url, out_file, cert_var=None):
+    """
+    Function for downloading data, optionally using a certificate.
+    """
+
+    try:
+        response = auth_requests.get(
+            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+        )
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Unsuccessful request:{e}")
+
+    CHUNK = 1024 * 1024 * 2  # 2MB chunks
+    from audit_logging.file_logging import logging_open
+
+    with logging_open(out_file, "wb") as file_:
+        for chunk in response.iter_content(CHUNK):
+            file_.write(chunk)
+
+    if not os.path.isfile(out_file):
+        raise Exception("Nothing was returned from the vector feature service.")
