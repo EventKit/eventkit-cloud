@@ -8,7 +8,7 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, Link
+    Divider, Link, Menu, MenuItem
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
@@ -26,6 +26,8 @@ import {MapLayer} from "./CreateExport";
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
+import MapDrawerOptions from "./MapDrawerOptions";
+import {arrayHasValue} from "../../utils/generic";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -97,8 +99,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         width: '250px',
     },
     heading: {
-        margin: 'auto 15px',
-        fontSize: '18px',
+        margin: 'auto 6px',
     },
     listItem: {
         marginBottom: '8px',
@@ -134,8 +135,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     clear: {
         marginLeft: 'auto',
         cursor: 'pointer',
-        width: '32px',
-        height: '32px',
+        width: '24px',
+        height: '24px',
+        color: theme.eventkit.colors.grey,
     },
     checked: {},
     selected: {},
@@ -176,6 +178,7 @@ export const VerticalTabs = withStyles(theme => ({
 }))(Tabs);
 
 
+
 // This should be used to facilitate user added base map sources (sources not derived from providers)
 export interface BaseMapSource {
     mapLayer: MapLayer;
@@ -194,10 +197,10 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-MapDrawer.defaultProps = { sources: [] } as Props;
+MapDrawer.defaultProps = {sources: []} as Props;
 
 export function MapDrawer(props: Props) {
-    const { providers, classes } = props;
+    const {providers, classes} = props;
 
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState(false);
@@ -208,7 +211,7 @@ export function MapDrawer(props: Props) {
         setBaseMap(newBaseMapId);
         let mapLayer = {} as MapLayer;
         if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
-            mapLayer = { ...sources[newBaseMapId] }.mapLayer;
+            mapLayer = {...sources[newBaseMapId]}.mapLayer;
         }
         props.updateBaseMap(mapLayer);
     }
@@ -256,37 +259,48 @@ export function MapDrawer(props: Props) {
         }
     }
 
+
+    const drawerOpen = !!selectedTab;
+    const areProvidersHidden = providers.find(provider => provider.hidden === true);
+
+
+    const [ offSet, setOffSet ] = useState(0);
+
+    const [ filteredProviders, setFilteredProviders ] = useState(() => providers || null);
+    useEffect(() => {
+        if (filteredProviders === null) {
+            setFilteredProviders(providers || null);
+        }
+    }, [providers]);
+
     const [sources, setSources] = useState([]);
     useEffect(() => {
         setSources([
-            ...providers.filter(provider =>
-                !provider.hidden && !!provider.preview_url && !!provider.display).map(provider => {
+            ...filteredProviders.filter(_provider =>
+                !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
                 let footprintsLayer;
-                if (!!provider.footprint_url) {
+                if (!!_provider.footprint_url) {
                     footprintsLayer = {
-                        mapUrl: provider.footprint_url,
-                        slug: `${provider.slug}-footprints`,
+                        mapUrl: _provider.footprint_url,
+                        slug: `${_provider.slug}-footprints`,
                     } as MapLayer;
                 }
                 return {
                     footprintsLayer,
                     mapLayer: {
-                        mapUrl: provider.preview_url,
-                        metadata: provider.metadata,
-                        slug: provider.slug,
-                        copyright: provider.service_copyright,
+                        mapUrl: _provider.preview_url,
+                        metadata: _provider.metadata,
+                        slug: _provider.slug,
+                        copyright: _provider.service_copyright,
                     } as MapLayer,
-                    name: provider.name,
-                    type: provider.type,
-                    data_type: provider.data_type,
-                    thumbnail_url: provider.thumbnail_url,
+                    name: _provider.name,
+                    type: _provider.type,
+                    data_type: _provider.data_type,
+                    thumbnail_url: _provider.thumbnail_url,
                 } as BaseMapSource;
             })
         ]);
-    }, [providers]);
-
-    const drawerOpen = !!selectedTab;
-    const areProvidersHidden = providers.find(provider => provider.hidden === true);
+    }, [filteredProviders]);
 
     return (
         <div
@@ -294,14 +308,14 @@ export function MapDrawer(props: Props) {
         >
             <div
                 className={classes.flexContainer}
-                style={{ zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px' }}
+                style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
             >
                 <Drawer
                     className="qa-MapDrawer-Drawer"
                     variant="persistent"
                     anchor="right"
                     open={drawerOpen}
-                    style={{ flexShrink: 0 }}
+                    style={{flexShrink: 0}}
                     PaperProps={{
                         className: classes.drawerPaper,
                         // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
@@ -320,7 +334,7 @@ export function MapDrawer(props: Props) {
                             }}
                             label={(
                                 <Card className={classes.tabHeader}>
-                                    <Icon classes={{ root: classes.iconRoot }}>
+                                    <Icon classes={{root: classes.iconRoot}}>
                                         <img
                                             className={classes.imageIcon}
                                             src={theme.eventkit.images.basemap}
@@ -331,31 +345,50 @@ export function MapDrawer(props: Props) {
                                 </Card>)}
                         />
                     </VerticalTabs>
-                    <div style={{ display: 'flex' }}>
-                        <strong className={classes.heading}>Select a basemap</strong>
-                        <Clear className={classes.clear} color="primary" onClick={(event) => setSelectedTab(false)}/>
+                    <div style={{display: 'block'}} className={classes.heading}>
+                        <div style={{display: 'flex'}}>
+                            <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
+                            <Clear
+                                className={classes.clear}
+                                color="primary"
+                                onClick={(event) => setSelectedTab(false)}
+
+                            />
+                        </div>
+                        <div style={{display: 'flex'}}>
+                            <strong style={{margin: 'auto 0'}}>
+                                Select a basemap
+                            </strong>
+                            <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                            <MapDrawerOptions
+                                providers={providers}
+                                setProviders={setFilteredProviders}
+                                onEnabled={(offset: number) => setOffSet(offset)}
+                                onDisabled={() => setOffSet(0)}
+                            />
+                            </span>
+                        </div>
                     </div>
-                    <Divider style={{ margin: '0 5px 0 5px' }}/>
                     <div className={classes.scrollBar} style={areProvidersHidden ? {} : {height: 'calc(100% - 100px)'}}>
                         <CustomScrollbar>
-                            <List style={{ padding: '10px' }}>
-                                {sources.map((source, ix) =>
-                                    (
+                            <div style={{height: `${offSet}px`}} />
+                            <List style={{padding: '10px'}}>
+                                {(sources || []).map((source, ix) => (
                                         <div key={ix}>
                                             <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
-                                                    <span style={{ marginRight: '2px' }}>
-                                                        <Radio
-                                                            checked={selectedBaseMap === ix}
-                                                            value={ix}
-                                                            classes={{
-                                                                root: classes.checkbox, checked: classes.checked,
-                                                            }}
-                                                            onClick={(e) => handleExpandClick(e, sources)}
-                                                            name="source"
-                                                        />
-                                                    </span>
+                                            <span style={{marginRight: '2px'}}>
+                                                <Radio
+                                                    checked={selectedBaseMap === ix}
+                                                    value={ix}
+                                                    classes={{
+                                                        root: classes.checkbox, checked: classes.checked,
+                                                    }}
+                                                    onClick={(e) => handleExpandClick(e, sources)}
+                                                    name="source"
+                                                />
+                                            </span>
                                                 <div>
-                                                    <div style={{ display: 'flex' }}>
+                                                    <div style={{display: 'flex'}}>
                                                         {source.thumbnail_url &&
                                                         <CardMedia
                                                             className={classes.thumbnail}
@@ -385,28 +418,28 @@ export function MapDrawer(props: Props) {
                                                 {showFootprintData(ix, sources)}
                                             </div>
                                         </div>
-                                    ))
-                                }
+                                    )
+                                )}
                             </List>
                         </CustomScrollbar>
                     </div>
-                    <Divider style={{ margin: '0 5px 0 5px' }}/>
+                    <Divider style={{margin: '0 5px 0 5px'}}/>
 
                     <div
                         className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
                     >
                         <div
                             className={classes.stickyRowItems}
-                            style={{ paddingLeft: '8px', paddingTop: '8px', display: 'flex', }}
+                            style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
                         >
-                            <div style={{ marginRight: '8px' }}>
+                            <div style={{marginRight: '8px'}}>
                                 <RequestDataSource open={requestDataSourceOpen}
                                                    onClose={() => setRequestDataSourceOpen(false)}/>
                                 <div>
                                     Data Source Missing?
                                 </div>
                                 <Link onClick={() => setRequestDataSourceOpen(true)}
-                                      style={{ fontSize: '12px', cursor: 'pointer' }}>
+                                      style={{fontSize: '12px', cursor: 'pointer'}}>
                                     Request New Data Source
                                 </Link>
                             </div>
