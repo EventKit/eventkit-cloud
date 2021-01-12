@@ -1057,7 +1057,7 @@ def wfs_export_task(
 
     configuration = load_provider_config(config)
 
-    vector_layer_data = configuration.get('vector_layers', [])
+    vector_layer_data = configuration.get("vector_layers", [])
     if len(vector_layer_data):
         for layer_properties in vector_layer_data:
             url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
@@ -1234,7 +1234,7 @@ def arcgis_feature_service_export_task(
 
     configuration = load_provider_config(config)
 
-    vector_layer_data = configuration.get('vector_layers', [])
+    vector_layer_data = configuration.get("vector_layers", [])
     if len(vector_layer_data):
         for layer_properties in vector_layer_data:
             url = get_arcgis_query_url(layer_properties.get("url"), bbox)
