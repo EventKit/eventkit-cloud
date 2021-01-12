@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import CustomTableRow from '../../components/common/CustomTableRow';
-import { DataCartInfoTable } from '../../components/StatusDownloadPage/DataCartInfoTable';
+import { ExportInfoTable } from '../../components/StatusDownloadPage/ExportInfoTable';
 
-describe('DataCartInfoTable component', () => {
+describe('ExportInfoTable component', () => {
     const shallow = createShallow();
 
     const props = {
@@ -16,7 +16,7 @@ describe('DataCartInfoTable component', () => {
         ...(global as any).eventkit_test_props,
     };
 
-    const wrapper = shallow(<DataCartInfoTable {...props} />);
+    const wrapper = shallow(<ExportInfoTable {...props} />);
 
     it('should render the 4 needed rows', () => {
         expect(wrapper.find(CustomTableRow)).toHaveLength(4);

@@ -14,18 +14,18 @@ export const types = {
     UPDATING_EXPIRATION: 'UPDATING_EXPIRATION',
     UPDATE_EXPIRATION_ERROR: 'UPDATE_EXPIRATION_ERROR',
     UPDATE_EXPIRATION_SUCCESS: 'UPDATE_EXPIRATION_SUCCESS',
-    GETTING_DATACART_DETAILS: 'GETTING_DATACART_DETAILS',
-    CLEAR_DATACART_DETAILS: 'CLEAR_DATACART_DETAILS',
-    DATACART_DETAILS_RECEIVED: 'DATACART_DETAILS_RECEIVED',
-    DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
+    GETTING_EXPORT_DETAILS: 'GETTING_EXPORT_DETAILS',
+    CLEAR_EXPORT_DETAILS: 'CLEAR_EXPORT_DETAILS',
+    EXPORT_DETAILS_RECEIVED: 'EXPORT_DETAILS_RECEIVED',
+    EXPORT_DETAILS_ERROR: 'EXPORT_DETAILS_ERROR',
 };
 
 export function getDatacartDetails(jobuid) {
     return {
         types: [
-            types.GETTING_DATACART_DETAILS,
-            types.DATACART_DETAILS_RECEIVED,
-            types.DATACART_DETAILS_ERROR,
+            types.GETTING_EXPORT_DETAILS,
+            types.EXPORT_DETAILS_RECEIVED,
+            types.EXPORT_DETAILS_ERROR,
         ],
         url: '/api/runs',
         method: 'GET',
@@ -68,8 +68,8 @@ export function getDatacartDetails(jobuid) {
     };
 }
 
-export function clearDataCartDetails() {
-    return { type: types.CLEAR_DATACART_DETAILS };
+export function clearExportDetails() {
+    return { type: types.CLEAR_EXPORT_DETAILS };
 }
 
 export function getRuns(args = {}) {

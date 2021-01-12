@@ -353,7 +353,7 @@ export const joyride = {
         {
             title: 'DataPack Info',
             content: 'This is the name that was entered for the name of the DataPack upon creation.',
-            target: '.qa-DataCartDetails-div-name',
+            target: '.qa-ExportDetails-div-name',
             placement: 'bottom',
             scrollToId: 'Name',
             style: JoyRideStyles.tooltipStyle,
@@ -362,7 +362,7 @@ export const joyride = {
             title: 'DataPack Status',
             content: `This is the status of the DataPack.  Status reports include: submitted, completed, and failed.
                 Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.`,
-            target: '.qa-DataCartDetails-div-StatusContainer',
+            target: '.qa-ExportDetails-div-StatusContainer',
             placement: 'bottom',
             scrollToId: 'Status',
             style: JoyRideStyles.tooltipStyle,
@@ -394,7 +394,7 @@ export const joyride = {
                 “Clone” creates a new export that maintains the existing Area of Interest and Data Source selections of the current job,
                 which can then be customized as needed. “Delete” will delete the entire DataPack.
                 If you created the DataPack or have Admin rights, you can “Run Export Again” or “Delete”, otherwise you can only “Clone”.`,
-            target: '.qa-DataCartDetails-div-otherOptionsContainer',
+            target: '.qa-ExportDetails-div-otherOptionsContainer',
             placement: 'bottom',
             scrollToId: 'OtherOptions',
             style: JoyRideStyles.tooltipStyle,
@@ -402,7 +402,7 @@ export const joyride = {
         {
             title: 'General Information',
             content: 'Here you will find additional information about the DataPack, including its data sources, projection, and formats.',
-            target: '.qa-DataCartDetails-div-generalInfoContainer',
+            target: '.qa-ExportDetails-div-generalInfoContainer',
             placement: 'bottom',
             scrollToId: 'GeneralInfo',
             style: JoyRideStyles.tooltipStyle,
@@ -421,7 +421,7 @@ export const joyride = {
             title: 'Export Information',
             content: `Here you will find specific information related to the processing of the DataPack.
                 This information may be useful in reporting errors or problems with the DataPack.`,
-            target: '.qa-DataCartDetails-div-exportInfoContainer',
+            target: '.qa-ExportDetails-div-exportInfoContainer',
             placement: 'top',
             scrollToId: 'ExportInfo',
             style: JoyRideStyles.tooltipStyle,

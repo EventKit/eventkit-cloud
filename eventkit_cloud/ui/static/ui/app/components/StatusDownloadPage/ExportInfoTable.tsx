@@ -11,7 +11,7 @@ export interface Props {
     };
 }
 
-export class DataCartInfoTable extends React.Component<Props, {}> {
+export class ExportInfoTable extends React.Component<Props, {}> {
     render() {
         const { dataPack } = this.props;
         return (
@@ -41,4 +41,4 @@ export class DataCartInfoTable extends React.Component<Props, {}> {
     }
 }
 
-export default DataCartInfoTable;
+export default ExportInfoTable;

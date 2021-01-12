@@ -413,10 +413,10 @@ export const initialState = {
 
 export function datacartDetailsIdsReducer(state = initialState.datacartDetails.ids, action) {
     switch (action.type) {
-        case types.DATACART_DETAILS_RECEIVED:
+        case types.EXPORT_DETAILS_RECEIVED:
             return isEqual(state, action.ids) ? state : action.ids;
-        case types.DATACART_DETAILS_ERROR:
-        case types.CLEAR_DATACART_DETAILS:
+        case types.EXPORT_DETAILS_ERROR:
+        case types.CLEAR_EXPORT_DETAILS:
             return [];
         default:
             return state;
@@ -425,25 +425,25 @@ export function datacartDetailsIdsReducer(state = initialState.datacartDetails.i
 
 export function datacartDetailsStatusReducer(state = initialState.datacartDetails.status, action) {
     switch (action.type) {
-        case types.GETTING_DATACART_DETAILS:
+        case types.GETTING_EXPORT_DETAILS:
             return {
                 fetching: true,
                 fetched: false,
                 error: null,
             };
-        case types.DATACART_DETAILS_RECEIVED:
+        case types.EXPORT_DETAILS_RECEIVED:
             return {
                 fetching: false,
                 fetched: true,
                 error: null,
             };
-        case types.DATACART_DETAILS_ERROR:
+        case types.EXPORT_DETAILS_ERROR:
             return {
                 fetching: false,
                 fetched: false,
                 error: action.error,
             };
-        case types.CLEAR_DATACART_DETAILS:
+        case types.CLEAR_EXPORT_DETAILS:
             return {
                 fetching: false,
                 fetched: false,

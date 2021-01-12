@@ -94,7 +94,7 @@ describe('DataPackPage component', () => {
                 groups: [2, 3],
             },
         ],
-        updateDataCartPermissions: sinon.spy(),
+        updateExportPermissions: sinon.spy(),
         updatePermissions: {
             updating: false,
             updated: false,
@@ -588,7 +588,7 @@ describe('DataPackPage component', () => {
             runIds: props.runIds,
             user: props.user,
             onRunDelete: props.deleteRun,
-            onRunShare: props.updateDataCartPermissions,
+            onRunShare: props.updateExportPermissions,
             range: props.runsMeta.range,
             handleLoadPrevious: instance.loadPrevious,
             handleLoadNext: instance.loadNext,

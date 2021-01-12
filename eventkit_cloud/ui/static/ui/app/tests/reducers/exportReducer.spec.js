@@ -1,4 +1,4 @@
-import * as reducers from '../../reducers/datacartReducer';
+import * as reducers from '../../reducers/exportReducer';
 
 describe('exportAoiInfo reducer', () => {
     const geojson = {

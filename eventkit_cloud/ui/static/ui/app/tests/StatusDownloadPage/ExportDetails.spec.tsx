@@ -6,10 +6,10 @@ import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
-import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
-import { DataCartDetails } from '../../components/StatusDownloadPage/DataCartDetails';
+import ExportInfoTable from '../../components/StatusDownloadPage/ExportInfoTable';
+import { ExportDetails } from '../../components/StatusDownloadPage/ExportDetails';
 
-describe('DataCartDetails component', () => {
+describe('ExportDetails component', () => {
     let shallow;
 
     const run = {
@@ -90,7 +90,7 @@ describe('DataCartDetails component', () => {
             maxResetExpirationDays: '30',
             zipFileProp: null,
             onUpdateExpiration: sinon.spy(),
-            onUpdateDataCartPermissions: sinon.spy(),
+            onUpdateExportPermissions: sinon.spy(),
             onRunDelete: sinon.spy(),
             onRunRerun: sinon.spy(),
             onClone: sinon.spy(),
@@ -110,24 +110,24 @@ describe('DataCartDetails component', () => {
             BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
         };
         props = { ...getProps(), ...overrides };
-        wrapper = shallow(<DataCartDetails {...props} />, {context: { config },});
+        wrapper = shallow(<ExportDetails {...props} />, {context: { config },});
         instance = wrapper.instance();
     };
 
     beforeEach(setup);
 
     it('should render elements', () => {
-        expect(wrapper.find('.qa-DataCartDetails-div-name')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-status')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-name')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-status')).toHaveLength(1);
         expect(wrapper.find(DataPackStatusTable)).toHaveLength(1);
         expect(wrapper.find(DataPackDetails)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-otherOptions')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-otherOptions')).toHaveLength(1);
         expect(wrapper.find(DataPackOptions)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-generalInfo')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-generalInfo')).toHaveLength(1);
         expect(wrapper.find(DataPackGeneralTable)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-aoi')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-exportInfo')).toHaveLength(1);
-        expect(wrapper.find(DataCartInfoTable)).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-aoi')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportDetails-div-exportInfo')).toHaveLength(1);
+        expect(wrapper.find(ExportInfoTable)).toHaveLength(1);
     });
 
     it('should change the status colors based on cart status', () => {
@@ -150,7 +150,7 @@ describe('DataCartDetails component', () => {
     });
 
     it('should call setMaxDate set on mount', () => {
-        const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
+        const dateStub = sinon.stub(ExportDetails.prototype, 'setDates');
         setup();
         expect(dateStub.calledOnce).toBe(true);
         dateStub.restore();
@@ -171,15 +171,15 @@ describe('DataCartDetails component', () => {
         clock.restore();
     });
 
-    it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
+    it('handlePermissionsChange should call onUpdateExportPermissions', () => {
         const permissions = {
             value: 'PUBLIC',
             groups: {},
             members: {},
         };
         instance.handlePermissionsChange(permissions);
-        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
+        expect(props.onUpdateExportPermissions.calledOnce).toBe(true);
+        expect(props.onUpdateExportPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {

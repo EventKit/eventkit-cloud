@@ -91,9 +91,9 @@ describe('export actions', () => {
         });
     });
 
-    describe('updateDataCartPermissions', () => {
+    describe('updateExportPermissions', () => {
         it('should return the correct types', () => {
-            expect(actions.updateDataCartPermissions('', {}).types).toEqual([
+            expect(actions.updateExportPermissions('', {}).types).toEqual([
                 actions.types.UPDATING_PERMISSION,
                 actions.types.UPDATE_PERMISSION_SUCCESS,
                 actions.types.UPDATE_PERMISSION_ERROR,
@@ -102,7 +102,7 @@ describe('export actions', () => {
 
         it('should return the correct data', () => {
             const permissions = { value: 'test' };
-            expect(actions.updateDataCartPermissions('', permissions).data).toEqual({
+            expect(actions.updateExportPermissions('', permissions).data).toEqual({
                 permissions,
                 visibility: permissions.value,
             });

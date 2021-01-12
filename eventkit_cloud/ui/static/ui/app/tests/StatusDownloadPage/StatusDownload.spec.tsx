@@ -5,7 +5,7 @@ import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
-import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
+import ExportDetails from '../../components/StatusDownloadPage/ExportDetails';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 import history from '../../utils/history';
 
@@ -128,12 +128,12 @@ describe('StatusDownload component', () => {
         },
         location,
         getDatacartDetails: sinon.spy(),
-        clearDataCartDetails: sinon.spy(),
+        clearExportDetails: sinon.spy(),
         deleteRun: sinon.spy(),
         rerunExport: sinon.spy(),
         clearReRunInfo: sinon.spy(),
         updateExpirationDate: sinon.spy(),
-        updateDataCartPermissions: sinon.spy(),
+        updateExportPermissions: sinon.spy(),
         cloneExport: sinon.spy(),
         cancelProviderTask: sinon.spy(),
         getProviders: sinon.spy(),
@@ -164,13 +164,13 @@ describe('StatusDownload component', () => {
         expect(wrapper.find('form')).toHaveLength(1);
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(DataCartDetails)).toHaveLength(0);
+        expect(wrapper.find(ExportDetails)).toHaveLength(0);
         const nextProps = getProps();
         nextProps.detailsFetched = true;
         nextProps.runs = [{ ...exampleRun }];
         nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
-        expect(wrapper.find(DataCartDetails)).toHaveLength(1);
+        expect(wrapper.find(ExportDetails)).toHaveLength(1);
 
     });
 
@@ -184,7 +184,7 @@ describe('StatusDownload component', () => {
         nextProps.detailsFetched = true;
         wrapper.setProps(nextProps);
         expect(wrapper.find('.qa-StatusDownload-NoDatapack')).toHaveLength(1);
-        expect(wrapper.find(DataCartDetails)).toHaveLength(0);
+        expect(wrapper.find(ExportDetails)).toHaveLength(0);
     });
 
     it('should display the circular progress if deleting', () => {
@@ -306,7 +306,7 @@ describe('StatusDownload component', () => {
             {
                 title: 'DataPack Info',
                 text: 'This is the name of the datapack.',
-                selector: '.qa-DataCartDetails-table-name',
+                selector: '.qa-ExportDetails-table-name',
                 position: 'bottom',
                 style: {},
                 isFixed: true,
@@ -364,7 +364,7 @@ describe('StatusDownload component', () => {
         expect(timerStub.calledWith(timer)).toBe(true);
         expect(timeoutStub.called).toBe(true);
         expect(timeoutStub.calledWith(timeout)).toBe(true);
-        expect(props.clearDataCartDetails.calledOnce).toBe(true);
+        expect(props.clearExportDetails.calledOnce).toBe(true);
         timerStub.restore();
         timeoutStub.restore();
     });

@@ -19,7 +19,7 @@ describe('ShareBaseDialog component', () => {
         onClose: sinon.spy(),
         handleSave: sinon.spy(),
         permissionState: {},
-        clearDataCartPermissions: sinon.spy(),
+        clearExportPermissions: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 

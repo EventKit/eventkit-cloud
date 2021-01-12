@@ -7,7 +7,7 @@ import CustomTableRow from '../common/CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';
-import {DataCartInfoTable} from './DataCartInfoTable';
+import {ExportInfoTable} from './ExportInfoTable';
 import {MapView} from "../common/MapView";
 import {getSqKmString} from "../../utils/generic"
 import {MapLayer} from "../CreateDataPack/CreateExport";
@@ -18,7 +18,7 @@ export interface Props {
     onRunDelete: (uid: string) => void;
     onRunRerun: (uid: string) => void;
     onUpdateExpiration: (uid: string, date: Date) => void;
-    onUpdateDataCartPermissions: (uid: string, perms: Eventkit.Permissions) => void;
+    onUpdateExportPermissions: (uid: string, perms: Eventkit.Permissions) => void;
     updatingExpiration: boolean;
     updatingPermission: boolean;
     onClone: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
@@ -35,7 +35,7 @@ export interface State {
     maxDate: null | Date;
 }
 
-export class DataCartDetails extends React.Component<Props, State> {
+export class ExportDetails extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -71,7 +71,7 @@ export class DataCartDetails extends React.Component<Props, State> {
     }
 
     private handlePermissionsChange(permissions: Eventkit.Permissions) {
-        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, permissions);
+        this.props.onUpdateExportPermissions(this.props.cartDetails.job.uid, permissions);
     }
 
     private handleExpirationChange(date: Date) {
@@ -124,21 +124,21 @@ export class DataCartDetails extends React.Component<Props, State> {
         return (
             <RunProvider value={{run: this.props.cartDetails}}>
                 <div>
-                    <div className="qa-DataCartDetails-div-name" id="Name">
+                    <div className="qa-ExportDetails-div-name" id="Name">
                         <CustomTableRow
-                            className="qa-DataCartDetails-name"
+                            className="qa-ExportDetails-name"
                             title="Name"
                             dataStyle={{wordBreak: 'break-all'}}
                         >
                             {this.props.cartDetails.job.name}
                         </CustomTableRow>
                     </div>
-                    <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer" id="Status">
-                        <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
+                    <div style={styles.container} className="qa-ExportDetails-div-StatusContainer" id="Status">
+                        <div className="qa-ExportDetails-div-status" style={styles.subHeading}>
                             Status
                         </div>
                         <DataPackStatusTable
-                            className="qa-DataCartDetails-DataPackStatusTable"
+                            className="qa-ExportDetails-DataPackStatusTable"
                             user={this.props.user.data}
                             status={this.props.cartDetails.status}
                             expiration={this.props.cartDetails.expiration}
@@ -153,7 +153,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                             job={this.props.job}
                         />
                     </div>
-                    <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer"
+                    <div style={styles.container} className="qa-ExportDetails-div-downloadOptionsContainer"
                          id="DownloadOptions">
                         <DataPackDetails
                             providerTasks={this.props.cartDetails.provider_tasks}
@@ -162,9 +162,9 @@ export class DataCartDetails extends React.Component<Props, State> {
                             job={this.props.job}
                         />
                     </div>
-                    <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer"
+                    <div style={styles.container} className="qa-ExportDetails-div-otherOptionsContainer"
                          id="OtherOptions">
-                        <div className="qa-DataCartDetails-div-otherOptions" style={styles.subHeading}>
+                        <div className="qa-ExportDetails-div-otherOptions" style={styles.subHeading}>
                             Other Options
                         </div>
                         <DataPackOptions
@@ -177,9 +177,9 @@ export class DataCartDetails extends React.Component<Props, State> {
                             adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
                         />
                     </div>
-                    <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer"
+                    <div style={styles.container} className="qa-ExportDetails-div-generalInfoContainer"
                          id="GeneralInfo">
-                        <div className="qa-DataCartDetails-div-generalInfo" style={styles.subHeading}>
+                        <div className="qa-ExportDetails-div-generalInfo" style={styles.subHeading}>
                             General Information
                         </div>
                         <DataPackGeneralTable
@@ -188,7 +188,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         />
                     </div>
                     <div style={styles.container} id="Map">
-                        <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
+                        <div className="qa-ExportDetails-div-aoi" style={styles.subHeading}>
                             Selected Area of Interest (AOI)
                         </div>
                         <div>
@@ -212,12 +212,12 @@ export class DataCartDetails extends React.Component<Props, State> {
                             </div>
                         </div>
                     </div>
-                    <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer"
+                    <div style={styles.container} className="qa-ExportDetails-div-exportInfoContainer"
                          id="ExportInfo">
-                        <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
+                        <div className="qa-ExportDetails-div-exportInfo" style={styles.subHeading}>
                             Export Information
                         </div>
-                        <DataCartInfoTable
+                        <ExportInfoTable
                             dataPack={this.props.cartDetails}
                         />
                     </div>
@@ -227,4 +227,4 @@ export class DataCartDetails extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(DataCartDetails);
+export default withTheme(ExportDetails);

@@ -12,7 +12,7 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import BaseDialog from "../Dialog/BaseDialog";
 import Divider from "@material-ui/core/Divider";
 import {connect} from "react-redux";
-import {clearDataCartPermissions} from "../../actions/datacartActions";
+import {clearExportPermissions} from "../../actions/datacartActions";
 import {Warning} from "@material-ui/icons";
 
 export interface Props {
@@ -26,7 +26,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     permissionState: Eventkit.Store.UpdatePermissions;
-    clearDataCartPermissions: () => void;
+    clearExportPermissions: () => void;
 }
 
 export class ShareBaseDialog extends React.Component<Props, {}> {
@@ -70,7 +70,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
     }
 
     clearError() {
-        this.props.clearDataCartPermissions();
+        this.props.clearExportPermissions();
     }
 
     handleClose() {
@@ -191,8 +191,8 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        clearDataCartPermissions: () => (
-            dispatch(clearDataCartPermissions())
+        clearExportPermissions: () => (
+            dispatch(clearExportPermissions())
         ),
     }
 );

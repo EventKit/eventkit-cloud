@@ -280,7 +280,7 @@ describe('Runs reducer', () => {
     });
 });
 
-describe('dataCartDetails reducer', () => {
+describe('exportDetails reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.getDatacartDetailsReducer(undefined, {})).toEqual({
             status: {
@@ -292,11 +292,11 @@ describe('dataCartDetails reducer', () => {
         });
     });
 
-    it('should handle GETTING_DATACART_DETAILS', () => {
+    it('should handle GETTING_EXPORT_DETAILS', () => {
         expect(reducers.getDatacartDetailsReducer(
             reducers.initialState.datacartDetails,
             {
-                type: 'GETTING_DATACART_DETAILS',
+                type: 'GETTING_EXPORT_DETAILS',
             },
         )).toEqual({
             status: {
@@ -308,11 +308,11 @@ describe('dataCartDetails reducer', () => {
         });
     });
 
-    it('should handle DATACART_DETAILS_RECEIVED', () => {
+    it('should handle EXPORT_DETAILS_RECEIVED', () => {
         expect(reducers.getDatacartDetailsReducer(
             reducers.initialState.datacartDetails,
             {
-                type: 'DATACART_DETAILS_RECEIVED',
+                type: 'EXPORT_DETAILS_RECEIVED',
                 ids: ['1', '2'],
             },
         )).toEqual({
@@ -325,11 +325,11 @@ describe('dataCartDetails reducer', () => {
         });
     });
 
-    it('should handle DATACART_DETAILS_ERROR', () => {
+    it('should handle EXPORT_DETAILS_ERROR', () => {
         expect(reducers.getDatacartDetailsReducer(
             reducers.initialState.datacartDetails,
             {
-                type: 'DATACART_DETAILS_ERROR', error: 'This is an error message',
+                type: 'EXPORT_DETAILS_ERROR', error: 'This is an error message',
             },
         )).toEqual({
             status: {
@@ -340,10 +340,10 @@ describe('dataCartDetails reducer', () => {
             ids: [],
         });
     });
-    it('should handle CLEAR_DATACART_DETAILS', () => {
+    it('should handle CLEAR_EXPORT_DETAILS', () => {
         expect(reducers.getDatacartDetailsReducer(
             reducers.initialState.datacartDetails,
-            { type: 'CLEAR_DATACART_DETAILS' },
+            { type: 'CLEAR_EXPORT_DETAILS' },
         )).toEqual(reducers.initialState.datacartDetails);
     });
 });

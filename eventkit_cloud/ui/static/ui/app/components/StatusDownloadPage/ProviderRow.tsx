@@ -24,7 +24,7 @@ import {useEffect, useState} from "react";
 import {useAsyncRequest} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
-import {useDataCartContext} from "./context/DataCart";
+import {useExportContext} from "./context/DataPackExport";
 import {useRunContext} from "./context/RunFile";
 import Popover from "@material-ui/core/Popover";
 import {Link} from "@material-ui/core";
@@ -161,7 +161,7 @@ export interface ProviderRowProps {
 export function ProviderRow(props: ProviderRowProps) {
 
     const {classes, providerTask, job} = props;
-    const {setFetching} = useDataCartContext();
+    const {setFetching} = useExportContext();
     const {run} = useRunContext();
 
     const [openTable, setOpenTable] = useState(false);

@@ -18,7 +18,7 @@ import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import {updateDataCartPermissions} from '../../actions/datacartActions';
+import {updateExportPermissions} from '../../actions/datacartActions';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
 import EventkitJoyride from "../common/JoyrideWrapper";
@@ -49,7 +49,7 @@ interface Props {
     deleteRun: (options?: object) => void;
     getNotifications: (options?: object) => void;
     updatePermission: Eventkit.Store.UpdatePermissions;
-    updateDataCartPermissions: () => void;
+    updateExportPermissions: () => void;
     theme: Eventkit.Theme;
     userData: any;
 }
@@ -525,7 +525,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                                 userData={this.props.userData}
                                                 key={`RecentlyViewedDataPack-${id}`}
                                                 onRunDelete={this.props.deleteRun}
-                                                onRunShare={this.props.updateDataCartPermissions}
+                                                onRunShare={this.props.updateExportPermissions}
                                                 providers={this.props.providers}
                                                 gridName="RecentlyViewed"
                                                 index={index}
@@ -592,7 +592,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                             userData={this.props.userData}
                                             key={`MyDataPacksDataPack-${id}`}
                                             onRunDelete={this.props.deleteRun}
-                                            onRunShare={this.props.updateDataCartPermissions}
+                                            onRunShare={this.props.updateExportPermissions}
                                             providers={this.props.providers}
                                             gridName="MyDataPacks"
                                             index={index}
@@ -634,7 +634,7 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => dispatch(getProviders()),
         deleteRun: uid => dispatch(deleteRun(uid)),
         getNotifications: args => dispatch(getNotifications(args)),
-        updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
+        updateExportPermissions: (uid, permissions) => dispatch(updateExportPermissions(uid, permissions)),
     };
 }
 

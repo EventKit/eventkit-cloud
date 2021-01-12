@@ -12,15 +12,15 @@ import Warning from '@material-ui/icons/Warning';
 import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
-import DataCartDetails from './DataCartDetails';
+import ExportDetails from './ExportDetails';
 import {
     updateAoiInfo,
     updateExportInfo,
-    updateDataCartPermissions,
+    updateExportPermissions,
     rerunExport,
     clearReRunInfo,
 } from '../../actions/datacartActions';
-import {updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun} from '../../actions/datapackActions';
+import {updateExpiration, getDatacartDetails, clearExportDetails, deleteRun} from '../../actions/datapackActions';
 import {getProviders, cancelProviderTask} from '../../actions/providerActions';
 import {viewedJob} from '../../actions/userActivityActions';
 import CustomScrollbar from '../common/CustomScrollbar';
@@ -32,20 +32,20 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {getJobDetails} from "../../utils/generic"
-import {DataCartProvider} from "./context/DataCart";
+import {ExportProvider} from "./context/DataPackExport";
 
 export interface Props {
     runs: Eventkit.FullRun[];
     runIds: string[];
     detailsFetched: boolean;
     getDatacartDetails: (uid: string) => void;
-    clearDataCartDetails: () => void;
+    clearExportDetails: () => void;
     deleteRun: (uid: string) => void;
     runDeletion: Eventkit.Store.RunDeletion;
     rerunExport: () => void;
     exportReRun: Eventkit.Store.ReRun;
     updateExpirationDate: (uid: string, date: Date) => void;
-    updateDataCartPermissions: (uid: string, perms: Eventkit.Permissions) => void;
+    updateExportPermissions: (uid: string, perms: Eventkit.Permissions) => void;
     permissionState: Eventkit.Store.UpdatePermissions;
     expirationState: Eventkit.Store.UpdateExpiration;
     cloneExport: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
@@ -188,7 +188,7 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        this.props.clearDataCartDetails();
+        this.props.clearExportDetails();
         window.clearInterval(this.timer);
         this.timer = null;
         window.clearTimeout(this.timeout);
@@ -380,12 +380,12 @@ export class StatusDownload extends React.Component<Props, State> {
                 );
             }
             return (
-                <DataCartDetails
+                <ExportDetails
                     key={cartDetails.uid}
                     cartDetails={cartDetails}
                     onRunDelete={this.props.deleteRun}
                     onUpdateExpiration={this.props.updateExpirationDate}
-                    onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
+                    onUpdateExportPermissions={this.props.updateExportPermissions}
                     updatingExpiration={this.props.expirationState.updating}
                     updatingPermission={this.props.permissionState.updating}
                     onRunRerun={this.props.rerunExport}
@@ -413,7 +413,7 @@ export class StatusDownload extends React.Component<Props, State> {
         }
 
         return (
-            <DataCartProvider
+            <ExportProvider
                 value={{setFetching: () => {
                     this.props.getDatacartDetails(this.props.match.params.jobuid);
                     this.startTimer();
@@ -475,7 +475,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     </div>
                 </CustomScrollbar>
             </div>
-</DataCartProvider>
+</ExportProvider>
         );
     }
 }
@@ -504,8 +504,8 @@ function mapDispatchToProps(dispatch) {
         getDatacartDetails: jobuid => (
             dispatch(getDatacartDetails(jobuid))
         ),
-        clearDataCartDetails: () => (
-            dispatch(clearDataCartDetails())
+        clearExportDetails: () => (
+            dispatch(clearExportDetails())
         ),
         deleteRun: jobuid => (
             dispatch(deleteRun(jobuid))
@@ -516,8 +516,8 @@ function mapDispatchToProps(dispatch) {
         updateExpirationDate: (uid, expiration) => (
             dispatch(updateExpiration(uid, expiration))
         ),
-        updateDataCartPermissions: (uid, permissions) => (
-            dispatch(updateDataCartPermissions(uid, permissions))
+        updateExportPermissions: (uid, permissions) => (
+            dispatch(updateExportPermissions(uid, permissions))
         ),
         clearReRunInfo: () => (
             dispatch(clearReRunInfo())

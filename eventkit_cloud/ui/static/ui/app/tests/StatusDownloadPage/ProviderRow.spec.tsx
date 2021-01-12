@@ -6,7 +6,7 @@ import '@testing-library/jest-dom/extend-expect'
 import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
 import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
 import {useAsyncRequest} from "../../utils/hooks/api";
-import {useDataCartContext} from "../../components/StatusDownloadPage/context/DataCart";
+import {useExportContext} from "../../components/StatusDownloadPage/context/DataPackExport";
 
 jest.mock('../../components/MatomoHandler', () => {
     // eslint-disable-next-line global-require,no-shadow
@@ -65,9 +65,9 @@ jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
     }
 });
 
-jest.mock('../../components/StatusDownloadPage/context/DataCart', () => {
+jest.mock('../../components/StatusDownloadPage/context/DataPackExport', () => {
     return {
-        useDataCartContext: jest.fn(),
+        useExportContext: jest.fn(),
     }
 });
 
@@ -160,7 +160,7 @@ describe('ProviderRow component', () => {
         (useAsyncRequest as any).mockImplementation(() => {
            return [{}, requestCall];
         });
-        (useDataCartContext as any).mockImplementation(() => {
+        (useExportContext as any).mockImplementation(() => {
             return {setFetching: jest.fn()};
         });
         const props = {

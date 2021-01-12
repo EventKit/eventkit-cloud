@@ -78,7 +78,7 @@ export function clearJobInfo() {
     };
 }
 
-export function updateDataCartPermissions(uid, permissions) {
+export function updateExportPermissions(uid, permissions) {
     const data = {
         permissions,
         visibility: permissions.value,
@@ -96,7 +96,7 @@ export function updateDataCartPermissions(uid, permissions) {
     };
 }
 
-export function clearDataCartPermissions() {
+export function clearExportPermissions() {
     return {
         type: types.CLEAR_UPDATING_PERMISSION,
     };

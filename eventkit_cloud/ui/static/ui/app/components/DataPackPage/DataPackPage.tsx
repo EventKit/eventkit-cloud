@@ -23,7 +23,7 @@ import FilterDrawer from './FilterDrawer';
 import {getRuns, deleteRun} from '../../actions/datapackActions';
 import {getProviders} from '../../actions/providerActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/fileActions';
-import {updateDataCartPermissions} from '../../actions/datacartActions';
+import {updateExportPermissions} from '../../actions/datacartActions';
 import {setPageOrder, setPageView} from '../../actions/uiActions';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {joyride} from '../../joyride.config';
@@ -67,7 +67,7 @@ interface Props {
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
     projections: Eventkit.Projection[];
-    updateDataCartPermissions: () => void;
+    updateExportPermissions: () => void;
     updatePermissions: {
         updating: boolean;
         updated: boolean;
@@ -306,7 +306,7 @@ export class DataPackPage extends React.Component<Props, State> {
             runIds: this.props.runIds,
             user: this.props.user,
             onRunDelete: this.props.deleteRun,
-            onRunShare: this.props.updateDataCartPermissions,
+            onRunShare: this.props.updateExportPermissions,
             range: this.props.runsMeta.range,
             handleLoadPrevious: this.loadPrevious,
             handleLoadNext: this.loadNext,
@@ -817,8 +817,8 @@ function mapDispatchToProps(dispatch) {
         setView: (view: string) => {
             dispatch(setPageView(view));
         },
-        updateDataCartPermissions: (uid: string, permissions: Eventkit.Permissions) => {
-            dispatch(updateDataCartPermissions(uid, permissions));
+        updateExportPermissions: (uid: string, permissions: Eventkit.Permissions) => {
+            dispatch(updateExportPermissions(uid, permissions));
         },
     };
 }

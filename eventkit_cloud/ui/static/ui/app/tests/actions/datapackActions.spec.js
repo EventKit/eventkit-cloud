@@ -54,9 +54,9 @@ describe('DataPackList actions', () => {
     describe('getDatacartDetails action', () => {
         it('should return the correct types', () => {
             expect(actions.getDatacartDetails('').types).toEqual([
-                actions.types.GETTING_DATACART_DETAILS,
-                actions.types.DATACART_DETAILS_RECEIVED,
-                actions.types.DATACART_DETAILS_ERROR,
+                actions.types.GETTING_EXPORT_DETAILS,
+                actions.types.EXPORT_DETAILS_RECEIVED,
+                actions.types.EXPORT_DETAILS_ERROR,
             ]);
         });
 
@@ -245,7 +245,7 @@ describe('DataPackList actions', () => {
         });
     });
 
-    it('clearDataCartDetails should return CLEAR_DATACART_DETAILS', () => {
-        expect(actions.clearDataCartDetails()).toEqual({ type: actions.types.CLEAR_DATACART_DETAILS });
+    it('clearExportDetails should return CLEAR_EXPORT_DETAILS', () => {
+        expect(actions.clearExportDetails()).toEqual({ type: actions.types.CLEAR_EXPORT_DETAILS });
     });
 });

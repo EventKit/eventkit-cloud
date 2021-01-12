@@ -9,7 +9,7 @@ import {
     submitJobReducer,
     updatePermissionReducer,
     rerunExportReducer,
-} from './datacartReducer';
+} from './exportReducer';
 import { drawerMenuReducer, stepperReducer } from './uiReducer';
 import { getProvidersReducer, providerTasksReducer } from './providerReducer';
 import { getFormatsReducer } from './formatReducer';
