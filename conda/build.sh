@@ -34,6 +34,9 @@ function create_index {
   echo "done."
 }
 
+echo "Converting the requirements.txt to a format compatible with conda."
+python /root/convert_requirements_to_conda.py
+
 echo "Building recipes"
 cd /root/recipes
 if [ -z "$1" ]; then
@@ -54,6 +57,9 @@ for RECIPE in $RECIPES; do
     break || s=$? && sleep 5;
   done; (exit $s)
 done
+
+echo "Cleaning up the conda-requirements.txt after the build."
+rm /root/recipes/eventkit-cloud/conda-requirements.txt
 
 pushd /root/repo/linux-64/
 python /root/download_packages.py
