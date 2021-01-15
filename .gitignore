@@ -90,7 +90,7 @@ celerybeat-schedule
 
 # project specific files
 core/settings/secret.py
-
+conda/recipes/eventkit-cloud/conda-requirements.txt
 *.iml
 
 # temp and generated data
