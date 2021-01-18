@@ -353,7 +353,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if self.export_provider_type.type_name in ["osm", "osm-generic"]:
             return list(config.keys())
         else:
-            return [layer.get("name") for layer in config.get("layers", [])]
+            return [layer.get("name") for layer in config.get("vector_layers", [])]
 
     """
     Max datasize is the size in megabytes.

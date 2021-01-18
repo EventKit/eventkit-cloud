@@ -12,7 +12,7 @@ django-notifications-hq==1.6.0
 django-storages==1.9.1
 django-timezone-field==4.0
 djangorestframework==3.12.1
-djangorestframework-gis==0.15.0
+djangorestframework-gis==0.15
 eventlet==0.28.0
 GDAL==3.1.4
 gunicorn==20.0.4
@@ -28,10 +28,10 @@ python-magic==0.4.15
 python-memcached==1.59
 pytz==2020.1
 PyYAML==5.3.1
-qgis==3.14.16
 requests==2.24.0
 Shapely==1.7.1
 sqlparse==0.3.1
+swapper==1.1.2.post1
 uritemplate==3.0.1
 webtest==2.0.35
 whitenoise==4.1.4
