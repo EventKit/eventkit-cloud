@@ -258,10 +258,7 @@ def get_layer_file(type, version=CURRENT_VERSION, projection="4326"):
     # Use 10.6 templates for versions greater than 10.6.
     if int(version.split(".")[1]) >= 6:
         version = "10.6"
-    if type in ["osm", "nome"]:
-        layer_basename = "{0}-{1}-{2}.lyr".format(type, version.replace(".", "-"), projection)
-    else:
-        layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
+    layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
     if os.path.isfile(layer_file):
         logger.warning(("Fetching layer template: {0}".format(layer_file)))
