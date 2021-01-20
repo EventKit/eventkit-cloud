@@ -44,7 +44,7 @@ logger.setLevel(logging_level)
 logger.info(logging_level)
 
 # mapproxy.client.log names its logger with the string 'mapproxy.source.request', we have to use that string
-# to capture the logger. care you be taken to see if mapproxy ever changes the name of that logger.
+# to capture the logger. Should be taken to see if mapproxy ever changes the name of that logger.
 client_logger = logging.getLogger("mapproxy.source.request")
 client_logger.setLevel(logging_level)
 

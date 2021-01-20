@@ -227,7 +227,8 @@ The MapProxy logger prints out various updates relating to seeding and external 
 ensure that only our progress updates will be logged.
 <pre>MAPPROXY_INTERNAL_LOGS_ENABLED=True</pre>
 
-The interval at which our MapProxy progress updater will print logs. Set this to -1 to disable logs from this updater.
+The interval in seconds at which our MapProxy progress updater will print logs.
+Set this to -1 to disable logs from this updater.
 <pre>MAPPROXY_PROGRESS_LOGS_INTERVAL=10</pre>
 
 #### Land Data
