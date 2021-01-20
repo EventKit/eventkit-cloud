@@ -19,7 +19,7 @@ from mapproxy.config.loader import (
 )
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
+from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore, format_bbox
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
@@ -39,6 +39,15 @@ from eventkit_cloud.utils.geopackage import (
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
+logging_level = settings.LOG_LEVEL if settings.MAPPROXY_INTERNAL_LOGS_ENABLED else logging.ERROR
+logger.setLevel(logging_level)
+logger.info(logging_level)
+
+# mapproxy.client.log names its logger with the string 'mapproxy.source.request', we have to use that string
+# to capture the logger. care you be taken to see if mapproxy ever changes the name of that logger.
+client_logger = logging.getLogger("mapproxy.source.request")
+client_logger.setLevel(logging_level)
+
 
 mapproxy_config_keys_index = "mapproxy-config-cache-keys"
 
@@ -58,6 +67,7 @@ class CustomLogger(ProgressLog):
         self.log_step_step = 1
         self.log_step_counter = self.log_step_step
         self.eta = ETA(task_uid=task_uid)
+        self.interval = settings.MAPPROXY_PROGRESS_LOGS_INTERVAL
 
     def log_step(self, progress):
         from eventkit_cloud.tasks.task_process import update_progress
@@ -84,13 +94,40 @@ class CustomLogger(ProgressLog):
         # https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
         if not self.verbose:
             return
-        if (self._laststep + 0.5) < time.time():
-            # log progress at most every 500ms
+        if self.interval != -1 and (self._laststep + self.interval) < time.time():
+            # log progress at most every <interval>s (derived from MAPPROXY_PROGRESS_LOGS_INTERVAL settings)
+            logger.setLevel(logging.INFO)
+            logger.info(f"INTERVVV: {self.interval} result: {self._laststep + self.interval}")
             logger.info(
                 f"[{timestamp()}] {progress.progress * 100:6.2f}%\t{progress.progress_str.ljust(20)} ETA: {self.eta}\r"
             )
+            logger.setLevel(logging_level)
             # [12:24:08] 100.00%     000000               ETA: 2020-08-06-12:22:30-UTC
             self._laststep = time.time()
+
+    def log_progress(self, progress, level, bbox, tiles):
+        progress_interval = 1
+        if not self.verbose:
+            progress_interval = 30
+
+        log_progess = False
+        if progress.progress == 1.0 or (self._lastprogress + progress_interval) < time.time():
+            self._lastprogress = time.time()
+            log_progess = True
+
+        if log_progess:
+            if self.progress_store and self.current_task_id:
+                self.progress_store.add(self.current_task_id, progress.current_progress_identifier())
+                self.progress_store.write()
+
+        if self.silent:
+            return
+
+        if log_progess:
+            logger.info(
+                "[%s] %2s %6.2f%% %s (%d tiles)\n"
+                % (timestamp(), level, progress.progress * 100, format_bbox(bbox), tiles)
+            )
 
 
 def get_custom_exp_backoff(max_repeat=None, task_uid=None):
@@ -243,6 +280,7 @@ class MapproxyGeopackage(object):
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)
 
             task_process = TaskProcess(task_uid=self.task_uid)
+
             task_process.start_process(
                 billiard=True,
                 target=seeder.seed,
