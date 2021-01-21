@@ -12,6 +12,7 @@ class Command(BaseCommand):
         call_command("collectstatic", "--noinput")
         call_command("migrate")
         call_command("createcachetable")
+        call_command("update_database_permissions")
         if options["setup"]:
             call_command("loaddata", "admin_user")
             call_command("loaddata", "osm_provider")

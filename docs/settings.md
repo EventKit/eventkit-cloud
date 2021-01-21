@@ -30,6 +30,11 @@ AWS_SECRET_ACCESS_KEY='my-secret-key'</pre>
 #### Database
 To use your own database connection string add:
 <pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
+If deploying to an environment that uses ephemeral db accounts you can set a db owner so that
+it is set after migrations are run so that the application doesn't take ownership
+of the table. 
+<pre>DATABASE_TABLE_OWNER='user_account'</pre>
+
 
 To reset the database:
 <pre>docker volume rm eventkitcloud_postgis_database</pre>

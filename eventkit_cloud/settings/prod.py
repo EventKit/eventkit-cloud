@@ -256,6 +256,8 @@ if os.getenv("FEATURE_DATABASE_URL"):
 else:
     DATABASES["feature_data"] = DATABASES["default"]
 
+DATABASE_TABLE_OWNER = os.getenv("DATABASE_TABLE_OWNER")
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
