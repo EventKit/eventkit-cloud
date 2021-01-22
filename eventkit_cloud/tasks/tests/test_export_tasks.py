@@ -388,7 +388,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
-        self.assertEqual(list(args[0]), list(expected_layers.values()))
+        self.assertEqual(list(args[1]), list(expected_layers.values()))
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(
@@ -430,7 +430,7 @@ class TestExportTasks(ExportTaskBase):
             layer=layer,
             config='cert_var: "test2"',
         )
-        mock_download_data.assert_any_call(expected_input_path, ANY, "test2")
+        mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, "test2")
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -758,7 +758,9 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        mock_download_data.assert_called_once_with(expected_input_url, expected_esrijson, None)
+        mock_download_data.assert_called_once_with(
+            str(saved_export_task.uid), expected_input_url, expected_esrijson, None
+        )
 
         mock_convert.assert_called_once_with(
             driver="gpkg",
@@ -807,8 +809,18 @@ class TestExportTasks(ExportTaskBase):
         expected_url_1 = f"{url_1}/{query_string}"
         expected_url_2 = f"{url_2}/{query_string}"
         expected_layers = {
-            layer_name_1: {"url": expected_url_1, "path": expected_path_1, "cert_var": None},
-            layer_name_2: {"url": expected_url_2, "path": expected_path_2, "cert_var": None},
+            layer_name_1: {
+                "task_uid": str(saved_export_task.uid),
+                "url": expected_url_1,
+                "path": expected_path_1,
+                "cert_var": None,
+            },
+            layer_name_2: {
+                "task_uid": str(saved_export_task.uid),
+                "url": expected_url_2,
+                "path": expected_path_2,
+                "cert_var": None,
+            },
         }
 
         mock_download_concurrently.return_value = expected_layers
@@ -829,7 +841,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
-        self.assertEqual(list(args[0]), list(expected_layers.values()))
+        self.assertEqual(list(args[1]), list(expected_layers.values()))
 
         self.assertEqual(mock_convert.call_count, 2)
 
@@ -872,7 +884,7 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
             config='cert_var: "test1"',
         )
-        mock_download_data.assert_called_once_with(expected_input_url, ANY, "test1")
+        mock_download_data.assert_called_once_with(str(saved_export_task.uid), expected_input_url, ANY, "test1")
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
