@@ -81,7 +81,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 });
 
 interface Props {
-    zipSize: number;
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; };
     providerTasks: Eventkit.ProviderTask[];
@@ -216,7 +215,7 @@ export function CreateDataPackButton(props: Props) {
         if (dataPackRestricted) {
             return 'Restricted by Policy';
         }
-        const sizeText = (props.zipSize) ? formatMegaBytes(props.zipSize, 1) + ' ' : '';
+        const sizeText = (run) ? formatMegaBytes(run?.zipfile?.size, 1) + ' ' : '';
         const zipText = (<span style={{whiteSpace: 'nowrap'}}>({sizeText}.ZIP)</span>)
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
