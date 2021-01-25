@@ -39,15 +39,12 @@ from eventkit_cloud.utils.geopackage import (
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
-logging_level = settings.LOG_LEVEL if settings.MAPPROXY_INTERNAL_LOGS_ENABLED else logging.ERROR
-logger.setLevel(logging_level)
-logger.info(logging_level)
 
 # mapproxy.client.log names its logger with the string 'mapproxy.source.request', we have to use that string
 # to capture the logger. Should be taken to see if mapproxy ever changes the name of that logger.
+log_settings = settings.MAPPROXY_LOGS
 client_logger = logging.getLogger("mapproxy.source.request")
-client_logger.setLevel(logging_level)
-
+client_logger.setLevel(settings.LOG_LEVEL if log_settings.get("requests", False) else logging.ERROR)
 
 mapproxy_config_keys_index = "mapproxy-config-cache-keys"
 
@@ -67,7 +64,7 @@ class CustomLogger(ProgressLog):
         self.log_step_step = 1
         self.log_step_counter = self.log_step_step
         self.eta = ETA(task_uid=task_uid)
-        self.interval = settings.MAPPROXY_PROGRESS_LOGS_INTERVAL
+        self.interval = 1
 
     def log_step(self, progress):
         from eventkit_cloud.tasks.task_process import update_progress
@@ -94,14 +91,10 @@ class CustomLogger(ProgressLog):
         # https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
         if not self.verbose:
             return
-        if self.interval != -1 and (self._laststep + self.interval) < time.time():
-            # log progress at most every <interval>s (derived from MAPPROXY_PROGRESS_LOGS_INTERVAL settings)
-            logger.setLevel(logging.INFO)
-            logger.info(f"INTERVVV: {self.interval} result: {self._laststep + self.interval}")
+        if (self._laststep + self.interval) < time.time():
             logger.info(
                 f"[{timestamp()}] {progress.progress * 100:6.2f}%\t{progress.progress_str.ljust(20)} ETA: {self.eta}\r"
             )
-            logger.setLevel(logging_level)
             # [12:24:08] 100.00%     000000               ETA: 2020-08-06-12:22:30-UTC
             self._laststep = time.time()
 
@@ -277,7 +270,12 @@ class MapproxyGeopackage(object):
             auth_requests.patch_mapproxy_opener_cache(slug=self.name, cred_var=cred_var)
 
             progress_store = get_progress_store(self.gpkgfile)
-            progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)
+            progress_logger = CustomLogger(
+                task_uid=self.task_uid,
+                progress_store=progress_store,
+                verbose=log_settings.get("verbose"),
+                silent=log_settings.get("silent"),
+            )
 
             task_process = TaskProcess(task_uid=self.task_uid)
 

@@ -352,8 +352,11 @@ AWS_DEFAULT_ACL = None
 
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
-MAPPROXY_INTERNAL_LOGS_ENABLED = is_true("MAPPROXY_LOGS_ENABLED")
-MAPPROXY_PROGRESS_LOGS_INTERVAL = float(os.getenv("MAPPROXY_PROGRESS_LOGS_INTERVAL", 10))
+MAPPROXY_LOGS = {
+    "requests": is_true(os.getenv("MAPPROXY_LOGS_REQUESTS")),
+    "verbose": is_true(os.getenv("MAPPROXY_LOGS_VERBOSE")),
+    "silent": is_true(os.getenv("MAPPROXY_LOGS_SILENT")),
+}
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 LOGGING = {
