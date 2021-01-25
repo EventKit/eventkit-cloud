@@ -318,6 +318,7 @@ def convert(
     :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
     :return: Filename of clipped dataset
     """
+
     input_file, output_file = get_dataset_names(input_file, output_file)
     meta = get_meta(input_file, is_raster)
 
@@ -582,6 +583,8 @@ def convert_vector(
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
     )
+    if "gpkg" in driver.lower():
+        options["geometryType"] = ["PROMOTE_TO_MULTI"]
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
     return output_file
