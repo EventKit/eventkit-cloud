@@ -196,7 +196,7 @@ def create_vector_layers(vector_layer_group: arcpy._mp.Layer, layers: list, file
                 "projection": "4326"
             }
         ]
-    :param mapx:  The Map document w
+    :param mapx:  The Map document hosting the layers.
     :return: None
     """
     file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
@@ -236,7 +236,7 @@ def add_layer_to_map(
 ) -> arcpy._mp.Layer:
     """
     :param layer_name: The name of the layer as it will appear in arcmap.
-    :param layer_file: The .lyr which will be used for the layer template. .
+    :param layer_file: The .lyr which will be used for the layer template.
     :param data_frame:  The dataframe from the map document where the layer should be loaded.
     :return: Layer, raises exception.
     """
