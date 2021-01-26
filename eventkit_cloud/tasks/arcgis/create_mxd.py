@@ -22,9 +22,6 @@ logger.warning("Creating an MXD file for your data...")
 if os.getenv("LOG_LEVEL"):
     logger.setLevel(os.getenv("LOG_LEVEL"))
 
-# logger.setLevel("DEBUG")
-
-
 try:
     from django.conf import settings
 
