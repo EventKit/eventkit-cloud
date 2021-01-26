@@ -38,6 +38,7 @@ ifeq ($(detected_OS),Linux)
 	sudo useradd -u 8800 -g 880 -m eventkit || echo "User eventkit already exists."
 	sudo usermod -a -G eventkit ${USER}
 	sudo chown -R ${USER}:eventkit .
+	sudo chmod -R g+rw .
 endif
 
 # Only run this command if you want to completely rebuild your conda dependencies.
