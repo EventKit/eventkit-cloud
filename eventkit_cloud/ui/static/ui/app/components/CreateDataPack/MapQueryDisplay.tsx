@@ -68,7 +68,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         } as FeatureResponse;
         let url;
         try {
-            url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
+            url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j, tileCoord.lat, tileCoord.long);
         }
         catch(error) {
             responseData.errorMessage = 'No data found at coordinates.';

@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
+import json
 from logging import getLogger
+
+import requests
+
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from urllib.parse import parse_qs
+
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 from eventkit_cloud.utils.map_query import get_map_query
 from eventkit_cloud.core.helpers import get_cached_model
@@ -40,10 +45,28 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
                 response.status_code = 500
                 response.content = "No data available."
         else:
-            if provider.metadata:
-                response.content = "The service was unable to provide data for this location."
+            if provider.export_provider_type.type_name == "osm" or provider.export_provider_type.type_name == "tms":  # This is for testing purposes, since OSM Tiles is TMS.
+                logger.info(f"OSM Layer, querying via Nominatim.")
+                lat = request.GET["LAT"]
+                long = request.GET["LONG"]
+                if lat and long:
+                    try:
+                        nominatim_url = f"https://nominatim.openstreetmap.org/reverse?format=geojson&lat={lat}&lon={long}"
+                        logger.info(f"NOMINATIM URL: {nominatim_url}")
+                        nominatim_response = requests.get(nominatim_url)
+                        logger.info(f"NOMINATIM RESPONSE: {nominatim_response}")
+                        features = json.loads(nominatim_response.content)["features"]
+                        response.content = features
+                        logger.info(f"RESPONSE CONTENT: {response.content}")
+                        response["Content-length"] = len(response.content)
+                        return response
+                    except Exception as e:
+                        response.content = f"Nominatim query failed, {e}"
             else:
-                response.content = "No data is available for this service."
+                if provider.metadata:
+                    response.content = "The service was unable to provide data for this location."
+                else:
+                    response.content = "No data is available for this service."
 
     response["Content-length"] = len(response.content)
     return response

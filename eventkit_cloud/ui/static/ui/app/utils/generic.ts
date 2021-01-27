@@ -192,12 +192,13 @@ export function getDefaultFormat(provider: Partial<Eventkit.Provider>) {
     }
 }
 
-export function getFeatureUrl(mapLayer, z, y, x, i, j): string {
+export function getFeatureUrl(mapLayer, z, y, x, i, j, lat, long): string {
     // MapProxy identifies the zoom level by the TileMatrix name which are named like so, 00, 01, 02...18, 19.
     const tileMatrixId = z.toString().padStart(1, '2');
-    return `${mapLayer.metadata.url}?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=${mapLayer.slug}&`
+    return `${mapLayer.mapUrl}?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=${mapLayer.slug}&`
         + 'REQUEST=GetFeatureInfo&SERVICE=WMTS&STYLE=default&'
-        + `TILECOL=${x}&TILEMATRIX=${tileMatrixId}&TILEMATRIXSET=default&TILEROW=${y}&VERSION=1.0.0&i=${i}&j=${j}`;
+        + `TILECOL=${x}&TILEMATRIX=${tileMatrixId}&TILEMATRIXSET=default&TILEROW=${y}&VERSION=1.0.0&i=${i}&j=${j}&`
+        + `LAT=${lat}&LONG=${long}`;
 }
 
 export function arrayHasValue(array: any[], val: any): boolean {
