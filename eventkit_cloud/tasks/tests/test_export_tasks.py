@@ -698,6 +698,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_outfile,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            creation_options=["-explodecollections"],
             boundary=example_geojson,
         )
         self.assertEqual(returned_result, expected_result)
