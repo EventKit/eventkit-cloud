@@ -1308,6 +1308,107 @@ def get_arcgis_query_url(service_url: str, bbox: list) -> str:
     return query_url
 
 
+@app.task(name="VectorFileExport", bind=True, base=ExportTask, abort_on_error=True)
+def vector_file_export_task(
+    self,
+    result=None,
+    layer=None,
+    config=str(),
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    bbox=None,
+    service_url=None,
+    name=None,
+    service_type=None,
+    user_details=None,
+    projection=4326,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining geopackage export for geospatial vector file service.
+    """
+    result = result or {}
+    export_task_record = get_export_task_record(task_uid)
+    provider_slug = export_task_record.export_provider_task.provider.slug
+
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    configuration = load_provider_config(config)
+
+    download_data(service_url, gpkg, configuration.get("cert_var"))
+
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=gpkg,
+        output_file=gpkg,
+        task_uid=task_uid,
+        projection=projection,
+        layer_name=export_task_record.export_provider_task.provider.layers[0],
+        boundary=bbox,
+        is_raster=False,
+    )
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    result["gpkg"] = out
+
+    return result
+
+
+@app.task(name="RasterFileExport", bind=True, base=ExportTask, abort_on_error=True)
+def raster_file_export_task(
+    self,
+    result=None,
+    layer=None,
+    config=str(),
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    bbox=None,
+    service_url=None,
+    name=None,
+    service_type=None,
+    user_details=None,
+    projection=4326,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining geopackage export for geospatial raster file service.
+    """
+    result = result or {}
+    export_task_record = get_export_task_record(task_uid)
+    provider_slug = export_task_record.export_provider_task.provider.slug
+
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    configuration = load_provider_config(config)
+
+    download_data(service_url, gpkg, configuration.get("cert_var"))
+
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=gpkg,
+        output_file=gpkg,
+        task_uid=task_uid,
+        projection=projection,
+        boundary=bbox,
+        is_raster=True,
+    )
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    result["gpkg"] = out
+
+    return result
+
+
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
 def bounds_export_task(
     self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs,
