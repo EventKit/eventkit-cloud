@@ -47,7 +47,6 @@ def callback(request):
     try:
         access_token = request_access_token(request.GET.get("code"))
         request.session["access_token"] = access_token
-        logger.info(f"SESSION: {request.session.items()}")
         user = fetch_user_from_token(access_token)
         state = request.GET.get("state")
         if user:
@@ -89,8 +88,8 @@ def check_oauth_authentication(request):
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         access_token = request.session.get("access_token")
         if access_token:
-            # This returns a call to get_user which updates the oauth profile.
             try:
+                # This returns a call to get_user which updates the oauth profile.
                 fetch_user_from_token(access_token)
                 return True
             except OAuthError:
