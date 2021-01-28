@@ -20,7 +20,6 @@ from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 logger = getLogger(__name__)
 
 
-@requires_oauth_authentication
 def download(request):
     """
     Logs and redirects a dataset download request

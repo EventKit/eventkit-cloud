@@ -7,8 +7,9 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect
+from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError
 from eventkit_cloud.core.helpers import get_id
@@ -87,7 +88,6 @@ def logout(request):
 def check_oauth_authentication(request):
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         access_token = request.session.get("access_token")
-        logger.info(f"Access Token: {access_token}")
         if access_token:
             # This returns a call to get_user which updates the oauth profile.
             try:
@@ -95,16 +95,20 @@ def check_oauth_authentication(request):
                 return True
             except OAuthError:
                 logger.info("Invalid access token, trying to log back in.")
-                return redirect("/oauth")
+                return HttpResponseRedirect("/oauth")
         else:
             logger.info("No access token available, trying to log back in.")
-            return redirect("/oauth")
+            return HttpResponseRedirect("/oauth")
 
 
 def requires_oauth_authentication(func):
     @wraps(func)
     def wrapper(request, *args, **kwargs):
-        check_oauth_authentication(request)
+        if issubclass(type(request), APIView):
+            # The original request is available on an APIView as request.
+            check_oauth_authentication(request.request)
+        else:
+            check_oauth_authentication(request)
         return func(request, *args, **kwargs)
 
     return wrapper
