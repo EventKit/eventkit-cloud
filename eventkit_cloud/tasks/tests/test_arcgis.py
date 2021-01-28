@@ -29,8 +29,6 @@ class TestSupport(TestCase):
         ) as mock_shutil, patch(
             "eventkit_cloud.tasks.arcgis.create_mxd.get_mxd_template"
         ) as mock_get_mxd_template, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.get_version"
-        ) as mock_get_version, patch(
             "eventkit_cloud.tasks.arcgis.create_mxd.update_mxd_from_metadata"
         ) as mock_update_from_metadata:
             test_mxd = "test.mxd"
@@ -38,7 +36,6 @@ class TestSupport(TestCase):
             test_metadata = {"metadata_keys": "metadata_values"}
             verify = True
             mock_get_mxd_template.return_value = test_mxd
-            mock_get_version.return_value = "10.5.1"
             mock_open().__enter__().read.return_value = mxd_contents
             returned_mxd_contents = create_mxd(mxd=test_mxd, metadata=test_metadata, verify=verify)
             mock_update_from_metadata.assert_called_once_with(test_mxd, test_metadata, verify=verify)
@@ -61,13 +58,12 @@ class TestSupport(TestCase):
                 ANY, kwds={"mxd": example_mxd, "metadata": example_metadata, "verify": True}
             )
 
-    def test_get_version(self):
-        from eventkit_cloud.tasks.arcgis.create_mxd import get_version
-
+    def test_version(self):
         test_version = "10.5.1"
         self.arcpy.GetInstallInfo.return_value.get.return_value = test_version
-        version = get_version()
-        self.assertEqual(test_version, version)
+        from eventkit_cloud.tasks.arcgis.create_mxd import CURRENT_VERSION
+
+        self.assertEqual(CURRENT_VERSION, test_version)
 
     def test_get_layer_file(self):
         from eventkit_cloud.tasks.arcgis.create_mxd import get_layer_file
