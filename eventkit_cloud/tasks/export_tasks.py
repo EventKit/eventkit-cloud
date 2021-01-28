@@ -8,7 +8,7 @@ import shutil
 import socket
 import time
 import traceback
-from typing import List
+from typing import List, Union
 from urllib.parse import urlencode, urljoin
 
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -63,6 +63,8 @@ from eventkit_cloud.tasks.helpers import (
     normalize_name,
     pickle_exception,
     progressive_kill,
+    download_data,
+    download_concurrently,
 )
 from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -83,9 +85,7 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProviderTask
-from typing import Union
 import yaml
-import requests
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -663,17 +663,20 @@ def gpx_export_task(
     """
     result = result or {}
     # Need to use PBF instead of GPKG because gpkg uses multi-geometry types whereas gpx doesn't support multipoint
-    pbf = parse_result(result, "pbf")
+    input_file = parse_result(result, "pbf")
+    if not input_file:
+        input_file = parse_result(result, "gpkg")
     # Need to crop to selection since the PBF hasn't been clipped.
     selection = parse_result(result, "selection")
     provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
     gpx_file = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
         out = gdalutils.convert(
-            input_file=pbf,
+            input_file=input_file,
             output_file=gpx_file,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            creation_options=["-explodecollections"],
             boundary=selection,
         )
         result["file_extension"] = "gpx"
@@ -1057,28 +1060,36 @@ def wfs_export_task(
 
     configuration = load_provider_config(config)
 
-    if "layers" in configuration:
-        for layer_properties in configuration["layers"]:
-            url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
-            input_file = download_data(url, gpkg, configuration.get("cert_var"))
+    vector_layer_data = configuration.get("vector_layers", [])
+    if len(vector_layer_data):
+        layers = {}
 
+        for layer in vector_layer_data:
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
+            url = get_wfs_query_url(name, layer.get("url"), layer.get("name"), projection)
+            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+
+        download_concurrently(layers.values(), configuration.get("concurrency"))
+
+        for layer_name, layer in layers.items():
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=input_file,
+                input_file=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
-                layer_name=layer_properties.get("name"),
+                layer_name=layer_name,
                 access_mode="append",
             )
+
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
-        input_file = download_data(url, gpkg, configuration.get("cert_var"))
+        download_data(url, gpkg, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
-            input_file=input_file,
+            input_file=gpkg,
             output_file=gpkg,
             task_uid=task_uid,
             projection=projection,
@@ -1089,6 +1100,7 @@ def wfs_export_task(
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
+    result["gpkg"] = out
 
     # Check for geopackage contents; gdal wfs driver fails silently
     if not geopackage.check_content_exists(out):
@@ -1226,35 +1238,43 @@ def arcgis_feature_service_export_task(
     provider_slug = export_task_record.export_provider_task.provider.slug
 
     gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
-    esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
 
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
 
     configuration = load_provider_config(config)
 
-    if "layers" in configuration:
-        for layer_properties in configuration.get("layers"):
-            url = get_arcgis_query_url(layer_properties.get("url"), bbox)
-            input_file = download_data(url, esrijson, configuration.get("cert_var"))
+    vector_layer_data = configuration.get("vector_layers", [])
+    if len(vector_layer_data):
+        layers = {}
 
+        for layer in vector_layer_data:
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
+            url = get_arcgis_query_url(layer.get("url"), bbox)
+            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+
+        download_concurrently(layers.values(), configuration.get("concurrency"))
+
+        for layer_name, layer in layers.items():
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=input_file,
+                input_file=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
-                layer_name=layer_properties.get("name"),
+                layer_name=layer_name,
                 access_mode="append",
             )
+
     else:
         url = get_arcgis_query_url(service_url, bbox)
-        input_file = download_data(url, esrijson, configuration.get("cert_var"))
+        esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
+        download_data(url, esrijson, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
-            input_file=input_file,
+            input_file=esrijson,
             output_file=gpkg,
             task_uid=task_uid,
             boundary=bbox,
@@ -1265,33 +1285,9 @@ def arcgis_feature_service_export_task(
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
+    result["gpkg"] = out
+
     return result
-
-
-def download_data(input_url, out_file, cert_var=None):
-    """
-    Function for downloading data, optionally using a certificate.
-    """
-
-    try:
-        response = auth_requests.get(
-            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
-        )
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
-
-    CHUNK = 1024 * 1024 * 2  # 2MB chunks
-    from audit_logging.file_logging import logging_open
-
-    with logging_open(out_file, "wb") as file_:
-        for chunk in response.iter_content(CHUNK):
-            file_.write(chunk)
-
-    if not os.path.isfile(out_file):
-        raise Exception("Nothing was returned from the vector feature service.")
-
-    return out_file
 
 
 def get_arcgis_query_url(service_url: str, bbox: list) -> str:
