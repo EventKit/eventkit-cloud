@@ -663,17 +663,20 @@ def gpx_export_task(
     """
     result = result or {}
     # Need to use PBF instead of GPKG because gpkg uses multi-geometry types whereas gpx doesn't support multipoint
-    pbf = parse_result(result, "pbf")
+    input_file = parse_result(result, "pbf")
+    if not input_file:
+        input_file = parse_result(result, "gpkg")
     # Need to crop to selection since the PBF hasn't been clipped.
     selection = parse_result(result, "selection")
     provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
     gpx_file = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
         out = gdalutils.convert(
-            input_file=pbf,
+            input_file=input_file,
             output_file=gpx_file,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            creation_options=["-explodecollections"],
             boundary=selection,
         )
         result["file_extension"] = "gpx"
@@ -1097,6 +1100,7 @@ def wfs_export_task(
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
+    result["gpkg"] = out
 
     # Check for geopackage contents; gdal wfs driver fails silently
     if not geopackage.check_content_exists(out):
@@ -1286,6 +1290,8 @@ def arcgis_feature_service_export_task(
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
+    result["gpkg"] = out
+
     return result
 
 
