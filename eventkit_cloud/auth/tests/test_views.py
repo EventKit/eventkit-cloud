@@ -145,7 +145,7 @@ class TestAuthViews(TestCase):
             response = self.client.get(reverse("logout"))
             self.assertEqual(response.json().get("OAUTH_LOGOUT_URL"), settings.OAUTH_LOGOUT_URL)
 
-    @patch("eventkit_cloud.auth.views.redirect")
+    @patch("eventkit_cloud.auth.views.HttpResponseRedirect")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
     def test_check_oauth_authentication(self, mock_fetch_user, mock_redirect):
         invalid_token = "invalid_token"

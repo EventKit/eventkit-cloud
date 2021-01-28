@@ -9,7 +9,6 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
