@@ -535,10 +535,10 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             == GeospatialDataType.ELEVATION.value
         ):
             metadata["has_elevation"] = True
-        if (
-            metadata["data_sources"][data_provider_task_record.provider.slug].get("type")
-            == GeospatialDataType.VECTOR.value
-        ):
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") in [
+            GeospatialDataType.VECTOR.value,
+            "osm",
+        ]:  # TODO: handle osm generically like vector layers
             metadata["has_vector"] = True
 
         if data_provider_task_record.preview is not None:
