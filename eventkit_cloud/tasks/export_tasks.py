@@ -1067,9 +1067,14 @@ def wfs_export_task(
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
             url = get_wfs_query_url(name, layer.get("url"), layer.get("name"), projection)
-            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+            layers[layer["name"]] = {
+                "task_uid": task_uid,
+                "url": url,
+                "path": path,
+                "cert_var": configuration.get("cert_var"),
+            }
 
-        download_concurrently(task_uid, layers.values(), configuration.get("concurrency"))
+        download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
             out = gdalutils.convert(
@@ -1258,7 +1263,7 @@ def arcgis_feature_service_export_task(
                 "cert_var": configuration.get("cert_var"),
             }
 
-        download_concurrently(task_uid, layers.values(), configuration.get("concurrency"))
+        download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
             out = gdalutils.convert(

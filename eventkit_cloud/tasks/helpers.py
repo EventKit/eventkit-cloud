@@ -833,7 +833,7 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
-def download_concurrently(task_uid: str, layers: ValuesView, concurrency=None):
+def download_concurrently(layers: ValuesView, concurrency=None):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
@@ -843,10 +843,8 @@ def download_concurrently(task_uid: str, layers: ValuesView, concurrency=None):
 
         # Get the total number of task points to compare against current progress.
         task_points = len(layers) * 100
-        cache.set(get_task_points_cache_key(task_uid), task_points, timeout=DEFAULT_CACHE_EXPIRATION)
-        cache.set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
 
-        futures_list = [executor.submit(download_data, *layer.values()) for layer in layers]
+        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
         futures.wait(futures_list)
 
     except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
@@ -855,7 +853,7 @@ def download_concurrently(task_uid: str, layers: ValuesView, concurrency=None):
     return layers
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None):
+def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
@@ -880,7 +878,7 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None):
 
     written_size = 0
     update_interval = total_size / 100
-    task_points = cache.get(get_task_points_cache_key(task_uid))
+    cache.set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
 
     with logging_open(out_file, "wb") as file_:
         for chunk in response.iter_content(CHUNK):

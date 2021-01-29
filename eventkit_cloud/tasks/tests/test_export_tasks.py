@@ -367,8 +367,18 @@ class TestExportTasks(ExportTaskBase):
             f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}&SRSNAME=EPSG:{projection}"
         )
         expected_layers = {
-            layer_1: {"url": expected_url_1, "path": expected_path_1, "cert_var": None},
-            layer_2: {"url": expected_url_2, "path": expected_path_2, "cert_var": None},
+            layer_1: {
+                "task_uid": str(saved_export_task.uid),
+                "url": expected_url_1,
+                "path": expected_path_1,
+                "cert_var": None,
+            },
+            layer_2: {
+                "task_uid": str(saved_export_task.uid),
+                "url": expected_url_2,
+                "path": expected_path_2,
+                "cert_var": None,
+            },
         }
 
         mock_download_concurrently.return_value = expected_layers
@@ -388,7 +398,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
-        self.assertEqual(list(args[1]), list(expected_layers.values()))
+        self.assertEqual(list(args[0]), list(expected_layers.values()))
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(
@@ -842,7 +852,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
-        self.assertEqual(list(args[1]), list(expected_layers.values()))
+        self.assertEqual(list(args[0]), list(expected_layers.values()))
 
         self.assertEqual(mock_convert.call_count, 2)
 
