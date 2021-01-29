@@ -10,6 +10,7 @@ services:
       - ./recipes:/root/recipes
       - ./build.sh:/root/build.sh
       - ./download_packages.py:/root/download_packages.py
+      - ./convert_requirements_to_conda.py:/root/convert_requirements_to_conda.py
       - ./recipes.txt:/root/recipes.txt
       - ../:/eventkit-cloud
     environment:

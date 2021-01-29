@@ -38,10 +38,11 @@ export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
             && exportOptions[provider.slug].formats.length > 0;
     });
 
+    const getIsStringValid = (value: string) => !!value && value.trim() !== "";
     return !!(
-        exportInfo.exportName
-        && exportInfo.datapackDescription
-        && exportInfo.projectName
+        getIsStringValid(exportInfo.exportName)
+        && getIsStringValid(exportInfo.datapackDescription)
+        && getIsStringValid(exportInfo.projectName)
         && exportInfo.providers.length > 0
         && exportInfo.projections.length > 0
         && formatsAreSelected.every(selected => selected)
