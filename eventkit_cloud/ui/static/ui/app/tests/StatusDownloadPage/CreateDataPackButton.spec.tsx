@@ -1,10 +1,11 @@
 import * as React from 'react';
-import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
+import {CreateDataPackButton, downloadRequest} from "../../components/StatusDownloadPage/CreateDataPackButton";
 import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
 import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
-import '@testing-library/jest-dom/extend-expect'
-import {rest} from 'msw'
-import {setupServer} from 'msw/node'
+import '@testing-library/jest-dom/extend-expect';
+import {rest} from 'msw';
+import {setupServer} from 'msw/node';
+import axios from 'axios';
 
 jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
     return {
@@ -21,6 +22,7 @@ jest.mock('../../components/Dialog/ProviderDialog', () => {
     const React = require('react');
     return (props) => (<div>ProviderDialog</div>);
 });
+
 
 const providers = [
     {
@@ -120,5 +122,11 @@ describe('CreateDataPackButton component', () => {
         setup();
         await waitFor(() => screen.getByText('Zip Error'))
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
+    });
+
+    it('should call the setter appropriately', () => {
+        const setterFunction = jest.fn();
+        downloadRequest('url/urlpath.zip', setterFunction);
+        expect(setterFunction).toHaveBeenCalledWith(true);
     });
 });

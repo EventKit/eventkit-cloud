@@ -1,5 +1,6 @@
 import {Reducer, useCallback, useReducer} from "react";
 import axios from "axios";
+import {ensureErrorShape} from "../generic";
 
 
 export enum ACTIONS {
@@ -101,9 +102,10 @@ export function useAsyncRequest(cancelMessage=''): [RequestState, (params: any) 
                 cancelToken: source.token,
             });
             dispatches.success(response);
+            return response;
         } catch (e) {
-            dispatches.error(e);
+            dispatches.error(ensureErrorShape(e));
         }
     }, []);
-    return [state, makeRequest, dispatches.cancel];
+    return [state, makeRequest as any, dispatches.cancel];
 }
