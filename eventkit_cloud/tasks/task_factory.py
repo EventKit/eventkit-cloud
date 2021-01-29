@@ -28,6 +28,8 @@ from eventkit_cloud.tasks.export_tasks import (
     mapproxy_export_task,
     wcs_export_task,
     arcgis_feature_service_export_task,
+    vector_file_export_task,
+    raster_file_export_task,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
@@ -59,6 +61,8 @@ class TaskFactory:
             "tms": mapproxy_export_task,
             "arcgis-raster": mapproxy_export_task,
             "arcgis-feature": arcgis_feature_service_export_task,
+            "vector-file": vector_file_export_task,
+            "raster-file": raster_file_export_task,
         }
 
     def parse_tasks(

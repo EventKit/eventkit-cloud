@@ -44,6 +44,8 @@ from eventkit_cloud.tasks.export_tasks import (
     gpx_export_task,
     mbtiles_export_task,
     wfs_export_task,
+    vector_file_export_task,
+    raster_file_export_task,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -1385,6 +1387,139 @@ class TestExportTasks(ExportTaskBase):
             file_path = ""
             res = zip_files(include_files, file_path=file_path)
             self.assertIsNone(res)
+
+    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
+    def test_vector_file_export_task(
+        self, mock_request, mock_convert, mock_download_data,
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        projection = 4326
+        expected_provider_slug = "vector-file"
+        self.provider.export_provider_type = DataProviderType.objects.get(type_name="vector-file")
+        self.provider.slug = expected_provider_slug
+        self.provider.config = None
+        self.provider.save()
+        date = default_format_time(timezone.now())
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        layer = "foo"
+        config = 'cert_var: "test_var"'
+        service_url = "https://abc.gov/file.geojson"
+
+        mock_convert.return_value = expected_output_path
+        mock_download_data.return_value = service_url
+
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskState.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=vector_file_export_task.name
+        )
+        vector_file_export_task.update_task_state(
+            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
+        )
+
+        result = vector_file_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=layer,
+            config=config,
+        )
+        mock_convert.assert_called_once_with(
+            driver="gpkg",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=projection,
+            boundary=None,
+            layer_name=expected_provider_slug,
+            is_raster=False,
+        )
+
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
+        self.assertEqual(expected_output_path, result["gpkg"])
+
+        mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
+
+    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
+    def test_raster_file_export_task(
+        self, mock_request, mock_convert, mock_download_data,
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        projection = 4326
+        expected_provider_slug = "raster-file"
+        self.provider.export_provider_type = DataProviderType.objects.get(type_name="raster-file")
+        self.provider.slug = expected_provider_slug
+        self.provider.config = None
+        self.provider.save()
+        date = default_format_time(timezone.now())
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        layer = "foo"
+        config = 'cert_var: "test_var"'
+        service_url = "https://abc.gov/file.geojson"
+
+        mock_convert.return_value = expected_output_path
+        mock_download_data.return_value = service_url
+
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskState.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=raster_file_export_task.name
+        )
+        raster_file_export_task.update_task_state(
+            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
+        )
+
+        result = raster_file_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=layer,
+            config=config,
+        )
+        mock_convert.assert_called_once_with(
+            driver="gpkg",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=projection,
+            boundary=None,
+            is_raster=True,
+        )
+
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
+        self.assertEqual(expected_output_path, result["gpkg"])
+
+        mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
 
 
 class TestFormatTasks(ExportTaskBase):
