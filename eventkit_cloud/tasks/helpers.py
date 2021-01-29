@@ -20,15 +20,17 @@ from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
-from typing import List, Optional
+from typing import List, Optional, ValuesView
 from xml.dom import minidom
 from concurrent import futures
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, ExportFormat
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
+from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
@@ -45,6 +47,8 @@ class Directory(Enum):
 PREVIEW_TAIL = "preview.jpg"
 
 UNSUPPORTED_CARTOGRAPHY_FORMATS = [".pbf", ".gpx"]
+
+CHUNK = 1024 * 1024 * 2  # 2MB chunks
 
 
 def get_run_staging_dir(run_uid):
@@ -829,24 +833,27 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
-def download_concurrently(layers, concurrency=None):
+def download_concurrently(layers: ValuesView, concurrency=None):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
-        futures_list = [executor.submit(download_data, *layer.values()) for layer in layers]
 
+        # Get the total number of task points to compare against current progress.
+        task_points = len(layers) * 100
+
+        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
         futures.wait(futures_list)
 
-    except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
+    except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
         logger.error(f"Unable to execute concurrent downloads: {e}")
 
     return layers
 
 
-def download_data(input_url, out_file, cert_var=None):
+def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
@@ -859,12 +866,50 @@ def download_data(input_url, out_file, cert_var=None):
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
 
-    CHUNK = 1024 * 1024 * 2  # 2MB chunks
     from audit_logging.file_logging import logging_open
+
+    try:
+        total_size = int(response.headers.get("content-length"))
+    except (ValueError, TypeError):
+        if response.content:
+            total_size = len(response.content)
+        else:
+            raise Exception("Request failed to return any data.")
+
+    written_size = 0
+    update_interval = total_size / 100
+    cache.set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
 
     with logging_open(out_file, "wb") as file_:
         for chunk in response.iter_content(CHUNK):
             file_.write(chunk)
+            written_size += CHUNK
+
+            last_update = cache.get_or_set(get_last_update_cache_key(task_uid), 0)
+            last_update += CHUNK
+            cache.set(get_last_update_cache_key(task_uid), last_update, timeout=DEFAULT_CACHE_EXPIRATION)
+
+            if last_update > update_interval:
+                updated_points = int((last_update / total_size) * 100) if last_update < total_size else 100
+                cache.incr(get_task_progress_cache_key(task_uid), updated_points)
+
+                progress_points = cache.get(get_task_progress_cache_key(task_uid))
+                progress = progress_points / task_points * 100 if progress_points < task_points else 100
+                update_progress(task_uid, progress)
+
+                cache.set(get_last_update_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
 
     if not os.path.isfile(out_file):
         raise Exception("Nothing was returned from the vector feature service.")
+
+
+def get_task_points_cache_key(task_uid: str):
+    return f"{task_uid}_task_points"
+
+
+def get_task_progress_cache_key(task_uid: str):
+    return f"{task_uid}_progress"
+
+
+def get_last_update_cache_key(task_uid: str):
+    return f"{task_uid}_mb_since_update"

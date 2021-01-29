@@ -1067,7 +1067,12 @@ def wfs_export_task(
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
             url = get_wfs_query_url(name, layer.get("url"), layer.get("name"), projection)
-            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+            layers[layer["name"]] = {
+                "task_uid": task_uid,
+                "url": url,
+                "path": path,
+                "cert_var": configuration.get("cert_var"),
+            }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
@@ -1085,7 +1090,7 @@ def wfs_export_task(
 
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
-        download_data(url, gpkg, configuration.get("cert_var"))
+        download_data(task_uid, url, gpkg, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1251,7 +1256,12 @@ def arcgis_feature_service_export_task(
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
             url = get_arcgis_query_url(layer.get("url"), bbox)
-            layers[layer["name"]] = {"url": url, "path": path, "cert_var": configuration.get("cert_var")}
+            layers[layer["name"]] = {
+                "task_uid": task_uid,
+                "url": url,
+                "path": path,
+                "cert_var": configuration.get("cert_var"),
+            }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
@@ -1270,7 +1280,7 @@ def arcgis_feature_service_export_task(
     else:
         url = get_arcgis_query_url(service_url, bbox)
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        download_data(url, esrijson, configuration.get("cert_var"))
+        download_data(task_uid, url, esrijson, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
