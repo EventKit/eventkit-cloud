@@ -98,30 +98,6 @@ class CustomLogger(ProgressLog):
             # [12:24:08] 100.00%     000000               ETA: 2020-08-06-12:22:30-UTC
             self._laststep = time.time()
 
-    def log_progress(self, progress, level, bbox, tiles):
-        progress_interval = 1
-        if not self.verbose:
-            progress_interval = 30
-
-        log_progess = False
-        if progress.progress == 1.0 or (self._lastprogress + progress_interval) < time.time():
-            self._lastprogress = time.time()
-            log_progess = True
-
-        if log_progess:
-            if self.progress_store and self.current_task_id:
-                self.progress_store.add(self.current_task_id, progress.current_progress_identifier())
-                self.progress_store.write()
-
-        if self.silent:
-            return
-
-        if log_progess:
-            logger.info(
-                "[%s] %2s %6.2f%% %s (%d tiles)\n"
-                % (timestamp(), level, progress.progress * 100, format_bbox(bbox), tiles)
-            )
-
 
 def get_custom_exp_backoff(max_repeat=None, task_uid=None):
     def custom_exp_backoff(*args, **kwargs):
