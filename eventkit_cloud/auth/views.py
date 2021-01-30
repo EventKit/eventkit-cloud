@@ -11,7 +11,7 @@ from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
-from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError
+from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError, Unauthorized
 from eventkit_cloud.core.helpers import get_id
 
 from urllib.parse import urlencode
@@ -84,7 +84,7 @@ def logout(request):
     return response
 
 
-def check_oauth_authentication(request):
+def has_valid_access_token(request):
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         access_token = request.session.get("access_token")
         if access_token:
@@ -92,12 +92,12 @@ def check_oauth_authentication(request):
                 # This returns a call to get_user which updates the oauth profile.
                 fetch_user_from_token(access_token)
                 return True
-            except OAuthError:
+            except (OAuthError, Unauthorized):
                 logger.info("Invalid access token, trying to log back in.")
-                return HttpResponseRedirect("/oauth")
+                return False
         else:
             logger.info("No access token available, trying to log back in.")
-            return HttpResponseRedirect("/oauth")
+            return False
 
 
 def requires_oauth_authentication(func):
@@ -105,9 +105,12 @@ def requires_oauth_authentication(func):
     def wrapper(request, *args, **kwargs):
         if issubclass(type(request), APIView):
             # The original request is available on an APIView as request.
-            check_oauth_authentication(request.request)
+            valid_access_token = has_valid_access_token(request.request)
         else:
-            check_oauth_authentication(request)
-        return func(request, *args, **kwargs)
+            valid_access_token = has_valid_access_token(request)
 
+        if valid_access_token:
+            return func(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect("/oauth")
     return wrapper

@@ -12,7 +12,7 @@ from unittest.mock import patch, MagicMock
 
 from eventkit_cloud.auth.auth import OAuthError
 from eventkit_cloud.auth.models import OAuth
-from eventkit_cloud.auth.views import callback, oauth, check_oauth_authentication
+from eventkit_cloud.auth.views import callback, oauth, has_valid_access_token
 
 import base64
 
@@ -157,13 +157,13 @@ class TestAuthViews(TestCase):
         request.session.save()
 
         # Test with no token.
-        check_oauth_authentication(request)
+        has_valid_access_token(request)
         mock_redirect.assert_called_with("/oauth")
 
         # Test with the return value from fetch_user_from_token being OAuthError aka an invalid token.
         request.session["access_token"] = invalid_token
         mock_fetch_user.side_effect = OAuthError(401)
-        check_oauth_authentication(request)
+        has_valid_access_token(request)
         mock_fetch_user.assert_called_with(invalid_token)
         mock_redirect.assert_called_with("/oauth")
         self.assertRaises(OAuthError)
@@ -171,6 +171,6 @@ class TestAuthViews(TestCase):
         # Test with a mocked return value of a valid user from fetch_user_from_token
         mock_fetch_user.reset_mock(side_effect=True)
         request.session["access_token"] = example_token
-        is_authenticated = check_oauth_authentication(request)
+        valid_access_token = has_valid_access_token(request)
         mock_fetch_user.assert_called_with(example_token)
-        self.assertEqual(is_authenticated, True)
+        self.assertEqual(valid_access_token, True)
