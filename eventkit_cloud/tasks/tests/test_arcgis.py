@@ -42,6 +42,21 @@ class TestCreateMXD(TestCase):
             self.assertEqual(mxd_contents, returned_mxd_contents)
             mock_shutil.copy.assert_called_once_with(ANY, test_mxd)
 
+    def get_data_source_by_type(self):
+        from eventkit_cloud.tasks.arcgis.create_mxd import get_data_source_by_type
+
+        data_sources = {"osm": {"type": "osm"}, "roads": {"type": "vector"}, "Imagery": {"type": "raster"}}
+
+        expected_sources = {"osm": {"type": "osm"}, "roads": {"type": "vector"}}
+        # OSM should be returned when vector is requested...
+        returned_sources = get_data_source_by_type(data_type="vector", data_sources=data_sources)
+        self.assertEqual(expected_sources, returned_sources)
+
+        # Other sources should return as themselves.
+        expected_sources = {"Imagery": {"type": "raster"}}
+        returned_sources = get_data_source_by_type(data_type="raster", data_sources=data_sources)
+        self.assertEqual(expected_sources, returned_sources)
+
     def test_create_mxd_process(self):
         from eventkit_cloud.tasks.arcgis.create_mxd import create_mxd_process
 
@@ -164,11 +179,68 @@ class TestCreateAPRX(TestCase):
             )
 
     def test_version(self):
-        test_version = "10.5.1"
+        test_version = "2.6"
         self.arcpy.GetInstallInfo.return_value.get.return_value = test_version
         from eventkit_cloud.tasks.arcgis.create_aprx import CURRENT_VERSION
 
         self.assertEqual(CURRENT_VERSION, test_version)
+
+    def test_update_aprx_from_metadata(self):
+        test_version = "2.6"
+        self.arcpy.GetInstallInfo.return_value.get.return_value = test_version
+        from eventkit_cloud.tasks.arcgis.create_aprx import update_aprx_from_metadata
+
+        example_file_name = "output.aprx"
+
+        mock_aprx = MagicMock()
+        mock_mapx = Mock()
+        mock_aprx.listMaps.return_value = [mock_mapx]
+        self.arcpy.mp.ArcGISProject.return_value = mock_aprx
+
+        expected_data_sources = ["list of sources"]
+        example_metadata = {"has_vector": True, "data_sources": expected_data_sources}
+        verify = True
+
+        with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os, patch(
+            "eventkit_cloud.tasks.arcgis.create_aprx.add_layer_to_map"
+        ) as mock_add_layer_to_map, patch(
+            "eventkit_cloud.tasks.arcgis.create_aprx.get_data_source_by_type"
+        ) as mock_get_data_source_by_type, patch(
+            "eventkit_cloud.tasks.arcgis.create_aprx.get_layer_file"
+        ) as mock_get_layer_file, patch(
+            "eventkit_cloud.tasks.arcgis.create_aprx.add_layers_to_group"
+        ) as mock_add_layers_to_group:
+            expected_full_path = f"/test/{example_file_name}"
+            mock_layer_file = Mock()
+            mock_get_layer_file.return_value = mock_layer_file
+            mock_os.path.abspath.return_value = expected_full_path
+            mock_group_layer = Mock()
+            mock_add_layer_to_map.return_value = mock_group_layer
+            mock_data_sources = Mock()
+            mock_get_data_source_by_type.return_value = mock_data_sources
+            update_aprx_from_metadata(file_name=example_file_name, metadata=example_metadata, verify=verify)
+            self.arcpy.mp.ArcGISProject.assert_called_once_with(expected_full_path)
+            mock_os.path.abspath.assert_called_once_with(example_file_name)
+            mock_add_layer_to_map.assert_called_once_with("Vector", mock_layer_file, mock_mapx)
+            mock_get_data_source_by_type.assert_called_once_with("vector", expected_data_sources)
+            mock_add_layers_to_group.assert_called_once_with(
+                mock_data_sources, mock_group_layer, mock_mapx, verify=verify
+            )
+
+    def get_data_source_by_type(self):
+        from eventkit_cloud.tasks.arcgis.create_aprx import get_data_source_by_type
+
+        data_sources = {"osm": {"type": "osm"}, "roads": {"type": "vector"}, "Imagery": {"type": "raster"}}
+
+        expected_sources = {"osm": {"type": "osm"}, "roads": {"type": "vector"}}
+        # OSM should be returned when vector is requested...
+        returned_sources = get_data_source_by_type(data_type="vector", data_sources=data_sources)
+        self.assertEqual(expected_sources, returned_sources)
+
+        # Other sources should return as themselves.
+        expected_sources = {"Imagery": {"type": "raster"}}
+        returned_sources = get_data_source_by_type(data_type="raster", data_sources=data_sources)
+        self.assertEqual(expected_sources, returned_sources)
 
     def test_get_layer_file(self):
         from eventkit_cloud.tasks.arcgis.create_aprx import get_layer_file
