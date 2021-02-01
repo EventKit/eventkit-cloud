@@ -19,7 +19,7 @@ from mapproxy.config.loader import (
 )
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore, format_bbox
+from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
