@@ -4,7 +4,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
-import {formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
+import {binaryPrefixConversion, formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
 import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
@@ -215,7 +215,7 @@ export function CreateDataPackButton(props: Props) {
         if (dataPackRestricted) {
             return 'Restricted by Policy';
         }
-        const sizeText = (run) ? formatMegaBytes(run?.zipfile?.size, 1) + ' ' : '';
+        const sizeText = (run) ? formatMegaBytes(binaryPrefixConversion(run?.zipfile?.size, 'm'), 1) + ' ' : '';
         const zipText = (<span style={{whiteSpace: 'nowrap'}}>({sizeText}.ZIP)</span>)
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
