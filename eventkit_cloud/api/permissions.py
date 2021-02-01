@@ -2,6 +2,8 @@
 from django.contrib.auth.models import User
 from rest_framework import permissions
 
+from eventkit_cloud.auth.views import has_valid_access_token
+
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -21,3 +23,17 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return obj == request.user
 
         return obj.user == request.user
+
+
+class HasValidAccessToken(permissions.BasePermission):
+    """
+    Validate that the user has a valid oauth authentication token.
+    """
+
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return has_valid_access_token(request)

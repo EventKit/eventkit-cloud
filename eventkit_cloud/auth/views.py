@@ -7,7 +7,7 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
@@ -21,7 +21,7 @@ import base64
 logger = getLogger(__name__)
 
 
-def oauth(request):
+def oauth(request, redirect_url=None):
     """
     :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings
     """
@@ -35,7 +35,9 @@ def oauth(request):
                 ("response_type", settings.OAUTH_RESPONSE_TYPE),
                 ("scope", settings.OAUTH_SCOPE),
             ]
-            if request.META.get("HTTP_REFERER"):
+            if redirect_url:
+                params += [("state", base64.b64encode(redirect_url.encode()),)]
+            elif request.META.get("HTTP_REFERER"):
                 params += [("state", base64.b64encode(request.META.get("HTTP_REFERER").encode()),)]
             encoded_params = urlencode(params)
             return redirect("{0}?{1}".format(settings.OAUTH_AUTHORIZATION_URL.rstrip("/"), encoded_params))
@@ -84,7 +86,7 @@ def logout(request):
     return response
 
 
-def has_valid_access_token(request):
+def has_valid_access_token(request) -> bool:
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         access_token = request.session.get("access_token")
         if access_token:
@@ -98,6 +100,9 @@ def has_valid_access_token(request):
         else:
             logger.info("No access token available, trying to log back in.")
             return False
+    else:
+        # If OAuth isn't enabled, allow without checking for a valid token.
+        return True
 
 
 def requires_oauth_authentication(func):
@@ -112,5 +117,7 @@ def requires_oauth_authentication(func):
         if valid_access_token:
             return func(request, *args, **kwargs)
         else:
-            return HttpResponseRedirect("/oauth")
+            # Validate with OAuth and then return to the requested URL.
+            return oauth(request, redirect_url=request.get_full_path())
+
     return wrapper

@@ -36,7 +36,7 @@ from eventkit_cloud.api.filters import (
     LogFilter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
+from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
 from eventkit_cloud.api.renderers import (
     HOTExportApiRenderer,
     PlainTextRenderer,
@@ -70,7 +70,6 @@ from eventkit_cloud.api.serializers import (
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.api.utils import get_run_zip_file
-from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
@@ -165,7 +164,7 @@ class JobViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = JobSerializer
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly, HasValidAccessToken)
     parser_classes = (JSONParser,)
     lookup_field = "uid"
     pagination_class = LinkHeaderPagination
@@ -244,7 +243,6 @@ class JobViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
 
-    @requires_oauth_authentication
     def create(self, request, *args, **kwargs):
         """
         Create a Job from the supplied request data.

@@ -145,9 +145,8 @@ class TestAuthViews(TestCase):
             response = self.client.get(reverse("logout"))
             self.assertEqual(response.json().get("OAUTH_LOGOUT_URL"), settings.OAUTH_LOGOUT_URL)
 
-    @patch("eventkit_cloud.auth.views.HttpResponseRedirect")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    def test_check_oauth_authentication(self, mock_fetch_user, mock_redirect):
+    def test_check_oauth_authentication(self, mock_fetch_user):
         invalid_token = "invalid_token"
         example_token = "token"
 
@@ -157,15 +156,15 @@ class TestAuthViews(TestCase):
         request.session.save()
 
         # Test with no token.
-        has_valid_access_token(request)
-        mock_redirect.assert_called_with("/oauth")
+        valid_access_token = has_valid_access_token(request)
+        self.assertEqual(valid_access_token, False)
 
         # Test with the return value from fetch_user_from_token being OAuthError aka an invalid token.
         request.session["access_token"] = invalid_token
         mock_fetch_user.side_effect = OAuthError(401)
-        has_valid_access_token(request)
+        valid_access_token = has_valid_access_token(request)
         mock_fetch_user.assert_called_with(invalid_token)
-        mock_redirect.assert_called_with("/oauth")
+        self.assertEqual(valid_access_token, False)
         self.assertRaises(OAuthError)
 
         # Test with a mocked return value of a valid user from fetch_user_from_token
