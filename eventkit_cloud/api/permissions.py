@@ -1,6 +1,6 @@
 """Provides custom permissions for API endpoints."""
 from django.contrib.auth.models import User
-from rest_framework import permissions
+from rest_framework import permissions, status
 
 from eventkit_cloud.auth.views import has_valid_access_token
 
@@ -29,6 +29,9 @@ class HasValidAccessToken(permissions.BasePermission):
     """
     Validate that the user has a valid oauth authentication token.
     """
+
+    code = status.HTTP_401_UNAUTHORIZED
+    message = "Your access token has expired, please log in again."
 
     def has_permission(self, request, view):
         # Read permissions are allowed to any request,
