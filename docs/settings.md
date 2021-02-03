@@ -223,6 +223,19 @@ Note an array can be used and EventKit will try each one for a valid value to en
 <pre>DEBUG=True</pre>
 <pre>LOG_LEVEL=Info</pre>
 
+The MapProxy logger prints out various updates relating to seeding and external requests.
+
+Setting this option to true will enable the MapProxy logger to print more periodic progress updates. In addition,
+it will reduce the interval at which some logs are printed.
+<pre>MAPPROXY_LOGS_VERBOSE=True</pre>
+
+Setting this option to true will turn the secondary logs in "log_progress". The main log step is unaffected.
+<pre>MAPPROXY_LOGS_SILENT=True</pre>
+
+Setting this option to true will turn on the logging of external requests that MapProxy makes during seeding.
+<pre>MAPPROXY_LOGS_REQUESTS=True</pre>
+
+
 #### Land Data
 EventKit includes land data with OSM exports, this data needs to be initially loaded and a custom location can be provided with:
 <pre>LAND_DATA_URL=https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip</pre>
