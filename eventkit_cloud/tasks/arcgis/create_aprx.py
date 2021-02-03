@@ -252,7 +252,7 @@ def add_layer_to_map(
     return layer
 
 
-def get_aprx_template(version=CURRENT_VERSION):
+def get_aprx_template():
     """
     :param version: A version for the correct arcgis project template.
     :return: A file path to the correct arcgis project template.
