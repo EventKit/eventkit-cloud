@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+from unittest.mock import MagicMock, Mock, patch, ANY
 
 from django.test import TestCase
-from unittest.mock import MagicMock, Mock, patch, ANY, call
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,6 @@ class TestCreateMXD(TestCase):
 
     def test_get_mxd_template(self):
         from eventkit_cloud.tasks.arcgis.create_mxd import get_mxd_template
-
 
         with patch("eventkit_cloud.tasks.arcgis.create_mxd.os") as mock_os:
 
@@ -174,36 +173,44 @@ class TestCreateMXD(TestCase):
         ) as mock_os:
             mock_add_layer_to_mxd.return_value = example_arc_layer
 
-            example_source = {"osm": {"type": "osm",
-                                          "name": "OSM",
-                                          "files": [{"file_path": "osm.gpkg",
-                                                     "file_ext": ".gpkg",
-                                                     "projection": 4326},
-                                                    {"file_path": "osm.kml",
-                                                     "file_ext": ".kml",
-                                                     "projection": 4326}
-                                                    ]}}
+            example_source = {
+                "osm": {
+                    "type": "osm",
+                    "name": "OSM",
+                    "files": [
+                        {"file_path": "osm.gpkg", "file_ext": ".gpkg", "projection": 4326},
+                        {"file_path": "osm.kml", "file_ext": ".kml", "projection": 4326},
+                    ],
+                }
+            }
             file_type = example_source["osm"]["type"]
             file_path = example_source["osm"]["files"][0]["file_path"]
             file_projection = example_source["osm"]["files"][0]["projection"]
-            mock_os.path.abspath.side_effect = [example_source["osm"]["files"][0]["file_path"],
-                                                example_source["osm"]["files"][1]["file_path"]]
+            mock_os.path.abspath.side_effect = [
+                example_source["osm"]["files"][0]["file_path"],
+                example_source["osm"]["files"][1]["file_path"],
+            ]
 
             example_layer_file = "vector"
             mock_get_layer_file.return_value = example_layer_file
             add_layers_to_group(example_source, example_layer_file, example_mxd, verify, example_version)
-            mock_add_layer_to_mxd.assert_called_with('OSM_4326_gpkg', example_layer_file, example_mxd, group_layer=example_layer_file)
-            mock_update_layer.assert_called_once_with(example_arc_layer, file_path, file_type,
-                                                      projection=file_projection, verify=verify)
+            mock_add_layer_to_mxd.assert_called_with(
+                "OSM_4326_gpkg", example_layer_file, example_mxd, group_layer=example_layer_file
+            )
+            mock_update_layer.assert_called_once_with(
+                example_arc_layer, file_path, file_type, projection=file_projection, verify=verify
+            )
             mock_add_layer_to_mxd.reset_mock()
             mock_update_layer.reset_mock()
 
             mock_add_layer_to_mxd.return_value = example_arc_layer
-            example_source = {"imagery": {"type": "raster",
-                                                  "name": "Imagery",
-                                                  "files": [{"file_path": "imagery.gpkg",
-                                                             "file_ext": ".gpkg",
-                                                             "projection": 4326}]}}
+            example_source = {
+                "imagery": {
+                    "type": "raster",
+                    "name": "Imagery",
+                    "files": [{"file_path": "imagery.gpkg", "file_ext": ".gpkg", "projection": 4326}],
+                }
+            }
             file_type = example_source["imagery"]["type"]
             file_path = example_source["imagery"]["files"][0]["file_path"]
             file_projection = example_source["imagery"]["files"][0]["projection"]
@@ -213,9 +220,12 @@ class TestCreateMXD(TestCase):
             mock_get_layer_file.return_value = example_layer_file
             add_layers_to_group(example_source, example_layer_file, example_mxd, verify, example_version)
 
-            mock_add_layer_to_mxd.assert_called_with('Imagery_4326_gpkg', example_layer_file, example_mxd, group_layer=example_layer_file)
-            mock_update_layer.assert_called_once_with(example_arc_layer, file_path, file_type,
-                                                      projection=file_projection, verify=verify)
+            mock_add_layer_to_mxd.assert_called_with(
+                "Imagery_4326_gpkg", example_layer_file, example_mxd, group_layer=example_layer_file
+            )
+            mock_update_layer.assert_called_once_with(
+                example_arc_layer, file_path, file_type, projection=file_projection, verify=verify
+            )
             mock_add_layer_to_mxd.reset_mock()
             mock_update_layer.reset_mock()
 
@@ -250,7 +260,6 @@ class TestCreateAPRX(TestCase):
             self.assertEqual(aprx_contents, returned_aprx_contents)
             mock_shutil.copy.assert_called_once_with(ANY, test_aprx)
 
-
     def test_get_aprx_template(self):
         from eventkit_cloud.tasks.arcgis.create_aprx import get_aprx_template
 
@@ -264,7 +273,6 @@ class TestCreateAPRX(TestCase):
             with self.assertRaises(Exception):
                 mock_os.path.isfile.return_value = False
                 get_aprx_template()
-
 
     def test_create_aprx_process(self):
         from eventkit_cloud.tasks.arcgis.create_aprx import create_aprx_process
@@ -433,41 +441,49 @@ class TestCreateAPRX(TestCase):
             "eventkit_cloud.tasks.arcgis.create_aprx.update_layer"
         ) as mock_update_layer, patch(
             "eventkit_cloud.tasks.arcgis.create_aprx.create_vector_layers"
-        ) as mock_create_vector_layers, patch(
+        ), patch(
             "eventkit_cloud.tasks.arcgis.create_aprx.os"
         ) as mock_os:
             mock_add_layer_to_map.return_value = example_arc_layer
 
-            example_source = {"osm": {"type": "osm",
-                                          "name": "OSM",
-                                          "files": [{"file_path": "osm.gpkg",
-                                                     "file_ext": ".gpkg",
-                                                     "projection": 4326},
-                                                    {"file_path": "osm.kml",
-                                                     "file_ext": ".kml",
-                                                     "projection": 4326}
-                                                    ]}}
+            example_source = {
+                "osm": {
+                    "type": "osm",
+                    "name": "OSM",
+                    "files": [
+                        {"file_path": "osm.gpkg", "file_ext": ".gpkg", "projection": 4326},
+                        {"file_path": "osm.kml", "file_ext": ".kml", "projection": 4326},
+                    ],
+                }
+            }
             file_type = example_source["osm"]["type"]
             file_path = example_source["osm"]["files"][0]["file_path"]
             file_projection = example_source["osm"]["files"][0]["projection"]
-            mock_os.path.abspath.side_effect = [example_source["osm"]["files"][0]["file_path"],
-                                                example_source["osm"]["files"][1]["file_path"]]
+            mock_os.path.abspath.side_effect = [
+                example_source["osm"]["files"][0]["file_path"],
+                example_source["osm"]["files"][1]["file_path"],
+            ]
 
             example_layer_file = "vector"
             mock_get_layer_file.return_value = example_layer_file
             add_layers_to_group(example_source, example_layer_file, example_mapx, verify, example_version)
-            mock_add_layer_to_map.assert_called_with('OSM_4326_gpkg', example_layer_file, example_mapx, group_layer=example_layer_file)
-            mock_update_layer.assert_called_once_with(example_arc_layer, file_path, file_type,
-                                                      projection=file_projection, verify=verify)
+            mock_add_layer_to_map.assert_called_with(
+                "OSM_4326_gpkg", example_layer_file, example_mapx, group_layer=example_layer_file
+            )
+            mock_update_layer.assert_called_once_with(
+                example_arc_layer, file_path, file_type, projection=file_projection, verify=verify
+            )
             mock_add_layer_to_map.reset_mock()
             mock_update_layer.reset_mock()
 
             mock_add_layer_to_map.return_value = example_arc_layer
-            example_source = {"imagery": {"type": "raster",
-                                                  "name": "Imagery",
-                                                  "files": [{"file_path": "imagery.gpkg",
-                                                             "file_ext": ".gpkg",
-                                                             "projection": 4326}]}}
+            example_source = {
+                "imagery": {
+                    "type": "raster",
+                    "name": "Imagery",
+                    "files": [{"file_path": "imagery.gpkg", "file_ext": ".gpkg", "projection": 4326}],
+                }
+            }
             file_type = example_source["imagery"]["type"]
             file_path = example_source["imagery"]["files"][0]["file_path"]
             file_projection = example_source["imagery"]["files"][0]["projection"]
@@ -477,8 +493,11 @@ class TestCreateAPRX(TestCase):
             mock_get_layer_file.return_value = example_layer_file
             add_layers_to_group(example_source, example_layer_file, example_mapx, verify, example_version)
 
-            mock_add_layer_to_map.assert_called_with('Imagery_4326_gpkg', example_layer_file, example_mapx, group_layer=example_layer_file)
-            mock_update_layer.assert_called_once_with(example_arc_layer, file_path, file_type,
-                                                      projection=file_projection, verify=verify)
+            mock_add_layer_to_map.assert_called_with(
+                "Imagery_4326_gpkg", example_layer_file, example_mapx, group_layer=example_layer_file
+            )
+            mock_update_layer.assert_called_once_with(
+                example_arc_layer, file_path, file_type, projection=file_projection, verify=verify
+            )
             mock_add_layer_to_map.reset_mock()
             mock_update_layer.reset_mock()
