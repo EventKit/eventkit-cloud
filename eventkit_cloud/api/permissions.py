@@ -30,7 +30,7 @@ class HasValidAccessToken(permissions.BasePermission):
     Validate that the user has a valid oauth authentication token.
     """
 
-    code = status.HTTP_401_UNAUTHORIZED
+    code = status.HTTP_403_FORBIDDEN
     message = "Your access token has expired, please log in again."
 
     def has_permission(self, request, view):
