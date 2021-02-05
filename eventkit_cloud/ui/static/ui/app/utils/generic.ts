@@ -263,3 +263,18 @@ export function ensureErrorShape(responseData: any) {
         errors,
     };
 }
+
+// We only use mebi to mega right now, if we need more, add more.
+const conversionMap = {
+    k: 1.024,
+    m: 1.04858,
+    g: 1.07374,
+}
+
+// Converts from size in powers of 2 to standard powers of 10, e.g. mebibytes to megabytes
+export function binaryPrefixConversion(size, prefix='m') {
+    if (conversionMap.hasOwnProperty(prefix)) {
+        return size * conversionMap[prefix];
+    }
+    return -1;
+}
