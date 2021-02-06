@@ -628,7 +628,7 @@ class WMSProviderCheck(OWSProviderCheck):
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
-        layer_name = layer_name.lower()
+        layer_name = str(layer_name).lower()
         return layer_name
 
 
@@ -661,7 +661,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         # Get layer names
         layer_names = [(layer, layer.find("identifier")) for layer in layers]
         logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        requested_layer = self.get_layer_name()
+        requested_layer= self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
@@ -683,12 +683,12 @@ class WMTSProviderCheck(OWSProviderCheck):
         bbox = list(map(float, southwest + northeast))
         return bbox
 
-    def get_layer_name(self):
+    def get_layer_name(self) -> str:
 
         try:
             layer_name = (
                 self.config.get("sources", {})
-                .get("imagery", {})
+                .get("default", {})
                 .get("req", {})
                 .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
             )
