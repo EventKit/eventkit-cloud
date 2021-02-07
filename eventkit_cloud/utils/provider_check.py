@@ -661,7 +661,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         # Get layer names
         layer_names = [(layer, layer.find("identifier")) for layer in layers]
         logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        requested_layer= self.get_layer_name()
+        requested_layer = self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
