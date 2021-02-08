@@ -74,6 +74,7 @@ services:
       - MATOMO_CUSTOM_VAR_SCOPE
       - MATOMO_SITE_ID
       - MATOMO_APPNAME
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -115,6 +116,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - TILE_CACHE_DIR
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
@@ -165,6 +167,7 @@ services:
       - AWS_STORAGE_BUCKET_NAME
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
