@@ -10,6 +10,8 @@ EventKit can request data from a variety of data sources including:
 - WFS
 - ArcGIS Raster (MapServer/ImageryServer)
 - ArcGIS Feature (MapServer/FeatureServer)
+- Vector File
+- Raster File
 
 The support varies a little by services.  For example all data will be loaded by default in the style sheets however WCS is expected to be elevation, so it may not appear correctly in the styles.
 Additionally WFS and ArcGIS Feature currently have no way to implement custom styles.
@@ -222,3 +224,11 @@ vector_layers:
   - name: 'bar'
     url: 'https://abc.gov/wfs/services/x' 
 ```
+
+#### File Data Providers
+EventKit allows users to setup geospatial files as the source for data providers.
+
+To set up a vector or raster file provider:
+1) `Service URL` must be a URL to a geospatial file.
+2) `Service Type` must be set to match the type of geospatial file. The two available options are `raster-file` and `vector-file`.
+3) `Data Type` must also match the type of data being provided.

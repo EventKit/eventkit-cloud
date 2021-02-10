@@ -9,6 +9,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
+from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
@@ -19,6 +20,7 @@ from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 logger = getLogger(__name__)
 
 
+@requires_oauth_authentication
 def download(request):
     """
     Logs and redirects a dataset download request

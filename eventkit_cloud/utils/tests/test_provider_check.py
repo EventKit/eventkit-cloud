@@ -224,7 +224,7 @@ class TestProviderCheck(TransactionTestCase):
     def test_check_wmts(self, get):
         url = "http://example.com/wmts?"
         layer = "exampleLayer"
-        config = {"sources": {"imagery": {"req": {"layers": layer}}}}
+        config = {"sources": {"default": {"req": {"layers": layer}}}}
         pc = WMTSProviderCheck(url, layer, self.aoi_geojson, config=config)
 
         invalid_content = "".encode()

@@ -491,6 +491,7 @@ class RunZipFileSerializer(serializers.ModelSerializer):
     run = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
+    size = serializers.SerializerMethodField()
 
     class Meta:
         model = RunZipFile
@@ -519,6 +520,10 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         if obj.downloadable_file:
             return request.build_absolute_uri("/download?uid={}".format(obj.downloadable_file.uid))
         return ""
+
+    def get_size(self, obj):
+        if obj.downloadable_file:
+            return obj.downloadable_file.size
 
     def create(self, validated_data, **kwargs):
         request = self.context["request"]
