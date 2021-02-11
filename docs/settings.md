@@ -14,9 +14,13 @@ The sitename and the hostname are added to allowed hosts.  This is used for secu
 <pre>SITE_NAME=cloud.eventkit.test</pre>
 (default: HOSTNAME)
 
-The SITE_URL is used when prividing links for users.  This should include the SITE_NAME but can provide additional context like https.
+The SITE_URL is used when providing links for users.  This should include the SITE_NAME but can provide additional context like https.
 <pre>SITE_URL=http://cloud.eventkit.test</pre>
 (default: http://<SITE_NAME>)
+
+The SECRET_KEY is a django setting used to encrypt certain items with in the application
+This should random, kept secret, and shared between any webserver portions of the application (i.e. the api and map)
+<pre>SECRET_KEY=some_super_secret_key</pre>
 
 ### Storage
 
