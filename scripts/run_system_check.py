@@ -26,6 +26,8 @@ def string2bool(string_value):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('url', help='The EventKit instance base url (i.e. http://cloud.eventkit.test).')
+    parser.add_argument('-s', '--sources', nargs='+', default='',
+                        help='The slugs of sources to check, if not included all visible sources are checked.')
     parser.add_argument('--verify', default='',
                         help='True to enable ssl verification, false to disable ssl verification')
     parser.add_argument('--certificate', default='',
@@ -70,6 +72,9 @@ def main():
             "Could not login to the url: {} using username:{} or certificate:{}".format(args.url, user, certificate))
 
     providers = client.get_providers()
+    
+    if args.sources:
+        providers = [provider for provider in providers if provider['slug'] in args.sources]
 
     if full_test:
         provider_tasks = []
@@ -81,7 +86,7 @@ def main():
                 if not level:
                     level = 1
                 provider_tasks += [
-                    {"provider": provider.get('name'), "formats": ["gpkg"], "min_zoom": level, 'max_zoom': level}]
+                    {"provider": provider.get('slug'), "formats": ["gpkg"], "min_zoom": level, 'max_zoom': level}]
 
         feature = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
                                                               "geometry": {"type": "Polygon", "coordinates": [
