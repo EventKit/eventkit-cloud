@@ -74,8 +74,8 @@ def main():
     providers = client.get_providers()
 
     if args.sources:
-        print(f"Selecting {args.sources} from:")
-        print(providers)
+        print(f"Selecting {args.sources} from: ")
+        print([provider.get('slug') for provider in providers])
         providers = [provider for provider in providers if provider.get('slug') in args.sources]
 
     if full_test:
