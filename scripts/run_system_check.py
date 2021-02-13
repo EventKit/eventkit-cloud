@@ -72,9 +72,11 @@ def main():
             "Could not login to the url: {} using username:{} or certificate:{}".format(args.url, user, certificate))
 
     providers = client.get_providers()
-    
+
     if args.sources:
-        providers = [provider for provider in providers if provider['slug'] in args.sources]
+        print(f"Selecting {args.sources} from:")
+        print(providers)
+        providers = [provider for provider in providers if provider.get('slug') in args.sources]
 
     if full_test:
         provider_tasks = []
@@ -133,6 +135,7 @@ def main():
             raise Exception("The following providers failed status checks: {0}".format(bad_providers))
 
     print("System check completed successfully.")
+
 
 if __name__ == "__main__":
     main()
