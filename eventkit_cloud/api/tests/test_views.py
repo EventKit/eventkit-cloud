@@ -588,7 +588,9 @@ class TestJobViewSet(APITestCase):
             "name": "TestJob",
             "description": "Test description",
             "event": "Test Activation",
-            "selection": bbox_to_geojson([-180, -90, 180, 90]),
+            # Full world (WGS84) bounds are invalid in 3857 -- subtract 10 from lat as we simply need
+            # a very large bounding box.
+            "selection": bbox_to_geojson([-180, -80, 180, 80]),
             "provider_tasks": [{"provider": "osm-generic", "formats": formats}],
         }
 
