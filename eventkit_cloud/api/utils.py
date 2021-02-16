@@ -122,6 +122,8 @@ def stringify(item):
         return "{0}".format(item[0])
     elif isinstance(item, str):
         return item
+    elif isinstance(item, int):
+        return str(item)
     elif item is None:
         return ""
     else:
