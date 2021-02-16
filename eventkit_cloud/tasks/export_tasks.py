@@ -392,6 +392,7 @@ def osm_data_collection_pipeline(
     url=None,
     slug=None,
     bbox=None,
+    selection=None,
     user_details=None,
     config=None,
     eta=None,
@@ -444,6 +445,12 @@ def osm_data_collection_pipeline(
         export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage",
     )
     geom = Polygon.from_bbox(bbox)
+    if selection:
+        try:
+            with open(selection, "r") as geojson:
+                geom = Polygon(geojson)
+        except Exception as e:
+            logger.error(e)
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
     )
@@ -513,6 +520,7 @@ def osm_data_collection_task(
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
 
+        selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
             task_uid,
             stage_dir,
@@ -520,17 +528,11 @@ def osm_data_collection_task(
             job_name=job_name,
             bbox=bbox,
             user_details=user_details,
+            selection=selection,
             url=overpass_url,
             config=config,
             eta=eta,
         )
-
-        selection = parse_result(result, "selection")
-        if selection:
-            logger.debug(
-                "Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results["gpkg"])
-            )
-            osm_results["gpkg"] = gdalutils.convert(boundary=selection, input_file=osm_results["gpkg"])
 
         result.update(osm_results)
         result["result"] = osm_results.get("gpkg")

@@ -546,6 +546,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
+    @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.FeatureSelection")
     @patch("eventkit_cloud.tasks.export_tasks.pbf")
@@ -556,6 +557,7 @@ class TestExportTasks(ExportTaskBase):
         mock_pbf,
         mock_feature_selection,
         mock_geopackage,
+        mock_update_progress,
         mock_gdalutils,
         mock_os,
         mock_get_export_task_record,
