@@ -2,13 +2,12 @@
 import logging
 
 from django.contrib.auth.models import User, Group
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
+from django.contrib.gis.geos import GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
 from unittest.mock import patch, Mock
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import (
-    get_geodesic_area,
     validate_bbox,
     validate_selection,
     validate_bbox_params,
@@ -46,11 +45,6 @@ class TestValidators(TestCase):
             with self.assertRaises(ValidationError):
                 mock_geos.return_value = Mock(valid=False)
                 validate_bbox(self.extents, user=self.user)
-
-    def test_get_geodesic_area(self,):
-        bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
-        area = get_geodesic_area(bbox)
-        self.assertEqual(2006874.9259034647, area / 1000000)
 
     def test_validate_original_selection(self):
         geojson = {
