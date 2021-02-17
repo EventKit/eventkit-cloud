@@ -125,8 +125,6 @@ describe('CreateDataPackButton component', () => {
 
     it('should call the setter appropriately', async () => {
         server.use(
-            // override the initial "GET /greeting" request handler
-            // to return a 500 Server Error
             rest.get('url/urlpath.zip', (req, res, ctx) => {
                 return res(
                     ctx.status(500)
