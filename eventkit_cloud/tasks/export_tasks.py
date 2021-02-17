@@ -1071,7 +1071,7 @@ def wfs_export_task(
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
-                "cert_var": configuration.get("cert_var"),
+                "cert_info": configuration.get("cert_info"),
             }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
@@ -1090,7 +1090,7 @@ def wfs_export_task(
 
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
-        download_data(task_uid, url, gpkg, configuration.get("cert_var"))
+        download_data(task_uid, url, gpkg, configuration.get("cert_info"))
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1260,7 +1260,7 @@ def arcgis_feature_service_export_task(
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
-                "cert_var": configuration.get("cert_var"),
+                "cert_info": configuration.get("cert_info"),
             }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
@@ -1280,7 +1280,7 @@ def arcgis_feature_service_export_task(
     else:
         url = get_arcgis_query_url(service_url, bbox)
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        download_data(task_uid, url, esrijson, configuration.get("cert_var"))
+        download_data(task_uid, url, esrijson, configuration.get("cert_info"))
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1354,7 +1354,7 @@ def vector_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(service_url, gpkg, configuration.get("cert_var"))
+    download_data(service_url, gpkg, configuration.get("cert_info"))
 
     out = gdalutils.convert(
         driver="gpkg",
@@ -1405,7 +1405,7 @@ def raster_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(service_url, gpkg, configuration.get("cert_var"))
+    download_data(service_url, gpkg, configuration.get("cert_info"))
 
     out = gdalutils.convert(
         driver="gpkg",

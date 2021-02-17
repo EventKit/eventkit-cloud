@@ -176,11 +176,11 @@ class WCSConverter(object):
             except OSError:
                 pass
             try:
-                cert_var = self.config.get("cert_var", self.slug)
+                cert_info = self.config.get("cert_info", self.slug)
                 req = auth_requests.get(
                     self.service_url,
                     params=params,
-                    cert_var=cert_var,
+                    cert_info=cert_info,
                     stream=True,
                     verify=getattr(settings, "SSL_VERIFICATION", True),
                 )

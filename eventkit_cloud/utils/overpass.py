@@ -116,13 +116,13 @@ class Overpass(object):
                 msg="Querying provider data",
             )
             conf: dict = yaml.safe_load(self.config) or dict()
-            cert_var = conf.get("cert_var") or self.slug
+            cert_info = conf.get("cert_info")
 
-            req = auth_requests.post(self.url, cert_var=cert_var, data=query, stream=True, verify=self.verify_ssl)
+            req = auth_requests.post(self.url, cert_info=cert_info, data=query, stream=True, verify=self.verify_ssl)
             if not req.ok:
                 # Workaround for https://bugs.python.org/issue27777
                 query = {"data": query}
-                req = auth_requests.post(self.url, cert_var=cert_var, data=query, stream=True, verify=self.verify_ssl)
+                req = auth_requests.post(self.url, cert_info=cert_info, data=query, stream=True, verify=self.verify_ssl)
             req.raise_for_status()
             try:
                 total_size = int(req.headers.get("content-length"))

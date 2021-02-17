@@ -60,6 +60,11 @@ from eventkit_cloud.tasks.task_base import LockingTask
 
 logger = logging.getLogger(__name__)
 
+test_cert_info = """
+    cert_info:
+        - cert_path: '/path/to/fake/cert'
+          cert_pass: 'fakepass'
+"""
 
 class TestLockingTask(TestCase):
     def test_locking_task(self):
@@ -373,13 +378,13 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
-                "cert_var": None,
+                "cert_info": None,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
-                "cert_var": None,
+                "cert_info": None,
             },
         }
 
@@ -440,7 +445,12 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config='cert_var: "test2"',
+            config="""        
+            cert_info:
+                - cert_path: '/path/to/cert'
+                  cert_pass: 'fake_pass'
+
+            """,
         )
         mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, "test2")
 
@@ -1431,7 +1441,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_var: "test_var"'
+        config = test_cert_info
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1475,7 +1485,10 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
+        mock_download_data.assert_called_once_with(service_url,
+                                                   ANY,
+                                                   dict(cert_path="path/to/fake/cert", cert_pass="fakepass")
+                                                   )
 
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")

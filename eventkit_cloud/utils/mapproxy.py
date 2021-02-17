@@ -239,8 +239,8 @@ class MapproxyGeopackage(object):
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             conf = yaml.safe_load(self.config) or dict()
-            cert_var = conf.get("cert_var")
-            auth_requests.patch_https(slug=self.name, cert_var=cert_var)
+            cert_info = conf.get("cert_info")
+            auth_requests.patch_https(slug=self.name, cert_info=cert_info)
 
             cred_var = conf.get("cred_var")
             auth_requests.patch_mapproxy_opener_cache(slug=self.name, cred_var=cred_var)
@@ -431,8 +431,8 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
             logger.error(e)
             raise
 
-    cert_var = conf_dict.get("cert_var")
-    auth_requests.patch_https(slug=slug, cert_var=cert_var)
+    cert_info = conf_dict.get("cert_info")
+    auth_requests.patch_https(slug=slug, cert_info=cert_info)
 
     cred_var = conf_dict.get("cred_var")
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)

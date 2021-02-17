@@ -1,4 +1,5 @@
 import logging
+import os
 
 import requests
 from django.conf import settings
@@ -46,7 +47,7 @@ def authenticate():
             auth_response = auth_requests.get(
                 getattr(settings, "GEOCODING_AUTH_URL"),
                 verify=getattr(settings, "SSL_VERIFICATION", True),
-                cert_var="GEOCODING_AUTH_CERT",
+                cert_info=get_geocode_cert_info(),
             ).json()
 
             token = auth_response.get("token")
@@ -60,3 +61,12 @@ def authenticate():
             logger.error(auth_response.content)
         cache.delete(CACHE_TOKEN_KEY)
         return None
+
+
+def get_geocode_cert_info():
+    """
+    Looks up the path to cert and passphrase for the geocoding cert in the enviornment.
+
+    :return: cert_info dict for geocoder
+    """
+    return dict(cert_path=os.getenv("GEOCODING_AUTH_CERT_PATH", None), cert_pass=os.getenv("GEOCODING_AUTH_CERT_PASS"))

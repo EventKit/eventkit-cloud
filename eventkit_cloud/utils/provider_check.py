@@ -220,9 +220,9 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            cert_var = self.config.get("cert_var", self.slug)
+            cert_info = self.config.get("cert_info", self.slug)
             response = auth_requests.get(
-                self.service_url, cert_var=cert_var, params=self.query, timeout=self.timeout, verify=self.verify,
+                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
             )
 
             self.token_dict["status"] = response.status_code
@@ -307,10 +307,10 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            cert_var = self.config.get("cert_var") or self.slug
+            cert_info = self.config.get("cert_info") or self.slug
 
             response = auth_requests.post(
-                url=self.service_url, cert_var=cert_var, data="out meta;", timeout=self.timeout, verify=self.verify,
+                url=self.service_url, cert_info=cert_info, data="out meta;", timeout=self.timeout, verify=self.verify,
             )
 
             self.token_dict["status"] = response.status_code
@@ -728,11 +728,11 @@ class FileProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            cert_var = self.config.get("cert_var") or self.slug
+            cert_info = self.config.get("cert_info")
 
             response = auth_requests.head(
                 url=self.service_url,
-                cert_var=cert_var,
+                cert_info=cert_info,
                 timeout=self.timeout,
                 verify=getattr(settings, "SSL_VERIFICATION", True),
             )
