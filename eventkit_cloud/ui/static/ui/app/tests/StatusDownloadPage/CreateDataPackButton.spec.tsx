@@ -5,7 +5,6 @@ import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile
 import '@testing-library/jest-dom/extend-expect';
 import {rest} from 'msw';
 import {setupServer} from 'msw/node';
-import axios from 'axios';
 
 jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
     return {
@@ -118,15 +117,24 @@ describe('CreateDataPackButton component', () => {
                     "status": "FAILED"
                 }]))
             })
-        )
+        );
         setup();
         await waitFor(() => screen.getByText('Zip Error'))
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
     });
 
-    it('should call the setter appropriately', () => {
+    it('should call the setter appropriately', async () => {
+        server.use(
+            // override the initial "GET /greeting" request handler
+            // to return a 500 Server Error
+            rest.get('url/urlpath.zip', (req, res, ctx) => {
+                return res(
+                    ctx.status(500)
+                )
+            })
+        );
         const setterFunction = jest.fn();
-        downloadRequest('url/urlpath.zip', setterFunction);
+        await downloadRequest('url/urlpath.zip', setterFunction);
         expect(setterFunction).toHaveBeenCalledWith(true);
     });
 });
