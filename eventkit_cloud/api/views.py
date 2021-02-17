@@ -36,7 +36,7 @@ from eventkit_cloud.api.filters import (
     LogFilter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
+from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
 from eventkit_cloud.api.renderers import (
     HOTExportApiRenderer,
     PlainTextRenderer,
@@ -164,7 +164,7 @@ class JobViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = JobSerializer
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly, HasValidAccessToken)
     parser_classes = (JSONParser,)
     lookup_field = "uid"
     pagination_class = LinkHeaderPagination

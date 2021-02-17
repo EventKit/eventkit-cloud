@@ -11,6 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
 from unittest.mock import call, patch
 
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     ExportProfile,
@@ -367,7 +368,7 @@ class TestDataProvider(TestCase):
     fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self):
-        self.export_provider = DataProvider.objects.get(slug="osm-generic")
+        self.data_provider = DataProvider.objects.get(slug="osm-generic")
 
     @patch("os.makedirs")
     @patch("eventkit_cloud.jobs.signals.make_thumbnail_downloadable")
@@ -392,19 +393,19 @@ class TestDataProvider(TestCase):
 
         with patch("os.stat") as mock_stat:
             mock_stat.return_value = StatMock()
-            self.export_provider.preview_url = "http://url.com"
-            self.export_provider.save()
+            self.data_provider.preview_url = "http://url.com"
+            self.data_provider.save()
             makedirs.assert_called()
             mock_make_thumbnail_downloadable.assert_called()
 
     @patch("eventkit_cloud.core.models.cache")
     def test_cached_model_on_save(self, mocked_cache):
         """Test that triggers a save on a provider and updates the database cache with a generic key name"""
-        self.export_provider.save()
+        self.data_provider.save()
 
         cache_calls = [
-            call(f"DataProvider-slug-{self.export_provider.slug}", self.export_provider),
-            call(f"DataProvider-uid-{self.export_provider.uid}", self.export_provider),
+            call(f"DataProvider-slug-{self.data_provider.slug}", self.data_provider),
+            call(f"DataProvider-uid-{self.data_provider.uid}", self.data_provider),
         ]
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
@@ -412,9 +413,9 @@ class TestDataProvider(TestCase):
     @patch("eventkit_cloud.jobs.models.cache")
     def test_deleted_mapproxy_cache_on_save(self, mocked_cache):
         """Test that triggers a save on a provider and clears the associated mapproxy cache"""
-        self.export_provider.save()
+        self.data_provider.save()
 
-        cache_call = [call(f"base-config-{self.export_provider.slug}")]
+        cache_call = [call(f"base-config-{self.data_provider.slug}")]
         mocked_cache.delete.assert_has_calls(cache_call)
 
     @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
@@ -424,8 +425,8 @@ class TestDataProvider(TestCase):
         expected_metadata = {"url": expected_url, "type": "arcgis"}
         mock_get_mapproxy_metadata_url.return_value = expected_url
         config = {"sources": {"info": {"type": "arcgis", "req": {"url": example_url}}}}
-        self.export_provider.config = yaml.dump(config)
-        self.assertEqual(expected_metadata, self.export_provider.metadata)
+        self.data_provider.config = yaml.dump(config)
+        self.assertEqual(expected_metadata, self.data_provider.metadata)
 
         @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
         def test_footprint_url(self, mock_get_mapproxy_footprint_url):
@@ -433,5 +434,35 @@ class TestDataProvider(TestCase):
             expected_url = "http://ek.test/footprint/"
             mock_get_mapproxy_footprint_url.return_value = expected_url
             config = {"sources": {"footprint": {"req": {"url": example_url}}}}
-            self.export_provider.config = yaml.dump(config)
-            self.assertEqual(expected_url, self.export_provider.footprint_url)
+            self.data_provider.config = yaml.dump(config)
+            self.assertEqual(expected_url, self.data_provider.footprint_url)
+
+    def test_layers(self,):
+
+        # Test single layer vector source
+        expected_layer = "test"
+        self.data_provider.layer = expected_layer
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        self.data_provider.config = None
+        self.assertEqual(self.data_provider.layers, [expected_layer])
+
+        # Test that layer names are better than integers
+        expected_layer = "slug"
+        self.data_provider.layer = "1"
+        self.data_provider.slug = expected_layer
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        self.data_provider.config = None
+        self.assertEqual(self.data_provider.layers, [expected_layer])
+
+        # Test OSM configuration
+        expected_layers = ["layer1", "layer2"]
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        self.data_provider.config = yaml.dump({layer: "data" for layer in expected_layers})
+        self.assertEqual(self.data_provider.layers, expected_layers)
+
+        # Test multilayer feature service
+        expected_layers = ["layer1", "layer2"]
+        self.data_provider.export_provider_type.type_name = "wfs"
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        self.data_provider.config = yaml.dump({"vector_layers": [{"name": layer} for layer in expected_layers]})
+        self.assertEqual(self.data_provider.layers, expected_layers)

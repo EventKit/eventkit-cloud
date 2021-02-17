@@ -7,7 +7,7 @@ from celery import chain  # required for tests
 from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
@@ -94,7 +94,7 @@ class TaskChainBuilder(object):
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name=provider_task.provider.name, provider=provider, status=TaskStates.PENDING.value, display=True,
+            run=run, name=provider_task.provider.name, provider=provider, status=TaskState.PENDING.value, display=True,
         )
         projections = get_metadata([data_provider_task_record.uid])["projections"]
 
@@ -257,7 +257,7 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
     try:
         export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task,
-            status=TaskStates.PENDING.value,
+            status=TaskState.PENDING.value,
             name=task_name,
             worker=worker,
             display=display,

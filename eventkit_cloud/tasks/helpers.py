@@ -20,13 +20,17 @@ from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
-from typing import List, Optional
+from typing import List, Optional, ValuesView
 from xml.dom import minidom
+from concurrent import futures
 
 from eventkit_cloud.core.helpers import get_cached_model
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, ExportFormat
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
+from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
@@ -43,6 +47,8 @@ class Directory(Enum):
 PREVIEW_TAIL = "preview.jpg"
 
 UNSUPPORTED_CARTOGRAPHY_FORMATS = [".pbf", ".gpx"]
+
+CHUNK = 1024 * 1024 * 2  # 2MB chunks
 
 
 def get_run_staging_dir(run_uid):
@@ -158,13 +164,13 @@ def normalize_name(name):
     return s.lower()
 
 
-def get_provider_slug(export_task_record_uid):
+def get_export_task_record(export_task_record_uid: str) -> ExportTaskRecord:
     """
-    Gets a provider slug from the ExportTaskRecord.
+    Gets the ExportTaskRecord and related models used for export_tasks from the ExportTaskRecord.
     :param export_task_record_uid: The UID of an ExportTaskRecord.
     :return provider_slug: The associated provider_slug value.
     """
-    return ExportTaskRecord.objects.get(uid=export_task_record_uid).export_provider_task.provider.slug
+    return ExportTaskRecord.objects.select_related("export_provider_task__provider").get(uid=export_task_record_uid)
 
 
 def get_supported_projections(format_slug: str) -> List[int]:
@@ -238,8 +244,6 @@ def get_style_files():
 
 def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
-    from eventkit_cloud.tasks.helpers import normalize_name
-
     data_provider_license = DataProvider.objects.get(slug=provider_task.provider.slug).license
 
     # DataProviders are not required to have a license
@@ -293,6 +297,7 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
         "bbox": metadata["bbox"],
         "has_raster": metadata["has_raster"],
         "has_elevation": metadata["has_elevation"],
+        "has_vector": metadata["has_vector"],
     }
 
     with open(style_file, "wb") as open_file:
@@ -445,7 +450,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "name": "OpenStreetMap Data (Themes)",
             "slug": "osm",
             "type": "osm",
-            "uid": "0d08ddf6-35c1-464f-b271-75f6911c3f78"
+            "uid": "0d08ddf6-35c1-464f-b271-75f6911c3f78",
+            "layers": ["layer1", "layer2"]
         }
     },
     "date": "20181101",
@@ -464,12 +470,13 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
     }
     """
 
-    from eventkit_cloud.tasks.enumerations import TaskStates
+    from eventkit_cloud.tasks.enumerations import TaskState
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
     data_provider_task_records = (
         DataProviderTaskRecord.objects.select_related("run__job")
         .prefetch_related("run__job__projections")
+        .prefetch_related("provider")
         .filter(uid__in=data_provider_task_record_uids)
     )
     run = data_provider_task_records.first().run
@@ -495,11 +502,12 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         "data_sources": {},
         "bbox": run.job.extents,
         "aoi": run.job.bounds_geojson,
-        "has_raster": False,
+        "has_raster": False,  # TODO: These are used for style groupings and seem frivolous.
         "has_elevation": False,
+        "has_vector": False,
     }
     for data_provider_task_record in data_provider_task_records:
-        data_provider = DataProvider.objects.get(slug=data_provider_task_record.provider.slug)
+        data_provider = data_provider_task_record.provider
         provider_type = data_provider.export_provider_type.type_name
 
         provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
@@ -510,16 +518,28 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "slug": data_provider_task_record.provider.slug,
             "name": data_provider_task_record.name,
             "files": [],
-            "type": get_data_type_from_provider(data_provider_task_record.provider.slug),
+            "type": get_data_type_from_provider(data_provider_task_record.provider),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
+            "layers": data_provider.layers,
         }
-        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "raster":
+        if (
+            metadata["data_sources"][data_provider_task_record.provider.slug].get("type")
+            == GeospatialDataType.RASTER.value
+        ):
             metadata["has_raster"] = True
-        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
+        if (
+            metadata["data_sources"][data_provider_task_record.provider.slug].get("type")
+            == GeospatialDataType.ELEVATION.value
+        ):
             metadata["has_elevation"] = True
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") in [
+            GeospatialDataType.VECTOR.value,
+            "osm",
+        ]:  # TODO: handle osm generically like vector layers
+            metadata["has_vector"] = True
 
         if data_provider_task_record.preview is not None:
             include_files += [get_provider_staging_preview(run.uid, data_provider_task_record.provider.slug)]
@@ -532,7 +552,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             export_tasks = [export_tasks.first()]
         for export_task in export_tasks:
 
-            if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
+            if TaskState[export_task.status] in TaskState.get_incomplete_states():
                 continue
 
             try:
@@ -562,7 +582,10 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                         "file_ext": file_ext,
                         "projection": projection,
                     }
-                    if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
+                    if (
+                        metadata["data_sources"][data_provider_task_record.provider.slug].get("type")
+                        == GeospatialDataType.ELEVATION.value
+                    ):
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
@@ -610,24 +633,17 @@ def get_arcgis_metadata(metadata):
     return arcgis_metadata
 
 
-def get_data_type_from_provider(provider_slug: str) -> str:
-    data_types = {
-        "wms": "raster",
-        "tms": "raster",
-        "wmts": "raster",
-        "wcs": "elevation",
-        "wfs": "vector",
-        "osm": "osm",
-        "osm-generic": "vector",
-        "arcgis-feature": "vector",
-        "arcgis-raster": "raster",
-    }
-    data_provider = DataProvider.objects.get(slug=provider_slug)
-    type_name = data_provider.export_provider_type.type_name
-    type_mapped = data_types.get(type_name)
-    if data_provider.slug.lower() == "nome":
-        type_mapped = "nome"
-    return type_mapped
+def get_data_type_from_provider(data_provider: DataProvider) -> str:
+    """
+    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
+    and should be removed if custom cartography is made configurable.
+    :param data_provider:
+    :return:
+    """
+    if data_provider.slug.lower() in ["nome", "osm"]:
+        return data_provider.slug.lower()
+    else:
+        return data_provider.data_type
 
 
 def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
@@ -701,22 +717,6 @@ def get_message_count(queue_name: str) -> int:
 
     logger.info(f"Cannot find queue named {queue_name}, returning 0 messages.")
     return 0
-
-
-def clean_config(config):
-    """
-    Used to remove adhoc service related values from the configuration.
-    :param config: A yaml structured string.
-    :return:
-    """
-    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat", "overpass_query", "max_data_size"]
-
-    conf = yaml.safe_load(config) or dict()
-
-    for service_key in service_keys:
-        conf.pop(service_key, None)
-
-    return yaml.dump(conf)
 
 
 def check_cached_task_failures(task_name, task_uid):
@@ -808,7 +808,7 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
         for data_file in data_source_info["files"]:
             file_path = os.path.relpath(data_file["file_path"])
             content = ET.SubElement(contents, "Content", attrib={"ignore": "false", "zipEntry": file_path})
-            if data_source_type == "raster":
+            if data_source_type == GeospatialDataType.RASTER.value:
                 # Let application know that this is raster data.
                 ET.SubElement(content, "Parameter", attrib={"name": "contentType", "value": "External Native Data"})
     # Ignore contents
@@ -831,3 +831,85 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     with open(manifest_file, "w") as open_file:
         open_file.write(manifest)
     return manifest_file
+
+
+def download_concurrently(layers: ValuesView, concurrency=None):
+    """
+    Function concurrently downloads data from a given list URLs and download paths.
+    """
+
+    try:
+        executor = futures.ThreadPoolExecutor(max_workers=concurrency)
+
+        # Get the total number of task points to compare against current progress.
+        task_points = len(layers) * 100
+
+        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
+        futures.wait(futures_list)
+
+    except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
+        logger.error(f"Unable to execute concurrent downloads: {e}")
+
+    return layers
+
+
+def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
+    """
+    Function for downloading data, optionally using a certificate.
+    """
+
+    try:
+        response = auth_requests.get(
+            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+        )
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Unsuccessful request:{e}")
+
+    from audit_logging.file_logging import logging_open
+
+    try:
+        total_size = int(response.headers.get("content-length"))
+    except (ValueError, TypeError):
+        if response.content:
+            total_size = len(response.content)
+        else:
+            raise Exception("Request failed to return any data.")
+
+    written_size = 0
+    update_interval = total_size / 100
+    cache.set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
+
+    with logging_open(out_file, "wb") as file_:
+        for chunk in response.iter_content(CHUNK):
+            file_.write(chunk)
+            written_size += CHUNK
+
+            last_update = cache.get_or_set(get_last_update_cache_key(task_uid), 0)
+            last_update += CHUNK
+            cache.set(get_last_update_cache_key(task_uid), last_update, timeout=DEFAULT_CACHE_EXPIRATION)
+
+            if last_update > update_interval:
+                updated_points = int((last_update / total_size) * 100) if last_update < total_size else 100
+                cache.incr(get_task_progress_cache_key(task_uid), updated_points)
+
+                progress_points = cache.get(get_task_progress_cache_key(task_uid))
+                progress = progress_points / task_points * 100 if progress_points < task_points else 100
+                update_progress(task_uid, progress)
+
+                cache.set(get_last_update_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
+
+    if not os.path.isfile(out_file):
+        raise Exception("Nothing was returned from the vector feature service.")
+
+
+def get_task_points_cache_key(task_uid: str):
+    return f"{task_uid}_task_points"
+
+
+def get_task_progress_cache_key(task_uid: str):
+    return f"{task_uid}_progress"
+
+
+def get_last_update_cache_key(task_uid: str):
+    return f"{task_uid}_mb_since_update"

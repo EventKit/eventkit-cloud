@@ -26,7 +26,7 @@ from eventkit_cloud.tasks.helpers import (
     get_data_package_manifest,
 )
 
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 
@@ -139,7 +139,8 @@ class TestHelpers(TestCase):
     ):
         run_uid = "1234"
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
-
+        expected_layers = ["layer1", "layer2"]
+        expected_type = "vector"
         mock_create_license_file.return_value = expected_license_file = "/license.txt"
         mock_isfile.return_value = True
         mock_get_metadata_url.return_value = expected_metadata_url = "https://some.url/metadata"
@@ -153,30 +154,34 @@ class TestHelpers(TestCase):
             mps = MagicMock()
             mps.result.filename = fname
             mps.name = "something EPSG:4326"
-            mps.status = TaskStates.COMPLETED.value
+            mps.status = TaskState.COMPLETED.value
             mocked_provider_subtasks.append(mps)
 
         mocked_provider_task = MagicMock()
         mocked_provider_task.name = expected_provider_task_name = "example_name"
-        mocked_provider_task.status = TaskStates.COMPLETED.value
+        mocked_provider_task.status = TaskState.COMPLETED.value
         mocked_provider_task.provider.slug = expected_provider_slug = "example_slug"
         mocked_provider_task.tasks.filter.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = "5678"
-
-        mocked_queryset = MagicMock()
-        mocked_queryset.return_value = [mocked_provider_task]
-        mocked_queryset.first.return_value = mocked_provider_task
-        mocked_queryset.__iter__.return_value = [mocked_provider_task]
-        mock_DataProviderTaskRecord.objects.select_related().prefetch_related().filter.return_value = mocked_queryset
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
         mocked_data_provider.export_provider_type.type_name = "osm"
         mocked_data_provider.service_copyright = expected_copyright = "mocked_copyright"
         mocked_data_provider.config = f"cert_var: {expected_provider_slug}"
-
         mocked_data_provider.service_description = expected_data_provider_desc = "example_description"
-        mock_DataProvider.objects.get.return_value = mocked_data_provider
+        mocked_data_provider.layers = expected_layers
+        mocked_data_provider.data_type = expected_type
+
+        mocked_provider_task.provider = mocked_data_provider
+
+        mocked_queryset = MagicMock()
+        mocked_queryset.return_value = [mocked_provider_task]
+        mocked_queryset.first.return_value = mocked_provider_task
+        mocked_queryset.__iter__.return_value = [mocked_provider_task]
+        mock_DataProviderTaskRecord.objects.select_related().prefetch_related().prefetch_related().filter.return_value = (  # NOQA
+            mocked_queryset
+        )
 
         mocked_run = MagicMock()
         mocked_run.uid = run_uid
@@ -225,14 +230,16 @@ class TestHelpers(TestCase):
                     "metadata": expected_metadata_url,
                     "name": expected_provider_task_name,
                     "slug": expected_provider_slug,
-                    "type": "osm",
+                    "type": expected_type,
                     "uid": expected_provider_task_uid,
+                    "layers": expected_layers,
                 }
             },
             "date": expected_date,
             "description": expected_job_desc,
             "has_elevation": False,
             "has_raster": False,
+            "has_vector": True,
             "include_files": [
                 os.path.join(stage_dir, expected_provider_slug, "preview.jpg"),
                 os.path.join(stage_dir, expected_provider_slug, sample_file),

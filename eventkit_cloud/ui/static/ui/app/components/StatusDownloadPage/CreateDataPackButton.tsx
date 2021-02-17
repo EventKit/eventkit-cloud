@@ -4,7 +4,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
-import {formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
+import {binaryPrefixConversion, formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
 import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
@@ -15,6 +15,9 @@ import AlertError from "@material-ui/icons/Error";
 import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
 import {MatomoClickTracker} from "../MatomoHandler";
+import {renderIf} from "../../utils/renderIf";
+import CustomTableRow from "../common/CustomTableRow";
+import axios from "axios";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -80,8 +83,28 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
     },
 });
 
+export async function downloadRequest(url: string, displaySetter: (value: boolean) => void) {
+    displaySetter(true);
+
+    return await axios({
+        url,
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+    }).then((_response: any) => {
+        if (!_response) {
+            displaySetter(true);
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }).catch(_error => {
+        displaySetter(true);
+    });
+}
+
 interface Props {
-    zipSize: number;
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; };
     providerTasks: Eventkit.ProviderTask[];
@@ -126,7 +149,7 @@ export function CreateDataPackButton(props: Props) {
         });
     };
 
-    const [{status: requestZipFileStatus, response: requestZipFileResponse}, requestZipFileCall, clearRequestZipFile] = useAsyncRequest();
+    const [{status: requestZipFileStatus,}, requestZipFileCall, clearRequestZipFile] = useAsyncRequest();
     const postZipRequest = () => {
         // Returned promise is ignored, we don't need it.
         requestZipFileCall({
@@ -138,6 +161,8 @@ export function CreateDataPackButton(props: Props) {
         });
     };
 
+    const [displayDownloadErrorDialog, setDisplayDownloadErrorDialog] = useState(false);
+
     useEffect(() => {
         // If the list of provider task UID's changes, or the status of the run changes,
         // We will attempt to clear the status of the zip available api hook.
@@ -147,7 +172,6 @@ export function CreateDataPackButton(props: Props) {
             clearZipAvailable();
         }
     }, [DepsHashers.uidHash(providerTasks), run.status]);
-
 
     // Updates the status of the button.
     useEffect(() => {
@@ -216,7 +240,7 @@ export function CreateDataPackButton(props: Props) {
         if (dataPackRestricted) {
             return 'Restricted by Policy';
         }
-        const sizeText = (props.zipSize) ? formatMegaBytes(props.zipSize, 1) + ' ' : '';
+        const sizeText = (run) ? formatMegaBytes(binaryPrefixConversion(run?.zipfile?.size, 'm'), 1) + ' ' : '';
         const zipText = (<span style={{whiteSpace: 'nowrap'}}>({sizeText}.ZIP)</span>)
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
@@ -372,6 +396,34 @@ export function CreateDataPackButton(props: Props) {
         }
     }
 
+    function getButton() {
+        return (
+            <Button
+                id="CompleteDownload"
+                variant="contained"
+                className={`qa-CreateDataPackButton-Button-zipButton`}
+                classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
+                disabled={!buttonEnabled}
+                style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
+                onClick={(buttonEnabled && isZipAvailable() && !dataPackRestricted)
+                    ? (() => downloadRequest(zipAvailableResponse.data[0].url, setDisplayDownloadErrorDialog))
+                    : buttonAction
+                }
+            >
+                {!buttonEnabled && (
+                    // This div is placed over top of the main button when it is disabled.
+                    // It then acts as a button that allows users to open popovers.
+                    // This allows us to leverage the built in disabled functionality on the MUI component
+                    // while still being able to click the button. MUI stops all onClick events when disabled.
+                    <div onClick={buttonAction} className={classes.fakeButton}
+                         id="qa-CreateDataPackButton-fakeButton"/>
+                )}
+                {getButtonIcon()}
+                <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
+            </Button>
+        );
+    }
+
     return (
         <div style={{display: 'flex'}}>
             <RegionJustification
@@ -400,36 +452,9 @@ export function CreateDataPackButton(props: Props) {
                 eventName="DataPack Button"
                 eventCategory="Status and Download"
             >
-                <Button
-                    id="CompleteDownload"
-                    variant="contained"
-                    className={`qa-CreateDataPackButton-Button-zipButton`}
-                    classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
-                    disabled={!buttonEnabled}
-                    style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
-                    onClick={buttonAction}
-                    {...(() => {
-                        // If the zip file is available, set the href of the button to the URL.
-                        const extraProps = {} as { href: string };
-                        if (buttonEnabled && isZipAvailable() && !dataPackRestricted) {
-                            extraProps.href = zipAvailableResponse.data[0].url;
-                        }
-                        return extraProps;
-                    })()}
-                >
-                    {!buttonEnabled && (
-                        // This div is placed over top of the main button when it is disabled.
-                        // It then acts as a button that allows users to open popovers.
-                        // This allows us to leverage the built in disabled functionality on the MUI component
-                        // while still being able to click the button. MUI stops all onClick events when disabled.
-                        <div onClick={buttonAction} className={classes.fakeButton}
-                             id="qa-CreateDataPackButton-fakeButton"/>
-                    )}
-                    {getButtonIcon()}
-                    <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
-                </Button>
+                {getButton()}
             </MatomoClickTracker>
-            {displayCreatingMessage && (
+            {renderIf(() => (
                 <CenteredPopup
                     onClose={() => setDisplayCreatingMessage(false)}
                     open={true}
@@ -447,7 +472,29 @@ export function CreateDataPackButton(props: Props) {
                         </div>
                     </div>
                 </CenteredPopup>
-            )}
+            ), displayCreatingMessage && !displayDownloadErrorDialog)}
+            {renderIf(() => {
+                return (
+                    <CenteredPopup
+                        onClose={() => setDisplayDownloadErrorDialog(false)}
+                        open={true}
+                    >
+                        <div style={{display: 'contents' as 'contents'}}>
+                            <IconButton
+                                className={classes.iconButton}
+                                type="button"
+                                onClick={() => setDisplayDownloadErrorDialog(false)}
+                            >
+                                <CloseIcon/>
+                            </IconButton>
+                            <div style={{marginTop: '5px', fontSize: '20px'}}>
+                                An error occurred when attempting to download this file, please try again or contact an
+                                administrator.
+                            </div>
+                        </div>
+                    </CenteredPopup>
+                );
+            }, displayDownloadErrorDialog)}
             <div className={classes.popoverBlock}>
                 <Popover
                     {...{

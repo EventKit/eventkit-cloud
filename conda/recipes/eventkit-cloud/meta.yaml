@@ -1,5 +1,12 @@
 {% set name = "eventkit-cloud" %}
 {% set version = "1.9.0" %}
+
+{% set run_requirements = load_file_regex(
+    load_file="conda-requirements.txt",
+    regex_pattern=".+",
+    from_recipe_dir=True).string.strip().split("\n")
+%}
+
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
@@ -19,49 +26,14 @@ requirements:
     - memcached=1.6.6
     - qgis=3.14.16
   run:
+    {% for req in run_requirements -%}
+      - {{ req }}
+    {% endfor %}
     - python >=3.7,<3.8
-    - billiard=3.6.3.0
-    - boto3=1.14.15
-    - celery=4.4.6
-    - dj-database-url=0.5.0
-    - django=3.1.2
-    - django-audit-logging=0.2.1
-    - django-auth-ldap=2.2.0
-    - django-celery-beat=2.0.0
-    - django-extensions=3.0.9
-    - django-filter=2.4.0
-    - django-notifications-hq=1.6.0
-    - django-pymemcache=1.0.0
-    - django-storages=1.9.1
-    - django-timezone-field=4.0
-    - djangorestframework=3.12.1
-    - djangorestframework-gis=0.15.0
-    - eventlet=0.28.0
-    - gdal=3.1.4
-    - gunicorn=20.0.4
     - libiconv=1.15
-    - mapproxy=1.12.0
     - mesa-libgl-cos7-x86_64
-    - numpy=1.19.2
     - osmctools=0.9.0
-    - pillow=8.0.1
     - proj=7.1.1
-    - psycopg2=2.8.4
-    - pyjwt=1.7.1
-    - pymemcache=3.4.0
-    - pyparsing=2.4.7
-    - python-dateutil=2.8.1
-    - python-ldap=3.2.0
-    - python-magic=0.4.15
-    - pytz=2020.1
-    - pyyaml=5.3.1
-    - requests=2.24.0
-    - shapely=1.7.1
-    - sqlparse=0.3.1
-    - swapper=1.1.2.post1
-    - uritemplate=3.0.1
-    - webtest=2.0.35
-    - whitenoise=4.1.4
     - zstd=1.4.5
 about:
   home: https://github.com/eventkit/eventkit-cloud

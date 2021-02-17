@@ -352,13 +352,19 @@ AWS_DEFAULT_ACL = None
 
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
+MAPPROXY_LOGS = {
+    "requests": is_true(os.getenv("MAPPROXY_LOGS_REQUESTS")),
+    "verbose": is_true(os.getenv("MAPPROXY_LOGS_VERBOSE")),
+    "silent": is_true(os.getenv("MAPPROXY_LOGS_SILENT")),
+}
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
     "formatters": {"simple": {"format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
-    "root": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
+    "root": {"handlers": ["console"], "propagate": True, "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
     },

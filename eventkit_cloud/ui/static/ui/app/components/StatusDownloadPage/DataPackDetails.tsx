@@ -49,17 +49,6 @@ interface CalculatorProps {
     setFileSize: (value: number) => void
 }
 
-ZipSizeCalculator.defaultProps = {fileSizes: []}
-
-function ZipSizeCalculator(props: CalculatorProps) {
-    useEffect(() => {
-        props.setFileSize(props.fileSizes.reduce((total, val) => total + val, 0))
-    }, [DepsHashers.arrayHash(props.fileSizes)])
-
-    return null;
-}
-
-
 export interface Props {
     providerTasks: Eventkit.ProviderTask[];
     onProviderCancel: (uid: string) => void;
@@ -157,6 +146,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         );
     }
 
+
     render() {
         const {colors} = this.props.theme.eventkit;
 
@@ -197,37 +187,30 @@ export class DataPackDetails extends React.Component<Props, State> {
             },
         };
 
+        const isSmallScreen = () => !isWidthUp('sm', this.props.width);
         const {classes} = this.props;
         const {selectedProvider} = this.state;
 
         return (
             <div>
                 {renderIf(() => (<>
-                    <ZipSizeCalculator
-                        fileSizes={
-                            this.props.providerTasks.filter(
-                                providerTask => shouldDisplay(providerTask)
-                            ).map(providerTask => {
-                                // Use the zip task if it exists, otherwise calc based on all available.
-                                const zipTask = providerTask.tasks.find(task => task.name === ZIP_TASK_NAME);
-                                if (!!zipTask && !!zipTask.result.size) {
-                                    return Number(zipTask.result.size.replace(' MB', ''));
-                                }
-                                let fileSize = 0;
-                                providerTask.tasks.forEach((task) => {
-                                    if (task.result != null) {
-                                        if (task.display !== false && task.result.size) {
-                                            fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
-                                        }
-                                    }
-                                });
-                                return fileSize;
-                            })}
-                        setFileSize={(value: number) => this.setState({zipSize: value})}
-                    />
                     <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
                         Download Options
                     </div>
+                    {renderIf(() => (
+                        <div style={{display: 'flex'}} className="FINDME">
+                                <div
+                                    className="qa-DataPackDetails-TableCell-zipButton"
+                                    style={styles.download}
+                                >
+                                    <CreateDataPackButton
+                                        fontSize={textFontSize}
+                                        providerTasks={this.props.providerTasks}
+                                        job={this.props.job}
+                                    />
+                                </div>
+                        </div>
+                    ), isSmallScreen())}
                     <Table
                         className="qa-DataPackDetails-Table"
                         style={{width: '100%', tableLayout: 'fixed'}}
@@ -236,17 +219,25 @@ export class DataPackDetails extends React.Component<Props, State> {
                             className="qa-DataPackDetails-TableHeader"
                         >
                             <TableRow className="qa-DataPackDetails-TableRow">
-                                <TableCell
-                                    className="qa-DataPackDetails-TableCell-zipButton"
-                                    style={styles.download}
-                                >
-                                    <CreateDataPackButton
-                                        zipSize={this.state.zipSize}
-                                        fontSize={textFontSize}
-                                        providerTasks={this.props.providerTasks}
-                                        job={this.props.job}
-                                    />
-                                </TableCell>
+                                {renderIf(() => (
+                                    <TableCell
+                                        className="qa-DataPackDetails-TableCell-zipButton"
+                                        style={styles.download}
+                                    >
+                                        <CreateDataPackButton
+                                            fontSize={textFontSize}
+                                            providerTasks={this.props.providerTasks}
+                                            job={this.props.job}
+                                        />
+                                    </TableCell>
+                                ), !isSmallScreen())}
+                                {renderIf(() => (
+                                    <TableCell
+                                        className="qa-DataPackDetails-TableCell-zipButton"
+                                        style={styles.download}
+                                    >
+                                    </TableCell>
+                                ), isSmallScreen())}
                                 <TableCell
                                     className="qa-DataPackDetails-TableCell-fileSize"
                                     style={styles.genericColumn}

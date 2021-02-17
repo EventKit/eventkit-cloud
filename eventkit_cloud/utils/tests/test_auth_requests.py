@@ -63,6 +63,11 @@ class TestAuthResult(TransactionTestCase):
         self.do_tests(auth_requests.get, get_patch, getenv)
 
     @patch("eventkit_cloud.utils.auth_requests.os.getenv")
+    @patch("eventkit_cloud.utils.auth_requests.requests.head")
+    def test_head(self, get_patch, getenv):
+        self.do_tests(auth_requests.head, get_patch, getenv)
+
+    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
     @patch("eventkit_cloud.utils.auth_requests.requests.post")
     def test_post(self, post_patch, getenv):
         self.do_tests(auth_requests.post, post_patch, getenv)

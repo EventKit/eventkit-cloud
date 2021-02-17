@@ -128,6 +128,7 @@ declare namespace Eventkit {
         status: string;
         url: string;
         message: string;
+        size: number;
     }
 
     interface UserJobActivity {

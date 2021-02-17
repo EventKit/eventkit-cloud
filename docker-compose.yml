@@ -27,6 +27,9 @@ services:
       - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
       - QT_QPA_PLATFORM=offscreen
       - DATAPACKS_DEFAULT_SHARED
+      - MAPPROXY_LOGS_REQUESTS
+      - MAPPROXY_LOGS_VERBOSE
+      - MAPPROXY_LOGS_SILENT
       - SERVE_ESTIMATES
       - SITE_NAME
       - SITE_IP
@@ -71,6 +74,7 @@ services:
       - MATOMO_CUSTOM_VAR_SCOPE
       - MATOMO_SITE_ID
       - MATOMO_APPNAME
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -112,6 +116,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - TILE_CACHE_DIR
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
@@ -144,6 +149,9 @@ services:
       - PRODUCTION
       - DJANGO_LOG_LEVEL
       - LOG_LEVEL
+      - MAPPROXY_LOGS_REQUESTS
+      - MAPPROXY_LOGS_VERBOSE
+      - MAPPROXY_LOGS_SILENT
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
@@ -159,6 +167,7 @@ services:
       - AWS_STORAGE_BUCKET_NAME
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh

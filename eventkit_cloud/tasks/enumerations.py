@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class TaskStates(Enum):
+class TaskState(Enum):
     COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
     INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
     SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
@@ -17,17 +17,17 @@ class TaskStates(Enum):
     @staticmethod
     def get_finished_states():
         return [
-            TaskStates.COMPLETED,
-            TaskStates.INCOMPLETE,
-            TaskStates.CANCELED,
-            TaskStates.SUCCESS,
-            TaskStates.FAILED,
+            TaskState.COMPLETED,
+            TaskState.INCOMPLETE,
+            TaskState.CANCELED,
+            TaskState.SUCCESS,
+            TaskState.FAILED,
         ]
 
     @staticmethod
     def get_incomplete_states():
-        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
+        return [TaskState.FAILED, TaskState.INCOMPLETE, TaskState.CANCELED]
 
     @staticmethod
     def get_not_finished_states():
-        return [TaskStates.PENDING, TaskStates.RUNNING, TaskStates.SUBMITTED]
+        return [TaskState.PENDING, TaskState.RUNNING, TaskState.SUBMITTED]

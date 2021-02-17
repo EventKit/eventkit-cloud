@@ -173,6 +173,19 @@ def get(url=None, **kwargs):
 
 @cert_var_to_cert
 @handle_basic_auth
+def head(url=None, **kwargs):
+    """
+    As requests.head, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
+    if found.
+    :param url: URL for requests.get
+    :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
+    :return: Result of requests.head call
+    """
+    return requests.head(url, **kwargs)
+
+
+@cert_var_to_cert
+@handle_basic_auth
 def post(url=None, **kwargs):
     """
     As requests.post, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,

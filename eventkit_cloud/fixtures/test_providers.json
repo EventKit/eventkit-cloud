@@ -6,7 +6,8 @@
       "slug": "wms",
       "url": "http://test/wms",
       "layer": "layer",
-      "export_provider_type": 3
+      "export_provider_type": 3,
+      "data_type": "raster"
     }
   },
   {
@@ -15,7 +16,8 @@
       "name": "wmts",
       "url": "http://test/wmts",
       "layer": "layer",
-      "export_provider_type": 4
+      "export_provider_type": 4,
+      "data_type": "raster"
     }
   },
   {
@@ -25,7 +27,8 @@
       "slug": "arc-raster",
       "url": "http://test/arc-raster",
       "layer": "layer",
-      "export_provider_type": 5
+      "export_provider_type": 5,
+      "data_type": "raster"
     }
   },
   {
@@ -35,7 +38,8 @@
       "slug": "wfs",
       "url": "http://test/wfs",
       "layer": "layer",
-      "export_provider_type": 6
+      "export_provider_type": 6,
+      "data_type": "vector"
     }
   },
   {
@@ -45,7 +49,8 @@
       "slug": "arc-fs",
       "url": "http://test/arc-fs",
       "layer": "layer",
-      "export_provider_type": 7
+      "export_provider_type": 7,
+      "data_type": "vector"
     }
   }
 ]
