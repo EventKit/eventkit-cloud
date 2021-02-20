@@ -496,9 +496,10 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(sample_input, result["source"])
 
-    @patch("eventkit_cloud.utils.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.os.rename")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_run_gpkg_export_task(self, mock_request, mock_convert):
+    def test_run_gpkg_export_task(self, mock_request, mock_convert, mock_rename):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -509,8 +510,7 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
-
-        mock_convert.return_value = expected_output_path
+        mock_rename.return_value = expected_output_path
         previous_task_result = {"source": expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
         export_provider_task = DataProviderTaskRecord.objects.create(
@@ -519,10 +519,8 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=geopackage_export_task.name
         )
-        geopackage_export_task.update_task_state(
-            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
-        )
-        result = geopackage_export_task.run(
+
+        result = geopackage_export_task(
             run_uid=self.run.uid,
             result=previous_task_result,
             task_uid=str(saved_export_task.uid),
@@ -530,9 +528,27 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
         )
+        mock_rename.assert_called_once_with(expected_output_path, expected_output_path)
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
+
+        example_input_file = "test.tif"
+        previous_task_result = {"source": example_input_file}
+
+        mock_convert.return_value = expected_output_path
+
+        result = geopackage_export_task(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_file=example_input_file,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -540,7 +556,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEqual(expected_output_path, result["result"])
-        self.assertEqual(expected_output_path, result["source"])
+        self.assertEqual(example_input_file, result["source"])
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
