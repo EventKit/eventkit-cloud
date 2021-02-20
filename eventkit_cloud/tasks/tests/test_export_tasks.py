@@ -8,6 +8,7 @@ import sys
 import uuid
 
 import celery
+import yaml
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -46,6 +47,7 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task,
     vector_file_export_task,
     raster_file_export_task,
+    osm_data_collection_pipeline,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -539,6 +541,59 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
+
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    @patch("eventkit_cloud.tasks.export_tasks.os")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
+    @patch("eventkit_cloud.tasks.export_tasks.update_progress")
+    @patch("eventkit_cloud.tasks.export_tasks.geopackage")
+    @patch("eventkit_cloud.tasks.export_tasks.FeatureSelection")
+    @patch("eventkit_cloud.tasks.export_tasks.pbf")
+    @patch("eventkit_cloud.tasks.export_tasks.overpass")
+    def test_osm_data_collection_pipeline(
+        self,
+        mock_overpass,
+        mock_pbf,
+        mock_feature_selection,
+        mock_geopackage,
+        mock_update_progress,
+        mock_gdalutils,
+        mock_os,
+        mock_get_export_task_record,
+        mock_get_export_filepath,
+    ):
+        example_export_task_record_uid = "1234"
+        stage_dir = settings.EXPORT_STAGING_ROOT
+        example_bbox = [-1, -1, 1, 1]
+        example_gpkg = "/path/to/file.gpkg"
+        mock_get_export_filepath.return_value = example_gpkg
+        mock_geopackage.Geopackage.return_value = Mock(results=[Mock(parts=[example_gpkg])])
+        # Test with using overpass
+        example_overpass_query = "some_query; out;"
+        example_config = {"overpass_query": example_overpass_query}
+        osm_data_collection_pipeline(
+            example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+        )
+
+        mock_overpass.Overpass.assert_called_once()
+        mock_pbf.OSMToPBF.assert_called_once()
+        mock_feature_selection.example.assert_called_once()
+
+        mock_overpass.reset_mock()
+        mock_pbf.reset_mock()
+        mock_feature_selection.reset_mock()
+
+        # Test with using pbf_file
+        example_pbf_file = "test.pbf"
+        example_config = {"pbf_file": example_pbf_file}
+        osm_data_collection_pipeline(
+            example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+        )
+
+        mock_overpass.Overpass.assert_not_called()
+        mock_pbf.OSMToPBF.assert_not_called()
+        mock_feature_selection.assert_not_called()
 
     @patch("eventkit_cloud.tasks.export_tasks.get_creation_options")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")

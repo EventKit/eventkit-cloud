@@ -319,6 +319,11 @@ The max number of processes/threads the `runs` celery worker will use. This will
 The maximum amount of times you want Celery to retry an export related task prior to failing it and moving on.
 <pre>MAX_TASK_ATTEMPTS=5</pre>
 
+This is the maximum size in memory to process osm data in MB.
+After this size a file is used on disk next to the source data.
+See: https://gdal.org/drivers/vector/osm.html#internal-working-and-performance-tweaking
+<pre>OSM_MAX_TMPFILE_SIZE=100</pre>
+
 ### RocketChat Settings
 
 Pass in this environment variable with your RocketChat settings to enable notifications about failed DataPacks to specific channel(s) or user(s).
