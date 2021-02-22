@@ -303,8 +303,11 @@ def get_area_in_sqkm(geom4326):
     :param geom4326: GEOSGeometry object created from a 4326 feature
     :return: float representing square km.
     """
+    # Copy the geom object to avoid transforming the original
+    # Presumably this isn't too expensive, and it's worth the call by reducing any errors from transforming again.
     geomIn3857 = copy.copy(geom4326)
     geomIn3857.transform(3857)
+    # Area divided by 1e6 (1,000,000) -- number of sq meters per sq km
     return geomIn3857.area / 1e6
 
 
