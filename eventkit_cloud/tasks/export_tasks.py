@@ -86,6 +86,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.jobs.models import DataProviderTask
 import yaml
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1014,20 +1015,120 @@ def reprojection_task(
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
-    reprojection = gdalutils.convert(
-        driver=driver,
-        input_file=in_dataset,
-        output_file=out_dataset,
-        task_uid=task_uid,
-        projection=projection,
-        boundary=selection,
-        warp_params=warp_params,
-        translate_params=translate_params,
-    )
+    dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
+    metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+    data_type = metadata["data_sources"][provider_slug].get("type")
+
+    if "gpkg" in os.path.splitext(in_dataset)[1] and driver == "gpkg" and data_type == GeospatialDataType.RASTER.value:
+        # Use MapProxy instead of GDAL so all the pyramids/zoom levels of the source are preserved.
+
+        level_from = metadata["data_sources"][provider_slug].get("level_from")
+        level_to = metadata["data_sources"][provider_slug].get("level_to")
+
+        reprojection = mapproxy_reproject(
+            output_file=out_dataset,
+            input_file=in_dataset,
+            name=job_name,
+            level_from=level_from,
+            level_to=level_to,
+            projection=projection,
+            selection=selection,
+            task_uid=task_uid,
+        )
+
+    else:
+        reprojection = gdalutils.convert(
+            driver=driver,
+            input_file=in_dataset,
+            output_file=out_dataset,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=selection,
+            warp_params=warp_params,
+            translate_params=translate_params,
+        )
 
     result["result"] = reprojection
 
     return result
+
+
+def mapproxy_reproject(
+    output_file, input_file, name, level_from, level_to, projection, selection, task_uid,
+):
+    # TODO: move this config block elsewhere after testing is done...
+
+    config = f"""
+    caches:
+        existing_cache:
+            sources: [ ]
+            grids: [ old_grid ]
+            cache:
+                type: geopackage
+                filename: {input_file}
+                table_name: imagery
+            meta_size: [4,4]
+            bulk_meta_tiles: true
+
+        new_cache:
+            sources: [ existing_cache ]
+            grids: [ new_grid ]
+            cache:
+                type: geopackage
+                filename: {output_file}
+                table_name: imagery
+    grids:
+        old_grid:
+            srs: EPSG:4326
+            tile_size: [ 256, 256 ]
+            origin: nw
+            res: [ 0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,
+                    0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,
+                    0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,
+                    0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,
+                    1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,
+                    6.705522537231444e-07 ]
+        new_grid:
+            srs: 'EPSG:{projection}'
+            tile_size: [ 256, 256 ]
+            origin: ul
+
+    coverages:
+        some_coverage:
+            datasource: '{selection}'
+            srs: 'EPSG:4326'
+
+    seeds:
+        new_cache:
+            coverages: [ some_coverage ]
+            caches: [ new_cache ]
+            grids: [ new_grid ]
+            levels:
+                from: {level_from}
+                to: {level_to}
+
+    layers:
+        -   name: layer
+            title: layer
+            sources: [new_cache]
+    """
+    try:
+        mp = mapproxy.MapproxyGeopackage(
+            gpkgfile=output_file,
+            service_url=input_file,
+            name=name,
+            config=config,
+            level_from=level_from,
+            level_to=level_to,
+            task_uid=task_uid,
+        )
+        gpkg = mp.convert()
+
+        return gpkg
+
+    except Exception as e:
+        logger.error(f"Raised exception in reprojection task, {e}")
+        raise e
 
 
 @app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)

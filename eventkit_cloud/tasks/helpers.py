@@ -524,6 +524,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
             "layers": data_provider.layers,
+            "level_from": data_provider.level_from,
+            "level_to": data_provider.level_to,
         }
         if (
             metadata["data_sources"][data_provider_task_record.provider.slug].get("type")
