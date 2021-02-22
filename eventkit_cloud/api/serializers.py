@@ -512,7 +512,9 @@ class RunZipFileSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         if obj.downloadable_file:
-            return ExportTaskRecord.objects.get(result=obj.downloadable_file).status
+            export_task_record = ExportTaskRecord.objects.filter(result=obj.downloadable_file).first()
+            if export_task_record:
+                return export_task_record.status
         return obj.status
 
     def get_url(self, obj):
