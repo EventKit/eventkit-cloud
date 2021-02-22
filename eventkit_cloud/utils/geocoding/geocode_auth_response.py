@@ -26,7 +26,12 @@ class GeocodeAuthResponse(object):
             else:
                 raise Exception(error_message)
         else:
-            response = auth_requests.get(self.url, params=payload)
+            try:
+                response = auth_requests.get(self.url, params=payload)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                logger.info(e)
             if not response.ok:
                 raise Exception(error_message)
             return response

@@ -6,11 +6,11 @@ import re
 import urllib.request
 import urllib.error
 import urllib.parse
+import requests_pkcs12
 from functools import wraps
 from tempfile import NamedTemporaryFile
 from django.conf import settings
-from requests_pkcs12 import get
-from requests_pkcs12 import Pkcs12Adapter
+from requests_pkcs12 import Pkcs12Adapter, create_ssl_sslcontext
 
 import requests
 from mapproxy.client import http as mapproxy_http
@@ -54,7 +54,7 @@ def get_cert_info(kwargs_dict):
     :param kwargs_dict: passed in dict representing kwargs passed to a calling function.
     :return:tuple (cert_path, cert_pass) either may be None
     """
-    cert_info = kwargs_dict.get("cert_info", dict())
+    cert_info = kwargs_dict.pop("cert_info", None) or dict()
     return cert_info.get("cert_path"), cert_info.get("cert_pass")
 
 
@@ -70,7 +70,7 @@ def cert_var_to_cert(func):
     def wrapper(*args, **kwargs):
         cert_path, cert_pass = get_cert_info(kwargs)
         if cert_path is None or cert_pass is None:
-            return func(*args, kwargs)
+            return func(*args, **kwargs)
         return func(pkcs12_filename=cert_path, pkcs12_password=cert_pass, *args, **kwargs)
 
     return wrapper
@@ -145,13 +145,19 @@ def handle_basic_auth(func):
 
 
 class AuthSession(object):
-    def __init__(self):
+
+    def __init__(self,):
         self.session = requests.session()
         self.cookies = self.session.cookies
 
-    @cert_var_to_cert
     @handle_basic_auth
     def get(self, *args, **kwargs):
+        cert_path, cert_pass = get_cert_info(kwargs)
+        if not (cert_path is None or cert_pass is None):
+            self.session.mount(
+                kwargs.get("url"),
+                Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass)
+            )
         return self.session.get(*args, **kwargs)
 
 
@@ -165,7 +171,7 @@ def get(url=None, **kwargs):
     :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
     :return: Result of requests.get call
     """
-    return get(url, **kwargs)
+    return requests_pkcs12.get(url, **kwargs)
 
 
 @cert_var_to_cert
@@ -185,10 +191,9 @@ _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
 _ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
 
-def patch_https(slug: str = None, cert_info: dict = None):
+def patch_https(cert_info: dict = None):
     """
-    Given a provider slug, wrap the initializer for HTTPSConnection so it checks for client keys and certs
-    in environment variables named after the given slug, and if found, provides them to the SSLContext.
+    Given cert info for a provider, establishes a SSSLContext object using requests_pkcs12 for HTTPSConnection.
     If no certs are found, this should function identically to the original, even if external certs/keys are given.
     :param slug: Provider slug, used for finding cert/key environment variable
     :param cert_var: An optional parameter, to use for finding the cert/key in the environment.
@@ -196,7 +201,12 @@ def patch_https(slug: str = None, cert_info: dict = None):
     :return: None
     """
     def _new_init(_self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
+        cert_path, cert_pass = get_cert_info(cert_info=cert_info)
+        if not (cert_path is None or cert_pass is None):
+            # create_ssl_sslcontext needs the cert data, instead of the filepath
+            with open(cert_path, 'rb') as pkcs12_file:
+                pkcs12_data = pkcs12_file.read()
+            kwargs['context'] = create_ssl_sslcontext(pkcs12_data, cert_pass)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init

@@ -240,7 +240,7 @@ class MapproxyGeopackage(object):
         try:
             conf = yaml.safe_load(self.config) or dict()
             cert_info = conf.get("cert_info")
-            auth_requests.patch_https(slug=self.name, cert_info=cert_info)
+            auth_requests.patch_https(cert_info=cert_info)
 
             cred_var = conf.get("cred_var")
             auth_requests.patch_mapproxy_opener_cache(slug=self.name, cred_var=cred_var)
@@ -432,7 +432,7 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
             raise
 
     cert_info = conf_dict.get("cert_info")
-    auth_requests.patch_https(slug=slug, cert_info=cert_info)
+    auth_requests.patch_https(cert_info=cert_info)
 
     cred_var = conf_dict.get("cred_var")
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)

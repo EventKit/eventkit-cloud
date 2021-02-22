@@ -1,5 +1,5 @@
 """Provides validation for API operations."""
-
+import copy
 import json
 
 # -*- coding: utf-8 -*-
@@ -124,7 +124,7 @@ def validate_bbox(extents, user=None):
     try:
         bbox = GEOSGeometry(Polygon.from_bbox(extents), srid=4326)
         if bbox.valid:
-            area = get_geodesic_area(bbox) / 1000000
+            area = get_area_in_sqkm(bbox)
             if area > max_extent:
                 detail["id"] = _("invalid_extents")
                 detail["message"] = _("Job extents too large: %(area)s") % {"area": area}
@@ -200,7 +200,7 @@ def validate_selection(data, user=None):
             raise serializers.ValidationError(detail)
         geom = GEOSGeometry(json.dumps(geometry), srid=4326)
         if geom.valid:
-            area = get_geodesic_area(geom) / 1000000
+            area = get_area_in_sqkm(geom)
             if area > max_extent:
                 detail["id"] = _("invalid_extents")
                 detail["message"] = _("Job extents too large: %(area)s") % {"area": area}
@@ -291,6 +291,21 @@ def validate_content_type(upload, config_type):
         }
         raise serializers.ValidationError(detail)
     return content_type
+
+
+def get_area_in_sqkm(geom4326):
+    """
+    Accepts a GEOSGeometry object created in 4326, and returns the area in square km.
+
+    Copies the geom object and transforms it to 3857 using GEOSGeometry' API (GDAL under the hood), then reports the
+    area. Area is reported in meters, so it is divided to get sqkm.
+
+    :param geom4326: GEOSGeometry object created from a 4326 feature
+    :return: float representing square km.
+    """
+    geomIn3857 = copy.copy(geom4326)
+    geomIn3857.transform(3857)
+    return geomIn3857.area / 1e6
 
 
 def get_geodesic_area(geom):

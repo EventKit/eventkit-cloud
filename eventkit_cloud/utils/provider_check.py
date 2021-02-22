@@ -220,10 +220,14 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            cert_info = self.config.get("cert_info", self.slug)
-            response = auth_requests.get(
-                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
-            )
+            cert_info = self.config.get("cert_info", None)
+            try:
+                response = auth_requests.get(
+                    self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
+                )
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
 
             self.token_dict["status"] = response.status_code
 
@@ -307,7 +311,7 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            cert_info = self.config.get("cert_info") or self.slug
+            cert_info = self.config.get("cert_info")
 
             response = auth_requests.post(
                 url=self.service_url, cert_info=cert_info, data="out meta;", timeout=self.timeout, verify=self.verify,
