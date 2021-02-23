@@ -79,14 +79,11 @@ class EventKitClient(object):
                 params=params,
                 headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
             )
-            if response.status_code in [404]:
+            if response.ok:
+                runs += response.json()
+                page += 1
+            else:
                 break
-            if response.status_code not in [200, 206]:
-                logger.error("There was an error getting the runs.")
-                logger.error(response.text)
-                raise Exception("Unable to get runs.")
-            runs += response.json()
-            page += 1
         return runs
 
     def get_runs(self, params):
