@@ -221,13 +221,9 @@ class ProviderCheck(object):
                 return None
 
             cert_info = self.config.get("cert_info", None)
-            try:
-                response = auth_requests.get(
-                    self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
-                )
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
+            response = auth_requests.get(
+                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
+            )
 
             self.token_dict["status"] = response.status_code
 

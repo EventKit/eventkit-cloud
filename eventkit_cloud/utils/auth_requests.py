@@ -165,8 +165,8 @@ class AuthSession(object):
 @handle_basic_auth
 def get(url=None, **kwargs):
     """
-    As requests.get, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
-    if found.
+    Makes a GET request, optionally with cert_info.
+
     :param url: URL for requests.get
     :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
     :return: Result of requests.get call

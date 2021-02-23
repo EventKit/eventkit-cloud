@@ -18,9 +18,8 @@ class TestAuthResult(TransactionTestCase):
     def setUp(self):
         self.url = "http://example.test/"
 
-    def do_tests(self, req, req_patch, getenv):
+    def do_tests(self, req, req_patch):
         # Test: exception propagation
-        getenv.return_value = None
         req_patch.side_effect = requests.exceptions.ConnectionError()
         with self.assertRaises(Exception):
             req(self.url)
@@ -31,29 +30,14 @@ class TestAuthResult(TransactionTestCase):
         req_patch.side_effect = None
         req_patch.return_value = response
 
-        result = req(self.url, cert_var="TEST_SLUG_CERT", cred_var="TEST_SLUG_CRED", data=42)
+        cert_info = dict(cert_path="fake/path/to", cert_pass="fakepass")
+        result = req(self.url, cert_info=cert_info, data=42)
 
-        getenv.assert_any_call("TEST_SLUG_CERT")
-        getenv.assert_any_call("TEST_SLUG_CRED")
         req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
-        # Test: normal response with cert
-        getenv.return_value = "test cert content"
+        result = req(self.url, cert_var="TEST_SLUG_CERT", data=42)
 
-        named_tempfile = MagicMock()
-        cert_tempfile = MagicMock()
-        cert_tempfile.name = "temp filename"
-        named_tempfile.__enter__ = MagicMock(return_value=cert_tempfile)
-        cert_tempfile.write = MagicMock()
-        cert_tempfile.flush = MagicMock()
-
-        with patch("eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True):
-            result = req(self.url, cert_var="TEST_SLUG_CERT", data=42)
-
-        getenv.assert_any_call("TEST_SLUG_CERT")
-        cert_tempfile.write.assert_called_once_with("test cert content".encode())
-        cert_tempfile.flush.assert_called()
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
 
