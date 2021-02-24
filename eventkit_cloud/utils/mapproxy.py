@@ -12,11 +12,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import (
-    ProxyConfiguration,
-    ConfigurationError,
-    validate_references,
-)
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
@@ -207,7 +203,7 @@ class MapproxyGeopackage(object):
                 self.selection = None
 
         seed_dict = get_seed_template(
-            bbox=self.bbox, level_from=self.level_from, level_to=self.level_to, coverage_file=self.selection,
+            bbox=self.bbox, level_from=self.level_from, level_to=self.level_to, coverage_file=self.selection
         )
 
         # Create a seed configuration object

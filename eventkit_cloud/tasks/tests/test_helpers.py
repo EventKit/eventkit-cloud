@@ -77,24 +77,22 @@ class TestHelpers(TestCase):
     def test_get_last_update(self, mock_get_osm_last_update):
         test_url = "https://test"
         test_type = "osm"
-        test_slug = "slug"
-        get_last_update(test_url, test_type, cert_var=test_slug)
-        mock_get_osm_last_update.assert_called_once_with(test_url, cert_var=test_slug)
+        get_last_update(test_url, test_type)
+        mock_get_osm_last_update.assert_called_once_with(test_url, cert_info=None)
 
     @patch("eventkit_cloud.tasks.helpers.auth_requests")
     def test_get_osm_last_update(self, mock_auth_requests):
         test_url = "https://test/interpreter"
-        test_slug = "slug"
         expected_url = "https://test/timestamp"
         expected_time = "2017-12-29T13:09:59Z"
 
         mock_auth_requests.get.return_value.content.decode.return_value = expected_time
-        returned_time = get_osm_last_update(test_url, cert_var=test_slug)
-        mock_auth_requests.get.assert_called_once_with(expected_url, cert_var=test_slug)
+        returned_time = get_osm_last_update(test_url)
+        mock_auth_requests.get.assert_called_once_with(expected_url, cert_info=None)
         self.assertEqual(expected_time, returned_time)
 
         mock_auth_requests.get.side_effect = Exception("FAIL")
-        returned_time = get_osm_last_update(test_url, cert_var=test_slug)
+        returned_time = get_osm_last_update(test_url)
         self.assertIsNone(returned_time)
 
     def test_get_metadata_url(self):

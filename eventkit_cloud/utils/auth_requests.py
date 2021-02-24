@@ -18,6 +18,7 @@ from mapproxy.client import http as mapproxy_http
 logger = logging.getLogger(__name__)
 
 
+# TODO: remove this if it's not needed anymore.
 def content_to_file(content):
     """
     Given content for a file, constructs a decorator that creates and destroys a temporary file containing that content,
@@ -60,10 +61,8 @@ def get_cert_info(kwargs_dict):
 
 def cert_var_to_cert(func):
     """
-    Decorator that takes a kwarg `slug` of the target function, and replaces it with `cert`, which points to an
-    open file containing the client certificate and key for that provider slug.
-    If an environment variable for that slug and cert was not found, call the function without the cert kwarg.
-    To avoid unnecessary overhead in creating multiple temporary files, this decorator should generally be applied last.
+    Checks the supplied kwargs for the `cert_info` key, and extracts the cert path and pass if present. These are
+    mapped to the requests_pkcs12 params `pkcs12_filename` and `pkcs12_filename`.
     """
 
     @wraps(func)
@@ -134,7 +133,7 @@ def handle_basic_auth(func):
             if cred:
                 kwargs["auth"] = tuple(cred)
             logger.debug(
-                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
+                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()])
             )
             response = func(*args, **kwargs)
             return response
@@ -145,7 +144,6 @@ def handle_basic_auth(func):
 
 
 class AuthSession(object):
-
     def __init__(self,):
         self.session = requests.session()
         self.cookies = self.session.cookies
@@ -154,10 +152,7 @@ class AuthSession(object):
     def get(self, *args, **kwargs):
         cert_path, cert_pass = get_cert_info(kwargs)
         if not (cert_path is None or cert_pass is None):
-            self.session.mount(
-                kwargs.get("url"),
-                Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass)
-            )
+            self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
         return self.session.get(*args, **kwargs)
 
 
@@ -167,8 +162,8 @@ def get(url=None, **kwargs):
     """
     Makes a GET request, optionally with cert_info.
 
-    :param url: URL for requests.get
-    :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
     :return: Result of requests.get call
     """
     return requests_pkcs12.get(url, **kwargs)
@@ -176,15 +171,28 @@ def get(url=None, **kwargs):
 
 @cert_var_to_cert
 @handle_basic_auth
+def head(url=None, **kwargs):
+    """
+    Makes a HEAD request, optionally with cert_info.
+
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
+    :return: Result of requests.head call
+    """
+    return requests_pkcs12.head(url, **kwargs)
+
+
+@cert_var_to_cert
+@handle_basic_auth
 def post(url=None, **kwargs):
     """
-    As requests.post, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
-    if found.
-    :param url: URL for requests.get
-    :param kwargs: Dict is passed along unaltered to requests.post, except for removing "slug" and adding "cert".
+    Makes a POST request, optionally with cert_info.
+
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.post, except for translating cert info
     :return: Result of requests.post call
     """
-    return requests.post(url, **kwargs)
+    return requests_pkcs12.post(url, **kwargs)
 
 
 _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
@@ -194,19 +202,18 @@ _ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 def patch_https(cert_info: dict = None):
     """
     Given cert info for a provider, establishes a SSSLContext object using requests_pkcs12 for HTTPSConnection.
-    If no certs are found, this should function identically to the original, even if external certs/keys are given.
-    :param slug: Provider slug, used for finding cert/key environment variable
-    :param cert_var: An optional parameter, to use for finding the cert/key in the environment.
-                     Takes priority over slug.
+    If no certs are found, this should function identically to the original.
+    :param cert_info: An optional parameter, must contain path to cert and the passphrase
     :return: None
     """
+
     def _new_init(_self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(cert_info=cert_info)
+        cert_path, cert_pass = get_cert_info(dict(cert_info=cert_info))
         if not (cert_path is None or cert_pass is None):
             # create_ssl_sslcontext needs the cert data, instead of the filepath
-            with open(cert_path, 'rb') as pkcs12_file:
+            with open(cert_path, "rb") as pkcs12_file:
                 pkcs12_data = pkcs12_file.read()
-            kwargs['context'] = create_ssl_sslcontext(pkcs12_data, cert_pass)
+            kwargs["context"] = create_ssl_sslcontext(pkcs12_data, cert_pass)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init

@@ -150,9 +150,7 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(
-        self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None,
-    ):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
@@ -222,7 +220,7 @@ class ProviderCheck(object):
 
             cert_info = self.config.get("cert_info", None)
             response = auth_requests.get(
-                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify,
+                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify
             )
 
             self.token_dict["status"] = response.status_code
@@ -239,7 +237,7 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.TIMEOUT
             return None
@@ -310,7 +308,7 @@ class OverpassProviderCheck(ProviderCheck):
             cert_info = self.config.get("cert_info")
 
             response = auth_requests.post(
-                url=self.service_url, cert_info=cert_info, data="out meta;", timeout=self.timeout, verify=self.verify,
+                url=self.service_url, cert_info=cert_info, data="out meta;", timeout=self.timeout, verify=self.verify
             )
 
             self.token_dict["status"] = response.status_code
@@ -327,7 +325,7 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAVAILABLE
                 return
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.TIMEOUT
             return
@@ -337,7 +335,7 @@ class OverpassProviderCheck(ProviderCheck):
             self.result = CheckResults.SSL_EXCEPTION
             return
 
-        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema,) as ex:
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return
@@ -751,7 +749,7 @@ class FileProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAVAILABLE
                 return
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.TIMEOUT
             return
@@ -761,7 +759,7 @@ class FileProviderCheck(ProviderCheck):
             self.result = CheckResults.SSL_EXCEPTION
             return
 
-        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema,) as ex:
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return
