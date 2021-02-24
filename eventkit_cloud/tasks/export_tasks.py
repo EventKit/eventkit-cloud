@@ -29,11 +29,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks import set_cache_value
@@ -167,10 +163,7 @@ class ExportTask(EventKitBaseTask):
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            if TaskState.CANCELED.value not in [
-                task.status,
-                task.export_provider_task.status,
-            ]:
+            if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
                 retval = super(ExportTask, self).__call__(*args, **kwargs)
 
             """
@@ -197,13 +190,8 @@ class ExportTask(EventKitBaseTask):
 
             # update the task
             finished = timezone.now()
-            if TaskState.CANCELED.value in [
-                task.status,
-                task.export_provider_task.status,
-            ]:
-                logging.info(
-                    "Task reported on success but was previously canceled ", format(task_uid),
-                )
+            if TaskState.CANCELED.value in [task.status, task.export_provider_task.status]:
+                logging.info("Task reported on success but was previously canceled ", format(task_uid))
                 username = None
                 if task.cancel_user:
                     username = task.cancel_user.username
@@ -314,11 +302,7 @@ class ExportTask(EventKitBaseTask):
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, "status") or []
-            if TaskState.CANCELED.value in [
-                task.status,
-                task.export_provider_task.status,
-                result,
-            ]:
+            if TaskState.CANCELED.value in [task.status, task.export_provider_task.status, result]:
                 logging.info("canceling before run %s", celery_uid)
                 task.status = TaskState.CANCELED.value
                 task.save()
@@ -434,12 +418,10 @@ def osm_data_collection_pipeline(
     config = clean_config(config)
     feature_selection = FeatureSelection.example(config)
 
-    update_progress(
-        export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage",
-    )
+    update_progress(export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage")
     geom = Polygon.from_bbox(bbox)
     g = geopackage.Geopackage(
-        pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
+        pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
@@ -465,9 +447,7 @@ def osm_data_collection_pipeline(
 
     ret_gpkg_filepath = g.results[0].parts[0]
     assert ret_gpkg_filepath == gpkg_filepath
-    update_progress(
-        export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
-    )
+    update_progress(export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline")
     result = {"osm": osm_filename, "pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
     return result
@@ -877,7 +857,7 @@ def mbtiles_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs,
+    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs
 ):
     """
     Function defining geopackage export function.
@@ -970,7 +950,7 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
     hfa_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "img")
-    hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
+    hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
 
     result["file_extension"] = "img"
     result["driver"] = "hfa"
@@ -1133,7 +1113,7 @@ def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, pro
     """
 
     # Strip out query string parameters that might conflict
-    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url)
 
     query_params = {
         "SERVICE": "WFS",
@@ -1312,12 +1292,7 @@ def get_arcgis_query_url(service_url: str, bbox: list) -> str:
         # if no url query we can just check for trailing slash and move on
         service_url = service_url.rstrip("/\\")
     finally:
-        query_params = {
-            "where": "objectid=objectid",
-            "outfields": "*",
-            "geometry": str(bbox).strip("[]"),
-            "f": "json",
-        }
+        query_params = {"where": "objectid=objectid", "outfields": "*", "geometry": str(bbox).strip("[]"), "f": "json"}
         query_str = urlencode(query_params, safe="=*")
         query_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
@@ -1427,7 +1402,7 @@ def raster_file_export_task(
 
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
 def bounds_export_task(
-    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs,
+    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs
 ):
     """
     Function defining geopackage export function.
@@ -1444,7 +1419,7 @@ def bounds_export_task(
 
     gpkg = os.path.join(stage_dir, "{0}-{1}_bounds.gpkg".format(provider_slug, projection))
     gpkg = geopackage.add_geojson_to_geopackage(
-        geojson=bounds, gpkg=gpkg, layer_name="bounds", task_uid=task_uid, user_details=user_details,
+        geojson=bounds, gpkg=gpkg, layer_name="bounds", task_uid=task_uid, user_details=user_details
     )
 
     result["result"] = gpkg
@@ -1452,9 +1427,7 @@ def bounds_export_task(
     return result
 
 
-@app.task(
-    name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True,
-)
+@app.task(name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def mapproxy_export_task(
     self,
     result=None,
@@ -1643,7 +1616,7 @@ def create_zip_task(
             include_files=include_files,
             run_zip_file_uid=run_zip_file_uid,
             file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name,
+                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name
             ),
             static_files=get_style_files(),
             metadata=metadata,
@@ -1739,7 +1712,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
                     else:
                         # Put the support files in the correct directory.
                         filename = os.path.join(
-                            Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename),
+                            Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
                         )
                 manifest_ignore_files.append(filename)
                 zipfile.write(absolute_file_path, arcname=filename)
@@ -1804,7 +1777,7 @@ class FinalizeRunBase(EventKitBaseTask):
         #    this waits until all provider tasks have finished before continuing.
         if any(getattr(TaskState, task.status, None) == TaskState.PENDING for task in provider_tasks):
             finalize_run_task.retry(
-                result=result, run_uid=run_uid, stage_dir=stage_dir, interval_start=4, interval_max=10,
+                result=result, run_uid=run_uid, stage_dir=stage_dir, interval_start=4, interval_max=10
             )
 
         # mark run as incomplete if any tasks fail
@@ -1976,18 +1949,14 @@ def fail_synchronous_task_chain(data_provider_task_record=None):
 
 @app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
 def create_datapack_preview(
-    result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
+    result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs
 ):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
     """
     result = result or {}
     try:
-        from eventkit_cloud.utils.image_snapshot import (
-            get_wmts_snapshot_image,
-            make_snapshot_downloadable,
-            fit_to_area,
-        )
+        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, make_snapshot_downloadable, fit_to_area
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 
@@ -2018,7 +1987,7 @@ def create_datapack_preview(
 
 @app.task(name="Cancel Export Provider Task", base=EventKitBaseTask)
 def cancel_export_provider_task(
-    result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs,
+    result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs
 ):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -2074,7 +2043,7 @@ def cancel_export_provider_task(
 
         # Add canceled to the cache so processes can check in to see if they should abort.
         set_cache_value(
-            uid=export_task.uid, attribute="status", model_name="ExportTaskRecord", value=TaskState.CANCELED.value,
+            uid=export_task.uid, attribute="status", model_name="ExportTaskRecord", value=TaskState.CANCELED.value
         )
 
     if TaskState[data_provider_task_record.status] not in TaskState.get_finished_states():
@@ -2088,9 +2057,7 @@ def cancel_export_provider_task(
 
 
 @app.task(name="Cancel Run", base=EventKitBaseTask)
-def cancel_run(
-    result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
-):
+def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
     result = result or {}
 
     export_run = ExportRun.objects.get(uid=export_run_uid)

@@ -446,7 +446,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config="""        
+            config="""
             cert_info:
                 - cert_path: '/path/to/cert'
                   cert_pass: 'fake_pass'
