@@ -8,7 +8,9 @@ from gunicorn.http import wsgi
 class Response(wsgi.Response):
     def default_headers(self, *args, **kwargs):
         headers = super(Response, self).default_headers(*args, **kwargs)
-        headers.append(f"Content-Security-Policy: ${os.getenv('CONTENT_SECURITY_POLICY')}")
+        content_security_policy = os.getenv("CONTENT_SECURITY_POLICY", None)
+        if content_security_policy:
+            headers.append(f"Content-Security-Policy: ${content_security_policy}")
         return [header for header in headers if not header.startswith("Server:")]
 
 
