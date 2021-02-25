@@ -10,7 +10,7 @@ class Response(wsgi.Response):
         headers = super(Response, self).default_headers(*args, **kwargs)
         content_security_policy = os.getenv("CONTENT_SECURITY_POLICY", None)
         if content_security_policy:
-            headers.append(f"Content-Security-Policy: ${content_security_policy}")
+            headers.append(f"Content-Security-Policy: {content_security_policy}")
         return [header for header in headers if not header.startswith("Server:")]
 
 
