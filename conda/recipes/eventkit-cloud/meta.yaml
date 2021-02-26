@@ -35,6 +35,7 @@ requirements:
     - osmctools=0.9.0
     - proj=7.1.1
     - zstd=1.4.5
+    - requests_pkcs12=1.6
 about:
   home: https://github.com/eventkit/eventkit-cloud
   license: BSD 3-Clause
