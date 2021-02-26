@@ -454,6 +454,7 @@ def osm_data_collection_pipeline(
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
     )
+
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
     # --- Add the Land Boundaries polygon layer, this accounts for the majority of post-processing time
