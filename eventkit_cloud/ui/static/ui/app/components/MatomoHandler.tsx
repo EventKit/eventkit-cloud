@@ -37,8 +37,10 @@ function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: str
         g.src = matomoJsUrl;
         g.id = 'matomo';
         document.getElementsByTagName('script')[0].parentNode.insertBefore(g, s);
-
+        _paq.push(['disableCookies']);
+        
         if (appName) {
+
             _paq.push(['setDocumentTitle', appName]);
         }
         /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
