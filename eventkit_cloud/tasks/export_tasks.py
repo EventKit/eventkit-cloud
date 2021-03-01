@@ -290,12 +290,16 @@ class ExportTask(EventKitBaseTask):
         export_task_record.status = status
         export_task_record.save()
         logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
-        if self.abort_on_error:
-            data_provider_task_record = export_task_record.export_provider_task
-            fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
-            run = data_provider_task_record.run
-            stage_dir = kwargs["stage_dir"]
-            export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
+        if self.abort_on_error or True:
+            try:
+                data_provider_task_record = export_task_record.export_provider_task
+                fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
+                run = data_provider_task_record.run
+                stage_dir = kwargs["stage_dir"]
+                export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
+            except Exception:
+                tb = traceback.format_exc()
+                logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
         return {"status": status}
 
     def update_task_state(self, result=None, task_status=TaskState.RUNNING.value, task_uid=None):
@@ -889,7 +893,6 @@ def geotiff_export_task(
     Function defining geopackage export function.
     """
     result = result or {}
-
     gtiff_in_dataset = parse_result(result, "source")
     provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
     gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
@@ -1939,39 +1942,42 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     Handles un-recoverable errors in export tasks.
     """
     result = result or {}
-
-    run = ExportRun.objects.get(uid=run_uid)
     try:
-        if os.path.isdir(stage_dir):
-            if not os.getenv("KEEP_STAGE", False):
-                shutil.rmtree(stage_dir)
-    except IOError:
-        logger.error("Error removing {0} during export finalize".format(stage_dir))
+        run = ExportRun.objects.get(uid=run_uid)
+        try:
+            if os.path.isdir(stage_dir):
+                if not os.getenv("KEEP_STAGE", False):
+                    shutil.rmtree(stage_dir)
+        except IOError:
+            logger.error("Error removing {0} during export finalize".format(stage_dir))
 
-    site_url = settings.SITE_URL
-    url = "{0}/status/{1}".format(site_url.rstrip("/"), run.job.uid)
-    addr = run.user.email
-    subject = "Your Eventkit Data Pack has a failure."
-    # email user and administrator
-    to = [addr, settings.TASK_ERROR_EMAIL]
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-    ctx = {"url": url, "task_id": task_id, "job_name": run.job.name}
-    text = get_template("email/error_email.txt").render(ctx)
-    html = get_template("email/error_email.html").render(ctx)
-    msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-    msg.attach_alternative(html, "text/html")
-    msg.send()
+        site_url = settings.SITE_URL
+        url = "{0}/status/{1}".format(site_url.rstrip("/"), run.job.uid)
+        addr = run.user.email
+        subject = "Your Eventkit Data Pack has a failure."
+        # email user and administrator
+        to = [addr, settings.TASK_ERROR_EMAIL]
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
+        ctx = {"url": url, "task_id": task_id, "job_name": run.job.name}
+        text = get_template("email/error_email.txt").render(ctx)
+        html = get_template("email/error_email.html").render(ctx)
+        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+        msg.attach_alternative(html, "text/html")
+        msg.send()
 
-    # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
-    rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
-    if rocketchat_notifications:
-        channels = rocketchat_notifications["channels"]
-        message = f"@here: A DataPack has failed during processing. {ctx['url']}"
+        # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
+        rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
+        if rocketchat_notifications:
+            if "channels" not in rocketchat_notifications:
+                logger.error("Rocket Chat configuration missing or malformed.")
+            channels = rocketchat_notifications["channels"]
+            message = f"@here: A DataPack has failed during processing. {ctx['url']}"
 
-        client = RocketChat(**rocketchat_notifications)
-        for channel in channels:
-            client.post_message(channel, message)
-
+            client = RocketChat(**rocketchat_notifications)
+            for channel in channels:
+                client.post_message(channel, message)
+    except Exception as e:
+        logger.exception(e)
     return result
 
 
