@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
@@ -11,6 +12,12 @@ from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
+
+from eventkit_cloud.tasks.helpers import get_provider_staging_dir, get_run_staging_dir
+from eventkit_cloud.tasks.export_tasks import pick_up_run_task
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import status
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -75,3 +82,49 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
     data_provider_task_record.estimated_size = estimated_size
     data_provider_task_record.estimated_duration = estimated_duration
     data_provider_task_record.save()
+
+
+@app.task(name="Rerun data provider records", bind=True, base=UserDetailsBase)
+def rerun_data_provider_records(user, run_uid, user_details, data_provider_slugs):
+
+    # from time import sleep
+    # sleep(20)
+
+    from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
+
+    # old_run
+    run = ExportRun.object.get(uid=run_uid)
+
+    try:
+        run_uid, run_zip_file_slug_sets = create_run(job_uid=run.job.uid, user=user, clone=True)
+    except Unauthorized:
+        raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to run this DataPack.")
+    except (InvalidLicense, Error) as err:
+        return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
+
+    run = ExportRun.objects.get(uid=run_uid)
+
+    # Remove the old data provider task record for the providers we're recreating.
+    for data_provider_task_record in run.data_provider_task_records.all():
+        if data_provider_task_record.provider is not None:
+            if data_provider_task_record.provider.slug in data_provider_slugs:
+                data_provider_task_record.delete()
+
+    # Remove the files for the providers we want to recreate.
+    run_dir = get_run_staging_dir(run_uid)
+    for data_provider_slug in data_provider_slugs:
+        stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
+        if os.path.exists(stage_dir):
+            shutil.rmtree(stage_dir)
+
+    if run:
+        pick_up_run_task.apply_async(
+            queue="runs",
+            routing_key="runs",
+            kwargs={
+                "run_uid": run_uid,
+                "user_details": user_details,
+                "data_provider_slugs": data_provider_slugs,
+                "run_zip_file_slug_sets": run_zip_file_slug_sets,
+            },
+        )

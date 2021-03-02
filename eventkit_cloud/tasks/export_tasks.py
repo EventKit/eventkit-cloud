@@ -1022,7 +1022,7 @@ def reprojection_task(
 
     # This logic is only valid IFF this method only allows 4326 which is True as of 1.9.0.
     # This needs to be updated to compare the input and output if over source projections are allowed.
-    if not projection or 4326 in str(projection):
+    if not projection or "4326" in str(projection):
         logger.info(f"Skipping projection and renaming {in_dataset} to {out_dataset}")
         os.rename(in_dataset, out_dataset)
     else:

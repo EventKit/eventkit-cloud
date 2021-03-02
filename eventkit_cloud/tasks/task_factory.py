@@ -248,30 +248,8 @@ def create_run(job_uid, user=None, clone=False):
         with transaction.atomic():
             max_runs = settings.EXPORT_MAX_RUNS
 
-            # get the number of existing runs for this job
-            job = Job.objects.select_related("user").get(uid=job_uid)
-            if not job.data_provider_tasks.all():
-                raise Error(
-                    "This job does not have any data sources or formats associated with it, "
-                    "try cloning the job or submitting a new request."
-                )
-            invalid_licenses = get_invalid_licenses(job)
-            if invalid_licenses:
-                raise InvalidLicense(
-                    "The user: {0} has not agreed to the following licenses: {1}.\n"
-                    "Please use the user account page, or the user api to agree to the "
-                    "licenses prior to exporting the data.".format(job.user.username, invalid_licenses)
-                )
-            if not user:
-                user = job.user
+            job = check_job_permissions(job_uid)
 
-            jobs = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
-            if not jobs.filter(id=job.id):
-                raise Unauthorized(
-                    "The user: {0} is not authorized to create a run based on the job: {1}.".format(
-                        job.user.username, job.name
-                    )
-                )
             run_count = job.runs.filter(deleted=False).count()
             run_zip_file_slug_sets = None
             if clone:
@@ -309,6 +287,33 @@ def create_run(job_uid, user=None, clone=False):
     except DatabaseError as e:
         logger.error("Error saving export run: {0}".format(e))
         raise e
+
+
+def check_job_permissions(job_uid: str, user=None) -> Job:
+    # get the number of existing runs for this job
+    job = Job.objects.select_related("user").get(uid=job_uid)
+    if not job.data_provider_tasks.all():
+        raise Error(
+            "This job does not have any data sources or formats associated with it, "
+            "try cloning the job or submitting a new request."
+        )
+    invalid_licenses = get_invalid_licenses(job)
+    if invalid_licenses:
+        raise InvalidLicense(
+            "The user: {0} has not agreed to the following licenses: {1}.\n"
+            "Please use the user account page, or the user api to agree to the "
+            "licenses prior to exporting the data.".format(job.user.username, invalid_licenses)
+        )
+    if not user:
+        user = job.user
+
+    jobs = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
+    if not jobs.filter(id=job.id):
+        raise Unauthorized(
+            "The user: {0} is not authorized to create a run based on the job: {1}.".format(job.user.username, job.name)
+        )
+
+    return job
 
 
 def create_task(
