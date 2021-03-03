@@ -392,6 +392,7 @@ def osm_data_collection_pipeline(
     url=None,
     slug=None,
     bbox=None,
+    selection=None,
     user_details=None,
     config=None,
     eta=None,
@@ -401,46 +402,59 @@ def osm_data_collection_pipeline(
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
-    # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
-
-    # --- Overpass Query
-    op = overpass.Overpass(
-        bbox=bbox,
-        stage_dir=stage_dir,
-        slug=slug,
-        url=url,
-        job_name=job_name,
-        task_uid=export_task_record_uid,
-        raw_data_filename="{}_query.osm".format(job_name),
-        config=config,
-    )
-
-    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
-
-    # --- Convert Overpass result to PBF
-    osm_filename = os.path.join(stage_dir, osm_data_filename)
-    pbf_filename = os.path.join(stage_dir, "{}_query.pbf".format(job_name))
-    pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
-
-    # --- Generate thematic gpkg from PBF
-    provider_slug = get_export_task_record(export_task_record_uid).export_provider_task.provider.slug
-    gpkg_filepath = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
-    config = clean_config(config)
-    feature_selection = FeatureSelection.example(config)
+    pbf_file = yaml.load(config).get("pbf_file")
+
+    if pbf_file:
+        logger.info(f"Using PBF file: {pbf_file} instead of overpass.")
+        pbf_filepath = pbf_file
+    else:
+        # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
+        # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
+
+        # --- Overpass Query
+        op = overpass.Overpass(
+            bbox=bbox,
+            stage_dir=stage_dir,
+            slug=slug,
+            url=url,
+            job_name=job_name,
+            task_uid=export_task_record_uid,
+            raw_data_filename="{}_query.osm".format(job_name),
+            config=config,
+        )
+
+        osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
+
+        # --- Convert Overpass result to PBF
+        osm_filename = os.path.join(stage_dir, osm_data_filename)
+        pbf_filename = os.path.join(stage_dir, "{}_query.pbf".format(job_name))
+        pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
+
+    # --- Generate thematic gpkg from PBF
+    provider_slug = get_export_task_record(export_task_record_uid).export_provider_task.provider.slug
+    gpkg_filepath = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    feature_selection = FeatureSelection.example(clean_config(config))
 
     update_progress(
         export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage",
     )
     geom = Polygon.from_bbox(bbox)
+    if selection:
+        try:
+            with open(selection, "r") as geojson:
+                geom = Polygon(geojson)
+        except Exception as e:
+            logger.error(e)
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
     )
+
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
     # --- Add the Land Boundaries polygon layer, this accounts for the majority of post-processing time
@@ -468,7 +482,7 @@ def osm_data_collection_pipeline(
     update_progress(
         export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
     )
-    result = {"osm": osm_filename, "pbf": pbf_filepath, "gpkg": gpkg_filepath}
+    result = {"pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
     return result
 
@@ -507,6 +521,7 @@ def osm_data_collection_task(
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
 
+        selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
             task_uid,
             stage_dir,
@@ -514,17 +529,11 @@ def osm_data_collection_task(
             job_name=job_name,
             bbox=bbox,
             user_details=user_details,
+            selection=selection,
             url=overpass_url,
             config=config,
             eta=eta,
         )
-
-        selection = parse_result(result, "selection")
-        if selection:
-            logger.debug(
-                "Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results["gpkg"])
-            )
-            osm_results["gpkg"] = gdalutils.convert(boundary=selection, input_file=osm_results["gpkg"])
 
         result.update(osm_results)
         result["result"] = osm_results.get("gpkg")

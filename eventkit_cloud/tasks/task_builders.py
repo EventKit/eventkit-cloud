@@ -6,7 +6,7 @@ import os
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
@@ -69,13 +69,13 @@ class TaskChainBuilder(object):
 
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
-        provider = DataProvider.objects.get(slug=provider_task.provider.slug)
+        data_provider_task = DataProviderTask.objects.select_related("provider").get(uid=provider_task_uid)
+        data_provider = data_provider_task.provider
         job = run.job
 
         job_name = normalize_name(job.name)
         # get the formats to export
-        formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
+        formats = [provider_task_format.slug for provider_task_format in data_provider_task.formats.all()]
         export_tasks = {}
 
         # If WCS we will want geotiff...
@@ -94,7 +94,7 @@ class TaskChainBuilder(object):
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name=provider_task.provider.name, provider=provider, status=TaskState.PENDING.value, display=True,
+            run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
         )
         projections = get_metadata([data_provider_task_record.uid])["projections"]
 
@@ -109,7 +109,7 @@ class TaskChainBuilder(object):
             routing_key=queue_group,
             kwargs={
                 "run_uid": run.uid,
-                "data_provider_task_uid": provider_task.uid,
+                "data_provider_task_uid": data_provider_task.uid,
                 "data_provider_task_record_uid": data_provider_task_record.uid,
             },
         )
@@ -132,12 +132,12 @@ class TaskChainBuilder(object):
         """
         if export_tasks:
             subtasks = list()
-            if provider_task.provider.preview_url:
+            if data_provider.preview_url:
                 subtasks.append(
                     create_datapack_preview.s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
-                        task_uid=provider_task.uid,
+                        task_uid=data_provider_task.uid,
                         user_details=user_details,
                         task_record_uid=data_provider_task_record.uid,
                     ).set(queue=queue_group, routing_key=queue_group)
@@ -156,7 +156,7 @@ class TaskChainBuilder(object):
                         task_uid=task.get("task_uid"),
                         user_details=user_details,
                         locking_task_key=data_provider_task_record.uid,
-                        config=provider_task.provider.config,
+                        config=data_provider.config,
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
@@ -183,7 +183,7 @@ class TaskChainBuilder(object):
                             user_details=user_details,
                             locking_task_key=data_provider_task_record.uid,
                             projection=projection,
-                            config=provider_task.provider.config,
+                            config=data_provider.config,
                         ).set(queue=queue_group, routing_key=queue_group)
                     )
 
@@ -207,14 +207,14 @@ class TaskChainBuilder(object):
 
         # Set custom zoom levels if available, otherwise use the provider defaults.
 
-        min_zoom = provider_task.min_zoom if provider_task.min_zoom else provider_task.provider.level_from
-        max_zoom = provider_task.max_zoom if provider_task.max_zoom else provider_task.provider.level_to
+        min_zoom = data_provider_task.min_zoom if data_provider_task.min_zoom else data_provider.level_from
+        max_zoom = data_provider_task.max_zoom if data_provider_task.max_zoom else data_provider.level_to
 
         primary_export_task_signature = primary_export_task.s(
-            name=provider_task.provider.slug,
+            name=data_provider.slug,
             run_uid=run.uid,
-            provider_slug=provider_task.provider.slug,
-            overpass_url=provider_task.provider.url,
+            provider_slug=data_provider.slug,
+            overpass_url=data_provider.url,
             stage_dir=stage_dir,
             export_provider_task_record_uid=data_provider_task_record.uid,
             worker=worker,
@@ -223,12 +223,12 @@ class TaskChainBuilder(object):
             selection=job.the_geom.geojson,
             user_details=user_details,
             task_uid=primary_export_task_record.uid,
-            layer=provider_task.provider.layer,
+            layer=data_provider.layer,
             level_from=min_zoom,
             level_to=max_zoom,
             service_type=service_type,
-            service_url=provider_task.provider.url,
-            config=provider_task.provider.config,
+            service_url=data_provider.url,
+            config=data_provider.config,
         )
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name

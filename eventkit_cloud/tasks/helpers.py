@@ -538,6 +538,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") in [
             GeospatialDataType.VECTOR.value,
             "osm",
+            "nome",
         ]:  # TODO: handle osm generically like vector layers
             metadata["has_vector"] = True
 
