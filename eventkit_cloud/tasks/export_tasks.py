@@ -825,14 +825,20 @@ def geopackage_export_task(
     gpkg_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
     selection = parse_result(result, "selection")
 
-    gpkg = gdalutils.convert(
-        driver="gpkg",
-        input_file=gpkg_in_dataset,
-        output_file=gpkg_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        projection=projection,
-    )
+    # This assumes that the source dataset has already been "clipped".  Since most things are tiles or selected
+    # based on area it doesn't make sense to run this again.  If that isn't true this may need to be updated.
+    if os.path.splitext(gpkg_in_dataset)[1] == ".gpkg":
+        os.rename(gpkg_in_dataset, gpkg_out_dataset)
+        gpkg = gpkg_out_dataset
+    else:
+        gpkg = gdalutils.convert(
+            driver="gpkg",
+            input_file=gpkg_in_dataset,
+            output_file=gpkg_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            projection=projection,
+        )
 
     result["driver"] = "gpkg"
     result["result"] = gpkg
@@ -1023,16 +1029,24 @@ def reprojection_task(
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
-    reprojection = gdalutils.convert(
-        driver=driver,
-        input_file=in_dataset,
-        output_file=out_dataset,
-        task_uid=task_uid,
-        projection=projection,
-        boundary=selection,
-        warp_params=warp_params,
-        translate_params=translate_params,
-    )
+    # This logic is only valid IFF this method only allows 4326 which is True as of 1.9.0.
+    # This needs to be updated to compare the input and output if over source projections are allowed.
+    if not projection or 4326 in str(projection):
+        logger.info(f"Skipping projection and renaming {in_dataset} to {out_dataset}")
+        os.rename(in_dataset, out_dataset)
+    else:
+        # If you are updating this see the note above about source projection.
+
+        reprojection = gdalutils.convert(
+            driver=driver,
+            input_file=in_dataset,
+            output_file=out_dataset,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=selection,
+            warp_params=warp_params,
+            translate_params=translate_params,
+        )
 
     result["result"] = reprojection
 
