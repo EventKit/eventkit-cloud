@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 test_cert_info = """
     cert_info:
         cert_path: '/path/to/fake/cert'
-        cert_pass: 'fakepass'
+        cert_pass_var: 'fakepass'
 """
 
 
@@ -449,7 +449,7 @@ class TestExportTasks(ExportTaskBase):
             config="""
             cert_info:
                 - cert_path: '/path/to/cert'
-                  cert_pass: 'fake_pass'
+                  cert_pass_var: 'fake_pass'
 
             """,
         )

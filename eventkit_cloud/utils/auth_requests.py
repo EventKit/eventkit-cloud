@@ -53,11 +53,21 @@ def get_cert_info(kwargs_dict):
     Gets and returns the cert info from a kwargs dict if they are present.
 
     :param kwargs_dict: passed in dict representing kwargs passed to a calling function.
-    :return:tuple (cert_path, cert_pass) either may be None
+    :return:tuple (cert_path, cert_pass_var) either may be None
     """
-    cert_info = kwargs_dict.pop("cert_info", None) or dict()
-    cert_pass_var = cert_info.get("cert_pass")
-    return cert_info.get("cert_path"), os.getenv(cert_pass_var) if cert_pass_var is not None else None
+    cert_info = kwargs_dict.pop("cert_info", None)
+    if not cert_info:
+        return None, None
+    cert_path = cert_info.get("cert_path")
+    cert_pass_var = cert_info.get("cert_pass_var", "")
+    cert_pass_var = os.getenv(cert_pass_var)
+    if not (cert_path and cert_pass_var):
+        logger.error(
+            f"Cert_info was passed in but cert_path={cert_path} or cert_pass_var={cert_pass_var})"
+            f"are not correctly configured"
+        )
+        raise Exception("Certificate information is improperly configured.")
+    return cert_path, cert_pass_var
 
 
 def cert_var_to_cert(func):
@@ -68,10 +78,10 @@ def cert_var_to_cert(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
-        if cert_path is None or cert_pass is None:
+        cert_path, cert_pass_var = get_cert_info(kwargs)
+        if cert_path is None or cert_pass_var is None:
             return func(*args, **kwargs)
-        return func(pkcs12_filename=cert_path, pkcs12_password=cert_pass, *args, **kwargs)
+        return func(pkcs12_filename=cert_path, pkcs12_password=cert_pass_var, *args, **kwargs)
 
     return wrapper
 
@@ -126,8 +136,8 @@ def handle_basic_auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            cert_path, cert_pass = get_cert_info(kwargs)
-            if cert_path is None or cert_pass is None:
+            cert_path, cert_pass_var = get_cert_info(kwargs)
+            if cert_path is None or cert_pass_var is None:
                 cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
             url = kwargs.get("url")
             cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
@@ -151,9 +161,11 @@ class AuthSession(object):
 
     @handle_basic_auth
     def get(self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
-        if not (cert_path is None or cert_pass is None):
-            self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
+        cert_path, cert_pass_var = get_cert_info(kwargs)
+        if not (cert_path is None or cert_pass_var is None):
+            self.session.mount(
+                kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass_var)
+            )
         return self.session.get(*args, **kwargs)
 
 
@@ -209,12 +221,12 @@ def patch_https(cert_info: dict = None):
     """
 
     def _new_init(_self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(dict(cert_info=cert_info))
-        if not (cert_path is None or cert_pass is None):
+        cert_path, cert_pass_var = get_cert_info(dict(cert_info=cert_info))
+        if not (cert_path is None or cert_pass_var is None):
             # create_ssl_sslcontext needs the cert data, instead of the filepath
             with open(cert_path, "rb") as pkcs12_file:
                 pkcs12_data = pkcs12_file.read()
-            kwargs["context"] = create_ssl_sslcontext(pkcs12_data, cert_pass)
+            kwargs["context"] = create_ssl_sslcontext(pkcs12_data, cert_pass_var)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init

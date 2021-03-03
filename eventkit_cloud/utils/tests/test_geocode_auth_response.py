@@ -80,7 +80,7 @@ class TestGeoCodeAuthResponse(TestCase):
         mock_auth_requests.get.return_value = expected_response
         self.assertIsNone(get_cached_response(example_url, example_payload))
 
-    @patch.dict(os.environ, {"GEOCODING_AUTH_CERT_PATH": "FAKE/GEO/PATH", "GEOCODING_AUTH_CERT_PASS": "FAKEPASS"})
+    @patch.dict(os.environ, {"GEOCODING_AUTH_CERT_PATH": "FAKE/GEO/PATH", "GEOCODING_AUTH_CERT_PASS_VAR": "FAKEPASS"})
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.check_data")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.auth_requests")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.update_session_cookies")
@@ -95,7 +95,9 @@ class TestGeoCodeAuthResponse(TestCase):
         self.assertEquals(expected_response, get_auth_response(example_url, example_payload))
         mock_update_session_cookies.assert_called_once_with(example_cookies)
         mock_auth_requests.AuthSession().get.assert_called_once_with(
-            example_url, params=example_payload, cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass="FAKEPASS")
+            example_url,
+            params=example_payload,
+            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR"),
         )
 
         expected_response = Mock(ok=False)

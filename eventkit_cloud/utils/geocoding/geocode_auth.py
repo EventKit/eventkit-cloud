@@ -69,4 +69,4 @@ def get_geocode_cert_info():
 
     :return: cert_info dict for geocoder
     """
-    return dict(cert_path=os.getenv("GEOCODING_AUTH_CERT_PATH", None), cert_pass=os.getenv("GEOCODING_AUTH_CERT_PASS"))
+    return dict(cert_path=os.getenv("GEOCODING_AUTH_CERT_PATH", None), cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR")

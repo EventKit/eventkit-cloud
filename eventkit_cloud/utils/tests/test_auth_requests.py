@@ -2,6 +2,7 @@
 import http.client
 import logging
 import urllib
+import os
 from unittest.mock import patch, MagicMock, ANY, mock_open
 
 import requests
@@ -30,10 +31,10 @@ class TestAuthResult(TransactionTestCase):
         req_patch.side_effect = None
         req_patch.return_value = response
 
-        cert_info = dict(cert_path="fake/path/to", cert_pass="fakepass")
+        cert_info = dict(cert_path="fake/path/to", cert_pass_var="fakepassvar")
         result = req(self.url, cert_info=cert_info, data=42)
 
-        req_patch.assert_called_with(self.url, data=42, pkcs12_filename="fake/path/to", pkcs12_password="fakepass")
+        req_patch.assert_called_with(self.url, data=42, pkcs12_filename="fake/path/to", pkcs12_password="FAKEPASS")
         self.assertEqual("test", result.content)
 
         result = req(self.url, cert_info=None, data=42)
@@ -41,18 +42,22 @@ class TestAuthResult(TransactionTestCase):
         req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.get")
     def test_get(self, get_patch):
         self.do_tests(auth_requests.get, get_patch)
 
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.head")
     def test_head(self, get_patch):
         self.do_tests(auth_requests.head, get_patch)
 
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.post")
     def test_post(self, post_patch):
         self.do_tests(auth_requests.post, post_patch)
 
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.create_ssl_sslcontext")
     @patch("eventkit_cloud.utils.auth_requests.os.getenv")
     def test_patch_https(self, getenv, create_ssl_sslcontext):
@@ -66,7 +71,7 @@ class TestAuthResult(TransactionTestCase):
             auth_requests._ORIG_HTTPSCONNECTION_INIT = new_orig_init
             # Confirm that the patch is applied
             getenv.return_value = "key and cert contents"
-            auth_requests.patch_https(dict(cert_path="fake/path/to", cert_pass="fakepass"))
+            auth_requests.patch_https(dict(cert_path="fake/path/to", cert_pass_var="fakepassvar"))
             self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, http.client.HTTPSConnection.__init__)
             self.assertEqual(
                 "_new_init", http.client.HTTPSConnection.__init__.__name__
