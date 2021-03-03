@@ -1,6 +1,5 @@
 import os
 
-from django.conf import settings
 from gunicorn.http import wsgi
 
 # Used to configure gunicorn settings.
