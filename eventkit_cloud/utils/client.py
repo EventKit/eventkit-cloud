@@ -83,10 +83,15 @@ class EventKitClient(object):
                 runs += response.json()
                 page += 1
             else:
-                break
+                # If the initial request was either empty or invalid raise an exception.
+                if page == 1:
+                    response.raise_for_status()
+                else:
+                    # We got some runs, but other requests failed. No more pages.
+                    break
         return runs
 
-    def get_runs(self, params):
+    def get_runs(self, params=dict()):
         response = self.client.get(self.runs_url, params=params)
         if not response.ok:
             logger.info(response.content.decode())
