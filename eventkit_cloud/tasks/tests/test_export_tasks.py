@@ -47,7 +47,11 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task,
     vector_file_export_task,
     raster_file_export_task,
+<<<<<<< HEAD
     osm_data_collection_pipeline,
+=======
+    reprojection_task,
+>>>>>>> Clean up, and add/update tests
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -1613,6 +1617,128 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["gpkg"])
 
         mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
+
+    @patch("eventkit_cloud.tasks.export_tasks.parse_result")
+    @patch("eventkit_cloud.tasks.export_tasks.os")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_metadata")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.mapproxy.MapproxyGeopackage")
+    def test_reprojection_task(
+        self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os, mock_parse_result
+    ):
+        job_name = self.job.name.lower()
+        in_projection = "4326"
+        out_projection = "3857"
+        expected_provider_slug = "some_provider"
+        self.provider.slug = expected_provider_slug
+        self.provider.config = None
+        self.provider.save()
+        date = default_format_time(timezone.now())
+        driver = "tif"
+        expected_outfile = f"{job_name}-{out_projection}-{expected_provider_slug}-{date}.{driver}"
+        expected_infile = f"{job_name}-{in_projection}-{expected_provider_slug}-{date}.{driver}"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        expected_input_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_infile
+        )
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskState.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
+        )
+        task_uid = str(saved_export_task.uid)
+        config = 'cert_var: "test_var"'
+        selection = "selection.geojson"
+        metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
+        mock_get_metadata.return_value = metadata
+        mock_gdal_convert.return_value = expected_output_path
+        mock_parse_result.side_effect = [driver, selection, None, expected_infile]
+        mock_get_export_filepath.return_value = expected_output_path
+        mock_os.path.splitext.return_value = ["path", driver]
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+
+        reprojection_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=task_uid,
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=None,
+            config=None,
+            user_details=None,
+        )
+        # test reprojection is skipped
+        mock_os.rename.assert_called_once_with(expected_infile, expected_output_path)
+
+        mock_parse_result.side_effect = [driver, selection, None, expected_input_path]
+        reprojection_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=task_uid,
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=out_projection,
+            config=config,
+            user_details=None,
+        )
+
+        # test reprojecting
+        mock_gdal_convert.assert_called_once_with(
+            driver=driver,
+            input_file=f"GTIFF_RAW:{expected_input_path}",
+            output_file=expected_output_path,
+            task_uid=task_uid,
+            projection=out_projection,
+            boundary=selection,
+            warp_params=ANY,
+            translate_params=ANY,
+        )
+
+        # test reprojecting raster geopackages
+        driver = "gpkg"
+        level_from = 0
+        level_to = 12
+        metadata = {
+            "data_sources": {expected_provider_slug: {"type": "raster", "level_from": level_from, "level_to": level_to}}
+        }
+        mock_get_metadata.return_value = metadata
+        expected_infile = f"{job_name}-{in_projection}-{expected_provider_slug}-{date}.{driver}"
+        expected_input_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_infile
+        )
+        mock_os.path.splitext.return_value = ["path", driver]
+        mock_parse_result.side_effect = [driver, selection, None, expected_input_path]
+        reprojection_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=task_uid,
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=out_projection,
+            config=config,
+            user_details=None,
+        )
+
+        mock_mapproxy.assert_called_once_with(
+            gpkgfile=expected_output_path,
+            service_url=expected_output_path,
+            name=job_name,
+            config=config,
+            bbox=ANY,
+            level_from=level_from,
+            level_to=level_to,
+            task_uid=task_uid,
+            selection=selection,
+            projection=out_projection,
+            input_gpkg=expected_input_path,
+        )
+
+        mock_mapproxy().convert.assert_called_once()
 
 
 class TestFormatTasks(ExportTaskBase):

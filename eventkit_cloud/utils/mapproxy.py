@@ -234,11 +234,6 @@ class MapproxyGeopackage(object):
 
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
-
-        logger.info("> Using Configuration:")
-        logger.info(conf_dict)
-        logger.info(" > Using Seed Configuration:")
-        logger.info(seed_dict)
         errors = validate_references(conf_dict)
         if errors:
             logger.error("MapProxy configuration failed.")
