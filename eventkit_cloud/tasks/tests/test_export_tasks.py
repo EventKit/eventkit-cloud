@@ -47,11 +47,8 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task,
     vector_file_export_task,
     raster_file_export_task,
-<<<<<<< HEAD
     osm_data_collection_pipeline,
-=======
     reprojection_task,
->>>>>>> Clean up, and add/update tests
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
