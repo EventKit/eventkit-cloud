@@ -56,7 +56,8 @@ def get_cert_info(kwargs_dict):
     :return:tuple (cert_path, cert_pass) either may be None
     """
     cert_info = kwargs_dict.pop("cert_info", None) or dict()
-    return cert_info.get("cert_path"), os.getenv(cert_info.get("cert_pass"), None)
+    cert_pass_var = cert_info.get("cert_pass")
+    return cert_info.get("cert_path"), os.getenv(cert_pass_var) if cert_pass_var is not None else None
 
 
 def cert_var_to_cert(func):
