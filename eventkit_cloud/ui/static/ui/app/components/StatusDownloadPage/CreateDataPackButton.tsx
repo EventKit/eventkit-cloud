@@ -84,8 +84,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 });
 
 export async function downloadRequest(url: string, displaySetter: (value: boolean) => void) {
-    displaySetter(true);
-
     return await axios({
         url,
         headers: {'X-CSRFToken': getCookie('csrftoken')},

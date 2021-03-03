@@ -8,6 +8,7 @@ import sys
 import uuid
 
 import celery
+import yaml
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -46,6 +47,7 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task,
     vector_file_export_task,
     raster_file_export_task,
+    osm_data_collection_pipeline,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -494,9 +496,10 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(sample_input, result["source"])
 
-    @patch("eventkit_cloud.utils.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.os.rename")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_run_gpkg_export_task(self, mock_request, mock_convert):
+    def test_run_gpkg_export_task(self, mock_request, mock_convert, mock_rename):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -507,8 +510,7 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
-
-        mock_convert.return_value = expected_output_path
+        mock_rename.return_value = expected_output_path
         previous_task_result = {"source": expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
         export_provider_task = DataProviderTaskRecord.objects.create(
@@ -517,10 +519,8 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=geopackage_export_task.name
         )
-        geopackage_export_task.update_task_state(
-            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
-        )
-        result = geopackage_export_task.run(
+
+        result = geopackage_export_task(
             run_uid=self.run.uid,
             result=previous_task_result,
             task_uid=str(saved_export_task.uid),
@@ -528,9 +528,27 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
         )
+        mock_rename.assert_called_once_with(expected_output_path, expected_output_path)
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
+
+        example_input_file = "test.tif"
+        previous_task_result = {"source": example_input_file}
+
+        mock_convert.return_value = expected_output_path
+
+        result = geopackage_export_task(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_file=example_input_file,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -538,7 +556,60 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEqual(expected_output_path, result["result"])
-        self.assertEqual(expected_output_path, result["source"])
+        self.assertEqual(example_input_file, result["source"])
+
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    @patch("eventkit_cloud.tasks.export_tasks.os")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
+    @patch("eventkit_cloud.tasks.export_tasks.update_progress")
+    @patch("eventkit_cloud.tasks.export_tasks.geopackage")
+    @patch("eventkit_cloud.tasks.export_tasks.FeatureSelection")
+    @patch("eventkit_cloud.tasks.export_tasks.pbf")
+    @patch("eventkit_cloud.tasks.export_tasks.overpass")
+    def test_osm_data_collection_pipeline(
+        self,
+        mock_overpass,
+        mock_pbf,
+        mock_feature_selection,
+        mock_geopackage,
+        mock_update_progress,
+        mock_gdalutils,
+        mock_os,
+        mock_get_export_task_record,
+        mock_get_export_filepath,
+    ):
+        example_export_task_record_uid = "1234"
+        stage_dir = settings.EXPORT_STAGING_ROOT
+        example_bbox = [-1, -1, 1, 1]
+        example_gpkg = "/path/to/file.gpkg"
+        mock_get_export_filepath.return_value = example_gpkg
+        mock_geopackage.Geopackage.return_value = Mock(results=[Mock(parts=[example_gpkg])])
+        # Test with using overpass
+        example_overpass_query = "some_query; out;"
+        example_config = {"overpass_query": example_overpass_query}
+        osm_data_collection_pipeline(
+            example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+        )
+
+        mock_overpass.Overpass.assert_called_once()
+        mock_pbf.OSMToPBF.assert_called_once()
+        mock_feature_selection.example.assert_called_once()
+
+        mock_overpass.reset_mock()
+        mock_pbf.reset_mock()
+        mock_feature_selection.reset_mock()
+
+        # Test with using pbf_file
+        example_pbf_file = "test.pbf"
+        example_config = {"pbf_file": example_pbf_file}
+        osm_data_collection_pipeline(
+            example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+        )
+
+        mock_overpass.Overpass.assert_not_called()
+        mock_pbf.OSMToPBF.assert_not_called()
+        mock_feature_selection.assert_not_called()
 
     @patch("eventkit_cloud.tasks.export_tasks.get_creation_options")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
