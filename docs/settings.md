@@ -22,6 +22,9 @@ The SECRET_KEY is a django setting used to encrypt certain items with in the app
 This should random, kept secret, and shared between any webserver portions of the application (i.e. the api and map)
 <pre>SECRET_KEY=some_super_secret_key</pre>
 
+Set CONTENT_SECURITY_POLICY for the browser to allow external resources. 
+<pre>CONTENT_SECURITY_POLICY="default-src 'none'; style-src cdn.example.com;"</pre>
+
 ### Storage
 
 #### S3 Storage
