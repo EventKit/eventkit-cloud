@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import subprocess
 from string import Template
+
+import json
+from django.conf import settings
+from django.contrib.gis.geos import Polygon
 
 from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
 from osgeo import gdal, osr
@@ -12,7 +15,7 @@ from .artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.utils import gdalutils
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 SPATIAL_SQL = """
 UPDATE 'points' SET geom=GeomFromGPB(geom);
@@ -253,7 +256,7 @@ class Geopackage(object):
         output_gpkg,
         stage_dir,
         feature_selection,
-        aoi_geom,
+        aoi_geom: Polygon,
         tempdir=None,
         per_theme=False,
         progress=None,
@@ -305,17 +308,29 @@ class Geopackage(object):
         """
 
         if self.is_complete:
-            LOG.debug("Skipping Geopackage, file exists")
+            logger.debug("Skipping Geopackage, file exists")
             return
         keys_points = self.feature_selection.key_union("points")
         keys_lines = self.feature_selection.key_union("lines")
         keys_polygons = self.feature_selection.key_union("polygons")
         osmconf = OSMConfig(self.stage_dir, points=keys_points, lines=keys_lines, polygons=keys_polygons)
         conf = osmconf.create_osm_conf()
-        ogr_cmd = self.ogr_cmd.safe_substitute({"gpkg": self.output_gpkg, "osm": self.input_pbf, "osmconf": conf})
-        LOG.debug("Running: %s" % ogr_cmd)
-        subprocess.check_call(ogr_cmd, shell=True, executable="/bin/bash")
-
+        logger.debug(
+            f"Creating OSM gpkg using OSM_MAX_TMPFILE_SIZE {settings.OSM_MAX_TMPFILE_SIZE}"
+            f"from {self.input_pbf} to {self.output_gpkg}"
+        )
+        gdalutils.convert(
+            input_file=self.input_pbf,
+            output_file=self.output_gpkg,
+            driver="GPKG",
+            boundary=json.loads(self.aoi_geom.geojson),
+            config_options=[
+                ("OSM_CONFIG_FILE", conf),
+                ("OGR_INTERLEAVED_READING", "YES"),
+                ("OSM_MAX_TMPFILE_SIZE", settings.OSM_MAX_TMPFILE_SIZE),
+            ],
+            task_uid=self.export_task_record_uid,
+        )
         """
         Create the default osm gpkg schema
         """
@@ -336,12 +351,12 @@ class Geopackage(object):
         # add themes
         create_sqls, index_sqls = self.feature_selection.sqls
         for query in create_sqls:
-            LOG.debug(query)
+            logger.debug(query)
             cur.executescript(query)
         update_progress(self.export_task_record_uid, 50, subtask_percentage, subtask_start, eta=eta)
 
         for query in index_sqls:
-            LOG.debug(query)
+            logger.debug(query)
             cur.executescript(query)
 
         """
@@ -435,9 +450,6 @@ class Geopackage(object):
                             table=table_name
                         )
                     )
-
-
-logger = logging.getLogger(__name__)
 
 
 def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid=None, user_details=None):
