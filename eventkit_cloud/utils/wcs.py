@@ -176,7 +176,7 @@ class WCSConverter(object):
             except OSError:
                 pass
             try:
-                cert_info = self.config.get("cert_info", self.slug)
+                cert_info = self.config.get("cert_info")
                 req = auth_requests.get(
                     self.service_url,
                     params=params,
