@@ -87,8 +87,6 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 @app.task(name="Rerun data provider records", bind=True, base=UserDetailsBase)
 def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provider_slugs):
-    # from time import sleep
-    # sleep(25)
 
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
