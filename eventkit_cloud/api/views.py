@@ -1273,7 +1273,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         and current user from the request.
         * returns: the serialized run data.
         """
-        print("________________________ rerun_providers begin")
+
         data_provider_slugs = request.data["data_provider_slugs"]
         run = ExportRun.objects.get(uid=uid)
 
@@ -1286,18 +1286,18 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             if data_provider_slug not in all_provider_slugs:
                 return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
 
-        if check_job_permissions(run.job.uid):
+        if check_job_permissions(run.job.uid)[0]:
             # This is just to make it easier to trace when user_details haven't been sent
             user_details = get_user_details(request)
             if user_details is None:
                 user_details = {"username": "unknown-JobViewSet.run"}
 
-            run.data_provider_task_records.filter(uid__in=data_provider_slugs).update(status=TaskState.PENDING.value)
+            run.data_provider_task_records.filter(slug__in=data_provider_slug).update(status=TaskState.PENDING.value)
             run.status = TaskState.SUBMITTED.value
             running = ExportRunSerializer(run, context={"request": request})
-            print("________________________ rerun_providers before")
-            rerun_data_provider_records(request.user, run.uid, user_details, data_provider_slugs)
-            print("________________________ rerun_providers after")
+            rerun_data_provider_records.apply_async(
+                args=(run.uid, request.user.id, user_details, data_provider_slugs), queue="runs", routing_key="runs"
+            )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)

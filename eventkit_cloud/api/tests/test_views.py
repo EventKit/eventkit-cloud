@@ -1000,41 +1000,27 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEqual(0, len(result))
 
-    @patch("eventkit_cloud.api.views.create_run")
-    @patch("eventkit_cloud.api.views.shutil")
-    @patch("eventkit_cloud.api.views.os")
-    @patch("eventkit_cloud.api.views.pick_up_run_task")
-    def test_rerun_providers(self, pickup_mock, os_mock, shutil_mock, create_run_mock):
+    @patch("eventkit_cloud.api.views.rerun_data_provider_records")
+    @patch("eventkit_cloud.api.views.check_job_permissions")
+    def test_rerun_providers(self, mock_check_job_permissions, mock_rerun_records):
         run = ExportRun.objects.create(job=self.job, user=self.user)
         data_provider_task_record = DataProviderTaskRecord.objects.create(
             run=run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         run.data_provider_task_records.add(data_provider_task_record)
-        new_run_uid, run_zip_file_slug_sets = create_run_mock.return_value = (
-            ExportRun.objects.create(job=self.job, user=self.user).uid,
-            [],
-        )
-        os_mock.path.exists.return_value = True
 
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         url = f"/api/runs/{run.uid}/rerun_providers"
-        request_data = {"data_provider_slugs": ["osm-generic"]}
+        expected_slugs = ["osm-generic"]
+        request_data = {"data_provider_slugs": expected_slugs}
 
         response = self.client.post(url, request_data, format="json")
         self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code)
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 
-        shutil_mock.rmtree.assert_called_once()
-        create_run_mock.assert_called_with(job_uid=self.job.uid, user=self.user, clone=True)
-        pickup_mock.apply_async.assert_called_with(
-            kwargs={
-                "run_uid": new_run_uid,
-                "user_details": expected_user_details,
-                "data_provider_slugs": ["osm-generic"],
-                "run_zip_file_slug_sets": [],
-            },
-            queue="runs",
-            routing_key="runs",
+        mock_check_job_permissions.assert_called_once_with(run.job.uid)
+        mock_rerun_records.apply_async.assert_called_once_with(
+            args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue="runs", routing_key="runs"
         )
 
 

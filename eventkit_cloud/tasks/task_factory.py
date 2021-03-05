@@ -248,7 +248,7 @@ def create_run(job_uid, user=None, clone=False):
         with transaction.atomic():
             max_runs = settings.EXPORT_MAX_RUNS
 
-            job = check_job_permissions(job_uid)
+            job, user = check_job_permissions(job_uid, user)
 
             run_count = job.runs.filter(deleted=False).count()
             run_zip_file_slug_sets = None
@@ -313,7 +313,7 @@ def check_job_permissions(job_uid: str, user=None) -> Job:
             "The user: {0} is not authorized to create a run based on the job: {1}.".format(job.user.username, job.name)
         )
 
-    return job
+    return job, user
 
 
 def create_task(
