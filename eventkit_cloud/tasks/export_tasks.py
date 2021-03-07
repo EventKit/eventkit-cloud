@@ -10,17 +10,17 @@ import time
 import traceback
 from typing import List, Union
 from urllib.parse import urlencode, urljoin
-
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import yaml
+from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.contrib.gis.geos import Polygon
 from django.contrib.auth.models import User
-
+from django.contrib.gis.geos import Polygon
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -34,8 +34,10 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
-
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.helpers import clean_config
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -66,16 +68,7 @@ from eventkit_cloud.tasks.helpers import (
     download_data,
     download_concurrently,
 )
-from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.tasks.metadata import metadata_tasks
-from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
-from eventkit_cloud.utils.rocket_chat import RocketChat
-from eventkit_cloud.utils.stats.eta_estimator import ETA
-from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from audit_logging.celery_support import UserDetailsBase
-
 from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
     ExportTaskException,
@@ -84,8 +77,12 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     RunZipFile,
 )
-from eventkit_cloud.jobs.models import DataProviderTask
-import yaml
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.task_process import update_progress
+from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
+from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1026,27 +1023,62 @@ def reprojection_task(
 
     warp_params, translate_params = get_creation_options(config, driver)
 
-    if "tif" in os.path.splitext(in_dataset)[1]:
-        in_dataset = f"GTIFF_RAW:{in_dataset}"
-
     # This logic is only valid IFF this method only allows 4326 which is True as of 1.9.0.
     # This needs to be updated to compare the input and output if over source projections are allowed.
-    if not projection or 4326 in str(projection):
+    if not projection or "4326" in str(projection):
         logger.info(f"Skipping projection and renaming {in_dataset} to {out_dataset}")
         os.rename(in_dataset, out_dataset)
+        reprojection = out_dataset
     else:
         # If you are updating this see the note above about source projection.
-
-        reprojection = gdalutils.convert(
-            driver=driver,
-            input_file=in_dataset,
-            output_file=out_dataset,
-            task_uid=task_uid,
-            projection=projection,
-            boundary=selection,
-            warp_params=warp_params,
-            translate_params=translate_params,
+        dptr: DataProviderTaskRecord = DataProviderTaskRecord.objects.select_related("run__job").get(
+            tasks__uid__exact=task_uid
         )
+        metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+        data_type = metadata["data_sources"][provider_slug].get("type")
+
+        if "tif" in os.path.splitext(in_dataset)[1]:
+            in_dataset = f"GTIFF_RAW:{in_dataset}"
+
+        if (
+            "gpkg" in os.path.splitext(in_dataset)[1]
+            and driver == "gpkg"
+            and data_type == GeospatialDataType.RASTER.value
+        ):
+            # Use MapProxy instead of GDAL so all the pyramids/zoom levels of the source are preserved.
+
+            level_from = metadata["data_sources"][provider_slug].get("level_from")
+            level_to = metadata["data_sources"][provider_slug].get("level_to")
+
+            job_geom = dptr.run.job.the_geom
+            job_geom.transform(projection)
+            bbox = job_geom.extent
+            mp = mapproxy.MapproxyGeopackage(
+                gpkgfile=out_dataset,
+                service_url=out_dataset,
+                name=job_name,
+                config=config,
+                bbox=bbox,
+                level_from=level_from,
+                level_to=level_to,
+                task_uid=task_uid,
+                selection=selection,
+                projection=projection,
+                input_gpkg=in_dataset,
+            )
+            reprojection = mp.convert()
+
+        else:
+            reprojection = gdalutils.convert(
+                driver=driver,
+                input_file=in_dataset,
+                output_file=out_dataset,
+                task_uid=task_uid,
+                projection=projection,
+                boundary=selection,
+                warp_params=warp_params,
+                translate_params=translate_params,
+            )
 
     result["result"] = reprojection
 

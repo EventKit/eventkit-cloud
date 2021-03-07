@@ -118,10 +118,12 @@ class TestGeopackage(TransactionTestCase):
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, "imagery", bbox)
-        seed_template.assert_called_once_with(bbox=bbox, coverage_file=None, level_from=0, level_to=10)
+        seed_template.assert_called_once_with(bbox=bbox, coverage_file=None, level_from=0, level_to=10, projection=None)
         self.task_process.side_effect = Exception()
         with self.assertRaises(Exception):
             w2g.convert()
+
+        # test reproject
 
 
 class TestHelpers(TransactionTestCase):
