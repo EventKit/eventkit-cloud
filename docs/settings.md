@@ -22,6 +22,9 @@ The SECRET_KEY is a django setting used to encrypt certain items with in the app
 This should random, kept secret, and shared between any webserver portions of the application (i.e. the api and map)
 <pre>SECRET_KEY=some_super_secret_key</pre>
 
+Set CONTENT_SECURITY_POLICY for the browser to allow external resources. 
+<pre>CONTENT_SECURITY_POLICY="default-src 'none'; style-src cdn.example.com;"</pre>
+
 ### Storage
 
 #### S3 Storage
@@ -318,6 +321,11 @@ The max number of processes/threads the `runs` celery worker will use. This will
 
 The maximum amount of times you want Celery to retry an export related task prior to failing it and moving on.
 <pre>MAX_TASK_ATTEMPTS=5</pre>
+
+This is the maximum size in memory to process osm data in MB.
+After this size a file is used on disk next to the source data.
+See: https://gdal.org/drivers/vector/osm.html#internal-working-and-performance-tweaking
+<pre>OSM_MAX_TMPFILE_SIZE=100</pre>
 
 ### RocketChat Settings
 
