@@ -1292,8 +1292,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             if user_details is None:
                 user_details = {"username": "unknown-JobViewSet.run"}
 
-            run.data_provider_task_records.filter(slug__in=data_provider_slug).update(status=TaskState.PENDING.value)
+            data_provider_task_records = run.data_provider_task_records.filter(provider__slug__in=data_provider_slugs)
+            ExportTaskRecord.objects.filter(export_provider_task__in=data_provider_task_records).update(
+                status=TaskState.PENDING.value
+            )
+            data_provider_task_records.update(status=TaskState.PENDING.value)
             run.status = TaskState.SUBMITTED.value
+
             running = ExportRunSerializer(run, context={"request": request})
             rerun_data_provider_records.apply_async(
                 args=(run.uid, request.user.id, user_details, data_provider_slugs), queue="runs", routing_key="runs"
