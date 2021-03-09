@@ -10,7 +10,7 @@ from django.conf import settings
 
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry
+from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox_at_scale
 
 logger = logging.getLogger(__name__)
 
@@ -158,51 +158,58 @@ class WCSConverter(object):
                 # NOQA
             )
             raise Exception("Data source incorrectly configured.")
-        logger.info("Getting Dimensions...")
-        width, height = get_dimensions(self.bbox, float(service.get("scale")))
 
-        logger.info("{}, {}".format(width, height))
-        params["width"] = str(width)
-        params["height"] = str(height)
+        scale = float(service.get("scale"))
         params["service"] = "WCS"
         params["bbox"] = ",".join(map(str, self.bbox))
+        width, height = get_dimensions(self.bbox, scale)
+        bbox, sizes, tile_bboxes = get_chunked_bbox_at_scale(self.bbox, width, height)
+
+        logger.info(f"width: {width} -- height: {height}")
+        tile_size = get_dimensions(bbox, scale)[0] / sizes[0]
         geotiffs = []
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
-            outfile = "{0}-{1}{2}".format(file_path, idx, ext)
-            try:
-                os.remove(outfile)
-            except OSError:
-                pass
             try:
                 cert_var = self.config.get("cert_var", self.slug)
-                req = auth_requests.get(
-                    self.service_url,
-                    params=params,
-                    cert_var=cert_var,
-                    stream=True,
-                    verify=getattr(settings, "SSL_VERIFICATION", True),
-                )
-                logger.info("Getting the coverage: {0}".format(req.url))
-                try:
-                    size = int(req.headers.get("content-length"))
-                except (ValueError, TypeError):
-                    if req.content:
-                        size = len(req.content)
-                    else:
-                        raise Exception("Overpass Query failed to return any data")
-                if not req:
-                    logger.error(req.content)
-                    raise Exception("WCS request for {0} failed.".format(self.name))
-                CHUNK = 1024 * 1024 * 2  # 2MB chunks
-                from audit_logging.file_logging import logging_open
+                for _bbox_idx, _tile_bbox, in enumerate(tile_bboxes):
+                    outfile = "{0}-{1}-{2}{3}".format(file_path, idx, _bbox_idx, ext)
+                    try:
+                        os.remove(outfile)
+                    except OSError:
+                        pass
 
-                with logging_open(outfile, "wb", user_details=self.user_details) as fd:
-                    for chunk in req.iter_content(CHUNK):
-                        fd.write(chunk)
-                        size += CHUNK
-                geotiffs += [outfile]
+                    params["bbox"] = ",".join(map(str, _tile_bbox))
+                    params["width"] = tile_size
+                    params["height"] = tile_size
+                    req = auth_requests.get(
+                        self.service_url,
+                        params=params,
+                        cert_var=cert_var,
+                        stream=True,
+                        verify=getattr(settings, "SSL_VERIFICATION", True),
+                    )
+                    logger.info(params)
+                    logger.info("Getting the coverage: {0}".format(req.url))
+                    try:
+                        size = int(req.headers.get("content-length"))
+                    except (ValueError, TypeError):
+                        if req.content:
+                            size = len(req.content)
+                        else:
+                            raise Exception("Overpass Query failed to return any data")
+                    if not req:
+                        logger.error(req.content)
+                        raise Exception("WCS request for {0} failed.".format(self.name))
+                    CHUNK = 1024 * 1024 * 2  # 2MB chunks
+                    from audit_logging.file_logging import logging_open
+
+                    with logging_open(outfile, "wb", user_details=self.user_details) as fd:
+                        for chunk in req.iter_content(CHUNK):
+                            fd.write(chunk)
+                            size += CHUNK
+                    geotiffs += [outfile]
             except Exception as e:
                 logger.error(e)
                 raise Exception("There was an error writing the file to disk.")

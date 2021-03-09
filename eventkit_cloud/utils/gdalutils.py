@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import json
 import logging
 from typing import List, Tuple
@@ -10,24 +11,27 @@ import time
 from tempfile import NamedTemporaryFile
 from functools import wraps
 
+from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
+
 
 from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 from django.conf import settings
 
-
 logger = logging.getLogger(__name__)
 
 MAX_DB_CONNECTION_RETRIES = 8
 TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
-
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
 # We have used this solution for now as I could not find options supporting this in the gdal documentation.
+
+
+GOOGLE_MAPS_FULL_WORLD = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
 
 
 def retry(f):
@@ -115,7 +119,7 @@ def open_dataset(file_path, is_raster):
             return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
-            "Error browsing database for PostGIS Raster tables" in str(ex)
+                "Error browsing database for PostGIS Raster tables" in str(ex)
         ):
             raise ex
     finally:
@@ -805,3 +809,15 @@ def strip_prefixes(dataset: str) -> (str, str):
             removed_prefix = prefix
         output_dataset = cleaned_dataset
     return removed_prefix, output_dataset
+
+
+def get_chunked_bbox_at_scale(bbox, width, height):
+    from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
+    try:
+        resolution = get_resolution_for_extent(bbox, (width, height))
+        mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+        bbox, sizes, tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)
+        return bbox, sizes, [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
+    except:
+        import traceback
+        traceback.print_exc()
