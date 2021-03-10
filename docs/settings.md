@@ -392,7 +392,7 @@ and some background is available in the [PCF Section](./pcf.md).
 
 
 #### Scripts
-Some of the scripts found  under [/scripts](../scirpts/) can be configured through the use of environment variables.
+Some of the scripts found under `/script` can be configured through the use of environment variables.
 
 | Variable Name | Description |
 |---------------|-------------|
