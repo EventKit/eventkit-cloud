@@ -10,7 +10,7 @@ from django.conf import settings
 
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox_at_scale
+from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox
 
 logger = logging.getLogger(__name__)
 
@@ -161,12 +161,17 @@ class WCSConverter(object):
 
         scale = float(service.get("scale"))
         params["service"] = "WCS"
-        params["bbox"] = ",".join(map(str, self.bbox))
         width, height = get_dimensions(self.bbox, scale)
-        bbox, sizes, tile_bboxes = get_chunked_bbox_at_scale(self.bbox, width, height)
+        sizes, tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
-        logger.info(f"width: {width} -- height: {height}")
-        tile_size = get_dimensions(bbox, scale)[0] / sizes[0]
+        # We compute an approximately good tile size by using the dimensions of the bbox calculated using the scale
+        # we then divide by the corresponding dimension by the number of tiles in that dimension
+        # Setting this to arbitrarily high values improves the computed resolution but makes the requests slow down.
+        # It could be set from a configuration value
+        tile_size = max(width / sizes[0], height / sizes[1])
+        params["width"] = tile_size
+        params["height"] = tile_size
+        logger.info(tile_size)
         geotiffs = []
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
@@ -181,8 +186,6 @@ class WCSConverter(object):
                         pass
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
-                    params["width"] = tile_size
-                    params["height"] = tile_size
                     req = auth_requests.get(
                         self.service_url,
                         params=params,
@@ -190,8 +193,6 @@ class WCSConverter(object):
                         stream=True,
                         verify=getattr(settings, "SSL_VERIFICATION", True),
                     )
-                    logger.info(params)
-                    logger.info("Getting the coverage: {0}".format(req.url))
                     try:
                         size = int(req.headers.get("content-length"))
                     except (ValueError, TypeError):

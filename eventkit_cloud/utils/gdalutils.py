@@ -811,13 +811,25 @@ def strip_prefixes(dataset: str) -> (str, str):
     return removed_prefix, output_dataset
 
 
-def get_chunked_bbox_at_scale(bbox, width, height):
+def get_chunked_bbox(bbox, size: tuple = None):
+    """
+    Chunks a bbox into a grid of sub-bboxes.
+
+    :param bbox: bbox in 4326, representing the area of the world to be chunked
+    :param size: optional image size to use when calculating the resolution.
+    :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
+    """
     from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
-    try:
-        resolution = get_resolution_for_extent(bbox, (width, height))
-        mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
-        bbox, sizes, tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)
-        return bbox, sizes, [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
-    except:
-        import traceback
-        traceback.print_exc()
+
+    # Calculate the starting res for our custom grid
+    # This is the same method we used when taking snap shots for data packs
+    resolution = get_resolution_for_extent(bbox, size)
+    # Make a subgrid of 4326 that spans the extent of the provided bbox
+    # min res specifies the starting zoom level
+    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+    # bbox is the bounding box of all tiles affected at the given level, unused here
+    # size is the x, y dimensions of the grid
+    # tiles at level is a generator that returns the tiles in order
+    _unused, sizes, tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)
+    # convert the tiles to bboxes representing the tiles on the map
+    return sizes, [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
