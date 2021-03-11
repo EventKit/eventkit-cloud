@@ -100,16 +100,16 @@ def add_layers_to_group(
                 )
                 continue
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
-            # If possible calculate the statistics now so that they are correct when opening arcmap.
+            # If possible calculate the statistics now so that they are correct when opening ArcPro.
             try:
                 logger.warning((f"Calculating statistics for the file {file_path}..."))
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
                 logger.warning(e)
-            layer_file = get_layer_file(layer_info["type"], version, projection=file_info["projection"])
+            layer_file = get_layer_file(layer_info["type"], version)
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 logger.warning(
-                    f"Skipping layer {vector_layer_name} because the file type is not supported for ArcMap {version}"
+                    f"Skipping layer {vector_layer_name} because the file type is not supported for ArcPro {version}"
                 )
                 continue
             vector_layer_name = (
@@ -235,7 +235,7 @@ def add_layer_to_map(
     layer_name: str, layer_path: str, mapx: arcpy._mp.Map, group_layer: arcpy.mp.LayerFile = None
 ) -> arcpy._mp.Layer:
     """
-    :param layer_name: The name of the layer as it will appear in arcmap.
+    :param layer_name: The name of the layer as it will appear in ArcPro.
     :param layer_file: The .lyr which will be used for the layer template.
     :param data_frame:  The dataframe from the map document where the layer should be loaded.
     :return: Layer, raises exception.
@@ -264,7 +264,7 @@ def get_aprx_template():
     return template_file
 
 
-def get_layer_file(type, version=CURRENT_VERSION, projection="4326"):
+def get_layer_file(type, version=CURRENT_VERSION):
     """
 
     :param type: Type of templace (i.e. raster, osm...)
