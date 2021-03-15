@@ -80,6 +80,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.geopackage import check_content_exists
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -453,6 +454,11 @@ def osm_data_collection_pipeline(
     )
 
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
+
+    # Cancel the provider task if the geopackage has no data.
+    if not check_content_exists(gpkg_filepath):
+        export_task_record = get_export_task_record(export_task_record_uid)
+        cancel_export_provider_task.run(data_provider_task_uid=export_task_record.export_provider_task.uid)
 
     # --- Add the Land Boundaries polygon layer, this accounts for the majority of post-processing time
     update_progress(export_task_record_uid, 85.5, eta=eta, msg="Clipping data in Geopackage")
