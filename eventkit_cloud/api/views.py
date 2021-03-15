@@ -1286,7 +1286,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             if data_provider_slug not in all_provider_slugs:
                 return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
 
-        if check_job_permissions(run.job.uid)[0]:
+        if check_job_permissions(run.job):
             # This is just to make it easier to trace when user_details haven't been sent
             user_details = get_user_details(request)
             if user_details is None:

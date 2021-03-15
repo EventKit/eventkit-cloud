@@ -41,6 +41,9 @@ from eventkit_cloud.tasks.task_builders import (
     TaskChainBuilder,
     create_export_task_record,
 )
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -247,8 +250,8 @@ def create_run(job_uid, user=None, clone=False):
         # enforce max runs
         with transaction.atomic():
             max_runs = settings.EXPORT_MAX_RUNS
-
-            job, user = check_job_permissions(job_uid, user)
+            job = Job.objects.select_related("user").get(uid=job_uid)
+            job, user = check_job_permissions(job, user)
 
             run_count = job.runs.filter(deleted=False).count()
             run_zip_file_slug_sets = None
@@ -289,9 +292,9 @@ def create_run(job_uid, user=None, clone=False):
         raise e
 
 
-def check_job_permissions(job_uid: str, user=None) -> Job:
+def check_job_permissions(job: Job, user: User = None) -> (Job, User):
     # get the number of existing runs for this job
-    job = Job.objects.select_related("user").get(uid=job_uid)
+    job = Job.objects.select_related("user").get(uid=job.uid)
     if not job.data_provider_tasks.all():
         raise Error(
             "This job does not have any data sources or formats associated with it, "

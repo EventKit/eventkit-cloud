@@ -5,7 +5,6 @@ import shutil
 from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
 
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
@@ -91,12 +90,10 @@ def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provi
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
     # old_run
-    run = ExportRun.objects.get(uid=run_uid)
-
-    user = User.objects.get(pk=user_id)
+    run = ExportRun.objects.select_related("job__user").get(uid=run_uid)
 
     try:
-        run_uid, run_zip_file_slug_sets = create_run(job_uid=run.job.uid, user=user, clone=True)
+        run_uid, run_zip_file_slug_sets = create_run(job_uid=run.job.uid, user=run.user, clone=True)
     except Unauthorized:
         raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to run this DataPack.")
     except (InvalidLicense, Error) as err:

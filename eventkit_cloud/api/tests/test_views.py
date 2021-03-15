@@ -1018,7 +1018,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code)
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 
-        mock_check_job_permissions.assert_called_once_with(run.job.uid)
+        mock_check_job_permissions.assert_called_once_with(run.job)
         mock_rerun_records.apply_async.assert_called_once_with(
             args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue="runs", routing_key="runs"
         )
