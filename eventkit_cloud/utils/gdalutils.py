@@ -830,6 +830,6 @@ def get_chunked_bbox(bbox, size: tuple = None):
     # bbox is the bounding box of all tiles affected at the given level, unused here
     # size is the x, y dimensions of the grid
     # tiles at level is a generator that returns the tiles in order
-    _unused, sizes, tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)
+    tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
     # convert the tiles to bboxes representing the tiles on the map
-    return sizes, [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
+    return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]

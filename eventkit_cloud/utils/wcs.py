@@ -162,16 +162,8 @@ class WCSConverter(object):
         scale = float(service.get("scale"))
         params["service"] = "WCS"
         width, height = get_dimensions(self.bbox, scale)
-        sizes, tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
+        tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
-        # We compute an approximately good tile size by using the dimensions of the bbox calculated using the scale
-        # we then divide by the corresponding dimension by the number of tiles in that dimension
-        # Setting this to arbitrarily high values improves the computed resolution but makes the requests slow down.
-        # It could be set from a configuration value
-        tile_size = max(width / sizes[0], height / sizes[1])
-        params["width"] = tile_size
-        params["height"] = tile_size
-        logger.info(tile_size)
         geotiffs = []
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
@@ -184,6 +176,13 @@ class WCSConverter(object):
                         os.remove(outfile)
                     except OSError:
                         pass
+
+                    # Setting this to arbitrarily high values improves the computed
+                    # resolution but makes the requests slow down.
+                    # It could be set from a configuration value
+                    tile_x, tile_y = get_dimensions(_tile_bbox, scale)
+                    params["width"] = tile_x
+                    params["height"] = tile_y
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
                     req = auth_requests.get(
