@@ -52,8 +52,10 @@ echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
   for i in 1 2 3; do
+    echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE && s=0 && \
+    && echo "Installing: ${RECIPE}" \
+    && echo "y" | $COMMAND install $RECIPE && \
     break || s=$? && sleep 5;
   done; (exit $s)
 done
@@ -66,3 +68,4 @@ python /root/download_packages.py
 popd
 
 create_index
+
