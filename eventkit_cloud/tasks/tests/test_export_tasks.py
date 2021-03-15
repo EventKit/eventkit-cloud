@@ -560,7 +560,6 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(example_input_file, result["source"])
 
     @patch("eventkit_cloud.tasks.export_tasks.cancel_export_provider_task.run")
-    @patch("eventkit_cloud.tasks.export_tasks.check_content_exists")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -581,7 +580,6 @@ class TestExportTasks(ExportTaskBase):
         mock_os,
         mock_get_export_task_record,
         mock_get_export_filepath,
-        mock_check_content_exists,
         mock_cancel_provider_task,
     ):
         provider_slug = "osm"
@@ -605,7 +603,7 @@ class TestExportTasks(ExportTaskBase):
         mock_cancel_provider_task.assert_not_called()
 
         # Test canceling the provider task on an empty geopackage.
-        mock_check_content_exists.return_value = False
+        mock_geopackage.Geopackage().run.return_value = None
         osm_data_collection_pipeline(
             example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
         )
@@ -614,6 +612,7 @@ class TestExportTasks(ExportTaskBase):
         mock_overpass.reset_mock()
         mock_pbf.reset_mock()
         mock_feature_selection.reset_mock()
+        mock_geopackage.reset_mock()
 
         # Test with using pbf_file
         example_pbf_file = "test.pbf"
