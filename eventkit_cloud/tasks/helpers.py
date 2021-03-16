@@ -32,7 +32,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
@@ -854,6 +854,17 @@ def download_concurrently(layers: ValuesView, concurrency=None):
         logger.error(f"Unable to execute concurrent downloads: {e}")
 
     return layers
+
+
+def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_var=None):
+    tile_bboxes = get_chunked_bbox(bbox)
+    chunks = []
+    for _index, _tile_bbox in enumerate(tile_bboxes):
+        url = base_url.format(*_tile_bbox)
+        outfile = os.path.join(stage_dir, f"chunk{_index}.json")
+        download_data(task_uid, url, outfile, cert_var)
+        chunks.append(outfile)
+    return chunks
 
 
 def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):

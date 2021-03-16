@@ -1337,12 +1337,14 @@ def arcgis_feature_service_export_task(
         tile_bboxes = get_chunked_bbox(bbox)
         chunks = []
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
+        bbox = ["{0}", "{1}", "{2}", "{3}"]
+        url = get_arcgis_query_url(service_url, [])
         for _index, _tile_bbox in enumerate(tile_bboxes):
             url = get_arcgis_query_url(service_url, _tile_bbox)
             outfile = get_export_filepath(stage_dir, f"{job_name}_{_index}", projection, provider_slug, "json")
             download_data(task_uid, url, outfile, configuration.get("cert_var"))
             chunks.append(outfile)
-        merge_geojson(chunks[0:1], esrijson, "GeoJSON")
+        merge_geojson(chunks, esrijson, "GeoJSON")
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1362,7 +1364,7 @@ def arcgis_feature_service_export_task(
     return result
 
 
-def get_arcgis_query_url(service_url: str, bbox: list) -> str:
+def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
     """
     Function generates ArcGIS query URL
     """
@@ -1380,6 +1382,8 @@ def get_arcgis_query_url(service_url: str, bbox: list) -> str:
             "geometry": str(bbox).strip("[]"),
             "f": "json",
         }
+        if bbox is None:
+            query_params["geometry"] = "{0},{1},{2},{3}"
         query_str = urlencode(query_params, safe="=*")
         query_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
