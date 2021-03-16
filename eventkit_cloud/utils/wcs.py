@@ -179,10 +179,14 @@ class WCSConverter(object):
 
                     # Setting this to arbitrarily high values improves the computed
                     # resolution but makes the requests slow down.
-                    # It could be set from a configuration value
-                    tile_x, tile_y = get_dimensions(_tile_bbox, scale)
-                    params["width"] = tile_x
-                    params["height"] = tile_y
+                    # If it is set in the config, use that value, otherwise compute approximate res based on scale
+                    if self.config.get("tile_size", None) is None:
+                        tile_x, tile_y = get_dimensions(_tile_bbox, scale)
+                        params["width"] = tile_x
+                        params["height"] = tile_y
+                    else:
+                        params["width"] = self.config.get("tile_size")
+                        params["height"] = self.config.get("tile_size")
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
                     req = auth_requests.get(
