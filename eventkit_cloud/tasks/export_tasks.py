@@ -80,6 +80,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.gdalutils import get_chunked_bbox, merge_geojson
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -1333,9 +1334,15 @@ def arcgis_feature_service_export_task(
             )
 
     else:
-        url = get_arcgis_query_url(service_url, bbox)
+        tile_bboxes = get_chunked_bbox(bbox)
+        chunks = []
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        download_data(task_uid, url, esrijson, configuration.get("cert_var"))
+        for _index, _tile_bbox in enumerate(tile_bboxes):
+            url = get_arcgis_query_url(service_url, _tile_bbox)
+            outfile = get_export_filepath(stage_dir, f"{job_name}_{_index}", projection, provider_slug, "json")
+            download_data(task_uid, url, outfile, configuration.get("cert_var"))
+            chunks.append(outfile)
+        merge_geojson(chunks[0:1], esrijson, "GeoJSON")
 
         out = gdalutils.convert(
             driver="gpkg",

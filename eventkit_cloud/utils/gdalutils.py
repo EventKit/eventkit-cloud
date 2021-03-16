@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import json
 import logging
 from typing import List, Tuple
@@ -10,24 +11,27 @@ import time
 from tempfile import NamedTemporaryFile
 from functools import wraps
 
+from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
+
 
 from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 from django.conf import settings
 
-
 logger = logging.getLogger(__name__)
 
 MAX_DB_CONNECTION_RETRIES = 8
 TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
-
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
 # We have used this solution for now as I could not find options supporting this in the gdal documentation.
+
+
+GOOGLE_MAPS_FULL_WORLD = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
 
 
 def retry(f):
@@ -115,7 +119,7 @@ def open_dataset(file_path, is_raster):
             return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
-            "Error browsing database for PostGIS Raster tables" in str(ex)
+                "Error browsing database for PostGIS Raster tables" in str(ex)
         ):
             raise ex
     finally:
@@ -754,6 +758,35 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
     return out_file
 
 
+def merge_geojson(in_files, out_file, driver, task_uid=None):
+    """
+    :param in_files: A list of geojson files.
+    :param out_file: A location for the result of the merge.
+    :param task_uid: A task uid to track the conversion.
+    :return: The out_file path.
+    """
+    try:
+        out_driver = ogr.GetDriverByName("GeoJSON")
+        out_ds = out_driver.CreateDataSource(out_file)
+        out_layer = out_ds.CreateLayer(out_file)
+
+        for file in in_files:
+            ds = ogr.Open(file)
+            lyr = ds.GetLayer()
+            for feat in lyr:
+                out_feat = ogr.Feature(out_layer.GetLayerDefn())
+                out_feat.SetGeometry(feat.GetGeometryRef().Clone())
+                out_layer.CreateFeature(out_feat)
+                out_feat = None
+                out_layer.SyncToDisk()
+        out_ds = None
+    except Exception as e:
+        logger.error(e)
+        raise Exception("File merge process failed.")
+
+    return out_file
+
+
 def get_band_statistics(file_path, band=1):
     """
     Returns the band statistics for a specific raster file and band
@@ -805,3 +838,26 @@ def strip_prefixes(dataset: str) -> (str, str):
             removed_prefix = prefix
         output_dataset = cleaned_dataset
     return removed_prefix, output_dataset
+
+
+def get_chunked_bbox(bbox, size: tuple = None):
+    """
+    Chunks a bbox into a grid of sub-bboxes.
+    :param bbox: bbox in 4326, representing the area of the world to be chunked
+    :param size: optional image size to use when calculating the resolution.
+    :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
+    """
+    from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
+
+    # Calculate the starting res for our custom grid
+    # This is the same method we used when taking snap shots for data packs
+    resolution = get_resolution_for_extent(bbox, size)
+    # Make a subgrid of 4326 that spans the extent of the provided bbox
+    # min res specifies the starting zoom level
+    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+    # bbox is the bounding box of all tiles affected at the given level, unused here
+    # size is the x, y dimensions of the grid
+    # tiles at level is a generator that returns the tiles in order
+    tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
+    # convert the tiles to bboxes representing the tiles on the map
+    return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
