@@ -204,7 +204,7 @@ class TaskFactory:
                             data_provider_task_uid=provider_task_record_uid,
                             status=TaskState.COMPLETED.value,
                             locking_task_key=run_uid,
-                        )
+                        ).set(**finalize_task_settings)
 
                         # add zip if required
                         if provider_task.provider.zip:

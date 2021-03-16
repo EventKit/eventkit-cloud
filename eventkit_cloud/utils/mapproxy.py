@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import sqlite3
@@ -24,7 +25,6 @@ from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.geopackage import (
     get_tile_table_names,
     set_gpkg_contents_bounds,
@@ -118,7 +118,7 @@ class MapproxyGeopackage(object):
         gpkgfile=None,
         bbox=None,
         service_url=None,
-        layer=None,
+        layer="default",
         debug=None,
         name=None,
         level_from=None,
@@ -126,6 +126,8 @@ class MapproxyGeopackage(object):
         service_type=None,
         task_uid=None,
         selection=None,
+        projection=None,
+        input_gpkg=None,
     ):
         """
         Initialize the ExternalServiceToGeopackage utility.
@@ -146,6 +148,8 @@ class MapproxyGeopackage(object):
         self.service_type = service_type
         self.task_uid = task_uid
         self.selection = selection
+        self.projection = projection
+        self.input_gpkg = input_gpkg
 
     def build_config(self):
         pass
@@ -154,7 +158,7 @@ class MapproxyGeopackage(object):
         """
         Create a MapProxy configuration object and verifies its validity
         """
-        if self.config:
+        if self.config or self.projection:
             conf_dict = yaml.safe_load(self.config) or dict()
         else:
             raise ConfigurationError("MapProxy configuration is required for raster data providers")
@@ -164,6 +168,10 @@ class MapproxyGeopackage(object):
                 "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
                 "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
             }
+        elif self.projection:
+            conf_dict["grids"].update(
+                {str(self.projection): {"srs": f"EPSG:{self.projection}", "tile_size": [256, 256], "origin": "nw"}}
+            )
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
         conf_dict["caches"] = conf_dict.get("caches", {})
@@ -175,6 +183,16 @@ class MapproxyGeopackage(object):
                 [grids for grids in conf_dict.get("grids")],
                 self.gpkgfile,
                 table_name=self.layer,
+            )
+
+        if self.projection:
+            conf_dict["caches"]["repro_cache"] = copy.deepcopy(conf_dict["caches"]["default"])
+            conf_dict["caches"]["repro_cache"]["cache"]["filename"] = self.input_gpkg
+            conf_dict["caches"]["repro_cache"]["sources"] = []
+            conf_dict["caches"]["default"]["meta_size"] = [4, 4]
+            conf_dict["caches"]["default"]["bulk_meta_tiles"] = True
+            conf_dict["caches"]["default"] = get_cache_template(
+                ["repro_cache"], [str(self.projection)], self.gpkgfile, "default"
             )
 
         # Need something listed as a service to pass the mapproxy validation.
@@ -203,12 +221,15 @@ class MapproxyGeopackage(object):
                 self.selection = None
 
         seed_dict = get_seed_template(
-            bbox=self.bbox, level_from=self.level_from, level_to=self.level_to, coverage_file=self.selection
+            bbox=self.bbox,
+            level_from=self.level_from,
+            level_to=self.level_to,
+            coverage_file=self.selection,
+            projection=self.projection
         )
 
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
-
         errors = validate_references(conf_dict)
         if errors:
             logger.error("MapProxy configuration failed.")
@@ -218,7 +239,7 @@ class MapproxyGeopackage(object):
 
         return conf_dict, seed_configuration, mapproxy_configuration
 
-    @retry
+    # @retry
     def convert(self,):
         """
         Convert external service to gpkg.
@@ -227,6 +248,7 @@ class MapproxyGeopackage(object):
         from eventkit_cloud.tasks.task_process import TaskProcess
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
+
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(
             max_repeat=int(conf_dict.get("max_repeat", 5)), task_uid=self.task_uid
@@ -248,9 +270,7 @@ class MapproxyGeopackage(object):
                 verbose=log_settings.get("verbose"),
                 silent=log_settings.get("silent"),
             )
-
             task_process = TaskProcess(task_uid=self.task_uid)
-
             task_process.start_process(
                 billiard=True,
                 target=seeder.seed,
@@ -265,8 +285,9 @@ class MapproxyGeopackage(object):
             set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
             if task_process.exitcode != 0:
                 raise Exception("The Raster Service failed to complete, please contact an administrator.")
-        except Exception:
+        except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
+            logger.error(e)
             raise
         finally:
             connections.close_all()
@@ -288,17 +309,21 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     :param geopackage: Location for the geopackage
     :return: The dict template
     """
+    if sources == ["None"]:
+        sources = []
     return {
         "sources": sources,
-        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None"},
+        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
         "request_format": "image/png",
     }
 
 
-def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
-    bbox = bbox or [-180, -89, 180, 89]
+def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None, projection=None):
+    out_projection = 4326
+    if projection:
+        out_projection = projection
     seed_template = {
         "coverages": {"geom": {"srs": "EPSG:4326"}},
         "seeds": {
@@ -311,9 +336,12 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
         },
     }
 
+    if projection:
+        seed_template["seeds"]["seed"]["grids"] = [str(out_projection)]
     if coverage_file:
         seed_template["coverages"]["geom"]["datasource"] = str(coverage_file)
     else:
+        seed_template["coverages"]["geom"]["srs"] = f"EPSG:{out_projection}"
         seed_template["coverages"]["geom"]["bbox"] = bbox
 
     return seed_template

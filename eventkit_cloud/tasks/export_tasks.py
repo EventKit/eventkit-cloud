@@ -10,17 +10,17 @@ import time
 import traceback
 from typing import List, Union
 from urllib.parse import urlencode, urljoin
-
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import yaml
+from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.contrib.gis.geos import Polygon
 from django.contrib.auth.models import User
-
+from django.contrib.gis.geos import Polygon
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -29,9 +29,17 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+
+from eventkit_cloud.core.helpers import (
+    sendnotification,
+    NotificationVerb,
+    NotificationLevel,
+)
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.helpers import clean_config
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -62,16 +70,7 @@ from eventkit_cloud.tasks.helpers import (
     download_data,
     download_concurrently,
 )
-from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.tasks.metadata import metadata_tasks
-from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
-from eventkit_cloud.utils.rocket_chat import RocketChat
-from eventkit_cloud.utils.stats.eta_estimator import ETA
-from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from audit_logging.celery_support import UserDetailsBase
-
 from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
     ExportTaskException,
@@ -80,8 +79,12 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     RunZipFile,
 )
-from eventkit_cloud.jobs.models import DataProviderTask
-import yaml
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.task_process import update_progress
+from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
+from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -376,6 +379,7 @@ def osm_data_collection_pipeline(
     url=None,
     slug=None,
     bbox=None,
+    selection=None,
     user_details=None,
     config=None,
     eta=None,
@@ -385,44 +389,57 @@ def osm_data_collection_pipeline(
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
-    # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
-
-    # --- Overpass Query
-    op = overpass.Overpass(
-        bbox=bbox,
-        stage_dir=stage_dir,
-        slug=slug,
-        url=url,
-        job_name=job_name,
-        task_uid=export_task_record_uid,
-        raw_data_filename="{}_query.osm".format(job_name),
-        config=config,
-    )
-
-    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
-
-    # --- Convert Overpass result to PBF
-    osm_filename = os.path.join(stage_dir, osm_data_filename)
-    pbf_filename = os.path.join(stage_dir, "{}_query.pbf".format(job_name))
-    pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
-
-    # --- Generate thematic gpkg from PBF
-    provider_slug = get_export_task_record(export_task_record_uid).export_provider_task.provider.slug
-    gpkg_filepath = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
-    config = clean_config(config)
-    feature_selection = FeatureSelection.example(config)
+    pbf_file = yaml.load(config).get("pbf_file")
+
+    if pbf_file:
+        logger.info(f"Using PBF file: {pbf_file} instead of overpass.")
+        pbf_filepath = pbf_file
+    else:
+        # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
+        # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
+
+        # --- Overpass Query
+        op = overpass.Overpass(
+            bbox=bbox,
+            stage_dir=stage_dir,
+            slug=slug,
+            url=url,
+            job_name=job_name,
+            task_uid=export_task_record_uid,
+            raw_data_filename="{}_query.osm".format(job_name),
+            config=config,
+        )
+
+        osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
+
+        # --- Convert Overpass result to PBF
+        osm_filename = os.path.join(stage_dir, osm_data_filename)
+        pbf_filename = os.path.join(stage_dir, "{}_query.pbf".format(job_name))
+        pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
+
+    # --- Generate thematic gpkg from PBF
+    provider_slug = get_export_task_record(export_task_record_uid).export_provider_task.provider.slug
+    gpkg_filepath = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    feature_selection = FeatureSelection.example(clean_config(config))
 
     update_progress(export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage")
     geom = Polygon.from_bbox(bbox)
+    if selection:
+        try:
+            with open(selection, "r") as geojson:
+                geom = Polygon(geojson)
+        except Exception as e:
+            logger.error(e)
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
+
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
     # --- Add the Land Boundaries polygon layer, this accounts for the majority of post-processing time
@@ -447,8 +464,10 @@ def osm_data_collection_pipeline(
 
     ret_gpkg_filepath = g.results[0].parts[0]
     assert ret_gpkg_filepath == gpkg_filepath
-    update_progress(export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline")
-    result = {"osm": osm_filename, "pbf": pbf_filepath, "gpkg": gpkg_filepath}
+    update_progress(
+        export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
+    )
+    result = {"pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
     return result
 
@@ -487,6 +506,7 @@ def osm_data_collection_task(
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
 
+        selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
             task_uid,
             stage_dir,
@@ -494,17 +514,11 @@ def osm_data_collection_task(
             job_name=job_name,
             bbox=bbox,
             user_details=user_details,
+            selection=selection,
             url=overpass_url,
             config=config,
             eta=eta,
         )
-
-        selection = parse_result(result, "selection")
-        if selection:
-            logger.debug(
-                "Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results["gpkg"])
-            )
-            osm_results["gpkg"] = gdalutils.convert(boundary=selection, input_file=osm_results["gpkg"])
 
         result.update(osm_results)
         result["result"] = osm_results.get("gpkg")
@@ -796,14 +810,20 @@ def geopackage_export_task(
     gpkg_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
     selection = parse_result(result, "selection")
 
-    gpkg = gdalutils.convert(
-        driver="gpkg",
-        input_file=gpkg_in_dataset,
-        output_file=gpkg_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        projection=projection,
-    )
+    # This assumes that the source dataset has already been "clipped".  Since most things are tiles or selected
+    # based on area it doesn't make sense to run this again.  If that isn't true this may need to be updated.
+    if os.path.splitext(gpkg_in_dataset)[1] == ".gpkg":
+        os.rename(gpkg_in_dataset, gpkg_out_dataset)
+        gpkg = gpkg_out_dataset
+    else:
+        gpkg = gdalutils.convert(
+            driver="gpkg",
+            input_file=gpkg_in_dataset,
+            output_file=gpkg_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            projection=projection,
+        )
 
     result["driver"] = "gpkg"
     result["result"] = gpkg
@@ -991,19 +1011,62 @@ def reprojection_task(
 
     warp_params, translate_params = get_creation_options(config, driver)
 
-    if "tif" in os.path.splitext(in_dataset)[1]:
-        in_dataset = f"GTIFF_RAW:{in_dataset}"
+    # This logic is only valid IFF this method only allows 4326 which is True as of 1.9.0.
+    # This needs to be updated to compare the input and output if over source projections are allowed.
+    if not projection or "4326" in str(projection):
+        logger.info(f"Skipping projection and renaming {in_dataset} to {out_dataset}")
+        os.rename(in_dataset, out_dataset)
+        reprojection = out_dataset
+    else:
+        # If you are updating this see the note above about source projection.
+        dptr: DataProviderTaskRecord = DataProviderTaskRecord.objects.select_related("run__job").get(
+            tasks__uid__exact=task_uid
+        )
+        metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+        data_type = metadata["data_sources"][provider_slug].get("type")
 
-    reprojection = gdalutils.convert(
-        driver=driver,
-        input_file=in_dataset,
-        output_file=out_dataset,
-        task_uid=task_uid,
-        projection=projection,
-        boundary=selection,
-        warp_params=warp_params,
-        translate_params=translate_params,
-    )
+        if "tif" in os.path.splitext(in_dataset)[1]:
+            in_dataset = f"GTIFF_RAW:{in_dataset}"
+
+        if (
+            "gpkg" in os.path.splitext(in_dataset)[1]
+            and driver == "gpkg"
+            and data_type == GeospatialDataType.RASTER.value
+        ):
+            # Use MapProxy instead of GDAL so all the pyramids/zoom levels of the source are preserved.
+
+            level_from = metadata["data_sources"][provider_slug].get("level_from")
+            level_to = metadata["data_sources"][provider_slug].get("level_to")
+
+            job_geom = dptr.run.job.the_geom
+            job_geom.transform(projection)
+            bbox = job_geom.extent
+            mp = mapproxy.MapproxyGeopackage(
+                gpkgfile=out_dataset,
+                service_url=out_dataset,
+                name=job_name,
+                config=config,
+                bbox=bbox,
+                level_from=level_from,
+                level_to=level_to,
+                task_uid=task_uid,
+                selection=selection,
+                projection=projection,
+                input_gpkg=in_dataset,
+            )
+            reprojection = mp.convert()
+
+        else:
+            reprojection = gdalutils.convert(
+                driver=driver,
+                input_file=in_dataset,
+                output_file=out_dataset,
+                task_uid=task_uid,
+                projection=projection,
+                boundary=selection,
+                warp_params=warp_params,
+                translate_params=translate_params,
+            )
 
     result["result"] = reprojection
 
