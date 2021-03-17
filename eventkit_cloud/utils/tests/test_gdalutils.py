@@ -140,6 +140,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -169,6 +170,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -195,6 +197,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -221,6 +224,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             dataset_creation_options=None,
             layer_creation_options=None,
             src_srs=in_projection,
@@ -257,6 +261,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             creation_options=extra_parameters,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -285,6 +290,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             out_dataset,
             driver=driver,
+            config_options=None,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -355,12 +361,27 @@ class TestGdalUtils(TestCase):
     def test_get_dimensions(self, mock_get_distance):
         bbox = [0, 1, 2, 3]
         scale = 10
-        expected_dim = [10, 20]
+        expected_dim = (10, 20)
         mock_get_distance.side_effect = [100, 200]
         dim = get_dimensions(bbox, scale)
         mock_get_distance.assert_has_calls(
             [call([bbox[0], bbox[1]], [bbox[2], bbox[1]]), call([bbox[0], bbox[1]], [bbox[0], bbox[3]])]
         )
+        self.assertEqual(dim, expected_dim)
+
+        expected_dim = (1, 1)
+        mock_get_distance.side_effect = [6, 8]
+        dim = get_dimensions(bbox, scale)
+        self.assertEqual(dim, expected_dim)
+
+        expected_dim = (1, 5)
+        mock_get_distance.side_effect = [9, 50]
+        dim = get_dimensions(bbox, scale)
+        self.assertEqual(dim, expected_dim)
+
+        expected_dim = (6, 1)
+        mock_get_distance.side_effect = [60, 8]
+        dim = get_dimensions(bbox, scale)
         self.assertEqual(dim, expected_dim)
 
     def test_merge_geotiffs(self):

@@ -166,7 +166,7 @@ Coverages will request one layer or many. If many are added then they will just 
 
 ##### Overpass Configuration
 
-You can configure the OSM schema by adding a yaml file. A default one should be loaded with eventkit. 
+You can configure the OSM schema by adding a yaml file. A default one should be loaded with Eventkit. 
 Should you want to customize it or create your own the schema is in a yaml format:
 ```yaml
 <table_name>:
@@ -187,13 +187,28 @@ amenities:
     - name
   where: amenity IS NOT NULL
 ```
-Would create tables called amentities_points and amenities_polygons.
-Each table would select all geometries where amenitiy is not null and it would include the columns
+Would create tables called amenities_points and amenities_polygons.
+Each table would select all geometries where amenity is not null and it would include the columns
 amenity and name. 
 
 You can change the default overpass query in the configuration section by adding: 
 ```yaml
 overpass_query: <Some overpass query>
+```
+
+Additionally if wishing NOT to use overpass a PBF file can be used, however there are many known limitations.
+The user will have no idea of the bounds of the PBF file, so they will likely extract areas outside of a PBF, unless a planet size PBF is used.
+Because of the way PBF is read from GDAL processing PBF data will take a significant amount of time regardless of selection area. 
+Small PBF files will take a small amount of time but that time gets worse as the PBF file grows.
+It could take 8 hours to do a 1000 km area from a planet sized PBF, however it may only take 8 hours to also do the whole planet.  
+Therefore PBF is a reasonable option if wishing create OSM extracts that are continent or planet scale.
+Lastly it can take a significant amount of storage space to process the data and there should be 3 times the size of the PBF file per worker on the system.
+If using a 10GB PBF file, with one worker processing an OSM job there should be more than 30 GB of storage available to that worker for both the 
+exported geopackage as well as for the geometry index used by GDAL.
+https://gdal.org/drivers/vector/osm.html#internal-working-and-performance-tweaking
+To set add in the OSM config block:
+```yaml
+pbf_file: <path to pbf file accessible by celery worker>
 ```
 
 #### Data Authentication
