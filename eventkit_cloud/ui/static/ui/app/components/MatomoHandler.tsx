@@ -39,6 +39,7 @@ function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: str
         document.getElementsByTagName('script')[0].parentNode.insertBefore(g, s);
 
         if (appName) {
+
             _paq.push(['setDocumentTitle', appName]);
         }
         /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
@@ -50,7 +51,7 @@ function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: str
         _paq.push(['setUserId', userInfo.username])
         _paq.push(['enableLinkTracking']);
 
-        _paq.push(['setTrackerUrl', matomoUrl + 'matomo.php']);
+        _paq.push(['setTrackerUrl', matomoJsUrl + 'matomo.php']);
         _paq.push(['setSiteId', siteId]);
     }
     if ((window as any)._url !== window.location.href) {
