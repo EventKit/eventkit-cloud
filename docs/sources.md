@@ -166,7 +166,7 @@ Coverages will request one layer or many. If many are added then they will just 
 
 ##### Overpass Configuration
 
-You can configure the OSM schema by adding a yaml file. A default one should be loaded with eventkit. 
+You can configure the OSM schema by adding a yaml file. A default one should be loaded with Eventkit. 
 Should you want to customize it or create your own the schema is in a yaml format:
 ```yaml
 <table_name>:
@@ -187,8 +187,8 @@ amenities:
     - name
   where: amenity IS NOT NULL
 ```
-Would create tables called amentities_points and amenities_polygons.
-Each table would select all geometries where amenitiy is not null and it would include the columns
+Would create tables called amenities_points and amenities_polygons.
+Each table would select all geometries where amenity is not null and it would include the columns
 amenity and name. 
 
 You can change the default overpass query in the configuration section by adding: 
@@ -204,7 +204,7 @@ It could take 8 hours to do a 1000 km area from a planet sized PBF, however it m
 Therefore PBF is a reasonable option if wishing create OSM extracts that are continent or planet scale.
 Lastly it can take a significant amount of storage space to process the data and there should be 3 times the size of the PBF file per worker on the system.
 If using a 10GB PBF file, with one worker processing an OSM job there should be more than 30 GB of storage available to that worker for both the 
-exported geopackage as well as for the geometry index used by gdal.
+exported geopackage as well as for the geometry index used by GDAL.
 https://gdal.org/drivers/vector/osm.html#internal-working-and-performance-tweaking
 To set add in the OSM config block:
 ```yaml
