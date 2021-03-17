@@ -226,7 +226,7 @@ def patch_https(cert_info: dict = None):
             # create_ssl_sslcontext needs the cert data, instead of the filepath
             with open(cert_path, "rb") as pkcs12_file:
                 pkcs12_data = pkcs12_file.read()
-            kwargs["context"] = create_ssl_sslcontext(pkcs12_data, cert_pass_var)
+            kwargs["context"] = create_ssl_context(pkcs12_data, cert_pass_var)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
