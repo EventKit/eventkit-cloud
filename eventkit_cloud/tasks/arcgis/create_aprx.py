@@ -254,7 +254,6 @@ def add_layer_to_map(
 
 def get_aprx_template():
     """
-    :param version: A version for the correct arcgis project template.
     :return: A file path to the correct arcgis project template.
     """
     template_file_name = "template-2-7.aprx"
@@ -344,7 +343,7 @@ def create_aprx(aprx=None, metadata=None, verify=False):
     :param verify: Raise an exception if there is an error in the aprx after adding the new gpkg.
     :return: The contents (binary) of the aprx file.
     """
-    template_file = get_aprx_template(CURRENT_VERSION)
+    template_file = get_aprx_template()
     # with get_temp_aprx(metadata, verify=verify) as temp_aprx_file:
     # copy temp file to permanent file if specified.
     if aprx:
