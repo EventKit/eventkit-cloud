@@ -300,8 +300,8 @@ class TestExportTasks(ExportTaskBase):
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         expected_input_path = (
-             'https://abc.gov/WFSserver/?SERVICE=WFS&VERSION=1.0.0&REQUEST='
-             'GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=2.0%2C%202.0%2C%203.0%2C%203.0'
+            "https://abc.gov/WFSserver/?SERVICE=WFS&VERSION=1.0.0&REQUEST="
+            "GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_merge.return_value = expected_output_path
 
@@ -327,7 +327,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            bbox=[1, 2, 3, 4]
+            bbox=[1, 2, 3, 4],
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
@@ -457,10 +457,11 @@ class TestExportTasks(ExportTaskBase):
             service_url=service_url,
             layer=layer,
             config='cert_var: "test2"',
-            bbox=[1, 2, 3, 4]
+            bbox=[1, 2, 3, 4],
         )
-        mock_download_data.assert_called_with(str(saved_export_task.uid),
-                                              expected_input_path, ANY, "test2", task_points=100)
+        mock_download_data.assert_called_with(
+            str(saved_export_task.uid), expected_input_path, ANY, "test2", task_points=100
+        )
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -828,8 +829,10 @@ class TestExportTasks(ExportTaskBase):
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, 3, 4]
         query_string = "query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+3%2C+4&f=json"
-        expected_input_url = ("https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
-                              "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0")
+        expected_input_url = (
+            "https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
+            "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
+        )
         mock_convert.return_value = expected_esrijson
         mock_merge.return_value = expected_output_path
         mock_download_data.return_value = expected_esrijson

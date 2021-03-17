@@ -66,7 +66,8 @@ from eventkit_cloud.tasks.helpers import (
     pickle_exception,
     progressive_kill,
     download_data,
-    download_concurrently, download_chunks,
+    download_concurrently,
+    download_chunks,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1147,10 +1148,13 @@ def wfs_export_task(
             )
 
     else:
-        logger.info("Downloading WFS")
-        chunks = download_chunks(task_uid, bbox, stage_dir,
-                                 get_wfs_query_url(name, service_url, layer, projection),
-                                 configuration.get("cert_var"),)
+        chunks = download_chunks(
+            task_uid,
+            bbox,
+            stage_dir,
+            get_wfs_query_url(name, service_url, layer, projection),
+            configuration.get("cert_var"),
+        )
         merge_geojson(chunks, gpkg)
 
         out = gdalutils.convert(
@@ -1188,9 +1192,9 @@ def load_provider_config(config: str) -> dict:
     return configuration
 
 
-def get_wfs_query_url(name: str, service_url: str = None,
-                      layer: str = None, projection: int = None,
-                      bbox: list = None) -> str:
+def get_wfs_query_url(
+    name: str, service_url: str = None, layer: str = None, projection: int = None, bbox: list = None
+) -> str:
     """
     Function generates WFS query URL
     """
@@ -1346,9 +1350,9 @@ def arcgis_feature_service_export_task(
             )
 
     else:
-        chunks = download_chunks(task_uid, bbox, stage_dir,
-                                 get_arcgis_query_url(service_url),
-                                 configuration.get("cert_var"),)
+        chunks = download_chunks(
+            task_uid, bbox, stage_dir, get_arcgis_query_url(service_url), configuration.get("cert_var")
+        )
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
         merge_geojson(chunks, esrijson)
 

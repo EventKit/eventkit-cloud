@@ -119,7 +119,7 @@ def open_dataset(file_path, is_raster):
             return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
-                "Error browsing database for PostGIS Raster tables" in str(ex)
+            "Error browsing database for PostGIS Raster tables" in str(ex)
         ):
             raise ex
     finally:
