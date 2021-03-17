@@ -32,7 +32,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
+from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox, merge_geojson
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
@@ -841,13 +841,20 @@ def download_concurrently(layers: ValuesView, concurrency=None):
     Function concurrently downloads data from a given list URLs and download paths.
     """
 
+    def download_chunks_concurrently(layer, task_points):
+        base_path = layer.get('base_path')
+        os.mkdir(base_path)
+        chunks = download_chunks(layer.get('task_uid'), layer.get('bbox'), base_path,
+                                 layer.get('url'), layer.get("cert_var"), task_points=task_points)
+        merge_geojson(chunks, layer.get('path'))
+
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
 
         # Get the total number of task points to compare against current progress.
         task_points = len(layers) * 100
 
-        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
+        futures_list = [executor.submit(download_chunks_concurrently, layer=layer, task_points=task_points) for layer in layers]
         futures.wait(futures_list)
 
     except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
@@ -856,13 +863,17 @@ def download_concurrently(layers: ValuesView, concurrency=None):
     return layers
 
 
-def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_var=None):
+def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_var=None, task_points=100):
+    logger.info("Starting Chunking")
     tile_bboxes = get_chunked_bbox(bbox)
     chunks = []
     for _index, _tile_bbox in enumerate(tile_bboxes):
-        url = base_url.format(*_tile_bbox)
+        # When constructing the bbox param for WFS and ARCGIS, we set there respective keys to "BBOX_PLACEHOLDER"
+        # Replace it here, allowing for the bbox as either a list or tuple
+        logger.info(f"this is the bbox: {_tile_bbox}")
+        url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
-        download_data(task_uid, url, outfile, cert_var)
+        download_data(task_uid, url, outfile, cert_var, task_points=task_points)
         chunks.append(outfile)
     return chunks
 
@@ -871,11 +882,10 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, t
     """
     Function for downloading data, optionally using a certificate.
     """
-
     try:
-        response = auth_requests.get(
-            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
-        )
+        auth_session = auth_requests.AuthSession()
+        response = auth_session.get(input_url, cert_var=cert_var,
+                                    stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")

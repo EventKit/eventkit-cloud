@@ -758,7 +758,7 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
     return out_file
 
 
-def merge_geojson(in_files, out_file, driver, task_uid=None):
+def merge_geojson(in_files, out_file):
     """
     :param in_files: A list of geojson files.
     :param out_file: A location for the result of the merge.

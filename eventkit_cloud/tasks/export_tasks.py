@@ -66,7 +66,7 @@ from eventkit_cloud.tasks.helpers import (
     pickle_exception,
     progressive_kill,
     download_data,
-    download_concurrently,
+    download_concurrently, download_chunks,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -80,7 +80,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.gdalutils import get_chunked_bbox, merge_geojson
+from eventkit_cloud.utils.gdalutils import merge_geojson
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -1127,6 +1127,8 @@ def wfs_export_task(
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
+                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+                "bbox": bbox,
                 "cert_var": configuration.get("cert_var"),
             }
 
@@ -1145,8 +1147,11 @@ def wfs_export_task(
             )
 
     else:
-        url = get_wfs_query_url(name, service_url, layer, projection)
-        download_data(task_uid, url, gpkg, configuration.get("cert_var"))
+        logger.info("Downloading WFS")
+        chunks = download_chunks(task_uid, bbox, stage_dir,
+                                 get_wfs_query_url(name, service_url, layer, projection),
+                                 configuration.get("cert_var"),)
+        merge_geojson(chunks, gpkg)
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1183,7 +1188,9 @@ def load_provider_config(config: str) -> dict:
     return configuration
 
 
-def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, projection: int = None) -> str:
+def get_wfs_query_url(name: str, service_url: str = None,
+                      layer: str = None, projection: int = None,
+                      bbox: list = None) -> str:
     """
     Function generates WFS query URL
     """
@@ -1197,7 +1204,10 @@ def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, pro
         "REQUEST": "GetFeature",
         "TYPENAME": layer,
         "SRSNAME": f"EPSG:{projection}",
+        "BBOX": str(bbox).strip("[]"),
     }
+    if bbox is None:
+        query_params["BBOX"] = "BBOX_PLACEHOLDER"
 
     query_str = urlencode(query_params, safe=":")
 
@@ -1311,11 +1321,13 @@ def arcgis_feature_service_export_task(
 
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
-            url = get_arcgis_query_url(layer.get("url"), bbox)
+            url = get_arcgis_query_url(layer.get("url"))
             layers[layer["name"]] = {
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
+                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+                "bbox": bbox,
                 "cert_var": configuration.get("cert_var"),
             }
 
@@ -1334,17 +1346,11 @@ def arcgis_feature_service_export_task(
             )
 
     else:
-        tile_bboxes = get_chunked_bbox(bbox)
-        chunks = []
+        chunks = download_chunks(task_uid, bbox, stage_dir,
+                                 get_arcgis_query_url(service_url),
+                                 configuration.get("cert_var"),)
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        bbox = ["{0}", "{1}", "{2}", "{3}"]
-        url = get_arcgis_query_url(service_url, [])
-        for _index, _tile_bbox in enumerate(tile_bboxes):
-            url = get_arcgis_query_url(service_url, _tile_bbox)
-            outfile = get_export_filepath(stage_dir, f"{job_name}_{_index}", projection, provider_slug, "json")
-            download_data(task_uid, url, outfile, configuration.get("cert_var"))
-            chunks.append(outfile)
-        merge_geojson(chunks, esrijson, "GeoJSON")
+        merge_geojson(chunks, esrijson)
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1379,11 +1385,11 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         query_params = {
             "where": "objectid=objectid",
             "outfields": "*",
-            "geometry": str(bbox).strip("[]"),
             "f": "json",
+            "geometry": str(bbox).strip("[]"),
         }
         if bbox is None:
-            query_params["geometry"] = "{0},{1},{2},{3}"
+            query_params["geometry"] = "BBOX_PLACEHOLDER"
         query_str = urlencode(query_params, safe="=*")
         query_url = urljoin(f"{service_url}/", f"query?{query_str}")
 

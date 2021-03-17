@@ -110,6 +110,7 @@ class ExportTaskBase(TestCase):
     fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self,):
+        self.maxDiff = None
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefault")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
@@ -273,13 +274,14 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.merge_geojson")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
-    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.helpers.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(
-        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_concurrently
+        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_concurrently, mock_merge
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -298,8 +300,10 @@ class TestExportTasks(ExportTaskBase):
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         expected_input_path = (
-            f"{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
+             'https://abc.gov/WFSserver/?SERVICE=WFS&VERSION=1.0.0&REQUEST='
+             'GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=2.0%2C%202.0%2C%203.0%2C%203.0'
         )
+        mock_merge.return_value = expected_output_path
 
         mock_convert.return_value = expected_output_path
         mock_download_data.return_value = expected_input_path
@@ -323,6 +327,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
+            bbox=[1, 2, 3, 4]
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
@@ -330,7 +335,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
         )
 
@@ -346,6 +351,7 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
             service_url=f"{service_url}/",
+            bbox=[1, 2, 3, 4],
         )
 
         self.assertEqual(expected_output_path, result_b["result"])
@@ -366,22 +372,28 @@ class TestExportTasks(ExportTaskBase):
         expected_path_1 = f"{stage_dir}{job_name}-{layer_1}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_path_2 = f"{stage_dir}{job_name}-{layer_2}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_url_1 = (
-            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}&SRSNAME=EPSG:{projection}"
+            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}"
+            f"&SRSNAME=EPSG:{projection}&BBOX=BBOX_PLACEHOLDER"
         )
         expected_url_2 = (
-            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}&SRSNAME=EPSG:{projection}"
+            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}"
+            f"&SRSNAME=EPSG:{projection}&BBOX=BBOX_PLACEHOLDER"
         )
         expected_layers = {
             layer_1: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
+                "base_path": f"{stage_dir}{layer_1}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_var": None,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
+                "base_path": f"{stage_dir}{layer_2}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_var": None,
             },
         }
@@ -400,6 +412,7 @@ class TestExportTasks(ExportTaskBase):
             service_url=service_url,
             layer=layer,
             config=config,
+            bbox=[1, 2, 3, 4],
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
@@ -412,7 +425,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_1,
         )
@@ -423,7 +436,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_2,
         )
@@ -444,8 +457,10 @@ class TestExportTasks(ExportTaskBase):
             service_url=service_url,
             layer=layer,
             config='cert_var: "test2"',
+            bbox=[1, 2, 3, 4]
         )
-        mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, "test2")
+        mock_download_data.assert_called_with(str(saved_export_task.uid),
+                                              expected_input_path, ANY, "test2", task_points=100)
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -785,12 +800,13 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.export_tasks.merge_geojson")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
-    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.helpers.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
-        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently
+        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently, mock_merge
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -810,10 +826,12 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.json"
         )
         service_url = "https://abc.gov/arcgis/services/x"
-        bbox = [1, 2, -3, 4]
-        query_string = "query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+-3%2C+4&f=json"
-        expected_input_url = f"{service_url}/{query_string}"
-        mock_convert.return_value = expected_output_path
+        bbox = [1, 2, 3, 4]
+        query_string = "query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+3%2C+4&f=json"
+        expected_input_url = ("https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
+                              "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0")
+        mock_convert.return_value = expected_esrijson
+        mock_merge.return_value = expected_output_path
         mock_download_data.return_value = expected_esrijson
 
         previous_task_result = {"source": expected_input_url}
@@ -843,8 +861,8 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        mock_download_data.assert_called_once_with(
-            str(saved_export_task.uid), expected_input_url, expected_esrijson, None
+        mock_download_data.assert_called_with(
+            str(saved_export_task.uid), expected_input_url, ANY, None, task_points=100
         )
 
         mock_convert.assert_called_once_with(
