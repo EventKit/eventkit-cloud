@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
 export PATH="$HOME/miniconda3/bin:$PATH"
 
 echo "Clearing out conda-bld"
@@ -22,8 +26,8 @@ conda config --add channels file:///root/repo/
 function create_index {
   echo "Move files and create index"
   echo "Copying files..."
-  cp -f /root/miniconda3/**/*.tar.bz2 /root/repo/linux-64/ || echo "No .tar.bz2 files to move"
-  cp -f /root/miniconda3/**/*.conda /root/repo/linux-64/ || echo "No .conda files to move"
+  find /root/miniconda3/ -type f -name "*.tar.bz2" -exec cp {} /root/repo/linux-64/ \; || echo "No .tar.bz2 files to move"
+  find /root/miniconda3/ -type f -name "*.conda" -exec cp {} /root/repo/linux-64/ \; || echo "No .conda files to move"
   echo "Ensuring repo channel is priority"
   conda config --add channels file:///root/repo/
   pushd /root/repo
@@ -52,9 +56,11 @@ echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
   for i in 1 2 3; do
+    echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE && s=0 && \
-    break || s=$? && sleep 5;
+    && echo "Installing: ${RECIPE}" \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
+    && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
 
@@ -66,3 +72,4 @@ python /root/download_packages.py
 popd
 
 create_index
+
