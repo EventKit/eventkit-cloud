@@ -10,7 +10,7 @@ import requests_pkcs12
 from functools import wraps
 from tempfile import NamedTemporaryFile
 from django.conf import settings
-from requests_pkcs12 import Pkcs12Adapter, create_ssl_sslcontext
+from requests_pkcs12 import Pkcs12Adapter, create_ssl_context
 
 import requests
 from mapproxy.client import http as mapproxy_http

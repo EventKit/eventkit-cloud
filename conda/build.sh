@@ -59,13 +59,13 @@ for RECIPE in $RECIPES; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE && \
-    break || s=$? && sleep 5;
-  done;
-  echo "Cleaning up the conda-requirements.txt after the build."
-  rm /root/recipes/eventkit-cloud/conda-requirements.txt
-  exit $s
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
+    && s=0 && break || s=$? && sleep 5;
+  done; (exit $s)
 done
+
+echo "Cleaning up the conda-requirements.txt after the build."
+rm /root/recipes/eventkit-cloud/conda-requirements.txt
 
 pushd /root/repo/linux-64/
 python /root/download_packages.py
