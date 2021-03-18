@@ -165,6 +165,7 @@ class WCSConverter(object):
         tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
+        auth_session = auth_requests.AuthSession()
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
@@ -189,7 +190,7 @@ class WCSConverter(object):
                         params["height"] = self.config.get("tile_size")
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
-                    req = auth_requests.get(
+                    req = auth_session.get(
                         self.service_url,
                         params=params,
                         cert_var=cert_var,
