@@ -523,7 +523,6 @@ class TestGdalUtils(TestCase):
     @patch("eventkit_cloud.utils.gdalutils.gdal")
     def test_get_chunked_tiles(self, mock_gdal):
         bbox = [-77.26290092220698, 38.58181863431442, -76.86362334675664, 38.94635628150632]
-        tile_dims, bboxes = get_chunked_bbox(bbox)
-        self.assertEqual(tile_dims, (3, 2))
+        bboxes = get_chunked_bbox(bbox)
         self.assertEqual(len(bboxes), 6)
         self.assertEqual(bboxes[0], (-77.26290092220698, 38.76408745791032, -77.08063209861098, 38.94635628150632))
