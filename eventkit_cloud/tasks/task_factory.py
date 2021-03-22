@@ -294,7 +294,7 @@ def create_run(job_uid, user=None, clone=False):
 
 def check_job_permissions(job: Job, user: User = None) -> (Job, User):
     # get the number of existing runs for this job
-    job = Job.objects.select_related("user").get(uid=job.uid)
+
     if not job.data_provider_tasks.all():
         raise Error(
             "This job does not have any data sources or formats associated with it, "
