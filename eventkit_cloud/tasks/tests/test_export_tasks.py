@@ -995,11 +995,7 @@ class TestExportTasks(ExportTaskBase):
             config='cert_var: "test1"',
         )
         mock_download_data.assert_called_with(
-            str(saved_export_task.uid),
-            expected_input_url,
-            'dir/chunk3.json',
-            'test1',
-            task_points=100
+            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", "test1", task_points=100
         )
 
     @patch("celery.app.task.Task.request")
