@@ -26,6 +26,8 @@ def string2bool(string_value):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('url', help='The EventKit instance base url (i.e. http://cloud.eventkit.test).')
+    parser.add_argument('-s', '--sources', nargs='+', default='',
+                        help='The slugs of sources to check, if not included all visible sources are checked.')
     parser.add_argument('--verify', default='',
                         help='True to enable ssl verification, false to disable ssl verification')
     parser.add_argument('--certificate', default='',
@@ -71,6 +73,11 @@ def main():
 
     providers = client.get_providers()
 
+    if args.sources:
+        print(f"Selecting {args.sources} from: ")
+        print([provider.get('slug') for provider in providers])
+        providers = [provider for provider in providers if provider.get('slug') in args.sources]
+
     if full_test:
         provider_tasks = []
 
@@ -81,7 +88,7 @@ def main():
                 if not level:
                     level = 1
                 provider_tasks += [
-                    {"provider": provider.get('name'), "formats": ["gpkg"], "min_zoom": level, 'max_zoom': level}]
+                    {"provider": provider.get('slug'), "formats": ["gpkg"], "min_zoom": level, 'max_zoom': level}]
 
         feature = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
                                                               "geometry": {"type": "Polygon", "coordinates": [
@@ -128,6 +135,7 @@ def main():
             raise Exception("The following providers failed status checks: {0}".format(bad_providers))
 
     print("System check completed successfully.")
+
 
 if __name__ == "__main__":
     main()
