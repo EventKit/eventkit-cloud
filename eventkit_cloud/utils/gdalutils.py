@@ -196,7 +196,9 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
         multiprocess_queue.put(ret)
-
+    except:
+        import traceback
+        traceback.print_exc()
     finally:
         cleanup_dataset(dataset)
 
@@ -326,12 +328,18 @@ def convert(
     :return: Filename of clipped dataset
     """
 
-    input_file, output_file = get_dataset_names(input_file, output_file)
-    meta = get_meta(input_file, is_raster)
+    if isinstance(input_file, str) and not use_translate:
+        input_file = [input_file]
+
+    meta_list = []
+    for _index, _file in enumerate(input_file):
+        input_file[_index], output_file = get_dataset_names(_file, output_file)
+        meta_list.append(get_meta(_file, is_raster))
 
     src_src = f"EPSG:{src_srs}"
     dst_src = f"EPSG:{projection}"
-
+    # Currently, when there are more than 1 files, they much each be the same driver, making the meta the same.
+    meta = meta_list[0]
     if not driver:
         driver = meta["driver"] or "gpkg"
 
@@ -382,6 +390,7 @@ def convert(
             config_options=config_options,
         )
     else:
+        logger.info(f"vector translate: {input_file}")
         cmd = get_task_command(
             convert_vector,
             input_file,
@@ -490,7 +499,11 @@ def convert_raster(
     if isinstance(input_files, str) and not use_translate:
         input_files = [input_files]
     elif isinstance(input_files, list) and use_translate:
-        raise Exception("Cannot use_translate with a list of files.")
+        # If a single file is provided in an array, we can simply pull it out
+        if len(input_files) == 1:
+            input_files = input_files[0]
+        else:
+            raise Exception("Cannot use_translate with a list of files.")
     gdal.UseExceptions()
     subtask_percentage = 50 if driver.lower() == "gtiff" else 100
     options = clean_options(
@@ -577,6 +590,15 @@ def convert_vector(
     :param config_options: A list of gdal configuration options as a tuple (option, value).
     :return: The output file.
     """
+    if isinstance(input_file, str) and access_mode == "append":
+        input_file = [input_file]
+    elif isinstance(input_file, list) and access_mode == "overwrite":
+        # If a single file is provided in an array, we can simply pull it out
+        if len(input_file) == 1:
+            input_file = input_file[0]
+        else:
+            raise Exception("Cannot overwrite with a list of files.")
+
     gdal.UseExceptions()
     options = clean_options(
         {
@@ -601,8 +623,10 @@ def convert_vector(
     if config_options:
         for config_option in config_options:
             gdal.SetConfigOption(*config_option)
-    logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
-    gdal.VectorTranslate(output_file, input_file, **options)
+    if access_mode == "append":
+        for _input_file in input_file:
+            logger.info(f"calling gdal.VectorTranslate('{output_file}', '{_input_file}', {stringify_params(options)})")
+            gdal.VectorTranslate(output_file, _input_file, **options)
     return output_file
 
 

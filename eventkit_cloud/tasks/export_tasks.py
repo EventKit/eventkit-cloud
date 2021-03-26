@@ -67,7 +67,7 @@ from eventkit_cloud.tasks.helpers import (
     progressive_kill,
     download_data,
     download_concurrently,
-    download_chunks,
+    download_chunks, merge_chunks,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1148,23 +1148,15 @@ def wfs_export_task(
             )
 
     else:
-        chunks = download_chunks(
+        out = merge_chunks(
+            gpkg,
+            export_task_record.export_provider_task.provider.layers[0],
+            projection,
             task_uid,
             bbox,
             stage_dir,
             get_wfs_query_url(name, service_url, layer, projection),
-            configuration.get("cert_var"),
-        )
-        merge_geojson(chunks, gpkg)
-
-        out = gdalutils.convert(
-            driver="gpkg",
-            input_file=gpkg,
-            output_file=gpkg,
-            task_uid=task_uid,
-            projection=projection,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
-            boundary=bbox,
+            configuration.get("cert_var")
         )
 
     result["driver"] = "gpkg"
@@ -1333,6 +1325,8 @@ def arcgis_feature_service_export_task(
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
                 "cert_var": configuration.get("cert_var"),
+                "layer_name": layer.get('name'),
+                "projection": projection,
             }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
@@ -1350,20 +1344,15 @@ def arcgis_feature_service_export_task(
             )
 
     else:
-        chunks = download_chunks(
-            task_uid, bbox, stage_dir, get_arcgis_query_url(service_url), configuration.get("cert_var")
-        )
-        esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        merge_geojson(chunks, esrijson)
-
-        out = gdalutils.convert(
-            driver="gpkg",
-            input_file=esrijson,
-            output_file=gpkg,
-            task_uid=task_uid,
-            boundary=bbox,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
-            projection=projection,
+        out = merge_chunks(
+            gpkg,
+            export_task_record.export_provider_task.provider.layers[0],
+            projection,
+            task_uid,
+            bbox,
+            stage_dir,
+            get_arcgis_query_url(service_url),
+            configuration.get("cert_var")
         )
 
     result["driver"] = "gpkg"

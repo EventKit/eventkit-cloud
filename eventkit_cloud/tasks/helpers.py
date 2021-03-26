@@ -31,7 +31,7 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils import auth_requests, gdalutils
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox, merge_geojson
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -836,6 +836,31 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
+def merge_chunks(
+        output_file,
+        layer_name,
+        projection,
+        task_uid: str,
+        bbox: list,
+        stage_dir: str,
+        base_url: str,
+        cert_var=None,
+        task_points=100
+):
+    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_var, task_points)
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=chunks,
+        output_file=output_file,
+        task_uid=task_uid,
+        boundary=bbox,
+        layer_name=layer_name,
+        projection=projection,
+        access_mode="append",
+    )
+    return out
+
+
 def download_concurrently(layers: ValuesView, concurrency=None):
     """
     Function concurrently downloads data from a given list URLs and download paths.
@@ -844,15 +869,17 @@ def download_concurrently(layers: ValuesView, concurrency=None):
     def download_chunks_concurrently(layer, task_points):
         base_path = layer.get("base_path")
         os.mkdir(base_path)
-        chunks = download_chunks(
-            layer.get("task_uid"),
-            layer.get("bbox"),
-            base_path,
-            layer.get("url"),
-            layer.get("cert_var"),
+        merge_chunks(
+            output_file=layer.get("path"),
+            projection=layer.get("projection"),
+            layer_name=layer.get("layer_name"),
+            task_uid=layer.get("task_uid"),
+            bbox=layer.get("bbox"),
+            stage_dir=base_path,
+            base_url=layer.get("url"),
+            cert_var=layer.get("cert_var"),
             task_points=task_points,
         )
-        merge_geojson(chunks, layer.get("path"))
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
