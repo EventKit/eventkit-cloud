@@ -1324,6 +1324,19 @@ def arcgis_feature_service_export_task(
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
+            try:
+                with open(layer.get("path")) as f:
+                    json_response = json.load(f)
+
+                if json_response.get("error"):
+                    code = json_response["error"].get("code")
+                    message = json_response["error"].get("message")
+                    raise Exception(f"Status code {code} - {message}")
+
+            except Exception as e:
+                logger.error(f"ArcGIS provider error: {e}")
+                raise e
+
             out = gdalutils.convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
