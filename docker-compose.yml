@@ -31,6 +31,7 @@ services:
       - MAPPROXY_LOGS_VERBOSE
       - MAPPROXY_LOGS_SILENT
       - SERVE_ESTIMATES
+      - CONTENT_SECURITY_POLICY
       - SITE_NAME
       - SITE_IP
       - TERM

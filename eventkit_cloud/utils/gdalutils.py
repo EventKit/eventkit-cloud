@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from typing import List, Tuple
+
 import math
 import billiard
 import os
@@ -8,24 +10,27 @@ import time
 from tempfile import NamedTemporaryFile
 from functools import wraps
 
+from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
+
 
 from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 from django.conf import settings
 
-
 logger = logging.getLogger(__name__)
 
 MAX_DB_CONNECTION_RETRIES = 8
 TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
-
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
 # We have used this solution for now as I could not find options supporting this in the gdal documentation.
+
+
+GOOGLE_MAPS_FULL_WORLD = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
 
 
 def retry(f):
@@ -298,6 +303,7 @@ def convert(
     translate_params: dict = None,
     use_translate: bool = False,
     access_mode: str = "overwrite",
+    config_options: List[Tuple[str]] = None,
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -316,6 +322,7 @@ def convert(
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
+    :param config_options: A list of gdal configuration options as a tuple (option, value).
     :return: Filename of clipped dataset
     """
 
@@ -372,6 +379,7 @@ def convert(
             warp_params=warp_params,
             translate_params=translate_params,
             use_translate=use_translate,
+            config_options=config_options,
         )
     else:
         cmd = get_task_command(
@@ -389,6 +397,7 @@ def convert(
             boundary=boundary,
             bbox=bbox,
             access_mode=access_mode,
+            config_options=config_options,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
@@ -454,6 +463,7 @@ def convert_raster(
     warp_params: dict = None,
     translate_params: dict = None,
     use_translate: bool = False,
+    config_options: List[Tuple[str]] = None,
 ):
     """
     :param warp_params: A dict of options to pass to gdal warp (done first in conversion), overrides other settings.
@@ -471,6 +481,7 @@ def convert_raster(
     :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
     :param task_uid: The eventkit task uid used for tracking the work.
     :param use_translate: Make true if needing to use translate for conversion instead of warp.
+    :param config_options: A list of gdal configuration options as a tuple (option, value).
     :return: The output file.
     """
     if not driver:
@@ -546,6 +557,7 @@ def convert_vector(
     bbox=None,
     dataset_creation_options=None,
     layer_creation_options=None,
+    config_options: List[Tuple[str]] = None,
 ):
     """
     :param input_files: A file or list of files to convert.
@@ -562,6 +574,7 @@ def convert_vector(
     :param task_uid: The eventkit task uid used for tracking the work.
     :param layers: A list of layers to include for translation.
     :param layer_name: Table name in database for in_dataset
+    :param config_options: A list of gdal configuration options as a tuple (option, value).
     :return: The output file.
     """
     gdal.UseExceptions()
@@ -585,6 +598,9 @@ def convert_vector(
     )
     if "gpkg" in driver.lower():
         options["geometryType"] = ["PROMOTE_TO_MULTI"]
+    if config_options:
+        for config_option in config_options:
+            gdal.SetConfigOption(*config_option)
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
     return output_file
@@ -656,17 +672,19 @@ def stringify_params(params):
     return ", ".join([f"{k}='{v}'" for k, v in params.items()])
 
 
-def get_dimensions(bbox, scale):
+def get_dimensions(bbox: List[float], scale: int) -> (int, int):
     """
-
     :param bbox: A list [w, s, e, n].
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
     # Request at least one pixel
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
-    return [int(width / scale), int(height / scale)]
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+
+    scaled_width = int(width / scale) or 1
+    scaled_height = int(height / scale) or 1
+    return scaled_width, scaled_height
 
 
 def get_line(coordinates):
@@ -764,6 +782,12 @@ def get_band_statistics(file_path, band=1):
 
 
 def rename_duplicate(original_file: str) -> str:
+
+    # Some files we may not want to rename or overwrite.  For example if PBF is used for source data, we don't want to
+    # create duplicates of it and the gdal driver doesn't support writing PBF anyway, so this is likely a mistake.
+    protected_files = [".pbf"]
+    if os.path.splitext(original_file)[1] in protected_files:
+        raise Exception(f"The {original_file} cannot be renamed it is protected and/or not writable by this module.")
     returned_file = os.path.join(os.path.dirname(original_file), "old_{0}".format(os.path.basename(original_file)),)
     # if the original and renamed files both exist, we can remove the renamed version, and then rename the file.
     if os.path.isfile(returned_file) and os.path.isfile(original_file):
@@ -786,3 +810,27 @@ def strip_prefixes(dataset: str) -> (str, str):
             removed_prefix = prefix
         output_dataset = cleaned_dataset
     return removed_prefix, output_dataset
+
+
+def get_chunked_bbox(bbox, size: tuple = None):
+    """
+    Chunks a bbox into a grid of sub-bboxes.
+
+    :param bbox: bbox in 4326, representing the area of the world to be chunked
+    :param size: optional image size to use when calculating the resolution.
+    :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
+    """
+    from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
+
+    # Calculate the starting res for our custom grid
+    # This is the same method we used when taking snap shots for data packs
+    resolution = get_resolution_for_extent(bbox, size)
+    # Make a subgrid of 4326 that spans the extent of the provided bbox
+    # min res specifies the starting zoom level
+    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+    # bbox is the bounding box of all tiles affected at the given level, unused here
+    # size is the x, y dimensions of the grid
+    # tiles at level is a generator that returns the tiles in order
+    tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
+    # convert the tiles to bboxes representing the tiles on the map
+    return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
