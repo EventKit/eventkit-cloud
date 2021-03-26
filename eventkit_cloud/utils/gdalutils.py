@@ -10,24 +10,27 @@ import time
 from tempfile import NamedTemporaryFile
 from functools import wraps
 
+from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
+
 
 from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 from django.conf import settings
 
-
 logger = logging.getLogger(__name__)
 
 MAX_DB_CONNECTION_RETRIES = 8
 TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
-
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
 # We have used this solution for now as I could not find options supporting this in the gdal documentation.
+
+
+GOOGLE_MAPS_FULL_WORLD = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244]
 
 
 def retry(f):
@@ -669,17 +672,19 @@ def stringify_params(params):
     return ", ".join([f"{k}='{v}'" for k, v in params.items()])
 
 
-def get_dimensions(bbox, scale):
+def get_dimensions(bbox: List[float], scale: int) -> (int, int):
     """
-
     :param bbox: A list [w, s, e, n].
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
     # Request at least one pixel
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
-    return [int(width / scale), int(height / scale)]
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+
+    scaled_width = int(width / scale) or 1
+    scaled_height = int(height / scale) or 1
+    return scaled_width, scaled_height
 
 
 def get_line(coordinates):
@@ -805,3 +810,27 @@ def strip_prefixes(dataset: str) -> (str, str):
             removed_prefix = prefix
         output_dataset = cleaned_dataset
     return removed_prefix, output_dataset
+
+
+def get_chunked_bbox(bbox, size: tuple = None):
+    """
+    Chunks a bbox into a grid of sub-bboxes.
+
+    :param bbox: bbox in 4326, representing the area of the world to be chunked
+    :param size: optional image size to use when calculating the resolution.
+    :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
+    """
+    from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
+
+    # Calculate the starting res for our custom grid
+    # This is the same method we used when taking snap shots for data packs
+    resolution = get_resolution_for_extent(bbox, size)
+    # Make a subgrid of 4326 that spans the extent of the provided bbox
+    # min res specifies the starting zoom level
+    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+    # bbox is the bounding box of all tiles affected at the given level, unused here
+    # size is the x, y dimensions of the grid
+    # tiles at level is a generator that returns the tiles in order
+    tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
+    # convert the tiles to bboxes representing the tiles on the map
+    return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
