@@ -1131,6 +1131,8 @@ def wfs_export_task(
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
                 "cert_var": configuration.get("cert_var"),
+                "layer_name": layer["name"],
+                "projection": projection,
             }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
