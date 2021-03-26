@@ -29,7 +29,7 @@ try:
 except Exception as e:
     logger.warning(e)
     input(
-        "Could not import ArcPY.  ArcGIS greater than 10.4 is required to run this script. "
+        "Could not import ArcPY.  ArcGIS Pro is required to run this script. "
         "Please ensure that it is installed and activated. "
         "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS. "
         "Press any key to exit."
@@ -105,7 +105,7 @@ def add_layers_to_group(
                 logger.warning((f"Calculating statistics for the file {file_path}..."))
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
-                logger.warning(e)
+                logger.info(e)
             layer_file = get_layer_file(layer_info["type"], version)
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 logger.warning(
@@ -304,7 +304,7 @@ def update_layer(layer: arcpy._mp.Layer, file_path: str, type: str, projection: 
                     logger.debug(f"Updating layers from {lyr.dataSource} to {file_path}")
                     # https://pro.arcgis.com/en/pro-app/latest/arcpy/mapping/updatingandfixingdatasources.htm
                     connection_properties = lyr.connectionProperties
-
+                    logger.debug(f"Updating connection_properties: {connection_properties}")
                     if type == "raster" and os.path.splitext(file_path)[1] != ".gpkg":
                         logger.debug("Replacing Datasource")
                         connection_properties["connection_info"]["database"] = os.path.dirname(file_path)
@@ -325,12 +325,11 @@ def update_layer(layer: arcpy._mp.Layer, file_path: str, type: str, projection: 
                     if lyr.isFeatureLayer:
                         try:
                             logger.debug(arcpy.management.RecalculateFeatureClassExtent(lyr).getMessages())
-                        except Exception as e:
-                            print(e)
-                            raise
+                        except Exception:
+                            logger.warning(f"Could not update the extent for {lyr.name}")
                 except Exception as e:
                     logger.error(e)
-                    # raise
+                    raise
         finally:
             del lyr
 
