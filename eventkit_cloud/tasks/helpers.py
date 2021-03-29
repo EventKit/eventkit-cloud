@@ -32,7 +32,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests, gdalutils
-from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox, merge_geojson
+from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
@@ -837,15 +837,15 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
 
 
 def merge_chunks(
-        output_file,
-        layer_name,
-        projection,
-        task_uid: str,
-        bbox: list,
-        stage_dir: str,
-        base_url: str,
-        cert_var=None,
-        task_points=100
+    output_file,
+    layer_name,
+    projection,
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_var=None,
+    task_points=100,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_var, task_points)
     out = gdalutils.convert(

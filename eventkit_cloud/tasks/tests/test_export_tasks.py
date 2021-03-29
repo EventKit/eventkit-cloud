@@ -274,14 +274,13 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
-    @patch("eventkit_cloud.tasks.export_tasks.merge_geojson")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.helpers.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(
-        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_concurrently, mock_merge
+        self, mock_request, mock_gpkg, mock_convert, mock_download_data, mock_download_concurrently
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -300,12 +299,11 @@ class TestExportTasks(ExportTaskBase):
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         expected_input_path = [
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk0.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk1.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk2.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk3.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk0.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk1.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk2.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk3.json"),
         ]
-        mock_merge.return_value = expected_output_path
 
         mock_convert.return_value = expected_output_path
         mock_download_data.return_value = expected_input_path
@@ -808,13 +806,12 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
-    @patch("eventkit_cloud.tasks.export_tasks.merge_geojson")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.helpers.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
-        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently, mock_merge
+        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -831,10 +828,10 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.gpkg"
         )
         expected_esrijson = [
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk0.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk1.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk2.json'),
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk3.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk0.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk1.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk2.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk3.json"),
         ]
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, 3, 4]
@@ -844,7 +841,6 @@ class TestExportTasks(ExportTaskBase):
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_convert.return_value = expected_output_path
-        mock_merge.return_value = expected_output_path
         mock_download_data.return_value = expected_esrijson
 
         previous_task_result = {"source": expected_input_url}

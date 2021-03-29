@@ -196,9 +196,6 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
         multiprocess_queue.put(ret)
-    except:
-        import traceback
-        traceback.print_exc()
     finally:
         cleanup_dataset(dataset)
 

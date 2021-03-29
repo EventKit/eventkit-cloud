@@ -67,7 +67,7 @@ from eventkit_cloud.tasks.helpers import (
     progressive_kill,
     download_data,
     download_concurrently,
-    download_chunks, merge_chunks,
+    merge_chunks,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -81,7 +81,6 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.gdalutils import merge_geojson
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -1158,7 +1157,7 @@ def wfs_export_task(
             bbox,
             stage_dir,
             get_wfs_query_url(name, service_url, layer, projection),
-            configuration.get("cert_var")
+            configuration.get("cert_var"),
         )
 
     result["driver"] = "gpkg"
@@ -1326,7 +1325,7 @@ def arcgis_feature_service_export_task(
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
                 "cert_var": configuration.get("cert_var"),
-                "layer_name": layer.get('name'),
+                "layer_name": layer.get("name"),
                 "projection": projection,
             }
 
