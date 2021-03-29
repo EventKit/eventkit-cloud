@@ -137,7 +137,7 @@ class TestGdalUtils(TestCase):
         )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,
@@ -167,7 +167,7 @@ class TestGdalUtils(TestCase):
         )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,
@@ -194,7 +194,7 @@ class TestGdalUtils(TestCase):
         )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,
@@ -221,7 +221,7 @@ class TestGdalUtils(TestCase):
         )
         get_task_command_mock.assert_called_once_with(
             convert_vector,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,
@@ -258,7 +258,7 @@ class TestGdalUtils(TestCase):
         )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,
@@ -287,7 +287,7 @@ class TestGdalUtils(TestCase):
         convert(driver=driver, input_file=in_dataset, output_file=out_dataset, task_uid=self.task_uid, projection=3857)
         get_task_command_mock.assert_called_once_with(
             convert_raster,
-            in_dataset,
+            [in_dataset],
             out_dataset,
             driver=driver,
             config_options=None,

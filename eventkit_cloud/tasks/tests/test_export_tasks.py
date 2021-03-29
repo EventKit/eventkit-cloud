@@ -299,10 +299,12 @@ class TestExportTasks(ExportTaskBase):
         )
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
-        expected_input_path = (
-            "https://abc.gov/WFSserver/?SERVICE=WFS&VERSION=1.0.0&REQUEST="
-            "GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=2.0%2C%202.0%2C%203.0%2C%203.0"
-        )
+        expected_input_path = [
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk0.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk1.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk2.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk3.json'),
+        ]
         mock_merge.return_value = expected_output_path
 
         mock_convert.return_value = expected_output_path
@@ -331,12 +333,13 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_file=expected_input_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
             boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
+            access_mode="append",
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -387,6 +390,8 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": f"{stage_dir}{layer_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
                 "cert_var": None,
+                "layer_name": layer_1,
+                "projection": projection,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -395,6 +400,8 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": f"{stage_dir}{layer_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
                 "cert_var": None,
+                "layer_name": layer_2,
+                "projection": projection,
             },
         }
 
@@ -460,7 +467,7 @@ class TestExportTasks(ExportTaskBase):
             bbox=[1, 2, 3, 4],
         )
         mock_download_data.assert_called_with(
-            str(saved_export_task.uid), expected_input_path, ANY, "test2", task_points=100
+            str(saved_export_task.uid), ANY, expected_input_path[3], "test2", task_points=100
         )
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
@@ -823,9 +830,12 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.gpkg"
         )
-        expected_esrijson = os.path.join(
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.json"
-        )
+        expected_esrijson = [
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk0.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk1.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk2.json'),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), 'chunk3.json'),
+        ]
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, 3, 4]
         query_string = "query?where=objectid=objectid&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
@@ -876,6 +886,7 @@ class TestExportTasks(ExportTaskBase):
             projection=4326,
             layer_name=expected_provider_slug,
             boundary=bbox,
+            access_mode="append",
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
@@ -922,6 +933,8 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": f"{stage_dir}{layer_name_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
                 "cert_var": None,
+                "projection": projection,
+                "layer_name": layer_name_1,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -930,6 +943,8 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": f"{stage_dir}{layer_name_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
                 "cert_var": None,
+                "projection": projection,
+                "layer_name": layer_name_2,
             },
         }
 

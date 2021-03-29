@@ -1316,7 +1316,6 @@ def arcgis_feature_service_export_task(
     vector_layer_data = configuration.get("vector_layers", [])
     if len(vector_layer_data):
         layers = {}
-
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
             url = get_arcgis_query_url(layer.get("url"))
@@ -1354,7 +1353,7 @@ def arcgis_feature_service_export_task(
             bbox,
             stage_dir,
             get_arcgis_query_url(service_url),
-            configuration.get("cert_var")
+            configuration.get("cert_var"),
         )
 
     result["driver"] = "gpkg"

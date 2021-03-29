@@ -627,6 +627,8 @@ def convert_vector(
         for _input_file in input_file:
             logger.info(f"calling gdal.VectorTranslate('{output_file}', '{_input_file}', {stringify_params(options)})")
             gdal.VectorTranslate(output_file, _input_file, **options)
+    else:
+        gdal.VectorTranslate(output_file, input_file, **options)
     return output_file
 
 
