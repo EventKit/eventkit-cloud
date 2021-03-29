@@ -1,8 +1,11 @@
 import copy
 import logging
+import multiprocessing
 import os
 import sqlite3
 import time
+from multiprocessing import Process
+from multiprocessing.dummy import DummyProcess
 from typing import Tuple
 
 import mapproxy
@@ -18,9 +21,6 @@ from mapproxy.config.loader import (
     ConfigurationError,
     validate_references,
 )
-from mapproxy.seed import seeder
-from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
@@ -37,6 +37,16 @@ from eventkit_cloud.utils.geopackage import (
     remove_empty_zoom_levels,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+
+# Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
+# a dummy process which relies on threads.  This fixes a bunch of deadlock issues which happen when using billiard.
+multiprocessing.Process = DummyProcess
+from mapproxy.seed import seeder  # noqa: E402
+from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
+from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore  # noqa: E402
+
+multiprocessing.Process = Process
+
 
 logger = logging.getLogger(__name__)
 
@@ -276,19 +286,15 @@ class MapproxyGeopackage(object):
             )
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(
-                billiard=True,
-                target=seeder.seed,
-                kwargs={
-                    "tasks": seed_configuration.seeds(["seed"]),
-                    "concurrency": get_concurrency(conf_dict),
-                    "progress_logger": progress_logger,
-                },
+                lambda: seeder.seed(
+                    tasks=seed_configuration.seeds(["seed"]),
+                    concurrency=get_concurrency(conf_dict),
+                    progress_logger=progress_logger,
+                )
             )
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
             set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
-            if task_process.exitcode != 0:
-                raise Exception("The Raster Service failed to complete, please contact an administrator.")
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             logger.error(e)

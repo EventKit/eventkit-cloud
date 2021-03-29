@@ -1,7 +1,6 @@
 import logging
 import subprocess
 
-from billiard import Process
 from django.db import connection
 import collections
 
@@ -12,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 class TaskProcess(object):
     """Wraps a Task subprocess up and handles logic specifically for the application.
-    If the child process calls other subprcesses use billiard.
     Note, unlike multi-use process classes start and join/wait happen during instantiation."""
 
     def __init__(self, task_uid=None):
@@ -24,7 +22,7 @@ class TaskProcess(object):
         self.stderr = None
         self.export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
 
-    def start_process(self, command=None, billiard=False, *args, **kwargs):
+    def start_process(self, command=None, *args, **kwargs):
         from eventkit_cloud.tasks.enumerations import TaskState
 
         # We need to close the existing connection because the logger could be using a forked process which,
@@ -33,14 +31,8 @@ class TaskProcess(object):
 
         if isinstance(command, collections.Callable):
             command()
-        elif billiard:
-            proc = Process(daemon=False, *args, **kwargs)
-            proc.start()
-            self.store_pid(pid=proc.pid)
-            proc.join()
-            self.exitcode = proc.exitcode
         else:
-            proc = subprocess.Popen(command, **kwargs)
+            proc = subprocess.Popen(command, *args, **kwargs)
             (self.stdout, self.stderr) = proc.communicate()
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
