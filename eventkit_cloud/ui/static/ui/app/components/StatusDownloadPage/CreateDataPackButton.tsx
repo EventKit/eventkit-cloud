@@ -320,14 +320,19 @@ export function CreateDataPackButton(props: Props) {
                 </p>
             )
         }
+        if (!isRunCompleted() && !isRunCanceled()) {
+            return (<p>
+                This DataPack is being processed  We will let you know in the notifications panel when it is ready.
+            </p>)
+        }
         if (isRequestZipFileStatusBad()) {
             return (<p>
                 Unable to create your zipfile at this time, please try again or contact an administrator
-            </p>)
+            </p>);
         }
         return (<p>
             We are creating your zip file. We will let you know in the notifications panel when it is ready.
-        </p>)
+        </p>);
     }
 
     // Builds the icon that is displayed to the left of the button text.
