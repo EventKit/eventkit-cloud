@@ -322,7 +322,7 @@ export function CreateDataPackButton(props: Props) {
         }
         if (!isRunCompleted() && !isRunCanceled()) {
             return (<p>
-                This DataPack is being processed  We will let you know in the notifications panel when it is ready.
+                This DataPack is being processed. We will let you know in the notifications panel when it is ready.
             </p>)
         }
         if (isRequestZipFileStatusBad()) {
