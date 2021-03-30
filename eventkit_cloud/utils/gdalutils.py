@@ -695,17 +695,19 @@ def stringify_params(params):
     return ", ".join([f"{k}='{v}'" for k, v in params.items()])
 
 
-def get_dimensions(bbox, scale):
+def get_dimensions(bbox: List[float], scale: int) -> (int, int):
     """
-
     :param bbox: A list [w, s, e, n].
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
     # Request at least one pixel
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
-    return [int(width / scale), int(height / scale)]
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+
+    scaled_width = int(width / scale) or 1
+    scaled_height = int(height / scale) or 1
+    return scaled_width, scaled_height
 
 
 def get_line(coordinates):

@@ -10,6 +10,12 @@ environment.yml file.
 
 If wishing to use some PCF features to autoscale celery the following settings can be provided to the environment. 
 Additionally you need to start celery with at least one process listening to the `scale` queue.
+
+```
+PCF_SCALING=<True|False>
+```
+Enable or disable Celery scaling on PCF.
+
 ```
 PCF_API_URL=https://pcf.api.test/
 ```
@@ -46,9 +52,25 @@ CELERY_MAX_TASKS_MEMORY=<integer in mb>
 The amount of memory that shouldn't be exceeded when running tasks.  Ideally enough memory should be set to allow all 
 queues to run at one time, about 10240 with the default settings. 
 
-#### CELERY_TASKS (optional)
+```
+CELERY_TASK_APP=<app name>
+```
+If desired, the Celery task application name can be set, otherwise it will default to `application_name`.
 
-A JSON can be passed in with the following structure: 
+```
+CELERY_GROUP_NAME=<app name>
+```
+The group name for the scheduled PCF tasks for celery.
+
+
+#### CELERY TASKS
+
+```
+CELERY_TASKS=<json_object>
+```
+
+`CELERY_TASKS` is optional. A JSON can be passed in with the following structure.
+
 ```json
 
 { "<queue_name>" : 
@@ -93,3 +115,11 @@ For example the default looks something like...
     }
 }
 ```
+
+The `disk` and `memory` values can be set globally, instead of having to set them for each task. 
+```
+CELERY_TASK_DISK=<disk_size_in_MB>
+CELERY_TASK_MEMORY=<memory_in_MB>
+```
+
+If the `memory` and `disk` values are not passed in as part of the JSON object described above, and  `CELERY_TASK_DISK` and `CELERY_TASK_MEMORY` are not set, then the default value of `2048` will be used for both.
