@@ -67,6 +67,7 @@ from eventkit_cloud.tasks.helpers import (
     progressive_kill,
     download_data,
     download_concurrently,
+    download_feature_data,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1321,22 +1322,13 @@ def arcgis_feature_service_export_task(
                 "cert_var": configuration.get("cert_var"),
             }
 
-        download_concurrently(layers.values(), configuration.get("concurrency"))
-
-        for layer_name, layer in layers.items():
             try:
-                with open(layer.get("path")) as f:
-                    json_response = json.load(f)
-
-                if json_response.get("error"):
-                    code = json_response["error"].get("code")
-                    message = json_response["error"].get("message")
-                    raise Exception(f"Status code {code} - {message}")
-
+                download_concurrently(layers.values(), configuration.get("concurrency"), feature_data=True)
             except Exception as e:
-                logger.error(f"ArcGIS provider error: {e}")
+                logger.error(f"ArcGIS provider download error: {e}")
                 raise e
 
+        for layer_name, layer in layers.items():
             out = gdalutils.convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
@@ -1351,7 +1343,7 @@ def arcgis_feature_service_export_task(
     else:
         url = get_arcgis_query_url(service_url, bbox)
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        download_data(task_uid, url, esrijson, configuration.get("cert_var"))
+        download_feature_data(task_uid, url, esrijson, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",

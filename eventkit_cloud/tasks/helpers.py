@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 import os
 import pickle
@@ -836,24 +837,57 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
-def download_concurrently(layers: ValuesView, concurrency=None):
+def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
+
+    download_function = download_feature_data if feature_data else download_data
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
 
         # Get the total number of task points to compare against current progress.
         task_points = len(layers) * 100
-
-        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
+        futures_list = [
+            executor.submit(download_function, *layer.values(), task_points=task_points) for layer in layers
+        ]
         futures.wait(futures_list)
 
-    except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
+        # result() is called for all futures so that any exception raised within is propagated to the caller.
+        [ftr.result() for ftr in futures_list]
+
+    except Exception as e:
         logger.error(f"Unable to execute concurrent downloads: {e}")
+        raise e
 
     return layers
+
+
+def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
+    # This function is necessary because ArcGIS servers often either
+    # respond with a 200 status code but also return an error message in the response body,
+    # or redirect to a parent URL if a resource is not found.
+
+    try:
+        download_path = download_data(task_uid, input_url, out_file, cert_var, task_points)
+
+        with open(download_path) as f:
+            json_response = json.load(f)
+
+            if json_response.get("error"):
+                code = json_response["error"].get("code")
+                message = json_response["error"].get("message")
+                raise Exception(f"Status code {code} - {message}")
+
+            if "features" not in json_response:
+                raise Exception(f"Invalid URL: {input_url}")
+
+    except Exception as e:
+        logger.error(f"Feature data download error: {e}")
+        raise e
+
+    return download_path
 
 
 def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
@@ -904,6 +938,8 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, t
 
     if not os.path.isfile(out_file):
         raise Exception("Nothing was returned from the vector feature service.")
+
+    return out_file
 
 
 def get_task_points_cache_key(task_uid: str):
