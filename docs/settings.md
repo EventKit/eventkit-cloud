@@ -47,9 +47,19 @@ To specify which RabbitMQ instance to use add:
 <pre>BROKER_URL='amqp://guest:guest@rabbitmq:5672/'</pre>
 
 #### Export Directories
-If you need to change where export files are staged or downloaded you can add:
-<pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'
-EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
+To change where exports are staged for processing, cached, downloaded to, etc, the following environment variables can be set.
+
+| Variable Name | Description |
+|---------------|-------------|
+| EXPORT_STAGING_ROOT  | Where exports are staged for processing. |
+| TILE_CACHE_DIR | Where tiles are cached. |
+| EXPORT_RUN_FILES_DOWNLOAD | Where export run files can be downloaded. |
+| EXPORT_DOWNLOAD_ROOT | Where exports are stored for public download. |
+| EXPORT_MEDIA_ROOT | The root URL for export downloads. |
+| KEEP_STAGE | Whether to keep the staging directory after an export is finished. |
+
+If any of these needs to be changed, it can be done by setting them in the docker-compose file.
+<pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'</pre>
 
 #### Task error email
 To configure the email address that will send out any error messages add:
@@ -87,7 +97,7 @@ However significant support was added for [pelias](http://github.com/pelias), in
 
 ##### Pelias Settings:
 
-###### Foward Geocoding
+###### Forward Geocoding
 Used for providing a text search for finding places and their location in the search box.
 <pre>GEOCODING_API_URL='http://my-pelias.com/api/v1/search'</pre>
 <pre>GEOCODING_API_TYPE='pelias'</pre>
@@ -97,12 +107,20 @@ Used for providing a location and getting the names of locations in the search b
 <pre>REVERSE_GEOCODING_API_URL='http://my-pelias.com/api/v1/reverse'</pre>
 
 ###### Place Lookup
-Used in EventKit to seach up the heirarchy to assist in zooming to locations.
+Used in EventKit to search up the hierarchy to assist in zooming to locations.
 <pre>GEOCODING_UPDATE_URL='http://my-pelias.com/api/v1/place'</pre>
 
 ###### Convert
 Used with a [custom version](https://github.com/eventkit/pelias-api) of the API to convert coordinates.
-<pre>CONVERT_URL='http://my-pelias.com/api/v1/convert'</pre>
+<pre>CONVERT_API_URL='http://my-pelias.com/api/v1/convert'</pre>
+
+###### Authentication
+If authentication is needed, the following environment variables may be used.
+
+| Variable Name | Description |
+|---------------|-------------|
+| GEOCODING_AUTH_URL  | The geocoder's authentication endpoint. |
+| GEOCODING_AUTH_CERT | The certificate, loaded as a single string, to be used for authentication. |
 
 #### Map Settings
 ##### Basemap URL
@@ -119,7 +137,7 @@ Where 10000 is an integer representing sq km.
 
 #### Data Authentication
 
-When configuring datasources, instead of storing credentials in the URLs in the database,
+When configuring data sources, instead of storing credentials in the URLs in the database,
 service credentials can be added to the environment using the service slug as the name.
 
 For example a slug of 'osm' would use environment variables `OSM_CRED` or `OSM_CERT` if requiring authentication.
@@ -160,6 +178,13 @@ EventKit can send users email notifying them about certain changes.
 ### User Authentication
 
 EventKit has some limited support for creating and authenticating users.  The solutions were tailored to use specific servers, but can be updated fairly easily using the settings files located in `eventkit_cloud/settings/prod.py`).
+
+##### URLs
+The relative paths for the login and logout URLs can be configured.
+| Variable Name | Description |
+|---------------|-------------|
+| LOGIN_URL  | Relative login path. e.g. `/login`. |
+| LOGOUT_URL | Relative logout path. e.g. `/logout`. |
 
 ##### Django Model Login
 Django allows built in users to be created via the admin console (such as superusers), you can enable these users to log in with :
@@ -232,6 +257,9 @@ Note an array can be used and EventKit will try each one for a valid value to en
 
 The MapProxy logger prints out various updates relating to seeding and external requests.
 
+The log level for the Django logger may be changed from the default.
+<pre>DJANGO_LOG_LEVEL=WARN</pre>
+
 Setting this option to true will enable the MapProxy logger to print more periodic progress updates. In addition,
 it will reduce the interval at which some logs are printed.
 <pre>MAPPROXY_LOGS_VERBOSE=True</pre>
@@ -248,12 +276,15 @@ EventKit includes land data with OSM exports, this data needs to be initially lo
 <pre>LAND_DATA_URL=https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip</pre>
 
 #### SSL Verification
-By default SSL verification will be enabled and the system certificates and certifi certs will be used.
+By default SSL verification will be enabled and the system certificates and Certifi certs will be used.
 A custom SSL cert file can be specified using:
 <pre>SSL_VERIFICATION=/path/to/certificate.pem</pre>
 SSL should be used but many services (especially geospatial services) don't have proper certificates with production CAs.
 SSL can be disabled using:
 <pre>SSL_VERIFICATION=False</pre>
+
+if `SSL_VERIFICATION` does not point to certificate, then `REQUESTS_CA_BUNDLE` should be set.
+<pre>REQUESTS_CA_BUNDLE=path/to/bundle</pre>
 
 ### UI Settings
 
@@ -300,6 +331,18 @@ This is enabled by default, but if adding new services or deploying eventkit for
 be very accurate.  To disable these estimates:
 <pre>SERVE_ESTIMATES='false'</pre>
 
+#### Matomo
+| Variable Name | Description |
+|---------------|-------------|
+| MATOMO_URL | Matomo URL. |
+| MATOMO_CUSTOM_DIM_ID | Custom tracker dimension ID. |
+| MATOMO_CUSTOM_VAR_NAME | Custom variable name. |
+| MATOMO_CUSTOM_VAR_ID | Custom variable ID. |
+| MATOMO_CUSTOM_VAR_SCOPE | The custom variable's scope. Defaults to "page" |
+| MATOMO_SITE_ID | ID of the site to be measured. |
+| MATOMO_APPNAME | Application name. Defaults to "EventKit" |
+
+
 ### Concurrency Settings
 
 These settings are used when setting up the celery workers in the `run-celery.sh` script.
@@ -335,4 +378,23 @@ Pass in this environment variable with your RocketChat settings to enable notifi
 ### PCF Settings
 
 EventKit can be configured to autoscale celery when deployed on Pivotal Cloud Foundry.  The settings for that
-and some background is available in the [PCF Section](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).
+and some background is available in the [PCF Section](./pcf.md).
+
+### Usage Settings
+
+| Variable Name | Description |
+|---------------|-------------|
+| MAX_UPLOAD_SIZE | Size limit (in MB) for any geospatial file a user may upload. |
+| DATAPACKS_DEFAULT_SHARED | Whether datapacks will be shared with other users by default. (true|false) |
+| PROVIDER_CHECK_INTERVAL | How often (in minutes) to check the providers' availability. |
+| FORCE_STATISTICS_RECOMPUTE | Whether to recompute provider statistic instead of reading them from cache. (True|False). |
+| MAX_ESTIMATE_EXPORT_TASK_RECORDS | The maximum number of export task records to use when generating estimates. |
+
+
+#### Scripts
+Some of the scripts found under `/script` can be configured through the use of environment variables.
+
+| Variable Name | Description |
+|---------------|-------------|
+| EVENTKIT_USER | Username used to authenticate. |
+| EVENTKIT_PASS | Password used to authenticate. |

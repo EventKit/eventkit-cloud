@@ -8,7 +8,7 @@ var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
-var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui')
+var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui');
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
 var APP_DIR = path.resolve(BASE_DIR, 'app');
 
@@ -22,7 +22,7 @@ var plugins = [
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
     new webpack.HashedModuleIdsPlugin(),
     new CompressionPlugin({
-        test: /(\.js$|\.css$)/
+        exclude: /(\.js$)/
     }),
     new ExtractTextPlugin({ filename: '[name].css' })
 ];
