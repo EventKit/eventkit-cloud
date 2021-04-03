@@ -15,6 +15,7 @@ from .artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.utils import gdalutils
 
+
 logger = logging.getLogger(__name__)
 
 SPATIAL_SQL = """
@@ -306,7 +307,6 @@ class Geopackage(object):
         """
         Create the GeoPackage from the osm data.
         """
-
         if self.is_complete:
             logger.debug("Skipping Geopackage, file exists")
             return
@@ -331,6 +331,10 @@ class Geopackage(object):
             ],
             task_uid=self.export_task_record_uid,
         )
+        # Cancel the provider task if the geopackage has no data.
+        if not check_content_exists(self.output_gpkg):
+            return None
+
         """
         Create the default osm gpkg schema
         """
@@ -342,6 +346,7 @@ class Geopackage(object):
         cur.execute(
             "INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,),
         )
+
         update_progress(self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta)
 
         cur.executescript(SPATIAL_SQL)
@@ -366,6 +371,8 @@ class Geopackage(object):
         cur.execute("DROP TABLE lines")
         cur.execute("DROP TABLE multipolygons")
 
+        cur.execute("VACUUM;")
+
         conn.commit()
         conn.close()
 
@@ -384,10 +391,12 @@ class Geopackage(object):
                 for geom_type in self.feature_selection.geom_types(theme):
                     for stmt in self.feature_selection.create_sql(theme, geom_type):
                         cur.executescript(stmt)
+                cur.execute("VACUUM;")
                 conn.commit()
                 conn.close()
 
         update_progress(self.export_task_record_uid, 100, subtask_percentage, subtask_start, eta=eta)
+        return self.output_gpkg
 
     @property
     def is_complete(self):
