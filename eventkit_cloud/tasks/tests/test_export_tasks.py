@@ -580,6 +580,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(example_input_file, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.cancel_export_provider_task.run")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -600,7 +601,10 @@ class TestExportTasks(ExportTaskBase):
         mock_os,
         mock_get_export_task_record,
         mock_get_export_filepath,
+        mock_cancel_provider_task,
     ):
+        provider_slug = "osm"
+        mock_get_export_task_record.return_value = Mock(export_provider_task=Mock(provider=Mock(slug=provider_slug)))
         example_export_task_record_uid = "1234"
         stage_dir = settings.EXPORT_STAGING_ROOT
         example_bbox = [-1, -1, 1, 1]
@@ -617,10 +621,19 @@ class TestExportTasks(ExportTaskBase):
         mock_overpass.Overpass.assert_called_once()
         mock_pbf.OSMToPBF.assert_called_once()
         mock_feature_selection.example.assert_called_once()
+        mock_cancel_provider_task.assert_not_called()
+
+        # Test canceling the provider task on an empty geopackage.
+        mock_geopackage.Geopackage().run.return_value = None
+        osm_data_collection_pipeline(
+            example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+        )
+        mock_cancel_provider_task.assert_called_once()
 
         mock_overpass.reset_mock()
         mock_pbf.reset_mock()
         mock_feature_selection.reset_mock()
+        mock_geopackage.reset_mock()
 
         # Test with using pbf_file
         example_pbf_file = "test.pbf"
