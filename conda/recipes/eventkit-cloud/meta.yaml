@@ -25,8 +25,11 @@ requirements:
   run_constrained:
     - memcached=1.6.6
     - qgis=3.14.16
+    - postgresql=12.3
+    - pip
   run:
     - python >=3.7,<3.8
+    - expat=2.2.9  
     - libiconv=1.15
     - mesa-libgl-cos7-x86_64
     - osmctools=0.9.0
