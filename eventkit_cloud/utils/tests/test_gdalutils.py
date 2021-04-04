@@ -19,6 +19,7 @@ from eventkit_cloud.utils.gdalutils import (
     convert_vector,
     progress_callback,
     polygonize,
+    get_chunked_bbox,
 )
 
 logger = logging.getLogger(__name__)
@@ -518,3 +519,10 @@ class TestGdalUtils(TestCase):
             skipFailures=True,
             srcSRS=src_srs,
         )
+
+    @patch("eventkit_cloud.utils.gdalutils.gdal")
+    def test_get_chunked_tiles(self, mock_gdal):
+        bbox = [-77.26290092220698, 38.58181863431442, -76.86362334675664, 38.94635628150632]
+        bboxes = get_chunked_bbox(bbox)
+        self.assertEqual(len(bboxes), 6)
+        self.assertEqual(bboxes[0], (-77.26290092220698, 38.76408745791032, -77.08063209861098, 38.94635628150632))
