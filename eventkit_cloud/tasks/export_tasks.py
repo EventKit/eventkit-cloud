@@ -444,7 +444,13 @@ def osm_data_collection_pipeline(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
 
-    g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
+    osm_gpkg = g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
+    if not osm_gpkg:
+        export_task_record = get_export_task_record(export_task_record_uid)
+        cancel_export_provider_task.run(
+            data_provider_task_uid=export_task_record.export_provider_task.uid,
+            message="No OSM data was returned for the selected area.",
+        )
 
     # --- Add the Land Boundaries polygon layer, this accounts for the majority of post-processing time
     update_progress(export_task_record_uid, 85.5, eta=eta, msg="Clipping data in Geopackage")
@@ -2056,7 +2062,14 @@ def create_datapack_preview(
 
 @app.task(name="Cancel Export Provider Task", base=EventKitBaseTask)
 def cancel_export_provider_task(
-    result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs
+    result=None,
+    data_provider_task_uid=None,
+    canceling_username=None,
+    delete=False,
+    error=False,
+    message=None,
+    *args,
+    **kwargs,
 ):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -2091,7 +2104,7 @@ def cancel_export_provider_task(
         # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
         # to pass task information to the users, then it may make sense to replace this.
         try:
-            raise exception_class(task_name=data_provider_task_record.name, user_name=canceling_user)
+            raise exception_class(message=message, task_name=data_provider_task_record.name, user_name=canceling_user)
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce

@@ -79,8 +79,16 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     :param return_dict: True if wishing to return config as dictionary.
     :return: A yaml as a str.
     """
-    service_keys = ["cert_cred", "concurrency", "max_repeat", "overpass_query", "max_data_size", "cert_info",
-                    "pbf_file"]
+    service_keys = [
+        "cert_info",
+        "cert_cred",
+        "concurrency",
+        "max_repeat",
+        "overpass_query",
+        "max_data_size",
+        "pbf_file",
+        "tile_size",
+    ]
 
     conf = yaml.safe_load(config) or dict()
 
