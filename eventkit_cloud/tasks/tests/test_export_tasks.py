@@ -992,7 +992,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=url_1,
             bbox=bbox,
-            config='cert_var: "test1"',
+            config='cert_info: "test1"',
         )
         mock_download_feature_data.assert_called_once_with(str(saved_export_task.uid), expected_input_url, ANY, "test1")
 
@@ -1592,7 +1592,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_var: "test_var"'
+        config = 'cert_info: "test_var"'
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1670,7 +1670,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         task_uid = str(saved_export_task.uid)
-        config = 'cert_var: "test_var"'
+        config = 'cert_info: "test_var"'
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata
