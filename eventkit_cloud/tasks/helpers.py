@@ -349,16 +349,16 @@ def get_human_readable_metadata_document(metadata):
     return metadata_file
 
 
-def get_last_update(url, type, cert_var=None):
+def get_last_update(url, type, cert_info=None):
     """
     A wrapper to get different timestamps.
     :param url: The url to get the timestamp
     :param type: The type of services (e.g. osm)
-    :param cert_var: Optionally a slug if the service requires credentials.
+    :param cert_info: Optionally a dict containing cert path and pass
     :return: The timestamp as a string.
     """
     if type == "osm":
-        return get_osm_last_update(url, cert_var=cert_var)
+        return get_osm_last_update(url, cert_info=cert_info)
 
 
 def get_metadata_url(url, type):
@@ -374,16 +374,16 @@ def get_metadata_url(url, type):
         return url
 
 
-def get_osm_last_update(url, cert_var=None):
+def get_osm_last_update(url, cert_info=None):
     """
 
     :param url: A path to the overpass api.
-    :param cert_var: Optionally a slug if credentials are needed
+    :param cert_info: Optionally cert info if needed
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
-        response = auth_requests.get(timestamp_url, cert_var=cert_var)
+        response = auth_requests.get(timestamp_url, cert_info=cert_info)
         if response:
             return response.content.decode()
         raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
@@ -512,7 +512,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
         provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
-        cert_var = conf.get("cert_var", data_provider.slug)
+        cert_info = conf.get("cert_info", None)
         metadata["data_sources"][data_provider_task_record.provider.slug] = {
             "uid": str(data_provider_task_record.uid),
             "slug": data_provider_task_record.provider.slug,
@@ -520,7 +520,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "files": [],
             "type": get_data_type_from_provider(data_provider_task_record.provider),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
-            "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
+            "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
             "layers": data_provider.layers,
@@ -856,14 +856,14 @@ def download_concurrently(layers: ValuesView, concurrency=None):
     return layers
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
+def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
 
     try:
         response = auth_requests.get(
-            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+            input_url, cert_info=cert_info, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as e:

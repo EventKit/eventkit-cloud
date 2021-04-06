@@ -80,7 +80,7 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     :return: A yaml as a str.
     """
     service_keys = [
-        "cert_var",
+        "cert_info",
         "cert_cred",
         "concurrency",
         "max_repeat",

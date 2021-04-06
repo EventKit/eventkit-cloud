@@ -29,6 +29,7 @@ python-memcached==1.59
 pytz==2020.1
 PyYAML==5.3.1
 requests==2.24.0
+requests-pkcs12==1.6  # conda: requests_pkcs12
 Shapely==1.7.1
 sqlparse==0.3.1
 swapper==1.1.2.post1

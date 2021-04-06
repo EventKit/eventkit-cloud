@@ -2,7 +2,8 @@
 import http.client
 import logging
 import urllib
-from unittest.mock import patch, MagicMock, ANY
+import os
+from unittest.mock import patch, MagicMock, ANY, mock_open
 
 import requests
 from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
@@ -18,9 +19,8 @@ class TestAuthResult(TransactionTestCase):
     def setUp(self):
         self.url = "http://example.test/"
 
-    def do_tests(self, req, req_patch, getenv):
+    def do_tests(self, req, req_patch):
         # Test: exception propagation
-        getenv.return_value = None
         req_patch.side_effect = requests.exceptions.ConnectionError()
         with self.assertRaises(Exception):
             req(self.url)
@@ -31,49 +31,36 @@ class TestAuthResult(TransactionTestCase):
         req_patch.side_effect = None
         req_patch.return_value = response
 
-        result = req(self.url, cert_var="TEST_SLUG_CERT", cred_var="TEST_SLUG_CRED", data=42)
+        cert_info = dict(cert_path="fake/path/to", cert_pass_var="fakepassvar")
+        result = req(self.url, cert_info=cert_info, data=42)
 
-        getenv.assert_any_call("TEST_SLUG_CERT")
-        getenv.assert_any_call("TEST_SLUG_CRED")
+        req_patch.assert_called_with(self.url, data=42, pkcs12_filename="fake/path/to", pkcs12_password="FAKEPASS")
+        self.assertEqual("test", result.content)
+
+        result = req(self.url, cert_info=None, data=42)
+
         req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
-        # Test: normal response with cert
-        getenv.return_value = "test cert content"
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
+    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.get")
+    def test_get(self, get_patch):
+        self.do_tests(auth_requests.get, get_patch)
 
-        named_tempfile = MagicMock()
-        cert_tempfile = MagicMock()
-        cert_tempfile.name = "temp filename"
-        named_tempfile.__enter__ = MagicMock(return_value=cert_tempfile)
-        cert_tempfile.write = MagicMock()
-        cert_tempfile.flush = MagicMock()
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
+    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.head")
+    def test_head(self, get_patch):
+        self.do_tests(auth_requests.head, get_patch)
 
-        with patch("eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True):
-            result = req(self.url, cert_var="TEST_SLUG_CERT", data=42)
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
+    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.post")
+    def test_post(self, post_patch):
+        self.do_tests(auth_requests.post, post_patch)
 
-        getenv.assert_any_call("TEST_SLUG_CERT")
-        cert_tempfile.write.assert_called_once_with("test cert content".encode())
-        cert_tempfile.flush.assert_called()
-        req_patch.assert_called_with(self.url, data=42, cert="temp filename")
-        self.assertEqual("test", result.content)
-
+    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
+    @patch("eventkit_cloud.utils.auth_requests.create_ssl_context")
     @patch("eventkit_cloud.utils.auth_requests.os.getenv")
-    @patch("eventkit_cloud.utils.auth_requests.requests.get")
-    def test_get(self, get_patch, getenv):
-        self.do_tests(auth_requests.get, get_patch, getenv)
-
-    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
-    @patch("eventkit_cloud.utils.auth_requests.requests.head")
-    def test_head(self, get_patch, getenv):
-        self.do_tests(auth_requests.head, get_patch, getenv)
-
-    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
-    @patch("eventkit_cloud.utils.auth_requests.requests.post")
-    def test_post(self, post_patch, getenv):
-        self.do_tests(auth_requests.post, post_patch, getenv)
-
-    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
-    def test_patch_https(self, getenv):
+    def test_patch_https(self, getenv, create_ssl_sslcontext):
         # NB: HTTPSConnection is never mocked here; the monkey-patch applies to the actual httplib library.
         # If other tests in the future have any issues with httplib (they shouldn't, the patch is transparent,
         # and the original initializer is restored in the finally block), this may be why.
@@ -84,33 +71,20 @@ class TestAuthResult(TransactionTestCase):
             auth_requests._ORIG_HTTPSCONNECTION_INIT = new_orig_init
             # Confirm that the patch is applied
             getenv.return_value = "key and cert contents"
-            auth_requests.patch_https("test-provider-slug")
+            auth_requests.patch_https(dict(cert_path="fake/path/to", cert_pass_var="fakepassvar"))
             self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, http.client.HTTPSConnection.__init__)
             self.assertEqual(
-                "_new_init", http.client.HTTPSConnection.__init__.__closure__[1].cell_contents.__name__
+                "_new_init", http.client.HTTPSConnection.__init__.__name__
             )  # complicated because decorator
 
-            named_tempfile = MagicMock()
-            cert_tempfile = MagicMock()
-            cert_tempfile.name = "temp filename"
-            named_tempfile.__enter__ = MagicMock(return_value=cert_tempfile)
-            cert_tempfile.write = MagicMock()
-            cert_tempfile.flush = MagicMock()
-
-            with patch(
-                "eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True
-            ):
-                # Confirm that a base HTTPSConnection picks up key and cert files
+            with patch("builtins.open", mock_open(read_data="data")):
+                # Confirm that a base HTTPSConnection picks up the passed ssl context object
+                create_ssl_sslcontext.return_value = "sslcontext"
                 http.client.HTTPSConnection()
-                getenv.assert_called_with("test_provider_slug_CERT")
-                new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
+                new_orig_init.assert_called_with(ANY, context="sslcontext")
 
-                # Confirm that a MapProxy VerifiedHTTPSConnection picks up key and cert files
-                cert_tempfile.write.reset_mock()
                 VerifiedHTTPSConnection()
-                new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
+                new_orig_init.assert_called_with(ANY, context="sslcontext")
 
                 # Test removing the patch
                 auth_requests.unpatch_https()
