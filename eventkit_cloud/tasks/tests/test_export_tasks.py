@@ -467,16 +467,10 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config="""
-            cert_info:
-                - cert_path: '/path/to/cert'
-                  cert_pass_var: 'fake_pass'
-
-            """,
             bbox=[1, 2, 3, 4],
         )
         mock_download_data.assert_called_with(
-            str(saved_export_task.uid), ANY, expected_input_path[3], "test2", task_points=100
+            str(saved_export_task.uid), ANY, expected_input_path[3], None, task_points=100
         )
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
@@ -1027,10 +1021,9 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=url_1,
             bbox=bbox,
-            config='cert_var: "test1"',
         )
         mock_download_data.assert_called_with(
-            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", "test1", task_points=100
+            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", None, task_points=100
         )
 
     @patch("celery.app.task.Task.request")
@@ -1628,7 +1621,11 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_var: "test_var"'
+        config = """
+                 cert_info:
+                     - cert_path: '/path/to/cert'
+                       cert_pass_var: 'fake_pass'
+                 """
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1671,7 +1668,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, None)
+        mock_download_data.assert_called_once_with(service_url, ANY, ANY)
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -1706,7 +1703,12 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         task_uid = str(saved_export_task.uid)
-        config = 'cert_var: "test_var"'
+        config = """
+        cert_info:
+            - cert_path: '/path/to/cert'
+              cert_pass_var: 'fake_pass'
+
+        """
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata

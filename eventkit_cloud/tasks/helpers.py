@@ -844,10 +844,10 @@ def merge_chunks(
     bbox: list,
     stage_dir: str,
     base_url: str,
-    cert_var=None,
+    cert_info=None,
     task_points=100,
 ):
-    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_var, task_points)
+    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points)
     out = gdalutils.convert(
         driver="gpkg",
         input_file=chunks,
@@ -877,7 +877,7 @@ def download_concurrently(layers: ValuesView, concurrency=None):
             bbox=layer.get("bbox"),
             stage_dir=base_path,
             base_url=layer.get("url"),
-            cert_var=layer.get("cert_var"),
+            cert_info=layer.get("cert_info"),
             task_points=task_points,
         )
 
@@ -905,7 +905,7 @@ def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, ce
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
-        download_data(task_uid, url, outfile, cert_var, task_points=task_points)
+        download_data(task_uid, url, outfile, cert_info, task_points=task_points)
         chunks.append(outfile)
     return chunks
 
