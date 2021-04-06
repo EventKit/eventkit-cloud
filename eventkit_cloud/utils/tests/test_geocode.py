@@ -1,5 +1,6 @@
 import json
 import logging
+from unittest.mock import patch
 
 import requests_mock
 from django.conf import settings
@@ -190,12 +191,14 @@ class TestGeoCode(TestCase):
 
         self.geocode_test(pelias_response)
 
+    @patch("eventkit_cloud.utils.geocoding.geocode.get_geocode_cert_info")
     @override_settings(
         GEOCODING_API_URL="http://pelias.url/",
         GEOCODING_API_TYPE="pelias",
         GEOCODING_UPDATE_URL="http://pelias.url/place",
     )
-    def test_pelias_add_bbox(self):
+    def test_pelias_add_bbox(self, get_cert_info):
+        get_cert_info.return_value = None
         in_result = {
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [102.18947, 17.77036]},

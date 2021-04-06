@@ -4,6 +4,7 @@ from eventkit_cloud.utils.geocoding.geocode_auth import (
     get_session_cookies,
     get_auth_headers,
     update_session_cookies,
+    get_geocode_cert_info,
 )
 from eventkit_cloud.utils import auth_requests
 
@@ -41,7 +42,7 @@ def get_cached_response(url, payload):
 
 def get_auth_response(url, payload):
     auth_session = auth_requests.AuthSession()
-    response = auth_session.get(url, params=payload, cert_var="GEOCODING_AUTH_CERT")
+    response = auth_session.get(url, params=payload, cert_info=get_geocode_cert_info())
     if response.ok and check_data(response):
         update_session_cookies(auth_session.session.cookies)
         return response

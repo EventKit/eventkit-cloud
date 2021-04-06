@@ -6,9 +6,11 @@ import re
 import urllib.request
 import urllib.error
 import urllib.parse
+import requests_pkcs12
 from functools import wraps
 from tempfile import NamedTemporaryFile
 from django.conf import settings
+from requests_pkcs12 import Pkcs12Adapter, create_ssl_context
 
 import requests
 from mapproxy.client import http as mapproxy_http
@@ -16,6 +18,7 @@ from mapproxy.client import http as mapproxy_http
 logger = logging.getLogger(__name__)
 
 
+# TODO: remove this if it's not needed anymore.
 def content_to_file(content):
     """
     Given content for a file, constructs a decorator that creates and destroys a temporary file containing that content,
@@ -45,37 +48,40 @@ def content_to_file(content):
     return decorator
 
 
-def find_cert_var(cert_var: str = None):
+def get_cert_info(kwargs_dict):
     """
-    Given a provider slug, returns the contents of an environment variable consisting of the slug (lower or uppercase)
-    followed by "_CERT". If no variable was found, return None.
-    :param cert_var: Provider slug
-    :return: Cert contents if found
+    Gets and returns the cert info from a kwargs dict if they are present.
+
+    :param kwargs_dict: passed in dict representing kwargs passed to a calling function.
+    :return:tuple (cert_path, cert_pass_var) either may be None
     """
-    if cert_var:
-        env_slug: str = cert_var.replace("-", "_")
-        cert: str = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT") or os.getenv(env_slug)
-    else:
-        cert = None
-
-    if cert:
-        cert = cert.replace("\\n", "\n")
-
-    return cert
+    cert_info = kwargs_dict.pop("cert_info", None)
+    if not cert_info:
+        return None, None
+    cert_path = cert_info.get("cert_path")
+    cert_pass_var = cert_info.get("cert_pass_var", "")
+    cert_pass_var = os.getenv(cert_pass_var)
+    if not (cert_path and cert_pass_var):
+        logger.error(
+            f"Cert_info was passed in but cert_path={cert_path} or cert_pass_var={cert_pass_var})"
+            f"are not correctly configured"
+        )
+        raise Exception("Certificate information is improperly configured.")
+    return cert_path, cert_pass_var
 
 
 def cert_var_to_cert(func):
     """
-    Decorator that takes a kwarg `slug` of the target function, and replaces it with `cert`, which points to an
-    open file containing the client certificate and key for that provider slug.
-    If an environment variable for that slug and cert was not found, call the function without the cert kwarg.
-    To avoid unnecessary overhead in creating multiple temporary files, this decorator should generally be applied last.
+    Checks the supplied kwargs for the `cert_info` key, and extracts the cert path and pass if present. These are
+    mapped to the requests_pkcs12 params `pkcs12_filename` and `pkcs12_filename`.
     """
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        cert_env = find_cert_var(kwargs.pop("cert_var", None))
-        return content_to_file(cert_env)(func)(*args, **kwargs)
+        cert_path, cert_pass_var = get_cert_info(kwargs)
+        if cert_path is None or cert_pass_var is None:
+            return func(*args, **kwargs)
+        return func(pkcs12_filename=cert_path, pkcs12_password=cert_pass_var, *args, **kwargs)
 
     return wrapper
 
@@ -130,14 +136,15 @@ def handle_basic_auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            if not kwargs.get("cert_var"):
+            cert_path, cert_pass_var = get_cert_info(kwargs)
+            if cert_path is None or cert_pass_var is None:
                 cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
             url = kwargs.get("url")
             cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
             if cred:
                 kwargs["auth"] = tuple(cred)
             logger.debug(
-                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
+                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()])
             )
             response = func(*args, **kwargs)
             return response
@@ -148,13 +155,17 @@ def handle_basic_auth(func):
 
 
 class AuthSession(object):
-    def __init__(self):
+    def __init__(self,):
         self.session = requests.session()
         self.cookies = self.session.cookies
 
-    @cert_var_to_cert
     @handle_basic_auth
     def get(self, *args, **kwargs):
+        cert_path, cert_pass_var = get_cert_info(kwargs)
+        if not (cert_path is None or cert_pass_var is None):
+            self.session.mount(
+                kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass_var)
+            )
         return self.session.get(*args, **kwargs)
 
 
@@ -162,65 +173,60 @@ class AuthSession(object):
 @handle_basic_auth
 def get(url=None, **kwargs):
     """
-    As requests.get, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
-    if found.
-    :param url: URL for requests.get
-    :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
+    Makes a GET request, optionally with cert_info.
+
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
     :return: Result of requests.get call
     """
-    return requests.get(url, **kwargs)
+    return requests_pkcs12.get(url, **kwargs)
 
 
 @cert_var_to_cert
 @handle_basic_auth
 def head(url=None, **kwargs):
     """
-    As requests.head, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
-    if found.
-    :param url: URL for requests.get
-    :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
+    Makes a HEAD request, optionally with cert_info.
+
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
     :return: Result of requests.head call
     """
-    return requests.head(url, **kwargs)
+    return requests_pkcs12.head(url, **kwargs)
 
 
 @cert_var_to_cert
 @handle_basic_auth
 def post(url=None, **kwargs):
     """
-    As requests.post, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
-    if found.
-    :param url: URL for requests.get
-    :param kwargs: Dict is passed along unaltered to requests.post, except for removing "slug" and adding "cert".
+    Makes a POST request, optionally with cert_info.
+
+    :param url: URL for requests.get (using requests_pkcs12)
+    :param kwargs: Dict is passed along unaltered to requests.post, except for translating cert info
     :return: Result of requests.post call
     """
-    return requests.post(url, **kwargs)
+    return requests_pkcs12.post(url, **kwargs)
 
 
 _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
 _ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
 
-def patch_https(slug: str = None, cert_var: str = None):
+def patch_https(cert_info: dict = None):
     """
-    Given a provider slug, wrap the initializer for HTTPSConnection so it checks for client keys and certs
-    in environment variables named after the given slug, and if found, provides them to the SSLContext.
-    If no certs are found, this should function identically to the original, even if external certs/keys are given.
-    :param slug: Provider slug, used for finding cert/key environment variable
-    :param cert_var: An optional parameter, to use for finding the cert/key in the environment.
-                     Takes priority over slug.
+    Given cert info for a provider, establishes a SSSLContext object using requests_pkcs12 for HTTPSConnection.
+    If no certs are found, this should function identically to the original.
+    :param cert_info: An optional parameter, must contain path to cert and the passphrase
     :return: None
     """
-    cert_var = cert_var or slug
-    cert = find_cert_var(cert_var)
-    logger.debug("Patching with slug %s, cert [%s B]", slug, len(cert) if cert is not None else 0)
 
-    @content_to_file(cert)
     def _new_init(_self, *args, **kwargs):
-        certfile = kwargs.pop("cert", None)
-        kwargs["key_file"] = certfile or kwargs.get("key_file", None)
-        kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
-        logger.debug(f"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}")
+        cert_path, cert_pass_var = get_cert_info(dict(cert_info=cert_info))
+        if not (cert_path is None or cert_pass_var is None):
+            # create_ssl_sslcontext needs the cert data, instead of the filepath
+            with open(cert_path, "rb") as pkcs12_file:
+                pkcs12_data = pkcs12_file.read()
+            kwargs["context"] = create_ssl_context(pkcs12_data, cert_pass_var)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
