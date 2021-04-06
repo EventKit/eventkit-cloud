@@ -225,7 +225,7 @@ class MapproxyGeopackage(object):
             level_from=self.level_from,
             level_to=self.level_to,
             coverage_file=self.selection,
-            projection=self.projection
+            projection=self.projection,
         )
 
         # Create a seed configuration object
