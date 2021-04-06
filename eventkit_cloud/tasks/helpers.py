@@ -32,7 +32,7 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils import auth_requests, gdalutils
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -864,6 +864,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
     return layers
 
 
+@gdalutils.retry
 def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
@@ -873,15 +874,16 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_var
         download_path = download_data(task_uid, input_url, out_file, cert_var, task_points)
 
         with open(download_path) as f:
+
             json_response = json.load(f)
 
             if json_response.get("error"):
-                code = json_response["error"].get("code")
-                message = json_response["error"].get("message")
-                raise Exception(f"Status code {code} - {message}")
+                logger.error(json_response)
+                raise Exception("The service did not receive a valid response.")
 
             if "features" not in json_response:
-                raise Exception(f"Invalid URL: {input_url}")
+                logger.error(f"No features were returned for {input_url}")
+                raise Exception("No features were returned.")
 
     except Exception as e:
         logger.error(f"Feature data download error: {e}")

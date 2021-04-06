@@ -1285,7 +1285,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
+@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1315,6 +1315,7 @@ def arcgis_feature_service_export_task(
     configuration = load_provider_config(config)
 
     vector_layer_data = configuration.get("vector_layers", [])
+    out = None
     if len(vector_layer_data):
         layers = {}
 
@@ -1360,6 +1361,9 @@ def arcgis_feature_service_export_task(
             layer_name=export_task_record.export_provider_task.provider.layers[0],
             projection=projection,
         )
+
+    if not (out and geopackage.check_content_exists(out)):
+        raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"
     result["result"] = out
