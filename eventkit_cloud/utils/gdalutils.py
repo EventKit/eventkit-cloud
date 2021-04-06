@@ -331,7 +331,7 @@ def convert(
     meta_list = []
     for _index, _file in enumerate(input_file):
         input_file[_index], output_file = get_dataset_names(_file, output_file)
-        meta_list.append(get_meta(_file, is_raster))
+        meta_list.append(get_meta(input_file[_index], is_raster))
 
     src_src = f"EPSG:{src_srs}"
     dst_src = f"EPSG:{projection}"
@@ -387,7 +387,6 @@ def convert(
             config_options=config_options,
         )
     else:
-        logger.info(f"vector translate: {input_file}")
         cmd = get_task_command(
             convert_vector,
             input_file,
