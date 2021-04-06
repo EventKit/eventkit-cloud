@@ -63,6 +63,12 @@ from eventkit_cloud.tasks.task_base import LockingTask
 
 logger = logging.getLogger(__name__)
 
+test_cert_info = """
+    cert_info:
+        cert_path: '/path/to/fake/cert'
+        cert_pass_var: 'fakepass'
+"""
+
 
 class TestLockingTask(TestCase):
     def test_locking_task(self):
@@ -376,13 +382,13 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
-                "cert_var": None,
+                "cert_info": None,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
-                "cert_var": None,
+                "cert_info": None,
             },
         }
 
@@ -443,9 +449,14 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config='cert_var: "test2"',
+            config="""
+            cert_info:
+                - cert_path: '/path/to/cert'
+                  cert_pass_var: 'fake_pass'
+
+            """,
         )
-        mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, "test2")
+        mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, ANY)
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -912,13 +923,13 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
-                "cert_var": None,
+                "cert_info": None,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
-                "cert_var": None,
+                "cert_info": None,
             },
         }
 
@@ -984,6 +995,7 @@ class TestExportTasks(ExportTaskBase):
             config='cert_var: "test1"',
         )
         mock_download_feature_data.assert_called_once_with(str(saved_export_task.uid), expected_input_url, ANY, "test1")
+
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
@@ -1499,9 +1511,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_vector_file_export_task(
-        self, mock_request, mock_convert, mock_download_data,
-    ):
+    def test_vector_file_export_task(self, mock_request, mock_convert, mock_download_data):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -1517,7 +1527,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_var: "test_var"'
+        config = test_cert_info
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1561,14 +1571,12 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
+        mock_download_data.assert_called_once_with(service_url, ANY, ANY)
 
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_raster_file_export_task(
-        self, mock_request, mock_convert, mock_download_data,
-    ):
+    def test_raster_file_export_task(self, mock_request, mock_convert, mock_download_data):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -1627,7 +1635,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, "test_var")
+        mock_download_data.assert_called_once_with(service_url, ANY, None)
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")

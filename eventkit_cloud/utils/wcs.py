@@ -170,7 +170,7 @@ class WCSConverter(object):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
             try:
-                cert_var = self.config.get("cert_var", self.slug)
+                cert_info = self.config.get("cert_info")
                 for _bbox_idx, _tile_bbox, in enumerate(tile_bboxes):
                     outfile = "{0}-{1}-{2}{3}".format(file_path, idx, _bbox_idx, ext)
                     try:
@@ -193,7 +193,7 @@ class WCSConverter(object):
                     req = auth_session.get(
                         self.service_url,
                         params=params,
-                        cert_var=cert_var,
+                        cert_info=cert_info,
                         stream=True,
                         verify=getattr(settings, "SSL_VERIFICATION", True),
                     )
