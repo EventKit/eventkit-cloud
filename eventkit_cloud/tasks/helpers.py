@@ -891,6 +891,7 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
 
     return download_path
 
+
 def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.

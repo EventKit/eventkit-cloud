@@ -996,7 +996,6 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_download_feature_data.assert_called_once_with(str(saved_export_task.uid), expected_input_url, ANY, "test1")
 
-
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
     def test_run_external_raster_service_export_task(self, mock_service, mock_request):
@@ -1592,7 +1591,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_info: "test_var"'
+        config = 'cert_var: "test_var"'
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1670,7 +1669,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         task_uid = str(saved_export_task.uid)
-        config = 'cert_info: "test_var"'
+        config = 'cert_var: "test_var"'
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata

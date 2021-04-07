@@ -1340,7 +1340,6 @@ def arcgis_feature_service_export_task(
         esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
         download_feature_data(task_uid, url, esrijson, configuration.get("cert_info"))
 
-
         out = gdalutils.convert(
             driver="gpkg",
             input_file=esrijson,
