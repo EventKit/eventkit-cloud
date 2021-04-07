@@ -847,7 +847,7 @@ def merge_chunks(
     base_url: str,
     cert_info=None,
     task_points=100,
-    feature_data=False
+    feature_data=False,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
     out = gdalutils.convert(
@@ -881,7 +881,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
             base_url=layer.get("url"),
             cert_info=layer.get("cert_info"),
             task_points=task_points,
-            feature_data=feature_data
+            feature_data=feature_data,
         )
 
     try:
@@ -891,7 +891,10 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
         task_points = len(layers) * 100
 
         futures_list = [
-            executor.submit(download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data) for layer in layers
+            executor.submit(
+                download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data
+            )
+            for layer in layers
         ]
         futures.wait(futures_list)
 
@@ -929,15 +932,18 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
         raise e
 
     return out_file
-    
-def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False):
+
+
+def download_chunks(
+    task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False
+):
     tile_bboxes = get_chunked_bbox(bbox)
     chunks = []
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
-        
+
         download_function = download_feature_data if feature_data else download_data
         download_function(task_uid, url, outfile, cert_info, task_points=task_points)
         chunks.append(outfile)

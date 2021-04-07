@@ -823,7 +823,7 @@ class TestExportTasks(ExportTaskBase):
             boundary=example_geojson,
         )
         self.assertEqual(returned_result, expected_result)
-    
+
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.helpers.download_feature_data")

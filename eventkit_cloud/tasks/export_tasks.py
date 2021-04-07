@@ -1355,7 +1355,7 @@ def arcgis_feature_service_export_task(
             stage_dir,
             get_arcgis_query_url(service_url),
             configuration.get("cert_info"),
-            feature_data=True
+            feature_data=True,
         )
 
     if not (out and geopackage.check_content_exists(out)):
