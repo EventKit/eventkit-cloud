@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests, gdalutils
-from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
@@ -837,20 +837,61 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
+def merge_chunks(
+    output_file,
+    layer_name,
+    projection,
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_info=None,
+    task_points=100,
+    feature_data=False
+):
+    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=chunks,
+        output_file=output_file,
+        task_uid=task_uid,
+        boundary=bbox,
+        layer_name=layer_name,
+        projection=projection,
+        access_mode="append",
+    )
+    return out
+
+
 def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
 
-    download_function = download_feature_data if feature_data else download_data
+    def download_chunks_concurrently(layer, task_points, feature_data):
+        base_path = layer.get("base_path")
+        os.mkdir(base_path)
+        merge_chunks(
+            output_file=layer.get("path"),
+            projection=layer.get("projection"),
+            layer_name=layer.get("layer_name"),
+            task_uid=layer.get("task_uid"),
+            bbox=layer.get("bbox"),
+            stage_dir=base_path,
+            base_url=layer.get("url"),
+            cert_info=layer.get("cert_info"),
+            task_points=task_points,
+            feature_data=feature_data
+        )
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
 
         # Get the total number of task points to compare against current progress.
         task_points = len(layers) * 100
+
         futures_list = [
-            executor.submit(download_function, *layer.values(), task_points=task_points) for layer in layers
+            executor.submit(download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data) for layer in layers
         ]
         futures.wait(futures_list)
 
@@ -871,10 +912,8 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
     # or redirect to a parent URL if a resource is not found.
 
     try:
-        download_path = download_data(task_uid, input_url, out_file, cert_info, task_points)
-
-        with open(download_path) as f:
-
+        out_file = download_data(task_uid, input_url, out_file, cert_info, task_points)
+        with open(out_file) as f:
             json_response = json.load(f)
 
             if json_response.get("error"):
@@ -889,16 +928,29 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
         logger.error(f"Feature data download error: {e}")
         raise e
 
-    return download_path
+    return out_file
+    
+def download_chunks(task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False):
+    tile_bboxes = get_chunked_bbox(bbox)
+    chunks = []
+    for _index, _tile_bbox in enumerate(tile_bboxes):
+        # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
+        url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
+        outfile = os.path.join(stage_dir, f"chunk{_index}.json")
+        
+        download_function = download_feature_data if feature_data else download_data
+        download_function(task_uid, url, outfile, cert_info, task_points=task_points)
+        chunks.append(outfile)
+    return chunks
 
 
 def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
-
     try:
-        response = auth_requests.get(
+        auth_session = auth_requests.AuthSession()
+        response = auth_session.get(
             input_url, cert_info=cert_info, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
         )
         response.raise_for_status()

@@ -116,6 +116,7 @@ class ExportTaskBase(TestCase):
     fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self,):
+        self.maxDiff = None
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefault")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
@@ -280,7 +281,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
 
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
-    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.helpers.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
@@ -303,9 +304,12 @@ class TestExportTasks(ExportTaskBase):
         )
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
-        expected_input_path = (
-            f"{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
-        )
+        expected_input_path = [
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk0.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk1.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk2.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk3.json"),
+        ]
 
         mock_convert.return_value = expected_output_path
         mock_download_data.return_value = expected_input_path
@@ -329,15 +333,17 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
+            bbox=[1, 2, 3, 4],
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_file=expected_input_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
+            access_mode="append",
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -352,6 +358,7 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
             service_url=f"{service_url}/",
+            bbox=[1, 2, 3, 4],
         )
 
         self.assertEqual(expected_output_path, result_b["result"])
@@ -372,23 +379,33 @@ class TestExportTasks(ExportTaskBase):
         expected_path_1 = f"{stage_dir}{job_name}-{layer_1}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_path_2 = f"{stage_dir}{job_name}-{layer_2}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_url_1 = (
-            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}&SRSNAME=EPSG:{projection}"
+            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}"
+            f"&SRSNAME=EPSG:{projection}&BBOX=BBOX_PLACEHOLDER"
         )
         expected_url_2 = (
-            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}&SRSNAME=EPSG:{projection}"
+            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}"
+            f"&SRSNAME=EPSG:{projection}&BBOX=BBOX_PLACEHOLDER"
         )
         expected_layers = {
             layer_1: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
+                "base_path": f"{stage_dir}{layer_1}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_info": None,
+                "layer_name": layer_1,
+                "projection": projection,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
+                "base_path": f"{stage_dir}{layer_2}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_info": None,
+                "layer_name": layer_2,
+                "projection": projection,
             },
         }
 
@@ -406,6 +423,7 @@ class TestExportTasks(ExportTaskBase):
             service_url=service_url,
             layer=layer,
             config=config,
+            bbox=[1, 2, 3, 4],
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
@@ -418,7 +436,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_1,
         )
@@ -429,7 +447,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
-            boundary=None,
+            boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_2,
         )
@@ -449,14 +467,11 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config="""
-            cert_info:
-                - cert_path: '/path/to/cert'
-                  cert_pass_var: 'fake_pass'
-
-            """,
+            bbox=[1, 2, 3, 4],
         )
-        mock_download_data.assert_any_call(str(saved_export_task.uid), expected_input_path, ANY, ANY)
+        mock_download_data.assert_called_with(
+            str(saved_export_task.uid), ANY, expected_input_path[3], None, task_points=100
+        )
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -808,10 +823,10 @@ class TestExportTasks(ExportTaskBase):
             boundary=example_geojson,
         )
         self.assertEqual(returned_result, expected_result)
-
+    
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
-    @patch("eventkit_cloud.tasks.export_tasks.download_feature_data")
+    @patch("eventkit_cloud.tasks.helpers.download_feature_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
@@ -831,15 +846,21 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.gpkg"
         )
-        expected_esrijson = os.path.join(
-            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), f"{outpath}.json"
-        )
+        expected_esrijson = [
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk0.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk1.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk2.json"),
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid), "chunk3.json"),
+        ]
         service_url = "https://abc.gov/arcgis/services/x"
-        bbox = [1, 2, -3, 4]
-        query_string = "query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+-3%2C+4&f=json"
-        expected_input_url = f"{service_url}/{query_string}"
+        bbox = [1, 2, 3, 4]
+        query_string = "query?where=objectid=objectid&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
+        expected_input_url = (
+            "https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
+            "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
+        )
         mock_convert.return_value = expected_output_path
-        mock_download_feature_data.return_value = expected_esrijson
+        mock_download_feature_data.side_effect = expected_esrijson
 
         previous_task_result = {"source": expected_input_url}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
@@ -856,6 +877,8 @@ class TestExportTasks(ExportTaskBase):
         arcgis_feature_service_export_task.update_task_state(
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
+        mock_geopackage.check_content_exists.return_value = True
+
         # test without trailing slash
         result_a = arcgis_feature_service_export_task.run(
             run_uid=self.run.uid,
@@ -868,8 +891,8 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        mock_download_feature_data.assert_called_once_with(
-            str(saved_export_task.uid), expected_input_url, expected_esrijson, None
+        mock_download_feature_data.assert_called_with(
+            str(saved_export_task.uid), expected_input_url, ANY, None, task_points=100
         )
 
         mock_convert.assert_called_once_with(
@@ -880,10 +903,12 @@ class TestExportTasks(ExportTaskBase):
             projection=4326,
             layer_name=expected_provider_slug,
             boundary=bbox,
+            access_mode="append",
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
         self.assertEqual(expected_output_path, result_a["source"])
+        mock_download_feature_data.reset_mock(return_value=True, side_effect=True)
 
         # test with trailing slash
         result_b = arcgis_feature_service_export_task.run(
@@ -923,13 +948,21 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
+                "base_path": f"{stage_dir}{layer_name_1}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_info": None,
+                "projection": projection,
+                "layer_name": layer_name_1,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
+                "base_path": f"{stage_dir}{layer_name_2}-{projection}",
+                "bbox": [1, 2, 3, 4],
                 "cert_info": None,
+                "projection": projection,
+                "layer_name": layer_name_2,
             },
         }
 
@@ -992,9 +1025,10 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=url_1,
             bbox=bbox,
-            config='cert_info: "test1"',
         )
-        mock_download_feature_data.assert_called_once_with(str(saved_export_task.uid), expected_input_url, ANY, "test1")
+        mock_download_feature_data.assert_called_with(
+            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", None, task_points=100
+        )
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
@@ -1591,7 +1625,11 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = 'cert_var: "test_var"'
+        config = """
+                 cert_info:
+                     - cert_path: '/path/to/cert'
+                       cert_pass_var: 'fake_pass'
+                 """
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1634,7 +1672,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, None)
+        mock_download_data.assert_called_once_with(service_url, ANY, ANY)
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -1669,7 +1707,12 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         task_uid = str(saved_export_task.uid)
-        config = 'cert_var: "test_var"'
+        config = """
+        cert_info:
+            - cert_path: '/path/to/cert'
+              cert_pass_var: 'fake_pass'
+
+        """
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata
