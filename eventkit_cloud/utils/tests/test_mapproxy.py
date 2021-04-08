@@ -114,7 +114,7 @@ class TestGeopackage(TransactionTestCase):
         }
         json_config["services"] = ["demo"]
 
-        patch_https.assert_called_once_with(cert_var=None, slug="imagery")
+        patch_https.assert_called_once_with(cert_info=None)
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, "imagery", bbox)

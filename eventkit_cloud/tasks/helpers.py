@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 import os
 import pickle
@@ -31,8 +32,8 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.utils import auth_requests, gdalutils
+from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
@@ -349,16 +350,16 @@ def get_human_readable_metadata_document(metadata):
     return metadata_file
 
 
-def get_last_update(url, type, cert_var=None):
+def get_last_update(url, type, cert_info=None):
     """
     A wrapper to get different timestamps.
     :param url: The url to get the timestamp
     :param type: The type of services (e.g. osm)
-    :param cert_var: Optionally a slug if the service requires credentials.
+    :param cert_info: Optionally a dict containing cert path and pass
     :return: The timestamp as a string.
     """
     if type == "osm":
-        return get_osm_last_update(url, cert_var=cert_var)
+        return get_osm_last_update(url, cert_info=cert_info)
 
 
 def get_metadata_url(url, type):
@@ -374,16 +375,16 @@ def get_metadata_url(url, type):
         return url
 
 
-def get_osm_last_update(url, cert_var=None):
+def get_osm_last_update(url, cert_info=None):
     """
 
     :param url: A path to the overpass api.
-    :param cert_var: Optionally a slug if credentials are needed
+    :param cert_info: Optionally cert info if needed
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
-        response = auth_requests.get(timestamp_url, cert_var=cert_var)
+        response = auth_requests.get(timestamp_url, cert_info=cert_info)
         if response:
             return response.content.decode()
         raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
@@ -512,7 +513,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
         provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
-        cert_var = conf.get("cert_var", data_provider.slug)
+        cert_info = conf.get("cert_info", None)
         metadata["data_sources"][data_provider_task_record.provider.slug] = {
             "uid": str(data_provider_task_record.uid),
             "slug": data_provider_task_record.provider.slug,
@@ -520,7 +521,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "files": [],
             "type": get_data_type_from_provider(data_provider_task_record.provider),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
-            "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
+            "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
             "layers": data_provider.layers,
@@ -836,10 +837,52 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
-def download_concurrently(layers: ValuesView, concurrency=None):
+def merge_chunks(
+    output_file,
+    layer_name,
+    projection,
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_info=None,
+    task_points=100,
+    feature_data=False,
+):
+    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=chunks,
+        output_file=output_file,
+        task_uid=task_uid,
+        boundary=bbox,
+        layer_name=layer_name,
+        projection=projection,
+        access_mode="append",
+    )
+    return out
+
+
+def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
+
+    def download_chunks_concurrently(layer, task_points, feature_data):
+        base_path = layer.get("base_path")
+        os.mkdir(base_path)
+        merge_chunks(
+            output_file=layer.get("path"),
+            projection=layer.get("projection"),
+            layer_name=layer.get("layer_name"),
+            task_uid=layer.get("task_uid"),
+            bbox=layer.get("bbox"),
+            stage_dir=base_path,
+            base_url=layer.get("url"),
+            cert_info=layer.get("cert_info"),
+            task_points=task_points,
+            feature_data=feature_data,
+        )
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
@@ -847,23 +890,74 @@ def download_concurrently(layers: ValuesView, concurrency=None):
         # Get the total number of task points to compare against current progress.
         task_points = len(layers) * 100
 
-        futures_list = [executor.submit(download_data, *layer.values(), task_points=task_points) for layer in layers]
+        futures_list = [
+            executor.submit(
+                download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data
+            )
+            for layer in layers
+        ]
         futures.wait(futures_list)
 
-    except (futures.BrokenExecutor, futures.thread.BrokenThreadPool, futures.InvalidStateError) as e:
+        # result() is called for all futures so that any exception raised within is propagated to the caller.
+        [ftr.result() for ftr in futures_list]
+
+    except Exception as e:
         logger.error(f"Unable to execute concurrent downloads: {e}")
+        raise e
 
     return layers
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, task_points=100):
+@gdalutils.retry
+def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
+    # This function is necessary because ArcGIS servers often either
+    # respond with a 200 status code but also return an error message in the response body,
+    # or redirect to a parent URL if a resource is not found.
+
+    try:
+        out_file = download_data(task_uid, input_url, out_file, cert_info, task_points)
+        with open(out_file) as f:
+            json_response = json.load(f)
+
+            if json_response.get("error"):
+                logger.error(json_response)
+                raise Exception("The service did not receive a valid response.")
+
+            if "features" not in json_response:
+                logger.error(f"No features were returned for {input_url}")
+                raise Exception("No features were returned.")
+
+    except Exception as e:
+        logger.error(f"Feature data download error: {e}")
+        raise e
+
+    return out_file
+
+
+def download_chunks(
+    task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False
+):
+    tile_bboxes = get_chunked_bbox(bbox)
+    chunks = []
+    for _index, _tile_bbox in enumerate(tile_bboxes):
+        # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
+        url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
+        outfile = os.path.join(stage_dir, f"chunk{_index}.json")
+
+        download_function = download_feature_data if feature_data else download_data
+        download_function(task_uid, url, outfile, cert_info, task_points=task_points)
+        chunks.append(outfile)
+    return chunks
+
+
+def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
-
     try:
-        response = auth_requests.get(
-            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+        auth_session = auth_requests.AuthSession()
+        response = auth_session.get(
+            input_url, cert_info=cert_info, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
@@ -904,6 +998,8 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_var=None, t
 
     if not os.path.isfile(out_file):
         raise Exception("Nothing was returned from the vector feature service.")
+
+    return out_file
 
 
 def get_task_points_cache_key(task_uid: str):
