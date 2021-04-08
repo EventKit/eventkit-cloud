@@ -38,6 +38,10 @@ BEAT_SCHEDULE = {
     "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0")},
     "clear-tile-cache": {"task": "Clear Tile Cache", "schedule": crontab(minute="0", day_of_month="*/14")},
     "clear-user-sessions": {"task": "Clear User Sessions", "schedule": crontab(minute="0", day_of_month="*/2")},
+    "update-statistics-cache": {
+        "task": "Update Statistics Caches",
+        "schedule": crontab(minute="0", day_of_month="*/4"),
+    },
 }
 
 PCF_SCALING = os.getenv("PCF_SCALING", False)
