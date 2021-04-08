@@ -69,6 +69,7 @@ from eventkit_cloud.tasks.helpers import (
     progressive_kill,
     download_data,
     download_concurrently,
+    merge_chunks,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1123,7 +1124,11 @@ def wfs_export_task(
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
+                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+                "bbox": bbox,
                 "cert_info": configuration.get("cert_info"),
+                "layer_name": layer["name"],
+                "projection": projection,
             }
 
         download_concurrently(layers.values(), configuration.get("concurrency"))
@@ -1141,17 +1146,15 @@ def wfs_export_task(
             )
 
     else:
-        url = get_wfs_query_url(name, service_url, layer, projection)
-        download_data(task_uid, url, gpkg, configuration.get("cert_info"))
-
-        out = gdalutils.convert(
-            driver="gpkg",
-            input_file=gpkg,
-            output_file=gpkg,
-            task_uid=task_uid,
-            projection=projection,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
-            boundary=bbox,
+        out = merge_chunks(
+            gpkg,
+            export_task_record.export_provider_task.provider.layers[0],
+            projection,
+            task_uid,
+            bbox,
+            stage_dir,
+            get_wfs_query_url(name, service_url, layer, projection),
+            configuration.get("cert_info"),
         )
 
     result["driver"] = "gpkg"
@@ -1179,7 +1182,9 @@ def load_provider_config(config: str) -> dict:
     return configuration
 
 
-def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, projection: int = None) -> str:
+def get_wfs_query_url(
+    name: str, service_url: str = None, layer: str = None, projection: int = None, bbox: list = None
+) -> str:
     """
     Function generates WFS query URL
     """
@@ -1193,7 +1198,10 @@ def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, pro
         "REQUEST": "GetFeature",
         "TYPENAME": layer,
         "SRSNAME": f"EPSG:{projection}",
+        "BBOX": str(bbox).strip("[]"),
     }
+    if bbox is None:
+        query_params["BBOX"] = "BBOX_PLACEHOLDER"
 
     query_str = urlencode(query_params, safe=":")
 
@@ -1272,7 +1280,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
+@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1302,20 +1310,28 @@ def arcgis_feature_service_export_task(
     configuration = load_provider_config(config)
 
     vector_layer_data = configuration.get("vector_layers", [])
+    out = None
     if len(vector_layer_data):
         layers = {}
-
         for layer in vector_layer_data:
             path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
-            url = get_arcgis_query_url(layer.get("url"), bbox)
+            url = get_arcgis_query_url(layer.get("url"))
             layers[layer["name"]] = {
                 "task_uid": task_uid,
                 "url": url,
                 "path": path,
+                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+                "bbox": bbox,
                 "cert_info": configuration.get("cert_info"),
+                "layer_name": layer.get("name"),
+                "projection": projection,
             }
 
-        download_concurrently(layers.values(), configuration.get("concurrency"))
+            try:
+                download_concurrently(layers.values(), configuration.get("concurrency"), feature_data=True)
+            except Exception as e:
+                logger.error(f"ArcGIS provider download error: {e}")
+                raise e
 
         for layer_name, layer in layers.items():
             out = gdalutils.convert(
@@ -1330,19 +1346,20 @@ def arcgis_feature_service_export_task(
             )
 
     else:
-        url = get_arcgis_query_url(service_url, bbox)
-        esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
-        download_data(task_uid, url, esrijson, configuration.get("cert_info"))
-
-        out = gdalutils.convert(
-            driver="gpkg",
-            input_file=esrijson,
-            output_file=gpkg,
-            task_uid=task_uid,
-            boundary=bbox,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
-            projection=projection,
+        out = merge_chunks(
+            gpkg,
+            export_task_record.export_provider_task.provider.layers[0],
+            projection,
+            task_uid,
+            bbox,
+            stage_dir,
+            get_arcgis_query_url(service_url),
+            configuration.get("cert_info"),
+            feature_data=True,
         )
+
+    if not (out and geopackage.check_content_exists(out)):
+        raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"
     result["result"] = out
@@ -1352,7 +1369,7 @@ def arcgis_feature_service_export_task(
     return result
 
 
-def get_arcgis_query_url(service_url: str, bbox: list) -> str:
+def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
     """
     Function generates ArcGIS query URL
     """
@@ -1364,7 +1381,14 @@ def get_arcgis_query_url(service_url: str, bbox: list) -> str:
         # if no url query we can just check for trailing slash and move on
         service_url = service_url.rstrip("/\\")
     finally:
-        query_params = {"where": "objectid=objectid", "outfields": "*", "geometry": str(bbox).strip("[]"), "f": "json"}
+        query_params = {
+            "where": "objectid=objectid",
+            "outfields": "*",
+            "f": "json",
+            "geometry": str(bbox).strip("[]"),
+        }
+        if bbox is None:
+            query_params["geometry"] = "BBOX_PLACEHOLDER"
         query_str = urlencode(query_params, safe="=*")
         query_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
