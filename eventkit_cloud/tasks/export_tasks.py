@@ -1280,7 +1280,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
+@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1310,6 +1310,7 @@ def arcgis_feature_service_export_task(
     configuration = load_provider_config(config)
 
     vector_layer_data = configuration.get("vector_layers", [])
+    out = None
     if len(vector_layer_data):
         layers = {}
         for layer in vector_layer_data:
@@ -1326,7 +1327,11 @@ def arcgis_feature_service_export_task(
                 "projection": projection,
             }
 
-        download_concurrently(layers.values(), configuration.get("concurrency"))
+            try:
+                download_concurrently(layers.values(), configuration.get("concurrency"), feature_data=True)
+            except Exception as e:
+                logger.error(f"ArcGIS provider download error: {e}")
+                raise e
 
         for layer_name, layer in layers.items():
             out = gdalutils.convert(
@@ -1350,7 +1355,11 @@ def arcgis_feature_service_export_task(
             stage_dir,
             get_arcgis_query_url(service_url),
             configuration.get("cert_info"),
+            feature_data=True,
         )
+
+    if not (out and geopackage.check_content_exists(out)):
+        raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"
     result["result"] = out

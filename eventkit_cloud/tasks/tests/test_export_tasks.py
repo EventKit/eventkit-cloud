@@ -824,12 +824,13 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
-    @patch("eventkit_cloud.tasks.helpers.download_data")
+    @patch("eventkit_cloud.tasks.helpers.download_feature_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
-        self, mock_request, mock_convert, mock_download_data, mock_download_concurrently,
+        self, mock_request, mock_convert, mock_download_feature_data, mock_download_concurrently, mock_geopackage
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -859,7 +860,7 @@ class TestExportTasks(ExportTaskBase):
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_convert.return_value = expected_output_path
-        mock_download_data.return_value = expected_esrijson
+        mock_download_feature_data.side_effect = expected_esrijson
 
         previous_task_result = {"source": expected_input_url}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
@@ -876,6 +877,8 @@ class TestExportTasks(ExportTaskBase):
         arcgis_feature_service_export_task.update_task_state(
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
+        mock_geopackage.check_content_exists.return_value = True
+
         # test without trailing slash
         result_a = arcgis_feature_service_export_task.run(
             run_uid=self.run.uid,
@@ -888,7 +891,7 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        mock_download_data.assert_called_with(
+        mock_download_feature_data.assert_called_with(
             str(saved_export_task.uid), expected_input_url, ANY, None, task_points=100
         )
 
@@ -905,6 +908,7 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_a["result"])
         self.assertEqual(expected_output_path, result_a["source"])
+        mock_download_feature_data.reset_mock(return_value=True, side_effect=True)
 
         # test with trailing slash
         result_b = arcgis_feature_service_export_task.run(
@@ -964,7 +968,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_download_concurrently.return_value = expected_layers
         mock_convert.reset_mock()
-        mock_download_data.reset_mock()
+        mock_download_feature_data.reset_mock()
 
         # test with multiple layers
         result_c = arcgis_feature_service_export_task.run(
@@ -1010,7 +1014,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result_c["source"])
 
         # test downloads with certs
-        mock_download_data.reset_mock()
+        mock_download_feature_data.reset_mock()
 
         arcgis_feature_service_export_task.run(
             run_uid=123,
@@ -1022,7 +1026,7 @@ class TestExportTasks(ExportTaskBase):
             service_url=url_1,
             bbox=bbox,
         )
-        mock_download_data.assert_called_with(
+        mock_download_feature_data.assert_called_with(
             str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", None, task_points=100
         )
 
