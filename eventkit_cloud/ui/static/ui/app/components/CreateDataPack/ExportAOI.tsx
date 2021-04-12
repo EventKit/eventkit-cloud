@@ -45,7 +45,7 @@ import {
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick, TileCoordinate
+    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick, TileCoordinate, simplifyFeature
 } from '../../utils/mapUtils';
 
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
@@ -367,6 +367,7 @@ export class ExportAOI extends React.Component<Props, State> {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
         const searchFeature = (new GeoJSONFormat()).readFeature(result);
+        simplifyFeature(searchFeature);
         this.drawLayer.getSource().addFeature(searchFeature);
         const geojson: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
@@ -395,10 +396,11 @@ export class ExportAOI extends React.Component<Props, State> {
         const {featureCollection, filename} = importGeom;
         clearDraw(this.drawLayer);
         const reader = new GeoJSONFormat();
-        const features = reader.readFeatures(featureCollection, {
+        let features = reader.readFeatures(featureCollection, {
             dataProjection: WGS84,
             featureProjection: WGS84,
         });
+        features = features.map(_feature => simplifyFeature(_feature));
         this.drawLayer.getSource().addFeatures(features);
         this.map.getView().fit(this.drawLayer.getSource().getExtent());
         const geomType = getDominantGeometry(featureCollection);

@@ -47,7 +47,7 @@ import {
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex, getResolutions
+    isBox, isVertex, getResolutions, simplifyFeature
 } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
@@ -55,6 +55,7 @@ import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import {useEffect, useState} from "react";
+import {WGS84} from "../CreateDataPack/ExportAOI";
 
 
 export const RED_STYLE = new Style({
@@ -754,6 +755,7 @@ export class MapView extends React.Component<Props, State> {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
         const searchFeature = (new GeoJSONFormat()).readFeature(result);
+        simplifyFeature(searchFeature);
         this.drawLayer.getSource().addFeature(searchFeature);
         const geojson = createGeoJSON(searchFeature.getGeometry()) as GeoJSON.FeatureCollection;
         this.props.onMapFilter(geojson);
@@ -815,7 +817,7 @@ export class MapView extends React.Component<Props, State> {
         const features = reader.readFeatures(featureCollection, {
             dataProjection: MapView.PROJECTION,
             featureProjection: MapView.PROJECTION,
-        });
+        }).map(_feature => simplifyFeature(_feature));
         this.drawLayer.getSource().addFeatures(features);
         this.props.onMapFilter(featureCollection);
         this.map.getView().fit(this.drawLayer.getSource().getExtent());
