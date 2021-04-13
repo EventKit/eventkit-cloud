@@ -9,8 +9,6 @@ node() {
         postStatus(getPendingStatus("The build is starting..."))
         withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO')]){
             sh "ls -al"
-            sh "cp -f $CERTS CA.pem"
-            sh "chmod 744 $CERTS CA.pem"
             if(CONDA_REPO){
                 sh """
 python - << END
