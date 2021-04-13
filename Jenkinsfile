@@ -7,8 +7,11 @@ node() {
     stage("Add Repo"){
         checkout scm
         postStatus(getPendingStatus("The build is starting..."))
-        withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO')]){
+        withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO'),
+                        file(credentialsId: 'eventkit_certs', variable: 'CERTS')]){
             sh "ls -al"
+            sh "cp -f $CERTS CA.pem"
+            sh "chmod 744 $CERTS CA.pem"
             if(CONDA_REPO){
                 sh """
 python - << END
@@ -18,8 +21,7 @@ data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.safe_load(yaml_file)
 data['channels'] = ['local', '$CONDA_REPO']
-if os.getenv("SSL_VERIFICATION"):
-    data['SSL_VERIFY'] = os.getenv("SSL_VERIFICATION")
+data['SSL_VERIFY'] = "CA.pem"
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
