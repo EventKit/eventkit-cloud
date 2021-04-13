@@ -18,7 +18,8 @@ data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.safe_load(yaml_file)
 data['channels'] = ['local', '$CONDA_REPO']
-
+if os.getenv("SSL_VERIFICATION"):
+    data['SSL_VERIFY'] = os.getenv("SSL_VERIFICATION")
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
@@ -31,19 +32,21 @@ END
 
     stage("Build"){
         try{
-            postStatus(getPendingStatus("Building the docker containers..."))
-            sh "docker-compose down || exit 0"
-            sh "docker system prune -f"
-            sh "ls -al ."
-            sh "ls -al conda/*"
-            // sh "cd conda && docker-compose up --build && cd .."
-            prepareComposeFile()
-            sh "docker-compose build --no-cache"
-            sh "chmod g+w -R ."
-            sh "docker-compose up -d"
-            sh "docker-compose exec --user=root -T eventkit chown eventkit:eventkit ."
-        }catch(Exception e) {
-           handleErrors("Failed to build the docker containers.")
+            withCredentials([file(credentialsId: 'eventkit_certs', variable: 'SSL_VERIFICATION')]){
+                postStatus(getPendingStatus("Building the docker containers..."))
+                sh "docker-compose down || exit 0"
+                sh "docker system prune -f"
+                sh "ls -al ."
+                sh "ls -al conda/*"
+                // sh "cd conda && docker-compose up --build && cd .."
+                prepareComposeFile()
+                sh "docker-compose build --no-cache"
+                sh "chmod g+w -R ."
+                sh "docker-compose up -d"
+                sh "docker-compose exec --user=root -T eventkit chown eventkit:eventkit ."
+            }catch(Exception e) {
+               handleErrors("Failed to build the docker containers.")
+            }
         }
     }
 
