@@ -30,7 +30,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_
     CURL_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem" && \
     REQUESTS_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem" && \
     openssl x509 -outform der -in /var/lib/eventkit/conda/cacert.pem -out /var/lib/eventkit/conda/cacert.crt && \
-    conda config --set ssl_verify cacert.crt && \
+    conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
 
     # Create the environment
     conda env create --file environment-dev.yml python=3.7 && \
