@@ -7,8 +7,7 @@ node() {
     stage("Add Repo"){
         checkout scm
         postStatus(getPendingStatus("The build is starting..."))
-        withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO'),
-                        file(credentialsId: 'eventkit_certs', variable: 'CERTS')]){
+        withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO')]){
             sh "ls -al"
             sh "cp -f $CERTS CA.pem"
             sh "chmod 744 $CERTS CA.pem"
@@ -21,7 +20,7 @@ data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.safe_load(yaml_file)
 data['channels'] = ['local', '$CONDA_REPO']
-data['SSL_VERIFY'] = "CA.pem"
+
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
@@ -33,14 +32,15 @@ END
     }
 
     stage("Build"){
-        withCredentials([file(credentialsId: 'eventkit_certs', variable: 'SSL_VERIFICATION')]){
+        withCredentials([file(credentialsId: 'eventkit_certs', variable: 'CERTS')]){
             try{
                 postStatus(getPendingStatus("Building the docker containers..."))
+                sh "cp -f $CERTS conda/cacert.pem"
+                sh "chmod 744 $CERTS conda/cacert.pem"
                 sh "docker-compose down || exit 0"
                 sh "docker system prune -f"
                 sh "ls -al ."
                 sh "ls -al conda/*"
-                // sh "cd conda && docker-compose up --build && cd .."
                 prepareComposeFile()
                 sh "docker-compose build --no-cache"
                 sh "chmod g+w -R ."
