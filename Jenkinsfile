@@ -31,8 +31,8 @@ END
     }
 
     stage("Build"){
-        try{
-            withCredentials([file(credentialsId: 'eventkit_certs', variable: 'SSL_VERIFICATION')]){
+        withCredentials([file(credentialsId: 'eventkit_certs', variable: 'SSL_VERIFICATION')]){
+            try{
                 postStatus(getPendingStatus("Building the docker containers..."))
                 sh "docker-compose down || exit 0"
                 sh "docker system prune -f"
