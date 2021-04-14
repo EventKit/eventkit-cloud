@@ -24,7 +24,6 @@ from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
 from eventkit_cloud.utils.pcf import PcfClient
 
-
 logger = get_task_logger(__name__)
 
 
@@ -285,6 +284,11 @@ def clear_tile_cache_task():
 @app.task(name="Clear User Sessions", base=EventKitBaseTask)
 def clear_user_sessions_task():
     call_command("clearsessions")
+
+
+@app.task(name="Update Statistics Caches", base=EventKitBaseTask)
+def update_all_statistics_caches_tasks():
+    call_command("update_statistics_cache")
 
 
 def get_celery_health_check_command(node_type: str):

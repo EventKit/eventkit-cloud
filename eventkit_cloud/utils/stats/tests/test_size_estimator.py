@@ -7,6 +7,7 @@ import logging
 from eventkit_cloud.tasks.models import ExportTaskRecord
 import eventkit_cloud.utils.stats.aoi_estimators as estimator
 import eventkit_cloud.utils.stats.generator as ek_stats
+from eventkit_cloud.utils.stats.geomutils import get_geometry_description
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,6 @@ def compute_estimator_error(task_limit=None, slugs=None, filename=None):
     """
     # Loop through every job and compute the error of the estimate against the actual
     os = None
-    geom_cache = {}
-    ek_stats.prefetch_geometry_cache(geom_cache)
 
     records = ExportTaskRecord.objects.filter(result__isnull=False, status="SUCCESS")
     if slugs is not None:
@@ -60,7 +59,7 @@ def compute_estimator_error(task_limit=None, slugs=None, filename=None):
 
                 dptr = etr.export_provider_task
                 run = dptr.run
-                bbox = geom_cache[run.id]["bbox"]
+                bbox = get_geometry_description(run.job.the_geom)
 
                 start_time = time.time()
                 estimate, method = estimator.get_size_estimate_slug(dptr.slug, bbox, srs="4326")
