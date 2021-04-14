@@ -395,6 +395,13 @@ export function wrapX(tileGrid, tileCoord) {
     return tileCoord;
 }
 
+// Simplifies the geometry on a feature using open layers. Squared tolerance should be in degrees.
+export function simplifyFeature(feature, toleranceAsSquaredDistance=0.001){
+    const geom = feature.getGeometry().simplify(toleranceAsSquaredDistance);
+    feature.setGeometry(geom);
+    return feature;
+}
+
 // if any coordinates are wrapped adjust them to be within the projection extent
 export function unwrapCoordinates(coords, projection) {
     // based on:
