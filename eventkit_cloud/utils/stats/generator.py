@@ -1,29 +1,39 @@
+import concurrent.futures
+import copy
+import datetime
+import itertools
+import json
+import logging
+import math
+import os
+import statistics
+import threading
+from typing import List
+
+from django import db
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.query import QuerySet
 from mapproxy import grid as mapproxy_grid
 from mapproxy import srs as mapproxy_srs
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.tasks.models import ExportTaskRecord
+from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.models import ExportTaskRecord, ExportRun, DataProviderTaskRecord
 from eventkit_cloud.utils.client import parse_duration
 from eventkit_cloud.utils.stats.geomutils import (
-    prefetch_geometry_cache,
-    lookup_cache_geometry,
     get_area_bbox,
     get_bbox_intersect,
+    get_geometry_description,
 )
-
-import logging
-import datetime
-import json
-import math
-import os
-import statistics
 
 logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
 MAX_SAMPLES_PER_TARGET = 2000
-DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
+DEFAULT_CACHE_EXPIRATION = 60 * 60 * 24 * 7  # expire in a week
+tid_cache_prefix = "generator.tidcache"
+global_key = "GLOBAL"
+# Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
 
 
 def get_statistics(provider_slug, force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
@@ -49,14 +59,31 @@ def get_statistics(provider_slug, force=os.getenv("FORCE_STATISTICS_RECOMPUTE", 
     return json.loads(stats)
 
 
+def get_default_stat():
+    return {"duration": [], "area": [], "size": [], "mpp": []}
+
+
+def get_accessors():
+    return {
+        # Get the size in MBs per unit area (valid for tasks objects)
+        "size": lambda t, area_km: t.result.size / area_km,
+        # Get the duration per unit area (valid for export_run, data_provider_task_records, or export_task_records)
+        "duration": lambda o, area_km: parse_duration(o.duration) / area_km if o.duration else 0,
+        # Get the area from the run or use the parent's area
+        "area": lambda o, area_km: area_km,
+    }
+
+
 def update_all_statistics_caches():
     """
     A helper function to compute all of the statistics and update all caches at once.
     :param force: True to re-compute the desired statistics
     """
-    providers = DataProvider.objects.all()
-    for provider in providers:
-        get_statistics(provider.slug, force=True)
+    provider_slugs = [provider.slug for provider in DataProvider.objects.all()]
+    for conn in db.connections.all():
+        conn.close_if_unusable_or_obsolete()
+    with concurrent.futures.ProcessPoolExecutor() as pool:
+        pool.map(get_statistics, provider_slugs, itertools.repeat(True))
 
 
 def get_default_tile_grid(level=10):
@@ -93,103 +120,54 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
     :param filename: Serializes the intermediate data-sample data so it can be shared btw different deployments
     :return: A dict with statistics including area, duration, and package size per sq. kilometer
     """
+
     max_estimate_export_task_records = os.getenv("MAX_ESTIMATE_EXPORT_TASK_RECORDS", 10000)
     # Order by time descending to ensure more recent samples are collected first
-    export_task_records = (
-        ExportTaskRecord.objects.filter(result__isnull=False)
-        .filter(export_provider_task__slug=provider_slug)
-        .order_by("-finished_at")
-        .select_related("result")
-        .all()[:max_estimate_export_task_records]
-    )
+    export_task_records: QuerySet[ExportTaskRecord] = ExportTaskRecord.objects.filter(
+        export_provider_task__provider__slug=provider_slug,
+        status=TaskState.SUCCESS.value,
+        export_provider_task__status=TaskState.COMPLETED.value,
+        result__isnull=False,
+        # Only use results larger than a MB,
+        # anything less is likely a failure or a test.
+        result__size__gt=1,
+    ).order_by("-finished_at").select_related(
+        "result", "export_provider_task__run__job", "export_provider_task__provider"
+    ).all()[
+        :max_estimate_export_task_records
+    ]
 
-    # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
-    accessors = {
-        # Get the size in MBs per unit area (valid for tasks objects)
-        "size": lambda t, area_km: t.result.size / area_km,
-        # Get the duration per unit area (valid for export_run, data_provider_task_records, or export_task_records)
-        "duration": lambda o, area_km: parse_duration(o.duration) / area_km,
-        # Get the area from the run or use the parent's area
-        "area": lambda o, area_km: area_km,
-    }
-
-    # TODO: Better way for select distinct on etr??
     processed_runs = {}
     processed_dptr = {}
-    tid_cache = {}
-    geom_cache = {}
     export_task_count = 0
-    processed_count = 0
-    total_count = export_task_records.count()
+    total_count = len(export_task_records)  # This should be the first and only DB hit.
+
     all_stats = {}
-    default_stat = {"duration": [], "area": [], "size": [], "mpp": []}
 
     logger.debug("Prefetching geometry data from all Jobs")
-    prefetch_geometry_cache(geom_cache)
 
     logger.info(f"Beginning collection of statistics for {total_count} {provider_slug} ExportTaskRecords")
-    for etr in export_task_records:
-        if processed_count % 500 == 0:
-            logger.debug(
-                "Processed %d of %d using %d completed", processed_count, total_count, export_task_count,
-            )
-        processed_count += 1
+    runs: List[ExportRun] = list(
+        set([export_task_record.export_provider_task.run for export_task_record in export_task_records])
+    )
+    data_provider_task_records: List[DataProviderTaskRecord] = list(
+        set([export_task_record.export_provider_task for export_task_record in export_task_records])
+    )
+    default_stat = get_default_stat()
+    accessors = get_accessors()
+    global_stats = get_child_entry(all_stats, global_key, default_stat)
 
-        if (
-            etr.status != "SUCCESS"
-            or etr.export_provider_task.status != "COMPLETED"
-            or etr.export_provider_task.run.status != "COMPLETED"
-            or not is_valid_result(etr.result)
-        ):
-            continue
+    for run in runs:
+        area = get_geometry_description(run.job.the_geom)["area"]
+        collect_samples(run, [global_stats], ["duration", "area"], accessors, area)
 
-        export_task_count += 1
+    for data_provider_task_record in data_provider_task_records:
+        area = get_geometry_description(data_provider_task_record.run.job.the_geom)["area"]
+        provider_stats = get_child_entry(all_stats, data_provider_task_record.provider.slug, default_stat)
+        collect_samples(data_provider_task_record, [provider_stats], ["duration", "area"], accessors, area)
 
-        dptr = etr.export_provider_task
-        run = etr.export_provider_task.run
-
-        gce = lookup_cache_geometry(run, geom_cache)
-        area = gce["area"]
-
-        global_stats = get_child_entry(all_stats, "GLOBAL", default_stat)
-        provider_stats = get_child_entry(all_stats, provider_slug, default_stat)
-        task_stats = get_child_entry(provider_stats, etr.name, default_stat)
-
-        if has_tiles(etr.name):
-            affected_tile_stats = get_tile_stats(provider_stats, tile_grid, gce["bbox"], True, tid_cache, run.id)
-        else:
-            affected_tile_stats = []
-
-        if run.id not in processed_runs:
-            processed_runs[run.id] = True
-            collect_samples(run, [global_stats], ["duration", "area"], accessors, area)
-        if dptr.id not in processed_dptr:
-            processed_dptr[dptr.id] = True
-            collect_samples(dptr, [provider_stats], ["duration", "area"], accessors, area)
-
-        collect_samples(
-            etr, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area,
-        )
-
-        sz = accessors["size"](etr, area)
-        provider_stats["size"] += [sz]  # Roll-up into provider_task level
-        global_stats["size"] += [sz]  # Roll-up into global level
-
-        # Collect a sample of the megabytes per pixel
-        if has_tiles(etr.name):
-            try:
-                provider = DataProvider.objects.get(name=dptr.name)
-                mpp = compute_mpp(provider, gce["bbox"], etr.result.size)
-                if len(provider_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
-                    provider_stats["mpp"] += [mpp]
-                if len(global_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
-                    global_stats["mpp"] += [mpp]
-                for ts in affected_tile_stats:
-                    if len(ts["mpp"]) < MAX_SAMPLES_PER_TARGET:
-                        ts["mpp"] += [mpp]
-
-            except ObjectDoesNotExist:
-                pass
+    collected_stats = collect_samples_for_export_task_records(export_task_records, copy.deepcopy(all_stats), tile_grid)
+    [all_stats.update(stat) for stat in collected_stats]
 
     logger.info(
         f"Computing statistics across {export_task_count} completed "
@@ -199,7 +177,7 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
     # TODO: Merge in any auxiliary sample data?
 
     if filename is not None:
-        all_stats["timestamp"] = datetime.datetime.now()
+        all_stats["timestamp"] = str(datetime.datetime.now())
         with open(filename, "w") as file:
             json.dump(all_stats, file)
 
@@ -208,36 +186,109 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
         "data_provider_task_count": len(processed_dptr),
         "export_task_count": export_task_count,
     }
-
-    for provider_slug in all_stats:
-        if provider_slug in ["timestamp"]:
-            continue
-
-        totals[provider_slug] = get_summary_stats(all_stats[provider_slug], ("area", "duration", "size", "mpp"))
-        tile_count = 0
-
-        for task_name in all_stats[provider_slug]:
-            if task_name in ["duration", "area", "size", "mpp"]:
-                # These are properties on the roll'ed up statistics
-                continue
-            elif task_name.startswith("tile_"):
-                # Two-level map, index by y then x+z
-                y_s = all_stats[provider_slug][task_name]
-                total_ys = {}
-                totals[provider_slug][task_name] = total_ys
-                for xz_s in y_s:
-                    total_ys[xz_s] = get_summary_stats(y_s[xz_s], ("area", "duration", "size", "mpp"))
-                    total_ys[xz_s]["tile_coord"] = y_s[xz_s]["tile_coord"]
-                    tile_count += 1
-            else:
-                totals[provider_slug][task_name] = get_summary_stats(
-                    all_stats[provider_slug][task_name], ("area", "duration", "size")
-                )
-
-        totals[provider_slug]["tile_count"] = tile_count
-        logger.info("Generated statistics for %d tiles for group %s", tile_count, provider_slug)
-
+    returned_totals = process_totals_concurrently(list(all_stats.keys()), copy.deepcopy(all_stats))
+    [totals.update(total) for total in returned_totals]
+    tile_count = sum([provider.get("tile_count", 0) for slug, provider in totals.items() if isinstance(provider, dict)])
+    logger.info("Generated statistics for %d tiles for group %s", tile_count, provider_slug)
     return totals
+
+
+def process_totals(provider_slug: str, stats: dict) -> dict:
+
+    if provider_slug in ["timestamp"]:
+        return dict()
+
+    totals = {provider_slug: get_summary_stats(stats[provider_slug], ("area", "duration", "size", "mpp"))}
+    tile_count = 0
+
+    for task_name in stats[provider_slug]:
+        if task_name in ["duration", "area", "size", "mpp"]:
+            # These are properties on the roll'ed up statistics
+            continue
+        elif task_name.startswith("tile_"):
+            # Two-level map, index by y then x+z
+            y_s = stats[provider_slug][task_name]
+            total_ys = {}
+            totals[provider_slug][task_name] = total_ys
+            for xz_s in y_s:
+                total_ys[xz_s] = get_summary_stats(y_s[xz_s], ("area", "duration", "size", "mpp"))
+                total_ys[xz_s]["tile_coord"] = y_s[xz_s]["tile_coord"]
+                tile_count += 1
+        else:
+            totals[provider_slug][task_name] = get_summary_stats(
+                stats[provider_slug][task_name], ("area", "duration", "size")
+            )
+
+    totals[provider_slug]["tile_count"] = tile_count
+    return totals
+
+
+def process_totals_concurrently(provider_slugs, stats):
+    thread = threading.current_thread()
+    if thread.daemon:
+        executor = concurrent.futures.ThreadPoolExecutor
+    else:
+        executor = concurrent.futures.ProcessPoolExecutor
+    with executor() as pool:
+        totals = pool.map(
+            process_totals, provider_slugs, itertools.repeat(stats), chunksize=math.ceil(len(provider_slugs) / 8)
+        )
+        return totals
+
+
+def collect_samples_for_export_task_record(export_task_record: ExportTaskRecord, stats: dict, tile_grid):
+
+    default_stat = get_default_stat()
+    accessors = get_accessors()
+    global_stats = stats["GLOBAL"]
+    geometry_description = get_geometry_description(export_task_record.export_provider_task.run.job.the_geom)
+    area = geometry_description["area"]
+    provider_stats = get_child_entry(stats, export_task_record.export_provider_task.provider.slug, default_stat)
+
+    task_stats = get_child_entry(provider_stats, export_task_record.name, default_stat)
+
+    if has_tiles(export_task_record.name):
+        cache_key = f"{tid_cache_prefix}.{export_task_record.export_provider_task.run}"
+        affected_tile_stats = get_tile_stats(
+            provider_stats, tile_grid, geometry_description["bbox"], True, cache_key=cache_key
+        )
+    else:
+        affected_tile_stats = []
+
+    collect_samples(
+        export_task_record, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area,
+    )
+
+    sz = accessors["size"](export_task_record, area)
+    provider_stats["size"] += [sz]  # Roll-up into provider_task level
+    global_stats["size"] += [sz]  # Roll-up into global level
+
+    # Collect a sample of the megabytes per pixel
+    if has_tiles(export_task_record.name):
+        try:
+            provider = export_task_record.export_provider_task.provider
+            mpp = compute_mpp(provider, geometry_description["bbox"], export_task_record.result.size)
+            if len(provider_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
+                provider_stats["mpp"] += [mpp]
+            if len(global_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
+                global_stats["mpp"] += [mpp]
+            for ts in affected_tile_stats:
+                if len(ts["mpp"]) < MAX_SAMPLES_PER_TARGET:
+                    ts["mpp"] += [mpp]
+
+        except ObjectDoesNotExist:
+            pass
+    return stats
+
+
+def collect_samples_for_export_task_records(export_task_records, stats, tile_grid):
+    # Can't do this concurrently because proj can't be pickled (i.e. tile_grid)
+    return map(
+        collect_samples_for_export_task_record,
+        export_task_records,
+        itertools.repeat(stats),
+        itertools.repeat(tile_grid),
+    )
 
 
 def get_child_entry(parent, key, default=None):
@@ -257,7 +308,7 @@ def get_child_entry(parent, key, default=None):
     return parent[key]
 
 
-def get_tile_stats(parent, tile_grid, bbox, create_if_absent=False, tid_cache=None, cid=None):
+def get_tile_stats(parent, tile_grid, bbox, create_if_absent=False, cache_key=None):
     """
     Intersects the bbox with the tile grid, returning all of the corresponding objects that hold
     data samples for those tiles
@@ -270,21 +321,16 @@ def get_tile_stats(parent, tile_grid, bbox, create_if_absent=False, tid_cache=No
     :param cid: Optional id used to access/store results of bbox query on grid, tid_cache MUST be provided when used
     :return: The list of objects intersecting the bbox, or an empty array
     """
-    if cid and cid in tid_cache:
-        tile_coords = tid_cache[cid]
-    else:
-        # Not in cache, or not using cache, compute intersection
-        run_bbox = mapproxy_grid.grid_bbox(bbox, bbox_srs=mapproxy_srs.SRS(4326), srs=tile_grid.srs)
-        affected_tiles = tile_grid.get_affected_level_tiles(run_bbox, tile_grid.levels - 1)  # Use highest res grid
 
-        tile_coords = []
-        for tile_coord in affected_tiles[2]:
-            tile_coords += [tile_coord]
+    run_bbox = mapproxy_grid.grid_bbox(bbox, bbox_srs=mapproxy_srs.SRS(4326), srs=tile_grid.srs)
+    affected_tiles = tile_grid.get_affected_level_tiles(run_bbox, tile_grid.levels - 1)  # Use highest res grid
 
-        if cid:
-            tid_cache[cid] = tile_coords
+    tile_coords = []
+    for tile_coord in affected_tiles[2]:
+        tile_coords += [tile_coord]
 
     tile_stats = list(map(lambda t: get_tile_stat(parent, t, create_if_absent), tile_coords))
+
     if create_if_absent:
         return tile_stats  # We won't have None entries
     else:
@@ -331,6 +377,7 @@ def collect_samples(item, targets, fields, accessors, area):
             for target in targets:
                 if field in target and len(target[field]) < MAX_SAMPLES_PER_TARGET:
                     target[field] += [sample]
+    return targets
 
 
 def compute_mpp(provider, bbox, size_mb, srs="4326", with_clipping=True):
@@ -401,15 +448,17 @@ def get_summary_stats(input_item, fields):
         if value_list and len(value_list) > 0:
             st = dict()
             st["mean"] = statistics.mean(value_list)
-            st["min"] = min(value_list)
-            st["max"] = max(value_list)
-            st["count"] = len(value_list)
 
-            if len(value_list) >= 2:
-                st["variance"] = statistics.variance(value_list, st["mean"])
-                st["ci_90"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.645)
-                st["ci_95"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.960)
-                st["ci_99"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 2.580)
+            # These items aren't currently used for estimate do not waste time calculating them.
+            # st["min"] = min(value_list)
+            # st["max"] = max(value_list)
+            # st["count"] = len(value_list)
+            #
+            # if len(value_list) >= 2:
+            #     st["variance"] = statistics.variance(value_list, st["mean"])
+            #     st["ci_90"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.645)
+            #     st["ci_95"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.960)
+            #     st["ci_99"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 2.580)
 
             target[field] = st
 
@@ -547,10 +596,10 @@ def query(
                 # No overlapping tiles, use group specific stats
                 method["group"] = provider_slug
                 stat_value = get_value(provider_stats)
-        elif "GLOBAL" in all_stats:
+        elif global_key in all_stats:
             # No group-specific data, use statistics computed across all groups (i.e. every completed job)
-            method["group"] = "GLOBAL"
-            stat_value = get_value(all_stats["GLOBAL"])
+            method["group"] = global_key
+            stat_value = get_value(all_stats[global_key])
 
     if stat_value is None:
         # No statistics... use default
@@ -558,9 +607,3 @@ def query(
         stat_value = default_value
 
     return stat_value, method
-
-
-def is_valid_result(result):
-    # TODO: Determine if there was actually data in this result (e.g. crack open the gpkg
-    # and see if tiles are sensical)
-    return True

@@ -1,20 +1,20 @@
-from mapproxy import grid as mapproxy_grid
-from eventkit_cloud.tasks.models import ExportRun
-import logging
 import json
+import logging
 import math
+
+from mapproxy import grid as mapproxy_grid
 
 logger = logging.getLogger(__name__)
 
 _dbg_geom_cache_misses = 0
 
 
-def _create_cache_geom_entry(job):
+def get_geometry_description(geometry):
     """
     Constructs a geometry cache entry
-    :param job: job contains the geometry
+    :param geometry: the geometry
     """
-    orm_geom = job.the_geom
+    orm_geom = geometry
     geojson = json.loads(orm_geom.json)
     bbox = orm_geom.extent
 
@@ -41,7 +41,7 @@ def lookup_cache_geometry(run, geom_cache):
         _dbg_geom_cache_misses += 1
 
         # Important that we only touch 'job' on cache miss
-        cache_entry = _create_cache_geom_entry(run.job)
+        cache_entry = get_geometry_description(run.job)
         geom_cache[run.id] = cache_entry
 
     return cache_entry
@@ -111,15 +111,6 @@ def get_bbox_intersect(one, two):
         return max(a_x0, b_x0), max(a_y0, b_y0), min(a_x1, b_x1), min(a_y1, b_y1)
     else:
         return None
-
-
-def prefetch_geometry_cache(geom_cache):
-    """
-    Populates geom_cache with all geometries information from all Jobs indexed by ExportRun.id
-    :param geom_cache:
-    """
-    for er in ExportRun.objects.select_related("job").only("id", "job__the_geom").all():
-        geom_cache[er.id] = _create_cache_geom_entry(er.job)
 
 
 def get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug):

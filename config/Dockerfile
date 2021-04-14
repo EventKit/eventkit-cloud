@@ -16,19 +16,29 @@ COPY --chown=eventkit ./config/setup.cfg /var/lib/eventkit/config/setup.cfg
 COPY --chown=eventkit ./config/pyproject.toml /var/lib/eventkit/config/pyproject.toml
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
-
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -o miniconda.sh && \
+ENV CURL_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem"
+ENV REQUESTS_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem"
+# Install Conda
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
-    conda config --add channels conda-forge && \
+    \
+    # Setup channels, only use channels in environment file or built locally.
     conda config --add channels file:///var/lib/eventkit/conda/repo && \
     conda config --set channel_priority strict && \
+    \
+    # Setup certs (might be needed if self-hosting).
+    openssl x509 -outform der -in /var/lib/eventkit/conda/cacert.pem -out /var/lib/eventkit/conda/cacert.crt && \
+    conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
+    \
+    # Create the environment
     conda env create --file environment-dev.yml python=3.7 && \
-    conda clean --yes --all && \
     SECRET_KEY=temp_secret_key /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
+    \
+    # Clean up.
+    conda clean --yes --all && \
     rm -rf /var/lib/eventkit/conda && \
-    # Remove the directory because of stale files
     rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud
 
 COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud

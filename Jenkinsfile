@@ -30,20 +30,23 @@ END
     }
 
     stage("Build"){
-        try{
-            postStatus(getPendingStatus("Building the docker containers..."))
-            sh "docker-compose down || exit 0"
-            sh "docker system prune -f"
-            sh "ls -al ."
-            sh "ls -al conda/*"
-            // sh "cd conda && docker-compose up --build && cd .."
-            prepareComposeFile()
-            sh "docker-compose build --no-cache"
-            sh "chmod g+w -R ."
-            sh "docker-compose up -d"
-            sh "docker-compose exec --user=root -T eventkit chown eventkit:eventkit ."
-        }catch(Exception e) {
-           handleErrors("Failed to build the docker containers.")
+        withCredentials([file(credentialsId: 'eventkit_certs', variable: 'CERTS')]){
+            try{
+                postStatus(getPendingStatus("Building the docker containers..."))
+                sh "cp -f $CERTS conda/cacert.pem"
+                sh "chmod 744 $CERTS conda/cacert.pem"
+                sh "docker-compose down || exit 0"
+                sh "docker system prune -f"
+                sh "ls -al ."
+                sh "ls -al conda/*"
+                prepareComposeFile()
+                sh "docker-compose build --no-cache"
+                sh "chmod g+w -R ."
+                sh "docker-compose up -d"
+                sh "docker-compose exec --user=root -T eventkit chown eventkit:eventkit ."
+            }catch(Exception e) {
+               handleErrors("Failed to build the docker containers.")
+            }
         }
     }
 
