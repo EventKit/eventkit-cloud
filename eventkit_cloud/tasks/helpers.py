@@ -5,6 +5,7 @@ import os
 import pickle
 import re
 import requests
+import requests_pkcs12
 import signal
 import time
 import urllib.parse
@@ -520,6 +521,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "name": data_provider_task_record.name,
             "files": [],
             "type": get_data_type_from_provider(data_provider_task_record.provider),
+            "data_type": provider_type,
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
@@ -568,7 +570,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
             if full_file_path not in map(itemgetter("full_file_path"), current_files):
                 file_ext = os.path.splitext(filename)[1]
-                # Only include files relavant to the user that we can actually add to the carto.
+                # Only include files relevant to the user that we can actually add to the carto.
                 if export_task.display and ("project file" not in export_task.name.lower()):
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], file_ext)
 
@@ -950,16 +952,38 @@ def download_chunks(
     return chunks
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
+def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
+    if not session:
+        session = requests.Session()
+
+    if username and password:
+        logger.error(f"setting {username} and {password} for session")
+        session.auth = (username, password)
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
+    if cert_path and cert_pass:
+        adapter = requests_pkcs12.Pkcs12Adapter(
+            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
+        )
+        session.mount("https://", adapter)
+
+    logger.debug("Using %s for SSL verification.", str(verify))
+    session.verify = verify
+    return session
+
+
+def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, session=None, task_points=100):
     """
     Function for downloading data, optionally using a certificate.
     """
     try:
-        auth_session = auth_requests.AuthSession()
-        response = auth_session.get(
-            input_url, cert_info=cert_info, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
-        )
+        auth_session = get_or_update_session(session=session, cert_info=cert_info)
+        response = auth_session.get(input_url, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),)
         response.raise_for_status()
+
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
 

@@ -770,6 +770,67 @@ class FileProviderCheck(ProviderCheck):
             return None
 
 
+class OGCProviderCheck(ProviderCheck):
+    """
+    Implementation of ProviderCheck for geospatial file providers.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
+
+    def get_check_response(self):
+        """
+        Sends a HEAD request to the provided service URL returns its response if the status code is OK
+        """
+        try:
+            if not self.service_url:
+                self.result = CheckResults.NO_URL
+                return
+
+            cert_info = self.config.get("cert_info")
+
+            response = auth_requests.get(
+                url=f"{self.service_url}/processes",
+                cert_info=cert_info,
+                timeout=self.timeout,
+                verify=getattr(settings, "SSL_VERIFICATION", True),
+            )
+
+            self.token_dict["status"] = response.status_code
+
+            if response.status_code in [401, 403]:
+                self.result = CheckResults.UNAUTHORIZED
+                return
+
+            if response.status_code == 404:
+                self.result = CheckResults.NOT_FOUND
+                return
+
+            if not response.ok:
+                self.result = CheckResults.UNAVAILABLE
+                return
+
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
+            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.TIMEOUT
+            return
+
+        except requests.exceptions.SSLError as ex:
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.SSL_EXCEPTION
+            return
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.CONNECTION
+            return
+
+        except Exception as ex:
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.UNKNOWN_ERROR
+            return None
+
+
 PROVIDER_CHECK_MAP = {
     "wfs": WFSProviderCheck,
     "wcs": WCSProviderCheck,
@@ -782,6 +843,7 @@ PROVIDER_CHECK_MAP = {
     "tms": TMSProviderCheck,
     "vector-file": FileProviderCheck,
     "raster-file": FileProviderCheck,
+    "ogc-process": OGCProviderCheck,
 }
 
 

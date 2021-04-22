@@ -30,6 +30,7 @@ from eventkit_cloud.tasks.export_tasks import (
     arcgis_feature_service_export_task,
     vector_file_export_task,
     raster_file_export_task,
+    ogc_process_export_task,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
@@ -66,6 +67,7 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
             "vector-file": vector_file_export_task,
             "raster-file": raster_file_export_task,
+            "ogc-process": ogc_process_export_task,
         }
 
     def parse_tasks(

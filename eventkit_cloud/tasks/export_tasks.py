@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import requests
 import shutil
 import socket
 import time
@@ -83,9 +84,11 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from pathlib import Path
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1687,6 +1690,7 @@ def create_zip_task(
 
     metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
+
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
@@ -1698,6 +1702,17 @@ def create_zip_task(
         # No need to add QGIS file if there aren't any files to be zipped.
         include_files += [generate_qgs_style(metadata)]
         include_files += [get_human_readable_metadata_document(metadata)]
+
+        ogc_metadata_dir = os.path.join(
+            os.path.join(get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug), "metadata"
+        )
+
+        # TODO: make sure files are placed in the '../metadata' directory.
+        if os.path.isdir(ogc_metadata_dir):
+            path = Path(ogc_metadata_dir)
+            files = [str(file_) for file_ in path.rglob("*")]
+            include_files.extend(files)
+
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
@@ -2256,3 +2271,189 @@ def make_dirs(path):
     except OSError:
         if not os.path.isdir(path):
             raise
+
+
+@app.task(name="OGC Processes", bind=True, base=ExportTask, abort_on_error=True)
+def ogc_process_export_task(
+    self,
+    result=None,
+    layer=None,
+    config=None,
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    bbox=None,
+    service_url=None,
+    name=None,
+    service_type=None,
+    user_details=None,
+    projection=4326,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining OGC API Processes export.
+    """
+
+    result = result or {}
+    export_task_record = get_export_task_record(task_uid)
+    provider_slug = export_task_record.export_provider_task.provider.slug
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+    download_path = get_export_filepath(stage_dir, job_name, projection, provider_slug, "zip")
+    configuration = load_provider_config(config)
+
+    service_url = service_url.rstrip("/\\")
+    service_url = service_url.rstrip("processes")
+    service_url += "/"
+
+    payload = get_ogc_process_payload(
+        process_id=configuration.get("process"),
+        product=configuration.get("product"),
+        bbox=bbox,
+        file_format=configuration.get("file_format"),
+        archive_format=configuration.get("archive_format"),
+    )
+    jobs_endpoint = urljoin(service_url, "jobs/")
+
+    # TODO: auth stuff here
+
+    # create new OGC job
+    try:
+        response = auth_requests.post(jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),)
+        response.raise_for_status()
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Unsuccessful request:{e}")
+
+    response_content = response.json()
+    job_id = response_content.get("jobID")
+    if not job_id:
+        raise Exception("Invalid response from OGC API server")
+
+    job_url = urljoin(jobs_endpoint, f"{job_id}/")
+    job_status = None
+
+    # poll job status
+    while job_status not in ["successful", "failed", "dismissed"]:
+        time.sleep(7)
+        try:
+            response = auth_requests.get(job_url, verify=getattr(settings, "SSL_VERIFICATION", True),)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Unsuccessful request:{e}")
+
+        response_content = response.json()
+        job_status = response_content.get("status")
+        if not job_status:
+            raise Exception("Invalid response from OGC API server")
+
+        update_progress(
+            export_task_record.uid, progress=response_content.get("progress", 42), msg=response_content.get("message")
+        )
+
+    if "successful" not in job_status:
+        raise Exception(f"Unsuccessful OGC export. {job_status}: {response_content.get('message')}")
+
+    # fetch job results
+    try:
+        response = auth_requests.get(urljoin(job_url, "results/"), verify=getattr(settings, "SSL_VERIFICATION", True),)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Unsuccessful request:{e}")
+
+    response_content = response.json()
+    download_url = response_content.get("archive_format", dict()).get("href")
+
+    if not download_url:
+        raise Exception("Invalid response from OGC API server")
+
+    source_config = configuration.get("source_config", dict())
+    session = EventKitClient(
+        source_config.get("url"),
+        username=os.getenv(source_config.get("user_var")),
+        password=os.getenv(source_config.get("pass_var")),
+    )
+
+    download_path = download_data(task_uid, download_url, download_path, session=session.client,)
+
+    temp_dir = Path(f"{stage_dir}/temp/")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    source_data = find_in_zip(download_path, configuration.get("file_format"), temp_dir)
+
+    extract_metadata_files(download_path, [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"], stage_dir)
+
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=source_data,
+        output_file=gpkg,
+        task_uid=task_uid,
+        projection=projection,
+        boundary=bbox,
+    )
+
+    # temp_dir.rmdir()
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    result["gpkg"] = out
+
+    return result
+
+
+def find_in_zip(
+    zip_filepath: str, extension: str, stage_dir: str, archive_extension: str = "zip", matched_files: list = list()
+):
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+    extension = extension.lower()
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        # skip hidden files
+        if file_path.name.startswith("."):
+            continue
+
+        if extension in file_path.suffix.lower() and file_path not in matched_files:
+            matched_files.append(f"/vsizip/{zip_filepath}/{filepath}")
+
+        if archive_extension in file_path.suffix:
+            nested = Path(f"{stage_dir}/{filepath}")
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            with open(nested, "wb") as f:
+                f.write(zip_file.read(filepath))
+
+            matched_files.extend(find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files))
+
+    return matched_files
+
+
+def extract_metadata_files(zip_filepath: str, extensions: list, destination: str):
+
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+
+    metadata_dir = Path(f"{destination}/metadata/")
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        if file_path.suffix in extensions:
+            zip_file.extract(filepath, path=metadata_dir)
+
+    return str(metadata_dir)
+
+
+def get_ogc_process_payload(process_id, product, bbox, file_format="gpkg", archive_format="application/zip"):
+    payload = {
+        "id": process_id,
+        "inputs": {"product": {"value": product}, "file_format": {"value": file_format}, "bbox": {"bbox": bbox}},
+        "outputs": {"archive_format": {"format": {"mediaType": archive_format}, "transmissionMode": "reference"}},
+        "mode": "auto",
+        "response": "document",
+    }
+
+    return payload
