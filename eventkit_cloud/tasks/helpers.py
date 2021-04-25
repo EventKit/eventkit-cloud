@@ -521,7 +521,6 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "name": data_provider_task_record.name,
             "files": [],
             "type": get_data_type_from_provider(data_provider_task_record.provider),
-            "data_type": provider_type,
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),

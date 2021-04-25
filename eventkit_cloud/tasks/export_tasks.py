@@ -2379,9 +2379,9 @@ def ogc_process_export_task(
 
     temp_dir = Path(f"{stage_dir}/temp/")
     temp_dir.mkdir(parents=True, exist_ok=True)
-    source_data = find_in_zip(download_path, configuration.get("file_format"), temp_dir)
+    source_data = find_in_zip(download_path, configuration.get("file_format"), str(temp_dir))
 
-    extract_metadata_files(download_path, [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"], stage_dir)
+    extract_metadata_files(download_path, stage_dir)
 
     out = gdalutils.convert(
         driver="gpkg",
@@ -2430,7 +2430,9 @@ def find_in_zip(
     return matched_files
 
 
-def extract_metadata_files(zip_filepath: str, extensions: list, destination: str):
+def extract_metadata_files(
+    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
+):
 
     zip_file = ZipFile(zip_filepath)
     files_in_zip = zip_file.namelist()
