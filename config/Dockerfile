@@ -32,7 +32,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_
     conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
     \
     # Create the environment
-    conda env create --file environment-dev.yml python=3.7 && \
+    conda env create -vvv --file environment-dev.yml python=3.7 && \
     SECRET_KEY=temp_secret_key /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
     \
