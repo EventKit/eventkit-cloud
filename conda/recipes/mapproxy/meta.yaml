@@ -27,7 +27,7 @@ requirements:
     - python=3.7
     - pyyaml
     - proj=7.1.1
-    - gdal=3.1.4
+    - gdal=3.2.2
     - geos
     - shapely
 

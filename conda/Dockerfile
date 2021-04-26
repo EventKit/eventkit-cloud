@@ -5,7 +5,9 @@ WORKDIR /root
 ENV PATH="/root/miniconda3/bin:$PATH"
 
 # Install libgl here so that we can copy it in the eventkit conda build script.
-RUN apt-get update && apt-get install -y libgl1-mesa-glx
+RUN apt-get update && apt-get install -y libgl1-mesa-glx gcc-5 g++-5
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 5
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 5
 
 RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p $HOME/miniconda3 && \

@@ -14,5 +14,7 @@ services:
       - ./recipes.txt:/root/recipes.txt
       - ../:/eventkit-cloud
     environment:
+      MRSID_RASTER: ../eventkit-cloud/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531/Raster_DSDK
+      MRSID_LIDAR: ../eventkit-cloud/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531/Lidar_DSDK
       version:
       branch:
