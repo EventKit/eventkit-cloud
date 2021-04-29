@@ -25,6 +25,8 @@ from operator import itemgetter
 from typing import List, Optional, ValuesView
 from xml.dom import minidom
 from concurrent import futures
+from pathlib import Path
+from zipfile import ZipFile
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
@@ -996,6 +998,13 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, 
         else:
             raise Exception("Request failed to return any data.")
 
+    try:
+        content_type = response.headers.get("content-type")
+        if Path(out_file).suffix.replace(".", "") not in content_type:
+            raise Exception("The returned data is not in the expected format.")
+    except Exception:
+        logger.error("Unable to verify data type.")
+
     written_size = 0
     update_interval = total_size / 100
     cache.set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
@@ -1035,3 +1044,69 @@ def get_task_progress_cache_key(task_uid: str):
 
 def get_last_update_cache_key(task_uid: str):
     return f"{task_uid}_mb_since_update"
+
+
+def find_in_zip(
+    zip_filepath: str, extension: str, stage_dir: str, archive_extension: str = "zip", matched_files: list = list()
+):
+    """
+    Function finds files within archives and returns their vsi path.
+    """
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+    extension = extension.lower()
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        if extension in file_path.suffix.lower() and file_path not in matched_files:
+            return f"/vsizip/{zip_filepath}/{filepath}"
+
+        if archive_extension in file_path.suffix:
+            nested = Path(f"{stage_dir}/{filepath}")
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            with open(nested, "wb") as f:
+                f.write(zip_file.read(filepath))
+
+            return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
+
+
+def extract_metadata_files(
+    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
+):
+    """
+    Function extract metadata files from archives.
+    The function will look for any files that match the extensions that were provided,
+    and will extract those files into a metadata directory.
+    """
+
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+
+    metadata_dir = Path(f"{destination}/metadata/")
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        if file_path.suffix in extensions:
+            zip_file.extract(filepath, path=metadata_dir)
+
+    return str(metadata_dir)
+
+
+def get_ogc_process_payload(
+    process_id: str, product: str, bbox, file_format: str = "gpkg", archive_format: str = "application/zip"
+):
+    """
+    Function used to generate the request body of a post request to the OGC /jobs endpoint.
+    """
+    payload = {
+        "id": process_id,
+        "inputs": {"product": {"value": product}, "file_format": {"value": file_format}, "bbox": {"bbox": bbox}},
+        "outputs": {"archive_format": {"format": {"mediaType": archive_format}, "transmissionMode": "reference"}},
+        "mode": "auto",
+        "response": "document",
+    }
+
+    return payload

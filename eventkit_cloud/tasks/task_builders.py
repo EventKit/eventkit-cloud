@@ -47,6 +47,7 @@ class TaskChainBuilder(object):
         stage_dir=None,
         worker=None,
         service_type=None,
+        session_token=None,
         *args,
         **kwargs,
     ):
@@ -229,6 +230,7 @@ class TaskChainBuilder(object):
             service_type=service_type,
             service_url=data_provider.url,
             config=data_provider.config,
+            session_token=session_token,
         )
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name

@@ -29,6 +29,7 @@ from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
 
+from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.celery import app, TaskPriority
 
 from eventkit_cloud.core.helpers import (
@@ -42,7 +43,7 @@ from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import set_cache_value
-from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.enumerations import TaskState, OGC_Status
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     Directory,
@@ -71,6 +72,9 @@ from eventkit_cloud.tasks.helpers import (
     download_data,
     download_concurrently,
     merge_chunks,
+    find_in_zip,
+    extract_metadata_files,
+    get_ogc_process_payload,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1588,6 +1592,7 @@ def pick_up_run_task(
     user_details=None,
     data_provider_slugs=None,
     run_zip_file_slug_sets=None,
+    session_token=None,
     *args,
     **kwargs,
 ):
@@ -1611,6 +1616,7 @@ def pick_up_run_task(
             user_details=user_details,
             data_provider_slugs=data_provider_slugs,
             run_zip_file_slug_sets=run_zip_file_slug_sets,
+            session_token=session_token,
         )
     except Exception as e:
         run.status = TaskState.FAILED.value
@@ -2289,6 +2295,7 @@ def ogc_process_export_task(
     service_type=None,
     user_details=None,
     projection=4326,
+    session_token=None,
     *args,
     **kwargs,
 ):
@@ -2300,11 +2307,10 @@ def ogc_process_export_task(
     export_task_record = get_export_task_record(task_uid)
     provider_slug = export_task_record.export_provider_task.provider.slug
     gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
-    download_path = get_export_filepath(stage_dir, job_name, projection, provider_slug, "zip")
+    download_path = get_export_filepath(stage_dir, f"{job_name}-source_zip", projection, provider_slug, "zip")
     configuration = load_provider_config(config)
 
     service_url = service_url.rstrip("/\\")
-    service_url = service_url.rstrip("processes")
     service_url += "/"
 
     payload = get_ogc_process_payload(
@@ -2316,11 +2322,15 @@ def ogc_process_export_task(
     )
     jobs_endpoint = urljoin(service_url, "jobs/")
 
-    # TODO: auth stuff here
+    valid_token = has_valid_access_token(session_token)
+    if not valid_token:
+        raise Exception("Invalid access token.")
+    auth_session = auth_requests.AuthSession().session
+    auth_session.headers.update({"Authorization": f"Bearer: {session_token}"})
 
     # create new OGC job
     try:
-        response = auth_requests.post(jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),)
+        response = auth_session.post(jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
@@ -2335,10 +2345,10 @@ def ogc_process_export_task(
     job_status = None
 
     # poll job status
-    while job_status not in ["successful", "failed", "dismissed"]:
-        time.sleep(7)
+    while job_status not in OGC_Status.get_finished_status():
+        time.sleep(5)
         try:
-            response = auth_requests.get(job_url, verify=getattr(settings, "SSL_VERIFICATION", True),)
+            response = auth_session.get(job_url, verify=getattr(settings, "SSL_VERIFICATION", True),)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Unsuccessful request:{e}")
@@ -2348,16 +2358,14 @@ def ogc_process_export_task(
         if not job_status:
             raise Exception("Invalid response from OGC API server")
 
-        update_progress(
-            export_task_record.uid, progress=response_content.get("progress", 42), msg=response_content.get("message")
-        )
-
-    if "successful" not in job_status:
+    if OGC_Status.SUCCESSFUL.value not in job_status:
         raise Exception(f"Unsuccessful OGC export. {job_status}: {response_content.get('message')}")
+
+    update_progress(export_task_record.uid, progress=50)
 
     # fetch job results
     try:
-        response = auth_requests.get(urljoin(job_url, "results/"), verify=getattr(settings, "SSL_VERIFICATION", True),)
+        response = auth_session.get(urljoin(job_url, "results/"), verify=getattr(settings, "SSL_VERIFICATION", True),)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
@@ -2369,18 +2377,23 @@ def ogc_process_export_task(
         raise Exception("Invalid response from OGC API server")
 
     source_config = configuration.get("source_config", dict())
-    session = EventKitClient(
-        source_config.get("url"),
-        username=os.getenv(source_config.get("user_var")),
-        password=os.getenv(source_config.get("pass_var")),
-    )
+    source_url = source_config.get("url")
 
-    download_path = download_data(task_uid, download_url, download_path, session=session.client,)
+    if source_url and getattr(settings, "SITE_NAME", os.getenv("SITE_NAME")) in source_url:
+        session = EventKitClient(
+            source_url,
+            username=os.getenv(source_config.get("user_var")),
+            password=os.getenv(source_config.get("pass_var")),
+        )
+        session = session.client
+        cert_info = None
+    else:
+        session = requests.Session()
+        cert_info = source_config.get("cert_info")
 
-    temp_dir = Path(f"{stage_dir}/temp/")
-    temp_dir.mkdir(parents=True, exist_ok=True)
-    source_data = find_in_zip(download_path, configuration.get("file_format"), str(temp_dir))
+    download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
 
+    source_data = find_in_zip(download_path, configuration.get("file_format"), stage_dir)
     extract_metadata_files(download_path, stage_dir)
 
     out = gdalutils.convert(
@@ -2392,7 +2405,7 @@ def ogc_process_export_task(
         boundary=bbox,
     )
 
-    # temp_dir.rmdir()
+    update_progress(export_task_record.uid, progress=90)
 
     result["driver"] = "gpkg"
     result["result"] = out
@@ -2400,62 +2413,3 @@ def ogc_process_export_task(
     result["gpkg"] = out
 
     return result
-
-
-def find_in_zip(
-    zip_filepath: str, extension: str, stage_dir: str, archive_extension: str = "zip", matched_files: list = list()
-):
-    zip_file = ZipFile(zip_filepath)
-    files_in_zip = zip_file.namelist()
-    extension = extension.lower()
-
-    for filepath in files_in_zip:
-        file_path = Path(filepath)
-
-        # skip hidden files
-        if file_path.name.startswith("."):
-            continue
-
-        if extension in file_path.suffix.lower() and file_path not in matched_files:
-            matched_files.append(f"/vsizip/{zip_filepath}/{filepath}")
-
-        if archive_extension in file_path.suffix:
-            nested = Path(f"{stage_dir}/{filepath}")
-            nested.parent.mkdir(parents=True, exist_ok=True)
-            with open(nested, "wb") as f:
-                f.write(zip_file.read(filepath))
-
-            matched_files.extend(find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files))
-
-    return matched_files
-
-
-def extract_metadata_files(
-    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
-):
-
-    zip_file = ZipFile(zip_filepath)
-    files_in_zip = zip_file.namelist()
-
-    metadata_dir = Path(f"{destination}/metadata/")
-    metadata_dir.mkdir(parents=True, exist_ok=True)
-
-    for filepath in files_in_zip:
-        file_path = Path(filepath)
-
-        if file_path.suffix in extensions:
-            zip_file.extract(filepath, path=metadata_dir)
-
-    return str(metadata_dir)
-
-
-def get_ogc_process_payload(process_id, product, bbox, file_format="gpkg", archive_format="application/zip"):
-    payload = {
-        "id": process_id,
-        "inputs": {"product": {"value": product}, "file_format": {"value": file_format}, "bbox": {"bbox": bbox}},
-        "outputs": {"archive_format": {"format": {"mediaType": archive_format}, "transmissionMode": "reference"}},
-        "mode": "auto",
-        "response": "document",
-    }
-
-    return payload

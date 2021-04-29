@@ -1208,6 +1208,7 @@ class TestExportTasks(ExportTaskBase):
             worker="test",
             data_provider_slugs=None,
             run_zip_file_slug_sets=None,
+            session_token=None,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.logger")
@@ -1805,27 +1806,26 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.extract_metadata_files")
     @patch("eventkit_cloud.tasks.export_tasks.find_in_zip")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.EventKitClient")
+    @patch("eventkit_cloud.tasks.export_tasks.requests.Session")
     @patch("time.sleep", return_value=None)
     @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.get_ogc_process_payload")
-    @patch("eventkit_cloud.tasks.export_tasks.auth_requests")
+    @patch("eventkit_cloud.tasks.export_tasks.auth_requests.AuthSession")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_ogc_process_export_task(
         self,
         mock_request,
         mock_convert,
-        mock_auth_requests,
+        mock_AuthSession,
         mock_get_payload,
         mock_update_progress,
         patch_time,
-        mock_client,
+        mock_session,
         mock_download_data,
         mock_find_in_zip,
         mock_extract_metadata_files,
     ):
-
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -1838,22 +1838,23 @@ class TestExportTasks(ExportTaskBase):
         self.provider.save()
         date = default_format_time(timezone.now())
         expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
-        expected_outzip = f"{job_name}-{projection}-{expected_provider_slug}-{date}.zip"
+        expected_outzip = f"{job_name}-source_zip-{projection}-{expected_provider_slug}-{date}.zip"
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         expected_outzip_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outzip
         )
-
+        source_file = "foo.gpkg"
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, status=TaskState.PENDING.value, provider=self.provider
         )
         saved_export_task = ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=raster_file_export_task.name
+            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=ogc_process_export_task.name
         )
-        raster_file_export_task.update_task_state(
+        task_uid = str(saved_export_task.uid)
+        ogc_process_export_task.update_task_state(
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
 
@@ -1871,19 +1872,23 @@ class TestExportTasks(ExportTaskBase):
         download_url = "http://source-service.net/downloads/foo"
 
         mock_convert.return_value = expected_output_path
+        auth_requests = mock_AuthSession().session
 
-        mock_get_response = Mock()
-        mock_get_response_b = Mock()
-        mock_get_response_c = Mock()
-        mock_auth_requests.get.return_value = mock_get_response
-        mock_get_response.json.return_value = mock_get_response_b
-        mock_get_response_b.get.side_effect = ["successful", "successful", "successful", mock_get_response_c]
-        mock_get_response_c.get.return_value = download_url
+        mock_GET_response = Mock()
+        mock_GET_response_b = Mock()
+        mock_GET_response_c = Mock()
+        auth_requests.get.return_value = mock_GET_response
+        mock_GET_response.json.return_value = mock_GET_response_b
+        mock_GET_response_c.get.return_value = download_url
+        mock_GET_response_b.get.side_effect = ["successful", mock_GET_response_c]
+
+        mock_find_in_zip.return_value = source_file
+
         mock_download_data.return_value = expected_outzip_path
         ogc_process_export_task.run(
             run_uid=self.run.uid,
             result=None,
-            task_uid=str(saved_export_task.uid),
+            task_uid=task_uid,
             stage_dir=stage_dir,
             job_name=job_name,
             projection=projection,
@@ -1893,8 +1898,8 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        mock_update_progress.assert_called_once()
-        mock_client.assert_called_once()
+        self.assertEqual(len(mock_update_progress.mock_calls), 2)
+        auth_requests.post.assert_called_once()
 
         mock_get_payload.assert_called_once_with(
             process_id=configuration.get("process"),
@@ -1905,13 +1910,18 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_download_data.assert_called_once_with(
-            str(saved_export_task.uid), download_url, expected_outzip_path, session=mock_client().client
+            task_uid, download_url, expected_outzip_path, session=mock_session(), cert_info=None
         )
-        mock_find_in_zip.assert_called_once_with(
-            expected_outzip_path, configuration.get("file_format"), f"{stage_dir}temp"
-        )
+        mock_find_in_zip.assert_called_once_with(expected_outzip_path, configuration.get("file_format"), stage_dir)
         mock_extract_metadata_files.assert_called_once_with(expected_outzip_path, stage_dir)
-        mock_convert.assert_called_once()
+        mock_convert.assert_called_once_with(
+            driver="gpkg",
+            input_file=source_file,
+            output_file=expected_output_path,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=bbox,
+        )
 
 
 class TestFormatTasks(ExportTaskBase):

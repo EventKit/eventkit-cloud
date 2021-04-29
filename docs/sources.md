@@ -247,3 +247,36 @@ To set up a vector or raster file provider:
 1) `Service URL` must be a URL to a geospatial file.
 2) `Service Type` must be set to match the type of geospatial file. The two available options are `raster-file` and `vector-file`.
 3) `Data Type` must also match the type of data being provided.
+
+##### OGC Process Configuration
+
+An OGC API process provider can be configured through the use of YAML syntax. 
+Below is a sample configuration.
+
+```yaml
+process: gpm-process
+product: elevation
+file_format: "gpkg" 
+archive_format: "application/zip"
+source_config:
+  cert_info:
+    cert_path: path/to/cert.p12
+    cert_pass_var: CERT_PASS
+```
+
+Alternative configuration.
+
+```yaml
+process: eventkit-process
+product: hydro
+file_format: "gpkg" 
+archive_format: "application/zip"
+source_config:
+  url: http://evenkit.com
+  user_var: SOURCE_USER
+  pass_var: SOURCE_PASS
+```
+
+The *source* in `source_config` refers to the provider the bundler will fetch data from.
+
+`GPKG` and `zip` are the only file and archive formats currently supported by the EventKit OGC provider.
