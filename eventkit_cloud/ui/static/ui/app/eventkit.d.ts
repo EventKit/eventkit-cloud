@@ -159,6 +159,7 @@ declare namespace Eventkit {
         layer: string;
         max_data_size: string;
         max_selection: string;
+        use_bbox: boolean;
         level_from: number;
         level_to: number;
         zip: boolean;

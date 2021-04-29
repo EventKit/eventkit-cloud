@@ -171,6 +171,7 @@ class DataProviderType(TimeStampedModelMixin):
     id = models.AutoField(primary_key=True, editable=False)
     type_name = models.CharField(verbose_name="Type Name", max_length=40, unique=True, default="")
     supported_formats = models.ManyToManyField(ExportFormat, verbose_name="Supported Export Formats", blank=True)
+    use_bbox = models.BooleanField(verbose_name="Use bounding box to calculate area", default=False)
 
     def __str__(self):
         return "{0}".format(self.type_name)

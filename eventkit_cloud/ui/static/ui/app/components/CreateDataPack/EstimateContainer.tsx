@@ -14,6 +14,7 @@ export interface ProviderLimits {
     slug: string;
     maxDataSize: number;
     maxArea: number;
+    useBbox: boolean;
 }
 
 export interface Props {
@@ -216,6 +217,7 @@ function EstimateContainer(props: Props) {
                     slug: provider.slug,
                     maxDataSize: getValue(provider.max_data_size),
                     maxArea: getValue(provider.max_selection),
+                    useBbox: provider.use_bbox,
                 } as ProviderLimits)
             });
             limits.sort((a, b) => b.maxArea - a.maxArea);
@@ -231,6 +233,7 @@ function EstimateContainer(props: Props) {
     }, props.exportInfo.providers, [props.exportInfo.providerInfo]);
 
     const [ aoiArea, setArea ] = useState(0);
+    const [ aoiBboxArea, setBboxArea ] = useState(0);
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
             props.updateExportInfo({ providerInfo: {} });
@@ -240,8 +243,10 @@ function EstimateContainer(props: Props) {
         setHasArea(hasArea);
         if (hasArea) {
             setArea(getSqKm(props.aoiInfo.geojson));
+            setBboxArea(getSqKm(props.aoiInfo.geojson, true));
         } else {
             setArea(0);
+            setBboxArea(0);
         }
     }, [aoiInfo.geojson, props.providers]);
 
@@ -294,6 +299,7 @@ function EstimateContainer(props: Props) {
             providerLimits,
             aoiHasArea,
             aoiArea,
+            aoiBboxArea,
             dataSizeInfo,
             areEstimatesLoading,
         }}>

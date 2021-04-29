@@ -40,6 +40,7 @@ from eventkit_cloud.jobs.models import (
     UserLicense,
     UserJobActivity,
     JobPermission,
+    DataProviderType,
 )
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
@@ -963,6 +964,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     footprint_url = serializers.SerializerMethodField(read_only=True)
     max_data_size = serializers.SerializerMethodField(read_only=True)
     max_selection = serializers.SerializerMethodField(read_only=True)
+    use_bbox = serializers.SerializerMethodField(read_only=True)
     hidden = serializers.ReadOnlyField(default=False)
     data_type = serializers.ReadOnlyField(default=False)
 
@@ -1039,6 +1041,9 @@ class DataProviderSerializer(serializers.ModelSerializer):
         if request and hasattr(request, "user"):
             user = request.user
         return obj.get_max_selection_size(user)
+
+    def get_use_bbox(self, obj):
+        return obj.export_provider_type.use_bbox
 
 
 class ListJobSerializer(serializers.Serializer):
