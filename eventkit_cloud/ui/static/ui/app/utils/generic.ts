@@ -1,6 +1,7 @@
 import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/GeoJSON';
+import Polygon from 'ol/geom/Polygon';
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
@@ -87,7 +88,13 @@ export function getFeaturesFromGeojson(json) {
     return [];
 }
 
-export function getSqKm(geojson) {
+// convert an extent (bbox) to an openlayers polygon
+export function extentToPoly(minx, miny, maxx, maxy) {
+    let polyCoordRing = [[[minx, maxy], [maxx,maxy], [maxx,miny], [minx,miny], [minx,maxy]]];
+    return new Polygon(polyCoordRing);
+}
+
+export function getSqKm(geojson, useExtent = false) {
     let area = 0;
     const features = getFeaturesFromGeojson(geojson);
     if (!features.length) {
@@ -96,7 +103,12 @@ export function getSqKm(geojson) {
 
     features.forEach((feature) => {
         try {
-            area += feature.getGeometry().transform('EPSG:4326', 'EPSG:3857').getArea() / 1000000;
+            let geo = feature.getGeometry();
+            if (useExtent) {
+                let [minx, miny, maxx, maxy] = geo.getExtent();
+                geo = extentToPoly(minx, miny, maxx, maxy);
+            }
+            area += geo.transform('EPSG:4326', 'EPSG:3857').getArea() / 1000000;
         } catch (e) {
             area += 0;
         }
