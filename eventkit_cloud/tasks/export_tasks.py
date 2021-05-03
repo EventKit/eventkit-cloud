@@ -29,7 +29,6 @@ from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
 
-from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.celery import app, TaskPriority
 
 from eventkit_cloud.core.helpers import (
@@ -43,7 +42,7 @@ from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import set_cache_value
-from eventkit_cloud.tasks.enumerations import TaskState, OGC_Status
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     Directory,
@@ -74,7 +73,6 @@ from eventkit_cloud.tasks.helpers import (
     merge_chunks,
     find_in_zip,
     extract_metadata_files,
-    get_ogc_process_payload,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -88,6 +86,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
@@ -2280,7 +2279,7 @@ def make_dirs(path):
 
 
 @app.task(name="OGC Processes", bind=True, base=ExportTask, abort_on_error=True)
-def ogc_process_export_task(
+def ogcapi_process_export_task(
     self,
     result=None,
     layer=None,
@@ -2310,90 +2309,35 @@ def ogc_process_export_task(
     download_path = get_export_filepath(stage_dir, f"{job_name}-source_zip", projection, provider_slug, "zip")
     configuration = load_provider_config(config)
 
-    service_url = service_url.rstrip("/\\")
-    service_url += "/"
-
-    payload = get_ogc_process_payload(
-        process_id=configuration.get("process"),
-        product=configuration.get("product"),
-        bbox=bbox,
-        file_format=configuration.get("file_format"),
-        archive_format=configuration.get("archive_format"),
-    )
-    jobs_endpoint = urljoin(service_url, "jobs/")
-
-    valid_token = has_valid_access_token(session_token)
-    if not valid_token:
-        raise Exception("Invalid access token.")
-    auth_session = auth_requests.AuthSession().session
-    auth_session.headers.update({"Authorization": f"Bearer: {session_token}"})
-
-    # create new OGC job
     try:
-        response = auth_session.post(jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),)
-        response.raise_for_status()
-
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
-
-    response_content = response.json()
-    job_id = response_content.get("jobID")
-    if not job_id:
-        raise Exception("Invalid response from OGC API server")
-
-    job_url = urljoin(jobs_endpoint, f"{job_id}/")
-    job_status = None
-
-    # poll job status
-    while job_status not in OGC_Status.get_finished_status():
-        time.sleep(5)
-        try:
-            response = auth_session.get(job_url, verify=getattr(settings, "SSL_VERIFICATION", True),)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Unsuccessful request:{e}")
-
-        response_content = response.json()
-        job_status = response_content.get("status")
-        if not job_status:
+        ogc_process = OgcApiProcess(service_url, configuration, session_token, export_task_record.uid)
+        ogc_process.create_job(bbox=bbox)
+        download_url = ogc_process.get_job_results()
+        if not download_url:
             raise Exception("Invalid response from OGC API server")
+    except Exception as e:
+        raise Exception(f"Error creating OGC API Process job:{e}")
 
-    if OGC_Status.SUCCESSFUL.value not in job_status:
-        raise Exception(f"Unsuccessful OGC export. {job_status}: {response_content.get('message')}")
+    update_progress(export_task_record.uid, progress=50, subtask_percentage=50)
 
-    update_progress(export_task_record.uid, progress=50)
+    ogc_config = configuration.get("ogcapi_process", dict())
+    download_credentials = ogc_config.get("download_credentials", dict())
 
-    # fetch job results
-    try:
-        response = auth_session.get(urljoin(job_url, "results/"), verify=getattr(settings, "SSL_VERIFICATION", True),)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
-
-    response_content = response.json()
-    download_url = response_content.get("archive_format", dict()).get("href")
-
-    if not download_url:
-        raise Exception("Invalid response from OGC API server")
-
-    source_config = configuration.get("source_config", dict())
-    source_url = source_config.get("url")
-
-    if source_url and getattr(settings, "SITE_NAME", os.getenv("SITE_NAME")) in source_url:
+    if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
         session = EventKitClient(
-            source_url,
-            username=os.getenv(source_config.get("user_var")),
-            password=os.getenv(source_config.get("pass_var")),
+            getattr(settings, "SITE_URL"),
+            username=os.getenv(download_credentials.get("user_var")),
+            password=os.getenv(download_credentials.get("pass_var")),
         )
         session = session.client
         cert_info = None
     else:
         session = requests.Session()
-        cert_info = source_config.get("cert_info")
+        cert_info = download_credentials.get("cert_info")
 
     download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
 
-    source_data = find_in_zip(download_path, configuration.get("file_format"), stage_dir)
+    source_data = find_in_zip(download_path, ogc_config.get("inputs", dict()).get("file_format"), stage_dir)
     extract_metadata_files(download_path, stage_dir)
 
     out = gdalutils.convert(
@@ -2405,7 +2349,7 @@ def ogc_process_export_task(
         boundary=bbox,
     )
 
-    update_progress(export_task_record.uid, progress=90)
+    update_progress(export_task_record.uid, progress=90, subtask_percentage=90)
 
     result["driver"] = "gpkg"
     result["result"] = out

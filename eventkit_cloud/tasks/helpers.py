@@ -1093,20 +1093,3 @@ def extract_metadata_files(
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
-
-
-def get_ogc_process_payload(
-    process_id: str, product: str, bbox, file_format: str = "gpkg", archive_format: str = "application/zip"
-):
-    """
-    Function used to generate the request body of a post request to the OGC /jobs endpoint.
-    """
-    payload = {
-        "id": process_id,
-        "inputs": {"product": {"value": product}, "file_format": {"value": file_format}, "bbox": {"bbox": bbox}},
-        "outputs": {"archive_format": {"format": {"mediaType": archive_format}, "transmissionMode": "reference"}},
-        "mode": "auto",
-        "response": "document",
-    }
-
-    return payload

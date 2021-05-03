@@ -254,27 +254,32 @@ An OGC API process provider can be configured through the use of YAML syntax.
 Below is a sample configuration.
 
 ```yaml
-process: gpm-process
-product: elevation
-file_format: "gpkg" 
-archive_format: "application/zip"
-source_config:
-  cert_info:
-    cert_path: path/to/cert.p12
-    cert_pass_var: CERT_PASS
+ogcapi_process:
+  process: some-ogc-process
+  inputs: 
+    product: elevation
+    file_format: gpkg
+  outputs:
+    archive_format: "application/zip"
+  download_credentials:
+    cert_info:
+      cert_path: path/to/cert.p12
+      cert_pass_var: CERT_PASS
 ```
 
 Alternative configuration.
 
 ```yaml
-process: eventkit-process
-product: hydro
-file_format: "gpkg" 
-archive_format: "application/zip"
-source_config:
-  url: http://evenkit.com
-  user_var: SOURCE_USER
-  pass_var: SOURCE_PASS
+ogcapi_process:
+  process: another-ogc-process
+  inputs: 
+    product: hydro
+    file_format: gpkg
+  outputs:
+    archive_format: "application/zip"
+  download_credentials:
+    user_var: SOURCE_USER
+    pass_var: SOURCE_PASS
 ```
 
 The *source* in `source_config` refers to the provider the bundler will fetch data from.

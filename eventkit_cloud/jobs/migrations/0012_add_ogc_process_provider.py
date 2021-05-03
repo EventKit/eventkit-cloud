@@ -9,18 +9,24 @@ class Migration(migrations.Migration):
         ExportFormat = apps.get_model('jobs', 'ExportFormat')
 
         # Create the DataProvider objects if they don't exist.
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogc-process')
+        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process')
 
         # Currently available Export Formats.
         gpkg = ExportFormat.objects.get(slug='gpkg')
 
         # Set the known supported export formats per provider type.
         ogc_provider.supported_formats.add(gpkg)
+    
+    def remove_ogc_process_provider(apps, schema_editor):
+        DataProviderType = apps.get_model('jobs', 'DataProviderType')
+
+        # Create the DataProvider objects if they don't exist.
+        DataProviderType.objects.filter(type_name='ogcapi-process').delete()
 
     dependencies = [
         ('jobs', '0011_add_file_data_providers'),
     ]
 
     operations = [
-        migrations.RunPython(add_ogc_process_provider)
+        migrations.RunPython(add_ogc_process_provider, remove_ogc_process_provider)
     ]

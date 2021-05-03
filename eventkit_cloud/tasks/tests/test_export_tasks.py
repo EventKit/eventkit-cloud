@@ -49,7 +49,7 @@ from eventkit_cloud.tasks.export_tasks import (
     raster_file_export_task,
     osm_data_collection_pipeline,
     reprojection_task,
-    ogc_process_export_task,
+    ogcapi_process_export_task,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -1813,7 +1813,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.auth_requests.AuthSession")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_ogc_process_export_task(
+    def test_ogcapi_process_export_task(
         self,
         mock_request,
         mock_convert,
@@ -1832,7 +1832,7 @@ class TestExportTasks(ExportTaskBase):
         projection = 4326
         bbox = [1, 2, 3, 4]
         expected_provider_slug = "ogc_api_proc"
-        self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogc-process")
+        self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
         self.provider.slug = expected_provider_slug
         self.provider.config = None
         self.provider.save()
@@ -1851,10 +1851,12 @@ class TestExportTasks(ExportTaskBase):
             run=self.run, status=TaskState.PENDING.value, provider=self.provider
         )
         saved_export_task = ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=ogc_process_export_task.name
+            export_provider_task=export_provider_task,
+            status=TaskState.PENDING.value,
+            name=ogcapi_process_export_task.name,
         )
         task_uid = str(saved_export_task.uid)
-        ogc_process_export_task.update_task_state(
+        ogcapi_process_export_task.update_task_state(
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
 
@@ -1885,7 +1887,7 @@ class TestExportTasks(ExportTaskBase):
         mock_find_in_zip.return_value = source_file
 
         mock_download_data.return_value = expected_outzip_path
-        ogc_process_export_task.run(
+        ogcapi_process_export_task.run(
             run_uid=self.run.uid,
             result=None,
             task_uid=task_uid,

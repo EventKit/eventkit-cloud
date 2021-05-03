@@ -17,6 +17,7 @@ import yaml
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.jobs.models import DataProvider
+from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -788,9 +789,11 @@ class OGCProviderCheck(ProviderCheck):
                 return
 
             cert_info = self.config.get("cert_info")
+            service_url = self.service_url.rstrip("/\\")
+            processes_endpoint = urljoin(service_url, "processes/")
 
             response = auth_requests.get(
-                url=f"{self.service_url}/processes",
+                url=processes_endpoint,
                 cert_info=cert_info,
                 timeout=self.timeout,
                 verify=getattr(settings, "SSL_VERIFICATION", True),
@@ -843,7 +846,7 @@ PROVIDER_CHECK_MAP = {
     "tms": TMSProviderCheck,
     "vector-file": FileProviderCheck,
     "raster-file": FileProviderCheck,
-    "ogc-process": OGCProviderCheck,
+    "ogcapi-process": OGCProviderCheck,
 }
 
 
