@@ -2310,7 +2310,9 @@ def ogcapi_process_export_task(
     configuration = load_provider_config(config)
 
     try:
-        ogc_process = OgcApiProcess(service_url, configuration, session_token, export_task_record.uid)
+        ogc_process = OgcApiProcess(
+            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid
+        )
         ogc_process.create_job(bbox=bbox)
         download_url = ogc_process.get_job_results()
         if not download_url:
