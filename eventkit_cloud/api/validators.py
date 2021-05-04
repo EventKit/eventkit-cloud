@@ -310,6 +310,7 @@ def get_area_in_sqkm(geom4326):
     # Area divided by 1e6 (1,000,000) -- number of sq meters per sq km
     return geomIn3857.area / 1e6
 
+
 def get_bbox_area_in_sqkm(geom_4326):
     """
     Accepts a GEOSGeometry object created in 4326, and returns the area of its bounding box/extent in square km.
@@ -322,6 +323,7 @@ def get_bbox_area_in_sqkm(geom_4326):
     bbox_geom = GEOSGeometry(bbox_poly.wkt, srid=4326)
     # Use existing area function to get bbox area
     return get_area_in_sqkm(bbox_geom)
+
 
 def get_geodesic_area(geom):
     """
