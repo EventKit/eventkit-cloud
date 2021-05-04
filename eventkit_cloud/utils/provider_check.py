@@ -198,6 +198,7 @@ class ProviderCheck(object):
         Return True if the AOI selection's area is lower than the maximum for this provider, otherwise False.
         :return: True if AOI is lower than area limit
         """
+
         if self.aoi is None or int(self.max_area) <= 0:
             return True
 
@@ -206,7 +207,7 @@ class ProviderCheck(object):
 
         area_sq_km = area / 1000000
 
-        return area_sq_km
+        return area_sq_km < self.max_area
 
     def get_check_response(self):
         """
