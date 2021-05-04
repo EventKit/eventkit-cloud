@@ -19,6 +19,7 @@ from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.utils import timezone
 from enum import Enum
@@ -147,6 +148,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
     """
+    safe_kwargs = ["name", "slug", "description", "cmd",]
 
     name = models.CharField(max_length=100)
     slug = LowerCaseCharField(max_length=20, unique=True, default="")
@@ -161,6 +163,21 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
 
     def __str__(self):
         return "{0}".format(self.name)
+
+    @classmethod
+    def get_or_create(cls, **kwargs):
+        blacklisted_keys = []
+        for _key in kwargs:
+            if _key not in cls.safe_kwargs:
+                blacklisted_keys.append(_key)
+        for _key in blacklisted_keys:
+            del kwargs[_key]
+        try:
+            format = cls.objects.get(**kwargs)
+        except ObjectDoesNotExist:
+            format = cls.objects.create(**kwargs)
+        return format
+
 
 
 class DataProviderType(TimeStampedModelMixin):

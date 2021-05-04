@@ -53,17 +53,30 @@ from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
 from eventkit_cloud.tasks.enumerations import TaskState
+from django.core.exceptions import ObjectDoesNotExist
 
 from collections import OrderedDict
 
 # Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+from .helpers import get_process_formats
+
 
 logger = logging.getLogger(__name__)
 
 
+class CreatableFormatSlugRelatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        try:
+            return self.get_queryset().get(**{self.slug_field: data})
+        except ObjectDoesNotExist:
+            return data
+        except (TypeError, ValueError):
+            self.fail('invalid')
+
+
 class ProviderTaskSerializer(serializers.ModelSerializer):
-    formats = serializers.SlugRelatedField(
+    formats = CreatableFormatSlugRelatedField(
         many=True,
         queryset=ExportFormat.objects.all(),
         slug_field="slug",
@@ -75,16 +88,25 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         model = DataProviderTask
         fields = ("provider", "formats", "min_zoom", "max_zoom")
 
-    @staticmethod
-    def create(validated_data, **kwargs):
+    def create(self, validated_data):
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
+        logger.info(f"Formats: {formats}")
         provider_slug = validated_data.get("provider")
         try:
             provider_model = DataProvider.objects.get(slug=provider_slug)
         except DataProvider.DoesNotExist:
             raise Exception(f"The DataProvider for {provider_slug} does not exist.")
         provider_task = DataProviderTask.objects.create(provider=provider_model)
+
+        process_formats = get_process_formats(provider_model, self.context["request"])
+        process_formats = list(filter(lambda _format: _format.get("slug") in formats, process_formats))
+        for _format in process_formats:
+            format = ExportFormat.get_or_create(**_format)
+            format.save()
+        formats = [_format for _format in formats if not isinstance(_format, str)]
+        logger.info(f"Formats: {formats}")
+
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
         provider_task.max_zoom = validated_data.pop("max_zoom", None)
@@ -994,9 +1016,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_type(obj):
         return obj.export_provider_type.type_name
 
-    @staticmethod
-    def get_supported_formats(obj):
-        return obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description")
+    def get_supported_formats(self, obj):
+        process_formats = get_process_formats(obj, self.context["request"])
+        formats = list(obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description"))
+        formats.extend(process_formats)
+        return formats
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult

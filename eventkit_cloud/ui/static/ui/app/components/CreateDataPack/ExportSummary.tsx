@@ -8,7 +8,7 @@ import MapCard from '../common/MapCard';
 import CustomScrollbar from '../common/CustomScrollbar';
 import CustomTableRow from '../common/CustomTableRow';
 import {joyride} from '../../joyride.config';
-import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
+import {isZoomLevelInRange, shouldDisplay, supportsZoomLevels} from "../../utils/generic";
 import InfoDialog from "../Dialog/InfoDialog";
 import {Link} from "@material-ui/core";
 import EventkitJoyride from "../common/JoyrideWrapper";
@@ -275,19 +275,25 @@ export class ExportSummary extends React.Component<Props, State> {
         const dataStyle = {color: 'black'};
         const formatSet = {};
 
-        const providers = this.props.providers.filter(provider => (provider.display !== false));
+        const providers = this.props.providers.filter(provider => shouldDisplay(provider));
         const projections = this.props.projections.filter(projection => this.props.selectedProjections.indexOf(projection.srid) !== -1);
 
         // Get all selected formats, and map them to the sources that have selected them.
         Object.entries(this.props.exportOptions).map(([slug, providerOptions], ix) => {
             providerOptions.formats.map((formatSlug) => {
+                const provider = providers.find(provider => provider.slug === slug);
                 if (!formatSet.hasOwnProperty(formatSlug)) {
+                    let format = formats.find(format => format.slug === formatSlug);
+                    if (!format) {
+                        format = provider.supported_formats.find(format => format.slug === formatSlug);
+                    }
                     formatSet[formatSlug] = {
-                        format: formats.find(format => format.slug === formatSlug),
-                        sources: [providers.find(provider => provider.slug === slug)]
+                        format: format,
+                        sources: [provider]
                     };
                 } else {
-                    formatSet[formatSlug].sources.push([providers.find(provider => provider.slug === slug)]);
+
+                    formatSet[formatSlug].sources.push(provider);
                 }
             })
         });

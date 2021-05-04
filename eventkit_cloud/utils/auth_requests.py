@@ -166,6 +166,13 @@ class AuthSession(object):
             self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
         return self.session.get(*args, **kwargs)
 
+    @handle_basic_auth
+    def post(self, *args, **kwargs):
+        cert_path, cert_pass = get_cert_info(kwargs)
+        if not (cert_path is None or cert_pass is None):
+            self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
+        return self.session.post(*args, **kwargs)
+
 
 @cert_var_to_cert
 @handle_basic_auth
