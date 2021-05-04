@@ -529,7 +529,7 @@ export function DataProvider(props: Props) {
                         baseStyle={{ marginRight: '40px' }}
                         availability={providerInfo.availability}
                         overArea={overArea}
-                        overSize={false} //TODO: change back after api dev
+                        overSize={overSize}
                         providerHasEstimates={providerHasEstimates}
                         areEstimatesLoading={areEstimatesLoading}
                         supportsZoomLevels={supportsZoomLevels(props.provider)}
