@@ -40,7 +40,6 @@ from eventkit_cloud.jobs.models import (
     UserLicense,
     UserJobActivity,
     JobPermission,
-    DataProviderType,
 )
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
