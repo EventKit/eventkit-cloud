@@ -198,27 +198,15 @@ class ProviderCheck(object):
         Return True if the AOI selection's area is lower than the maximum for this provider, otherwise False.
         :return: True if AOI is lower than area limit
         """
-        as_bbox = True
         if self.aoi is None or int(self.max_area) <= 0:
             return True
 
-        if as_bbox:
-            geo = self.aoi.envelope
-        else:
-            geo = self.aoi
-
-        geom = geo.transform(3857, clone=True)
-        self_geom = self.aoi.transform(3857, clone=True)
+        geom = self.aoi.transform(3857, clone=True)
         area = geom.area
-        self_area = self_geom.area
 
         area_sq_km = area / 1000000
-        self_area_sq_km = self_area / 1000000
-        logger.error("******Bbox area = {}".format(area_sq_km))
-        logger.error("******Self.aoi area = {}".format(self_area_sq_km))
-        logger.error("******Max area = {}".format(self.max_area))
 
-        return area_sq_km < self.max_area
+        return area_sq_km
 
     def get_check_response(self):
         """

@@ -9,7 +9,7 @@ from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.gis.geos import GEOSException, GEOSGeometry, Polygon
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
@@ -119,7 +119,7 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.gdalutils import get_area
+from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
@@ -414,6 +414,9 @@ class JobViewSet(viewsets.ModelViewSet):
                                 max_selection = provider.get_max_selection_size(self.request.user)
                                 max_data_size = provider.get_max_data_size(self.request.user)
 
+                                use_bbox = provider.export_provider_type.use_bbox
+                                area = get_bbox_area_in_sqkm(job.the_geom) if use_bbox else get_area_in_sqkm(job.the_geom)
+
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
                                 if size and max_data_size is not None:
@@ -430,10 +433,9 @@ class JobViewSet(viewsets.ModelViewSet):
                                                     f"The estimated size "
                                                     f"exceeds the maximum data size for the {provider.name}"
                                                 ),
-                                            }
-                                        ]
+                                            } ]
 
-                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                if max_selection and 0 < float(max_selection) < area:
                                     status_code = status.HTTP_400_BAD_REQUEST
                                     error_data["errors"] += [
                                         {
