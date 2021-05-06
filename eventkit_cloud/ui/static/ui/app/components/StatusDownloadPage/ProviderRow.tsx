@@ -31,9 +31,14 @@ import {Link} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
 import {MatomoClickTracker} from "../MatomoHandler";
 
+const taskPaddingLeft = '44';
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
         width: '44px',
+        padding: '0px',
+    },
+    headingInsetColumn: {
+        width: '10px',
         padding: '0px',
     },
     sizeColumn: {
@@ -61,15 +66,26 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     taskLinkColumn: {
         paddingRight: '12px',
-        paddingLeft: '0px',
+        paddingLeft: `${taskPaddingLeft}px`,
         fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+        },
+    },
+    headingColumn: {
+        color: theme.eventkit.colors.black,
+        fontWeight: 'bold',
+        marginLeft: '0px',
+        paddingRight: '12px',
+        paddingLeft: '0px',
+        fontSize: '13px',
         [theme.breakpoints.up('md')]: {
             fontSize: '14px',
         },
     },
     zoomLevelColumn: {
         paddingRight: '12px',
-        paddingLeft: '0px',
+        paddingLeft: `${taskPaddingLeft}px`,
         fontSize: '12px',
         [theme.breakpoints.up('md')]: {
             fontSize: '14px',
@@ -357,6 +373,9 @@ export function ProviderRow(props: ProviderRowProps) {
                 </span>
             );
         }
+        if (task.hide_download) {
+            return task.name;
+        }
         return (
             <MatomoClickTracker
                 eventAction="Download Task File"
@@ -455,6 +474,9 @@ export function ProviderRow(props: ProviderRowProps) {
                     }}
                 />
             );
+        }
+        if (task.hide_download) {
+            return null;
         }
         return (
             <MatomoClickTracker
@@ -594,8 +616,8 @@ export function ProviderRow(props: ProviderRowProps) {
         ),
     );
 
-    const tasks = providerTask.tasks.filter(task => (task.display !== false));
-    tasks.sort((a, b)=> (a.hide_download > b.hide_download ?  1 : -1))
+    const exportTasks = providerTask.tasks.filter(task => (task.display !== false && !task.hide_download));
+    const processingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
 
     let tableData;
     if (openTable) {
@@ -605,6 +627,26 @@ export function ProviderRow(props: ProviderRowProps) {
                     className="qa-ProviderRow-TableBody"
                 >
                     {licenseData}
+
+                    {/* Preprocessing Info */}
+                    <TableRow
+                        className="qa-ProviderRow-TableRow-task"
+                    >
+                        <TableCell classes={{root: classes.headingInsetColumn}}/>
+
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-processingInfo"
+                            classes={{root: classes.headingColumn}}
+                        >
+                            Preprocessing Information
+                        </TableCell>
+                        <TableCell classes={{root: classes.sizeColumn}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn}}/>
+                        <TableCell classes={{root: classes.menuColumn}}/>
+                        <TableCell classes={{root: classes.arrowColumn}}/>
+                    </TableRow>
+                    
                     <TableRow
                         className="qa-ProviderRow-TableRow-task"
                     >
@@ -622,7 +664,7 @@ export function ProviderRow(props: ProviderRowProps) {
                         <TableCell classes={{root: classes.menuColumn}}/>
                         <TableCell classes={{root: classes.arrowColumn}}/>
                     </TableRow>
-                    {tasks.map(task => (
+                    {processingTasks.map(task => (
                         <TableRow
                             className="qa-ProviderRow-TableRow-task"
                             key={task.uid}
@@ -632,14 +674,69 @@ export function ProviderRow(props: ProviderRowProps) {
                                 className="qa-ProviderRow-TableCell-taskLinks"
                                 classes={{root: classes.taskLinkColumn}}
                             >
-                                {task.hide_download ? task.name : getTaskLink(task)}
-                                {task.hide_download ? null : getTaskDownloadIcon(task)}
+                                {getTaskLink(task)}
+                                {getTaskDownloadIcon(task)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-size"
                                 classes={{root: classes.sizeColumn}}
                             >
-                                {task.hide_download ? null : (task.result == null ? '' : task.result.size)}
+                                {(task.hide_download || task.result == null) ? null : task.result.size}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-estimatedFinish"
+                                classes={{root: classes.estimatedFinishColumn}}
+                                style={{fontSize: '.85em'}}
+                            >
+                                {getEstimatedFinish(task)}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-status"
+                                classes={{root: classes.taskStatusColumn}}
+                            >
+                                {getTaskStatus(task)}
+                            </TableCell>
+                            <TableCell classes={{root: classes.menuColumn}}/>
+                            <TableCell classes={{root: classes.arrowColumn}}/>
+                        </TableRow>
+                    ))}
+                    
+                    {/* Downloads */}
+                    <TableRow
+                        className="qa-ProviderRow-TableRow-task"
+                    >
+                        <TableCell classes={{root: classes.headingInsetColumn}}/>
+
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-processingInfo"
+                            classes={{root: classes.headingColumn}}
+                        >
+                            Downloads
+                        </TableCell>
+                        <TableCell classes={{root: classes.sizeColumn}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn}}/>
+                        <TableCell classes={{root: classes.menuColumn}}/>
+                        <TableCell classes={{root: classes.arrowColumn}}/>
+                    </TableRow>
+                    {exportTasks.map(task => (
+                        <TableRow
+                            className="qa-ProviderRow-TableRow-task"
+                            key={task.uid}
+                        >
+                            <TableCell classes={{root: classes.insetColumn}}/>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-taskLinks"
+                                classes={{root: classes.taskLinkColumn}}
+                            >
+                                {getTaskLink(task)}
+                                {getTaskDownloadIcon(task)}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-size"
+                                classes={{root: classes.sizeColumn}}
+                            >
+                                {(task.hide_download || task.result == null) ? null : task.result.size}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
@@ -693,7 +790,7 @@ export function ProviderRow(props: ProviderRowProps) {
                             className="qa-ProviderRow-TableCell-estimatedFinish"
                             classes={{root: classes.estimatedFinishColumn}}
                         >
-                            {getLastEstimatedFinish(tasks)}
+                            {getLastEstimatedFinish(exportTasks)}
                         </TableCell>
                         <TableCell
                             className="qa-ProviderRow-TableCell-providerStatus"
