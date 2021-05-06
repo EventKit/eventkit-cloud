@@ -1048,7 +1048,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return obj.get_max_selection_size(user)
 
     def get_use_bbox(self, obj):
-        return obj.export_provider_type.use_bbox
+        return obj.get_use_bbox()
 
 
 class ListJobSerializer(serializers.Serializer):

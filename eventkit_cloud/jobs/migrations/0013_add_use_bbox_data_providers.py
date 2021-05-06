@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
         DataProviderType = apps.get_model('jobs', 'DataProviderType')
 
         # Data provider types that can only fetch data from bbox
-        bbox_data_provider_types = ['osm', 'osm-generic', 'wfs', 'arcgis-feature']
+        bbox_data_provider_types = ['osm', 'wcs', 'wfs', 'arcgis-feature']
 
         # Set use bbox on all provider types
         for provider_type in DataProviderType.objects.all():

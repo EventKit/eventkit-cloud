@@ -381,6 +381,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         else:
             return [layer.get("name") for layer in config.get("vector_layers", [])]
 
+    def get_use_bbox(self):
+        if self.export_provider_type is not None:
+            return self.export_provider_type.use_bbox
+        else:
+            return False
+
     """
     Max datasize is the size in megabytes.
     """

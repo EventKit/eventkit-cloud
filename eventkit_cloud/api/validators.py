@@ -315,7 +315,7 @@ def get_bbox_area_in_sqkm(geom_4326):
     """
     Accepts a GEOSGeometry object created in 4326, and returns the area of its bounding box/extent in square km.
 
-    :param geom4326: GEOSGeometry object created from a 4326 feature
+    :param geom_4326: GEOSGeometry object created from a 4326 feature
     :return: float representing square km area of bbox/extent of geometry
     """
     # Get bbox from GEOS 4326 geometry
