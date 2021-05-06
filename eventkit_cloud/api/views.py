@@ -414,8 +414,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                 max_selection = provider.get_max_selection_size(self.request.user)
                                 max_data_size = provider.get_max_data_size(self.request.user)
 
-                                use_bbox = provider.export_provider_type.use_bbox
-                                if use_bbox:
+                                if provider.get_use_bbox():
                                     area = get_bbox_area_in_sqkm(job.the_geom)
                                 else:
                                     area = get_area_in_sqkm(job.the_geom)

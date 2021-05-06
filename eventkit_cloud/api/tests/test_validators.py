@@ -2,7 +2,7 @@
 import logging
 
 from django.contrib.auth.models import User, Group
-from django.contrib.gis.geos import GeometryCollection, Point, LineString, Polygon
+from django.contrib.gis.geos import GeometryCollection, Point, LineString, Polygon, GEOSGeometry
 from django.test import TestCase
 from unittest.mock import patch, Mock
 from rest_framework.serializers import ValidationError
@@ -12,6 +12,8 @@ from eventkit_cloud.api.validators import (
     validate_selection,
     validate_bbox_params,
     validate_original_selection,
+    get_area_in_sqkm,
+    get_bbox_area_in_sqkm,
 )
 from eventkit_cloud.jobs.models import bbox_to_geojson
 
@@ -26,6 +28,7 @@ class TestValidators(TestCase):
             self.user = User.objects.create_user(username="demo1", email="demo@demo.com", password="demo")
         self.extents = (13.473475, 7.441068, 24.002661, 23.450369)
         self.selection = bbox_to_geojson(self.extents)
+        self.bbox_geom = GEOSGeometry(Polygon.from_bbox(self.extents).wkt, srid=4326)
 
     def test_validate_bbox(self,):
 
@@ -126,3 +129,27 @@ class TestValidators(TestCase):
         data = {"xmin": -1, "ymin": -91, "xmax": 1, "ymax": 1}
         with self.assertRaises(ValidationError):
             validate_bbox_params(data)
+
+    # Test that area calculation is correct
+    def test_area(self):
+        self.assertEqual(get_area_in_sqkm(self.bbox_geom), 2175307.6863957904)
+
+    # Test that bbox area calculation is correct and same as normal area function
+    def test_bbox_area(self):
+        self.assertEqual(get_bbox_area_in_sqkm(self.bbox_geom), 2175307.6863957904)
+
+    # test that the area of a right triangle made from the bbox coords is
+    # exactly half of the area of the original bbox
+    def test_triangle_area(self):
+        xmin, ymin, xmax, ymax = self.extents
+        triangle_poly = Polygon(((xmin, ymin), (xmax, ymax), (xmax, ymin), (xmin, ymin)))
+        triangle_geom = GEOSGeometry(triangle_poly.wkt, srid=4326)
+        self.assertEqual(get_area_in_sqkm(triangle_geom), get_area_in_sqkm(self.bbox_geom) / 2)
+
+    # test that the area of the bounding box of a right triangle made from the bbox
+    # coords is exactly the same as the original bbox area
+    def test_triangle_bbox_area(self):
+        xmin, ymin, xmax, ymax = self.extents
+        triangle_poly = Polygon(((xmin, ymin), (xmax, ymax), (xmax, ymin), (xmin, ymin)))
+        triangle_geom = GEOSGeometry(triangle_poly.wkt, srid=4326)
+        self.assertEqual(get_bbox_area_in_sqkm(triangle_geom), get_area_in_sqkm(self.bbox_geom))
