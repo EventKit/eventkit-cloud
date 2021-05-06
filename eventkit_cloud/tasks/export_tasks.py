@@ -145,6 +145,8 @@ class ExportTask(EventKitBaseTask):
     # whether to abort the whole provider if this task fails.
     abort_on_error = False
     name = "ExportTask"
+    display = True
+    hide_download = True
 
     def __call__(self, *args, **kwargs) -> dict:
         task_uid = kwargs.get("task_uid")
@@ -155,6 +157,8 @@ class ExportTask(EventKitBaseTask):
                 .select_related("export_provider_task__provider")
                 .get(uid=task_uid)
             )
+            if self.hide_download:
+                task.hide_download = True
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -339,6 +343,7 @@ class FormatTask(ExportTask):
 
     name = "FormatTask"
     display = True
+    hide_download = False
 
 
 class ZipFileTask(FormatTask):
@@ -483,7 +488,7 @@ def osm_data_collection_pipeline(
     return result
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create OSM", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -765,7 +770,7 @@ def sqlite_export_task(
     return result
 
 
-@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
+@app.task(name="Create Area of Interest", bind=True, base=ExportTask, acks_late=True)
 def output_selection_geojson_task(
     self,
     result=None,
@@ -1083,7 +1088,7 @@ def reprojection_task(
     return result
 
 
-@app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create WFS Export", bind=True, base=ExportTask, abort_on_error=True)
 def wfs_export_task(
     self,
     result=None,
@@ -1223,7 +1228,7 @@ def get_wfs_query_url(
     return url
 
 
-@app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wcs_export_task(
     self,
     result=None,
@@ -1280,7 +1285,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create ArcGIS FeatureService Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1395,7 +1400,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
     return query_url
 
 
-@app.task(name="VectorFileExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create Vector File Export", bind=True, base=ExportTask, abort_on_error=True)
 def vector_file_export_task(
     self,
     result=None,
@@ -1446,7 +1451,7 @@ def vector_file_export_task(
     return result
 
 
-@app.task(name="RasterFileExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create Raster File Export", bind=True, base=ExportTask, abort_on_error=True)
 def raster_file_export_task(
     self,
     result=None,
@@ -1496,7 +1501,7 @@ def raster_file_export_task(
     return result
 
 
-@app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
+@app.task(name="Create Bounds Export", bind=True, base=ExportTask)
 def bounds_export_task(
     self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs
 ):
@@ -1523,7 +1528,7 @@ def bounds_export_task(
     return result
 
 
-@app.task(name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create Raster Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def mapproxy_export_task(
     self,
     result=None,
@@ -1740,6 +1745,11 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
         data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(
             uid=data_provider_task_uid
         )
+        # for export_task_record in data_provider_task_record.tasks.all():
+        #     if export_task_record.hide_download:
+        #         export_task_record.display = False
+        #         export_task_record.save()
+
         has_failures = any(
             [
                 export_task_record.status == TaskState.FAILED.value

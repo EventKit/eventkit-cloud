@@ -36,7 +36,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         width: '44px',
         padding: '0px',
     },
-    sizeColumnn: {
+    sizeColumn: {
         width: '80px',
         paddingRight: '0px',
         paddingLeft: '0px',
@@ -595,6 +595,7 @@ export function ProviderRow(props: ProviderRowProps) {
     );
 
     const tasks = providerTask.tasks.filter(task => (task.display !== false));
+    tasks.sort((a, b)=> (a.hide_download > b.hide_download ?  1 : -1))
 
     let tableData;
     if (openTable) {
@@ -615,7 +616,7 @@ export function ProviderRow(props: ProviderRowProps) {
                         >
                             Zoom Levels {min_zoom} - {max_zoom}
                         </TableCell>
-                        <TableCell classes={{root: classes.sizeColumnn}}/>
+                        <TableCell classes={{root: classes.sizeColumn}}/>
                         <TableCell classes={{root: classes.estimatedFinishColumn}}/>
                         <TableCell classes={{root: classes.taskStatusColumn}}/>
                         <TableCell classes={{root: classes.menuColumn}}/>
@@ -631,14 +632,14 @@ export function ProviderRow(props: ProviderRowProps) {
                                 className="qa-ProviderRow-TableCell-taskLinks"
                                 classes={{root: classes.taskLinkColumn}}
                             >
-                                {getTaskLink(task)}
-                                {getTaskDownloadIcon(task)}
+                                {task.hide_download ? task.name : getTaskLink(task)}
+                                {task.hide_download ? null : getTaskDownloadIcon(task)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-size"
-                                classes={{root: classes.sizeColumnn}}
+                                classes={{root: classes.sizeColumn}}
                             >
-                                {task.result == null ? '' : task.result.size}
+                                {task.hide_download ? null : (task.result == null ? '' : task.result.size)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
