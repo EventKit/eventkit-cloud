@@ -812,9 +812,9 @@ def merge_geojson(in_files, out_file):
                 out_feat = ogr.Feature(out_layer.GetLayerDefn())
                 out_feat.SetGeometry(feat.GetGeometryRef().Clone())
                 out_layer.CreateFeature(out_feat)
-                out_feat = None
+                out_feat = None  # NOQA
                 out_layer.SyncToDisk()
-        out_ds = None
+        out_ds = None  # NOQA
     except Exception as e:
         logger.error(e)
         raise Exception("File merge process failed.")
