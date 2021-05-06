@@ -4,7 +4,7 @@ import logging
 from typing import List, Tuple
 
 import math
-import billiard
+import multiprocessing
 import os
 import time
 from tempfile import NamedTemporaryFile
@@ -155,8 +155,8 @@ def get_meta(ds_path, is_raster=True):
         nodata: NODATA value for all bands if all bands have the same one, otherwise None (raster sets only)
     """
 
-    multiprocess_queue = billiard.Queue()
-    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, is_raster, multiprocess_queue,))
+    multiprocess_queue = multiprocessing.dummy.Queue()
+    proc = multiprocessing.dummy.Process(target=get_gdal_metadata, args=(ds_path, is_raster, multiprocess_queue,))
     proc.start()
     proc.join()
     return multiprocess_queue.get()
@@ -303,6 +303,7 @@ def convert(
     use_translate: bool = False,
     access_mode: str = "overwrite",
     config_options: List[Tuple[str]] = None,
+    distinct_field = None
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -403,6 +404,7 @@ def convert(
             bbox=bbox,
             access_mode=access_mode,
             config_options=config_options,
+            distinct_field=distinct_field,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
@@ -567,6 +569,7 @@ def convert_vector(
     dataset_creation_options=None,
     layer_creation_options=None,
     config_options: List[Tuple[str]] = None,
+    distinct_field=None
 ):
     """
     :param input_files: A file or list of files to convert.
@@ -584,6 +587,7 @@ def convert_vector(
     :param layers: A list of layers to include for translation.
     :param layer_name: Table name in database for in_dataset
     :param config_options: A list of gdal configuration options as a tuple (option, value).
+    :param distinct_field: A field for selecting distinct features to prevent duplicates.
     :return: The output file.
     """
     if isinstance(input_file, str) and access_mode == "append":
@@ -594,7 +598,6 @@ def convert_vector(
             input_file = input_file[0]
         else:
             raise Exception("Cannot overwrite with a list of files.")
-
     gdal.UseExceptions()
     options = clean_options(
         {
@@ -625,6 +628,15 @@ def convert_vector(
             gdal.VectorTranslate(output_file, _input_file, **options)
     else:
         gdal.VectorTranslate(output_file, input_file, **options)
+
+    if distinct_field:
+        logger.error(f"Normalizing features based on field: {distinct_field}")
+        table_name = layer_name or os.path.splitext(os.path.basename(output_file))[0]
+        options["SQLStatement"] = f"SELECT * from '{table_name}' GROUP BY '{distinct_field}'"
+        options["SQLDialect"] = "sqlite"
+        logger.error(f"calling gdal.VectorTranslate('{output_file}', '{output_file}', {stringify_params(options)})")
+        gdal.VectorTranslate(output_file, rename_duplicate(output_file), **options)
+
     return output_file
 
 
@@ -863,11 +875,12 @@ def strip_prefixes(dataset: str) -> (str, str):
     return removed_prefix, output_dataset
 
 
-def get_chunked_bbox(bbox, size: tuple = None):
+def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
     """
     Chunks a bbox into a grid of sub-bboxes.
     :param bbox: bbox in 4326, representing the area of the world to be chunked
     :param size: optional image size to use when calculating the resolution.
+    :param level:  The level to use for the affected level.
     :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
     """
     from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent

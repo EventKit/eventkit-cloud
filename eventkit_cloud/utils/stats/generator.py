@@ -8,7 +8,8 @@ import math
 import os
 import statistics
 import threading
-from typing import List
+from concurrent.futures import ProcessPoolExecutor, Executor, ThreadPoolExecutor
+from typing import List, Union
 
 from django import db
 from django.core.cache import cache
@@ -74,15 +75,15 @@ def get_accessors():
     }
 
 
-def update_all_statistics_caches():
+def update_all_statistics_caches(executor=ProcessPoolExecutor):
     """
     A helper function to compute all of the statistics and update all caches at once.
-    :param force: True to re-compute the desired statistics
+    :param executor: The concurrent.futures.executor to use for processing the statistics.
     """
     provider_slugs = [provider.slug for provider in DataProvider.objects.all()]
     for conn in db.connections.all():
         conn.close_if_unusable_or_obsolete()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
+    with executor() as pool:
         pool.map(get_statistics, provider_slugs, itertools.repeat(True))
 
 
@@ -225,10 +226,9 @@ def process_totals(provider_slug: str, stats: dict) -> dict:
 
 def process_totals_concurrently(provider_slugs, stats):
     thread = threading.current_thread()
+    executor = ThreadPoolExecutor
     if thread.daemon:
-        executor = concurrent.futures.ThreadPoolExecutor
-    else:
-        executor = concurrent.futures.ProcessPoolExecutor
+        executor = ProcessPoolExecutor
     with executor() as pool:
         totals = pool.map(
             process_totals, provider_slugs, itertools.repeat(stats), chunksize=math.ceil(len(provider_slugs) / 8)

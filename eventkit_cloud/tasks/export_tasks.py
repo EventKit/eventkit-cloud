@@ -15,6 +15,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import yaml
 from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
+from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
@@ -168,7 +169,11 @@ class ExportTask(EventKitBaseTask):
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
             if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
-                retval = super(ExportTask, self).__call__(*args, **kwargs)
+                try:
+                    retval = super(ExportTask, self).__call__(*args, **kwargs)
+                except SoftTimeLimitExceeded as e:
+                    logger.error(e)
+                    raise Exception("Task time limit exceeded. Try again or contact us.") from e
 
             """
             Update the successfully completed task as follows:
@@ -1083,7 +1088,7 @@ def reprojection_task(
     return result
 
 
-@app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wfs_export_task(
     self,
     result=None,
@@ -1314,7 +1319,8 @@ def arcgis_feature_service_export_task(
     if len(vector_layer_data):
         layers = {}
         for layer in vector_layer_data:
-            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
+            # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
             url = get_arcgis_query_url(layer.get("url"))
             layers[layer["name"]] = {
                 "task_uid": task_uid,
@@ -1325,6 +1331,7 @@ def arcgis_feature_service_export_task(
                 "cert_info": configuration.get("cert_info"),
                 "layer_name": layer.get("name"),
                 "projection": projection,
+                "distinct_field": layer.get("distinct_field")
             }
 
             try:
