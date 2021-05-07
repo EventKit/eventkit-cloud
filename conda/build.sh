@@ -21,19 +21,23 @@ conda config --add channels local
 cd /root/repo
 mkdir -p /root/repo/linux-64 /root/repo/noarch
 conda index . || echo "JSON Parse Error"
-conda config --add channels file:///root/repo/
+conda config --add channels file://root/repo/
 
 function create_index {
+  pushd /root/repo/linux-64/
+  python /root/download_packages.py
+  popd
+
   echo "Move files and create index"
   echo "Copying files..."
   find /root/miniconda3/ -type f -name "*.tar.bz2" -exec cp {} /root/repo/linux-64/ \; || echo "No .tar.bz2 files to move"
   find /root/miniconda3/ -type f -name "*.conda" -exec cp {} /root/repo/linux-64/ \; || echo "No .conda files to move"
   echo "Ensuring repo channel is priority"
-  conda config --add channels file:///root/repo/
+  conda config --add channels file://root/repo/
   pushd /root/repo
 
   echo "Creating the repo index..."
-  conda index . || echo "JSON Parse Error"
+  conda index .
   popd
   echo "done."
 }
@@ -59,17 +63,13 @@ for RECIPE in $RECIPES; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE && create_index \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
 
+create_index
+
 echo "Cleaning up the conda-requirements.txt after the build."
 rm /root/recipes/eventkit-cloud/conda-requirements.txt
-
-pushd /root/repo/linux-64/
-python /root/download_packages.py
-popd
-
-create_index
 

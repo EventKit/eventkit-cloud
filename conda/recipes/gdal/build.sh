@@ -1,4 +1,4 @@
-	#!/bin/bash
+#!/bin/bash
 
 set -ex # Abort on error.
 
@@ -31,53 +31,47 @@ fi
 if [[ $ARCH =~ ppc.* ]]; then
   HDF4="--with-hdf4=no"
 fi
+
 # `--without-pam` was removed.
 # See https://github.com/conda-forge/gdal-feedstock/pull/47 for the discussion.
 
-echo raster $MRSID_RASTER
-echo lidar $MRSID_LIDAR
-
-(bash configure CC=gcc-5 \
-           --prefix=${PREFIX} \
-           --host=${HOST} \
-           --with-curl \
-           --with-dods-root=${PREFIX} \
-           --with-expat=${PREFIX} \
-           --with-freexl=${PREFIX} \
-           --with-geos=${PREFIX}/bin/geos-config \
-           --with-geotiff=${PREFIX} \
-           ${HDF4} \
-           --with-cfitsio=${PREFIX} \
-           --with-hdf5=${PREFIX} \
-           --with-tiledb=${PREFIX} \
-           --with-jpeg=${PREFIX} \
-           --with-kea=${PREFIX}/bin/kea-config \
-           --with-libiconv-prefix=${PREFIX} \
-           --with-libjson-c=${PREFIX} \
-           --with-libkml=${PREFIX} \
-           --with-liblzma=yes \
-           --with-libtiff=${PREFIX} \
-           --with-libz=${PREFIX} \
-           --with-netcdf=${PREFIX} \
-           --with-openjpeg=${PREFIX} \
-           --with-pcre \
-           --with-pg=yes \
-           --with-png=${PREFIX} \
-           --with-poppler=${PREFIX} \
-           --with-spatialite=${PREFIX} \
-           --with-sqlite3=${PREFIX} \
-           --with-proj=${PREFIX} \
-           --with-webp=${PREFIX} \
-           --with-xerces=${PREFIX} \
-           --with-xml2=yes \
-           --with-zstd=${PREFIX} \
-           --with-mrsid=/eventkit-cloud/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531/Raster_DSDK \
-           --with-mrsid_lidar=/eventkit-cloud/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531/Lidar_DSDK \
-           --with-jp2mrsid \
-           --without-python \
-           --disable-static \
-           --verbose \
-           ${OPTS}) || (cat config.log; false)
+(bash configure --prefix=${PREFIX} \
+               --host=${HOST} \
+               --with-curl \
+               --with-dods-root=${PREFIX} \
+               --with-expat=${PREFIX} \
+               --with-freexl=${PREFIX} \
+               --with-geos=${PREFIX}/bin/geos-config \
+               --with-geotiff=${PREFIX} \
+               ${HDF4} \
+               --with-cfitsio=${PREFIX} \
+               --with-hdf5=${PREFIX} \
+               --with-tiledb=${PREFIX} \
+               --with-jpeg=${PREFIX} \
+               --with-kea=${PREFIX}/bin/kea-config \
+               --with-libiconv-prefix=${PREFIX} \
+               --with-libjson-c=${PREFIX} \
+               --with-libkml=${PREFIX} \
+               --with-liblzma=yes \
+               --with-libtiff=${PREFIX} \
+               --with-libz=${PREFIX} \
+               --with-netcdf=${PREFIX} \
+               --with-openjpeg=${PREFIX} \
+               --with-pcre \
+               --with-pg=yes \
+               --with-png=${PREFIX} \
+               --with-poppler=${PREFIX} \
+               --with-spatialite=${PREFIX} \
+               --with-sqlite3=${PREFIX} \
+               --with-proj=${PREFIX} \
+               --with-webp=${PREFIX} \
+               --with-xerces=${PREFIX} \
+               --with-xml2=yes \
+               --with-zstd=${PREFIX} \
+               --without-python \
+               --disable-static \
+               --verbose \
+               ${OPTS}) || (cat config.log; false)
 
 make -j $CPU_COUNT ${VERBOSE_AT}
 
