@@ -158,6 +158,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         fontWeight: 600,
         cursor: 'pointer',
     },
+    nestedRows: {
+        borderBottom: '0px',
+        lineHeight: '1',
+        paddingBottom: '0.2em',
+    },
 });
 
 export interface ProviderRowProps {
@@ -617,7 +622,7 @@ export function ProviderRow(props: ProviderRowProps) {
     );
 
     const exportTasks = providerTask.tasks.filter(task => (task.display !== false && !task.hide_download));
-    const processingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
+    const preprocessingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
 
     let tableData;
     if (openTable) {
@@ -650,54 +655,54 @@ export function ProviderRow(props: ProviderRowProps) {
                     <TableRow
                         className="qa-ProviderRow-TableRow-task"
                     >
-                        <TableCell classes={{root: classes.insetColumn}}/>
+                        <TableCell classes={{root: classes.insetColumn, body: classes.nestedRows}}/>
 
                         <TableCell
                             className="qa-ProviderRow-TableCell-zoomLevels"
-                            classes={{root: classes.zoomLevelColumn}}
+                            classes={{root: classes.taskLinkColumn, body: classes.nestedRows}}
                         >
                             Zoom Levels {min_zoom} - {max_zoom}
                         </TableCell>
-                        <TableCell classes={{root: classes.sizeColumn}}/>
-                        <TableCell classes={{root: classes.estimatedFinishColumn}}/>
-                        <TableCell classes={{root: classes.taskStatusColumn}}/>
-                        <TableCell classes={{root: classes.menuColumn}}/>
-                        <TableCell classes={{root: classes.arrowColumn}}/>
+                        <TableCell classes={{root: classes.sizeColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.menuColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.arrowColumn, body: classes.nestedRows}}/>
                     </TableRow>
-                    {processingTasks.map(task => (
+                    {preprocessingTasks.map(task => (
                         <TableRow
                             className="qa-ProviderRow-TableRow-task"
                             key={task.uid}
                         >
-                            <TableCell classes={{root: classes.insetColumn}}/>
+                            <TableCell classes={{root: classes.insetColumn, body: classes.nestedRows}}/>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-taskLinks"
-                                classes={{root: classes.taskLinkColumn}}
+                                classes={{root: classes.taskLinkColumn, body: classes.nestedRows}}
                             >
                                 {getTaskLink(task)}
                                 {getTaskDownloadIcon(task)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-size"
-                                classes={{root: classes.sizeColumn}}
+                                classes={{root: classes.sizeColumn, body: classes.nestedRows}}
                             >
                                 {(task.hide_download || task.result == null) ? null : task.result.size}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
-                                classes={{root: classes.estimatedFinishColumn}}
+                                classes={{root: classes.estimatedFinishColumn, body: classes.nestedRows}}
                                 style={{fontSize: '.85em'}}
                             >
                                 {getEstimatedFinish(task)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-status"
-                                classes={{root: classes.taskStatusColumn}}
+                                classes={{root: classes.taskStatusColumn, body: classes.nestedRows}}
                             >
                                 {getTaskStatus(task)}
                             </TableCell>
-                            <TableCell classes={{root: classes.menuColumn}}/>
-                            <TableCell classes={{root: classes.arrowColumn}}/>
+                            <TableCell classes={{root: classes.menuColumn, body: classes.nestedRows}}/>
+                            <TableCell classes={{root: classes.arrowColumn, body: classes.nestedRows}}/>
                         </TableRow>
                     ))}
                     
@@ -708,7 +713,7 @@ export function ProviderRow(props: ProviderRowProps) {
                         <TableCell classes={{root: classes.headingInsetColumn}}/>
 
                         <TableCell
-                            className="qa-ProviderRow-TableCell-processingInfo"
+                            className="qa-ProviderRow-TableCell-downloads"
                             classes={{root: classes.headingColumn}}
                         >
                             Downloads
