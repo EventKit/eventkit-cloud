@@ -186,7 +186,9 @@ export function ProviderRow(props: ProviderRowProps) {
     const {run} = useRunContext();
 
     const [openTable, setOpenTable] = useState(false);
-    const [fileSize, setFileSize] = useState(getFileSize(props.providerTask.tasks));
+    const exportTasks = providerTask.tasks.filter(task => (task.display !== false && !task.hide_download));
+    const preprocessingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
+    const [fileSize, setFileSize] = useState(getFileSize(exportTasks));
     const [providerDesc, setProviderDesc] = useState('');
     const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
@@ -208,7 +210,7 @@ export function ProviderRow(props: ProviderRowProps) {
     };
 
     useEffect(() => {
-        setFileSize(getFileSize(props.providerTask.tasks));
+        setFileSize(getFileSize(exportTasks));
     }, [props.providerTask.status]);
 
     function getFileSize(tasks: Eventkit.Task[]): string {
@@ -620,9 +622,6 @@ export function ProviderRow(props: ProviderRowProps) {
             </MatomoClickTracker>
         ),
     );
-
-    const exportTasks = providerTask.tasks.filter(task => (task.display !== false && !task.hide_download));
-    const preprocessingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
 
     let tableData;
     if (openTable) {

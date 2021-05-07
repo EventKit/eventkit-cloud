@@ -1745,11 +1745,6 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
         data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(
             uid=data_provider_task_uid
         )
-        # for export_task_record in data_provider_task_record.tasks.all():
-        #     if export_task_record.hide_download:
-        #         export_task_record.display = False
-        #         export_task_record.save()
-
         has_failures = any(
             [
                 export_task_record.status == TaskState.FAILED.value
