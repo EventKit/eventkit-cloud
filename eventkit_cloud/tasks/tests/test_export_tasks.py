@@ -344,7 +344,7 @@ class TestExportTasks(ExportTaskBase):
             boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
             access_mode="append",
-            distinct_field=None
+            distinct_field=None,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -957,8 +957,7 @@ class TestExportTasks(ExportTaskBase):
                 "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_1,
-                "distinct_field": None
-
+                "distinct_field": None,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -969,7 +968,7 @@ class TestExportTasks(ExportTaskBase):
                 "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_2,
-                "distinct_field": expected_field
+                "distinct_field": expected_field,
             },
         }
 

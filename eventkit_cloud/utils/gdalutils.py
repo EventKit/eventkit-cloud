@@ -303,7 +303,7 @@ def convert(
     use_translate: bool = False,
     access_mode: str = "overwrite",
     config_options: List[Tuple[str]] = None,
-    distinct_field = None
+    distinct_field=None,
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -569,7 +569,7 @@ def convert_vector(
     dataset_creation_options=None,
     layer_creation_options=None,
     config_options: List[Tuple[str]] = None,
-    distinct_field=None
+    distinct_field=None,
 ):
     """
     :param input_files: A file or list of files to convert.

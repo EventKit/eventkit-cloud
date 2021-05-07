@@ -1,4 +1,3 @@
-import concurrent.futures
 import copy
 import datetime
 import itertools
@@ -8,8 +7,8 @@ import math
 import os
 import statistics
 import threading
-from concurrent.futures import ProcessPoolExecutor, Executor, ThreadPoolExecutor
-from typing import List, Union
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from typing import List
 
 from django import db
 from django.core.cache import cache

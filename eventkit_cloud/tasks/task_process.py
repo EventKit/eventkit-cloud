@@ -1,10 +1,9 @@
+import collections
 import logging
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
-from django.conf import settings
 from django.db import connection
-import collections
 
 from eventkit_cloud.tasks import set_cache_value
 

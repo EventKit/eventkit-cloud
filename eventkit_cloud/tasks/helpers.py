@@ -737,7 +737,6 @@ def check_cached_task_failures(task_name, task_uid):
         raise FailedException(task_name=task_name)
 
 
-
 def add_export_run_files_to_zip(zipfile, run_zip_file):
     """
     Add additional files stored in ExportRunFile objects to a zipfile.
@@ -881,7 +880,7 @@ def download_chunks_concurrently(layer, task_points, feature_data):
         cert_info=layer.get("cert_info"),
         task_points=task_points,
         feature_data=feature_data,
-        distinct_field=layer.get("distinct_field")
+        distinct_field=layer.get("distinct_field"),
     )
 
 
@@ -941,7 +940,14 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
 
 
 def download_chunks(
-    task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False, level=15
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_info=None,
+    task_points=100,
+    feature_data=False,
+    level=15,
 ):
     tile_bboxes = get_chunked_bbox(bbox, level=level)
     chunks = []

@@ -1331,7 +1331,7 @@ def arcgis_feature_service_export_task(
                 "cert_info": configuration.get("cert_info"),
                 "layer_name": layer.get("name"),
                 "projection": projection,
-                "distinct_field": layer.get("distinct_field")
+                "distinct_field": layer.get("distinct_field"),
             }
 
             try:
