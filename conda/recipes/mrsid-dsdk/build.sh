@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
 set -e
-
-./configure --prefix=${PREFIX}
-
-make
-make install
-
+cp -R Raster_DSDK/* ${PREFIX}/
+cp -R Lidar_DSDK/* ${PREFIX}/

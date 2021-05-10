@@ -9,26 +9,42 @@ source:
 
 build:
   number: 0
-
+  missing_dso_whitelist:
+    - libtbb.so
+    - libltidsdk.so.9
+    - libltidsdk.so
+    - libtbb.so.2
+    - libgeos.so
+    - libgeos-3.5.0.so
+    - libgeos_c.so.1.9.0
+    - libgeos_c.so.1
+    - libgeos_c.so
+    - liblti_lidar_dsdk.so
+    - libtbb.so
+    - liblti_lidar_dsdk.so.1
+    - libtbb.so.2
+    - liblaszip.so.6
+    - libpdal_util.so.3.0.0
+    - libgeos.so
+    - libpdal_util.so
+    - libpdal_base.so.2
+    - libgeos-3.5.0.so
+    - libpdal_base.so
+    - libpdal_base.so.3.0.0
+    - liblaszip.so.6.0.0
+    - liblaslib.so
+    - libgeos_c.so.1.9.0
+    - libgeos_c.so.1
+    - liblaszip.so
+    - libpdal_util.so.2
+    - libgeos_c.so
 requirements:
-  build: 
-    - {{ compiler('c') }}
-    - automake
-    - autoconf
-  host:
-    - expat
-    - proj
-    - zlib
-  run:
-    - expat
-    - proj
-    - zlib
-
+  build:
 
 about:
   home: https://www.extensis.com/support/developers
   license: Commercial
-  license_file: https://www.extensis.com/support/developers/mrsidsdkeula
+  license_file: LICENSE.pdf
   summary: |
     Extensis offers a range of MrSID Software Kits (SDKs) and development tools for integrating decode (viewing) capabilities and encoding technologies. Decode SDKs for MrSID are provided free of charge for development. This allows developers to integrate viewing of MrSID into their applications. For SDK support questions, please contact Extensis Technical Support.
     The MrSID 9.5 SDK, with support for MrSID Generation 4 files (MG4), is now available. With this SDK you can view and decode MG4 files containing both raster LiDAR data, in addition to MrSID Generation 3, MrSID Generation 2 and JPEG 2000 files. This version adds performance improvements so your images render even faster.
