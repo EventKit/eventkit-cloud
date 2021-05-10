@@ -91,7 +91,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
-        logger.info(f"Formats: {formats}")
         provider_slug = validated_data.get("provider")
         try:
             provider_model = DataProvider.objects.get(slug=provider_slug)
@@ -100,12 +99,12 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         provider_task = DataProviderTask.objects.create(provider=provider_model)
 
         process_formats = get_process_formats(provider_model, self.context["request"])
-        process_formats = list(filter(lambda _format: _format.get("slug") in formats, process_formats))
-        for _format in process_formats:
-            format = ExportFormat.get_or_create(**_format)
-            format.save()
-        formats = [_format for _format in formats if not isinstance(_format, str)]
-        logger.info(f"Formats: {formats}")
+        if len(process_formats):
+            process_formats = list(filter(lambda _format: _format.get("slug") in formats, process_formats))
+            for _format in process_formats:
+                format = ExportFormat.get_or_create(**_format)
+                format.save()
+            formats = [_format for _format in formats if not isinstance(_format, str)]
 
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
