@@ -57,6 +57,9 @@ if PCF_SCALING:
         }
     )
 
+PCF_SCALE_BY_RUN = is_true(os.getenv("PCF_SCALE_BY_RUN", False))
+
+
 app.conf.beat_schedule = BEAT_SCHEDULE
 
 CELERYD_USER = CELERYD_GROUP = "eventkit"

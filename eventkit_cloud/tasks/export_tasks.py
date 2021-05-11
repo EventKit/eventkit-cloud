@@ -2236,13 +2236,13 @@ def get_function(function):
     return function_object
 
 
-def get_creation_options(config: str, driver: str) -> Union[list, None]:
+def get_creation_options(config: str, driver: str):
     """
     Gets a list of options for a specific format or returns None.
     :param config: The configuration for a datasource.
     :param driver: The file format to look for specific creation options.
-    :return: A list of creation options of None
-    """
+    :return: A tuple of None or the first value is list of warp creation options, and
+     the second value is a list of translate create options.     """
     if config:
         conf = yaml.safe_load(config) or dict()
         params = conf.get("formats", {}).get(driver, {})

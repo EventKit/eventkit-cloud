@@ -105,9 +105,13 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
 
     # TODO: Too complex, clean up.
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
-    celery_tasks = get_celery_tasks()
+    if getattr(settings, "PCF_SCALE_BY_RUN"):
+        celery_tasks = get_celery_tasks_scale_by_run()
+    else:
+        celery_tasks = get_celery_tasks_scale_by_task()
 
     celery_pcf_task_details = get_celery_pcf_task_details(client, app_name, celery_tasks)
+
     logger.info(f"Running Tasks Memory used: {celery_pcf_task_details['memory']} MB")
 
     celery_tasks = order_celery_tasks(celery_tasks, celery_pcf_task_details["task_counts"])
@@ -158,6 +162,7 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
             running_tasks_memory = client.get_running_tasks_memory(app_name)
         if not has_run_task:
             break
+
 
 
 def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
@@ -311,7 +316,24 @@ def get_celery_health_check_command(node_type: str):
     return health_check_command
 
 
-def get_celery_tasks():
+def get_celery_tasks_scale_by_run(num_of_workers=3):
+    default_command = "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME & " \
+                      "exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large & " \
+                      "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & " \
+                      "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority"
+
+    celery_tasks = {f"WORKER_{worker}": {"command": default_command,
+                                         # NOQA
+                                         "disk": 12288,
+                                         "memory": 8192,
+                                         } for worker in range(num_of_workers)}
+
+    celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
+
+    return celery_tasks
+
+
+def get_celery_tasks_scale_by_task():
     """
     Sets up a dict with settings for running about running PCF tasks for celery.
     Adding or modifying queues can be done here.
