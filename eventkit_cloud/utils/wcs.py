@@ -8,6 +8,7 @@ from string import Template
 import yaml
 from django.conf import settings
 
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.auth_requests import get_or_update_session
@@ -166,7 +167,7 @@ class WCSConverter(object):
         tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
-        session = get_or_update_session(cert_info=self.config.get("cert_info"))
+        session = get_or_update_session(cert_info=self.config.get("cert_info"), slug=self.slug)
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
@@ -190,12 +191,7 @@ class WCSConverter(object):
                         params["height"] = self.config.get("tile_size")
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
-                    req = session.get(
-                        self.service_url,
-                        params=params,
-                        stream=True,
-                        verify=getattr(settings, "SSL_VERIFICATION", True),
-                    )
+                    req = session.get(self.service_url, params=params, stream=True)
                     try:
                         size = int(req.headers.get("content-length"))
                     except (ValueError, TypeError):

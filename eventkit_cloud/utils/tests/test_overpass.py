@@ -72,7 +72,7 @@ class TestOverpass(TestCase):
 
     @patch("django.db.connection.close")
     @patch("eventkit_cloud.tasks.models.ExportTaskRecord")
-    @patch("eventkit_cloud.utils.overpass.auth_requests.post")
+    @patch("requests.Session.post")
     def test_run_query(self, mock_post, export_task, mock_close):
         verify_ssl = getattr(settings, "SSL_VERIFICATION", True)
         export_task_instance = Mock(progress=0, estimated_finish=None)
@@ -95,7 +95,7 @@ class TestOverpass(TestCase):
         mock_response.iter_content.return_value = sample_data
         mock_post.return_value = mock_response
         op.run_query()
-        mock_post.assert_called_once_with(self.url, cert_info=None, data=overpass_query, stream=True, verify=verify_ssl)
+        mock_post.assert_called_once_with(self.url, data=overpass_query, stream=True)
         mock_close.assert_called()
         f = open(out)
         data = f.read()

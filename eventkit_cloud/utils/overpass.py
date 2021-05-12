@@ -8,8 +8,8 @@ from string import Template
 import yaml
 from django.conf import settings
 from requests import exceptions
-
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.core.helpers import get_or_update_session
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ class Overpass(object):
         self.job_name = job_name
         self.debug = debug
         self.task_uid = task_uid
-        self.verify_ssl = getattr(settings, "SSL_VERIFICATION", True)
         self.config = config
         if bbox:
             # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
@@ -119,11 +118,12 @@ class Overpass(object):
             conf: dict = yaml.safe_load(self.config) or dict()
             cert_info = conf.get("cert_info")
 
-            req = auth_requests.post(self.url, cert_info=cert_info, data=query, stream=True, verify=self.verify_ssl)
+            session = get_or_update_session(cert_info=cert_info, slug=self.slug)
+            req = session.post(self.url, data=query, stream=True)
             if not req.ok:
                 # Workaround for https://bugs.python.org/issue27777
                 query = {"data": query}
-                req = auth_requests.post(self.url, cert_info=cert_info, data=query, stream=True, verify=self.verify_ssl)
+                req = session.post(self.url, data=query, stream=True)
             req.raise_for_status()
             try:
                 total_size = int(req.headers.get("content-length"))

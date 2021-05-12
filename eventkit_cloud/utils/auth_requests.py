@@ -2,16 +2,15 @@
 import http.client
 import logging
 import os
+import pdb
 import re
 import urllib.error
 import urllib.parse
-import urllib.request
 from functools import wraps
 from tempfile import NamedTemporaryFile
 
-import requests
-import requests_pkcs12
 from django.conf import settings
+from requests_pkcs12 import create_ssl_context
 from mapproxy.client import http as mapproxy_http
 from requests_pkcs12 import create_ssl_context
 
@@ -70,22 +69,6 @@ def get_cert_info(kwargs_dict):
     return cert_path, cert_pass
 
 
-def cert_var_to_cert(func):
-    """
-    Checks the supplied kwargs for the `cert_info` key, and extracts the cert path and pass if present. These are
-    mapped to the requests_pkcs12 params `pkcs12_filename` and `pkcs12_filename`.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
-        if cert_path is None or cert_pass is None:
-            return func(*args, **kwargs)
-        return func(pkcs12_filename=cert_path, pkcs12_password=cert_pass, *args, **kwargs)
-
-    return wrapper
-
-
 def get_cred(cred_var=None, url=None, params=None):
     """
     Given a URL with a query string, locates parameters corresponding to username and password, and returns them.
@@ -123,74 +106,6 @@ def get_cred(cred_var=None, url=None, params=None):
         cred = (params.get("username"), params.get("password"))
 
     return cred
-
-
-def handle_basic_auth(func):
-    """
-    Decorator for requests methods that supplies username and password as HTTPBasicAuth header.
-    Checks first for credentials environment variable, then URL, and finally kwarg parameters.
-    :param func: A requests method that returns an instance of requests.models.Response
-    :return: result of requests function call
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            cert_path, cert_pass = get_cert_info(kwargs)
-            if cert_path is None or cert_pass is None:
-                cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
-                url = kwargs.get("url")
-                cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
-                if cred:
-                    kwargs["auth"] = tuple(cred)
-            logger.debug(
-                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()])
-            )
-            response = func(*args, **kwargs)
-            return response
-        except Exception:
-            raise
-
-    return wrapper
-
-
-@cert_var_to_cert
-@handle_basic_auth
-def get(url=None, **kwargs):
-    """
-    Makes a GET request, optionally with cert_info.
-
-    :param url: URL for requests.get (using requests_pkcs12)
-    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
-    :return: Result of requests.get call
-    """
-    return requests_pkcs12.get(url, **kwargs)
-
-
-@cert_var_to_cert
-@handle_basic_auth
-def head(url=None, **kwargs):
-    """
-    Makes a HEAD request, optionally with cert_info.
-
-    :param url: URL for requests.get (using requests_pkcs12)
-    :param kwargs: Dict is passed along unaltered to requests.get, except for translating cert info
-    :return: Result of requests.head call
-    """
-    return requests_pkcs12.head(url, **kwargs)
-
-
-@cert_var_to_cert
-@handle_basic_auth
-def post(url=None, **kwargs):
-    """
-    Makes a POST request, optionally with cert_info.
-
-    :param url: URL for requests.get (using requests_pkcs12)
-    :param kwargs: Dict is passed along unaltered to requests.post, except for translating cert info
-    :return: Result of requests.post call
-    """
-    return requests_pkcs12.post(url, **kwargs)
 
 
 _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__

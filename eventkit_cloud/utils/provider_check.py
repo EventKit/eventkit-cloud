@@ -17,7 +17,8 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.core.helpers import get_or_update_session
+from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -168,8 +169,14 @@ class ProviderCheck(object):
         self.max_area = max_area
         self.result = CheckResults.SUCCESS
         self.timeout = 10
-        self.verify = getattr(settings, "SSL_VERIFICATION", True)
         self.config = config or dict()
+        self.session = get_or_update_session(
+            session=None,
+            cert_info=self.config.get("cert_info", None),
+            slug=self.slug,
+            params=self.query,
+            timeout=self.timeout,
+        )
 
         if aoi_geojson is not None and aoi_geojson != "":
             if isinstance(aoi_geojson, str):
@@ -219,10 +226,7 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            cert_info = self.config.get("cert_info", None)
-            response = auth_requests.get(
-                self.service_url, cert_info=cert_info, params=self.query, timeout=self.timeout, verify=self.verify
-            )
+            response = self.session.get(self.service_url, params=self.query, timeout=self.timeout)
 
             self.token_dict["status"] = response.status_code
 
@@ -306,6 +310,7 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
+<<<<<<< HEAD
             cert_info = self.config.get("cert_info")
 
             query = "out meta;"
@@ -318,6 +323,9 @@ class OverpassProviderCheck(ProviderCheck):
                 response = auth_requests.post(
                     self.service_url, cert_info=cert_info, data=query, timeout=self.timeout, verify=self.verify
                 )
+=======
+            response = self.session.post(url=self.service_url, data="out meta;", timeout=self.timeout)
+>>>>>>> pass slug as cred var to allow basic auth
 
             self.token_dict["status"] = response.status_code
 
@@ -736,12 +744,7 @@ class FileProviderCheck(ProviderCheck):
 
             cert_info = self.config.get("cert_info")
 
-            response = auth_requests.head(
-                url=self.service_url,
-                cert_info=cert_info,
-                timeout=self.timeout,
-                verify=getattr(settings, "SSL_VERIFICATION", True),
-            )
+            response = self.session.head(url=self.service_url, timeout=self.timeout)
 
             self.token_dict["status"] = response.status_code
 
@@ -799,12 +802,7 @@ class OGCProviderCheck(ProviderCheck):
             service_url = self.service_url.rstrip("/\\")
             processes_endpoint = urljoin(service_url, "processes/")
 
-            response = auth_requests.get(
-                url=processes_endpoint,
-                cert_info=cert_info,
-                timeout=self.timeout,
-                verify=getattr(settings, "SSL_VERIFICATION", True),
-            )
+            response = self.session.get(url=processes_endpoint, timeout=self.timeout)
 
             self.token_dict["status"] = response.status_code
 

@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class TestGeoCodeAuthResponse(TestCase):
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.auth_requests")
+    @patch("requests.Session.get")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_auth_response")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_cached_response")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.os.getenv")
-    def test_get_response(self, mock_getenv, mock_get_cached_response, mock_get_auth_response, mock_auth_requests):
+    def test_get_response(self, mock_getenv, mock_get_cached_response, mock_get_auth_response, mock_session_get):
 
         example_url = "http://test.test"
         example_payload = "test_payload"
@@ -29,9 +29,9 @@ class TestGeoCodeAuthResponse(TestCase):
         # Test no auth.
         mock_getenv.return_value = None
         expected_response = Mock(ok=True)
-        mock_auth_requests.get.return_value = expected_response
+        mock_session_get.return_value = expected_response
         self.assertEquals(expected_response, geocode_auth_response.get_response(example_payload))
-        mock_auth_requests.get.assert_called_once_with(example_url, params=example_payload)
+        mock_session_get.assert_called_once_with(example_url, params=example_payload)
 
         # Test cached auth.
         mock_getenv.return_value = True
@@ -55,11 +55,11 @@ class TestGeoCodeAuthResponse(TestCase):
         mock_get_auth_response.reset_mock()
 
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.check_data")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.auth_requests")
+    @patch("requests.Session.get")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_auth_headers")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_session_cookies")
     def test_get_cached_response(
-        self, mock_get_session_cookies, mock_get_auth_headers, mock_auth_requests, mock_check_data
+        self, mock_get_session_cookies, mock_get_auth_headers, mock_session_get, mock_check_data
     ):
         example_url = "test_headers"
         example_payload = {"test": "payload"}
@@ -69,38 +69,30 @@ class TestGeoCodeAuthResponse(TestCase):
         mock_get_session_cookies.return_value = example_cookies
         mock_get_auth_headers.return_value = example_headers
         expected_response = Mock(ok=True)
-        mock_auth_requests.get.return_value = expected_response
+        mock_session_get.return_value = expected_response
         mock_check_data.return_value = True
         self.assertEquals(expected_response, get_cached_response(example_url, example_payload))
-        mock_auth_requests.get.assert_called_once_with(
-            example_url, params=example_payload, cookies=example_cookies, headers=example_headers
-        )
+        mock_session_get.assert_called_once_with(example_url, params=example_payload, cookies=example_cookies)
 
         expected_response = Mock(ok=False)
-        mock_auth_requests.get.return_value = expected_response
+        mock_session_get.return_value = expected_response
         self.assertIsNone(get_cached_response(example_url, example_payload))
 
     @patch.dict(os.environ, {"GEOCODING_AUTH_CERT_PATH": "FAKE/GEO/PATH", "GEOCODING_AUTH_CERT_PASS_VAR": "FAKEPASS"})
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.check_data")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_or_update_session")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.update_session_cookies")
-    def test_get_auth_response(self, mock_update_session_cookies, mock_get_or_update_session, mock_check_data):
+    @patch("requests.Session.get")
+    def test_get_auth_response(self, mock_session_get, mock_check_data):
         example_url = "test_headers"
         example_payload = {"test": "payload"}
-        example_cookies = "test_cookies"
         example_headers = "test_headers"
         expected_response = Mock(ok=True, headers=example_headers)
-        mock_get_or_update_session().get.return_value = expected_response
-        mock_get_or_update_session().session.cookies = example_cookies
+        mock_session_get.return_value = expected_response
+        mock_check_data.return_value = True
         self.assertEquals(expected_response, get_auth_response(example_url, example_payload))
-        mock_update_session_cookies.assert_called_once_with(example_cookies)
-        mock_get_or_update_session.assert_called_with(
-            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR")
-        )
-        mock_get_or_update_session().get.assert_called_once_with(example_url, params=example_payload)
+        mock_session_get.assert_called_once_with(example_url, params=example_payload)
 
         expected_response = Mock(ok=False)
-        mock_get_or_update_session().get.return_value = expected_response
+        mock_session_get.return_value = expected_response
         self.assertIsNone(get_auth_response(example_url, example_payload))
 
     def test_check_data(self):

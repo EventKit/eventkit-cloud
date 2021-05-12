@@ -9,18 +9,15 @@ from django.conf import settings
 from django.contrib.gis.geos import WKTWriter
 from django.core.cache import cache
 
+from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.jobs.models import clean_config
 from eventkit_cloud.jobs.models import load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
-from eventkit_cloud.tasks.helpers import update_progress
-from eventkit_cloud.utils import gdalutils
-from eventkit_cloud.utils.auth_requests import get_or_update_session
-
-logger = logging.getLogger(__name__)
-
-
-PROCESS_CACHE_TIMEOUT = 600
+from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.tasks.task_process import update_progress
+from django.conf import settings
+from urllib.parse import urljoin
 
 
 class OgcApiProcess:
@@ -33,8 +30,7 @@ class OgcApiProcess:
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = get_or_update_session(*args, **kwargs)
-        self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
+        self.session = get_or_update_session(headers={"Authorization": f"Bearer: {session_token}"})
 
     def create_job(self, geometry, file_format=None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
@@ -42,9 +38,7 @@ class OgcApiProcess:
         jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
-            response = self.session.post(
-                jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),
-            )
+            response = self.session.post(jobs_endpoint, json=payload)
             response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
@@ -87,9 +81,7 @@ class OgcApiProcess:
 
         # fetch job results
         try:
-            response = self.session.get(
-                urljoin(self.job_url, "results/"), verify=getattr(settings, "SSL_VERIFICATION", True),
-            )
+            response = self.session.get(urljoin(self.job_url, "results/"))
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Unsuccessful request:{e}")
@@ -114,7 +106,7 @@ class OgcApiProcess:
         while job_status not in OGC_Status.get_finished_status():
             time.sleep(interval)
             try:
-                response = self.session.get(job_url, verify=getattr(settings, "SSL_VERIFICATION", True),)
+                response = self.session.get(job_url)
                 response.raise_for_status()
             except requests.exceptions.RequestException as e:
                 raise Exception(f"Unsuccessful request:{e}")

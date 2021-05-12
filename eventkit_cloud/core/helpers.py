@@ -5,8 +5,10 @@ import shutil
 import subprocess
 import zipfile
 from enum import Enum
+from functools import wraps
 from typing import Type
 
+import requests_pkcs12
 from django.db import models
 
 import dj_database_url
@@ -15,6 +17,8 @@ from django.conf import settings
 from django.core.cache import cache
 from notifications.signals import notify
 from django.contrib.auth.models import User
+
+from eventkit_cloud.utils import auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +121,78 @@ def load_land_vectors(db_conn=None, url=None):
         pass
     finally:
         logger.info("Finished loading land data.")
+
+
+def handle_auth(func):
+    """
+    Decorator for requests methods that supplies username and password as HTTPBasicAuth header.
+    Checks first for credentials environment variable, then URL, and finally kwarg parameters.
+    :param func: A requests method that returns an instance of requests.models.Response
+    :return: result of requests function call
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            cert_path, cert_pass = auth_requests.get_cert_info(kwargs)
+            kwargs["cert_path"] = cert_path
+            kwargs["cert_pass"] = cert_pass
+            cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
+            url = kwargs.get("url")
+            cred = auth_requests.get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
+            if cred:
+                kwargs["username"] = cred[0]
+                kwargs["password"] = cred[1]
+            logger.debug(
+                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()])
+            )
+            response = func(*args, **kwargs)
+            return response
+        except Exception:
+            raise
+
+    return wrapper
+
+
+@handle_auth
+def get_or_update_session(session=None, max_retries=3, headers=None, **auth_info):
+    username = auth_info.get("username")
+    password = auth_info.get("password")
+    cert_path = auth_info.get("cert_path")
+    cert_pass = auth_info.get("cert_pass")
+    ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
+
+    # TODO: remove
+    logger.error("************************************")
+    logger.error("username: {}".format(username))
+    logger.error("password: {}".format(password))
+    logger.error("cert_path: {}".format(cert_path))
+    logger.error("cert_pass: {}".format(cert_pass))
+    logger.error("************************************")
+
+    if not session:
+        session = requests.Session()
+
+    if username and password:
+        logger.error(f"setting {username} and {password} for session")
+        session.auth = (username, password)
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+    if cert_path and cert_pass:
+        try:
+            adapter = requests_pkcs12.Pkcs12Adapter(
+                pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
+            )
+            session.mount("https://", adapter)
+        except FileNotFoundError:
+            logger.error("No cert found at path {}".format(cert_path))
+
+    logger.debug("Using %s for SSL verification.", str(ssl_verify))
+    session.verify = ssl_verify
+    session.headers = headers
+    return session
 
 
 class NotificationLevel(Enum):
