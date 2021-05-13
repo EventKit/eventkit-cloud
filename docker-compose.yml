@@ -124,6 +124,7 @@ services:
     image: eventkit/eventkit-base:1.9.0
     volumes:
       - ./:/var/lib/eventkit/
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
     user: eventkit
     depends_on:
