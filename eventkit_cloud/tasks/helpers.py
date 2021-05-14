@@ -848,6 +848,7 @@ def merge_chunks(
     cert_info=None,
     task_points=100,
     feature_data=False,
+    distinct_field=None,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
     out = gdalutils.convert(
@@ -859,30 +860,34 @@ def merge_chunks(
         layer_name=layer_name,
         projection=projection,
         access_mode="append",
+        distinct_field=distinct_field,
     )
     return out
+
+
+def download_chunks_concurrently(layer, task_points, feature_data):
+    base_path = layer.get("base_path")
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+    merge_chunks(
+        output_file=layer.get("path"),
+        projection=layer.get("projection"),
+        layer_name=layer.get("layer_name"),
+        task_uid=layer.get("task_uid"),
+        bbox=layer.get("bbox"),
+        stage_dir=base_path,
+        base_url=layer.get("url"),
+        cert_info=layer.get("cert_info"),
+        task_points=task_points,
+        feature_data=feature_data,
+        distinct_field=layer.get("distinct_field"),
+    )
 
 
 def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
-
-    def download_chunks_concurrently(layer, task_points, feature_data):
-        base_path = layer.get("base_path")
-        os.mkdir(base_path)
-        merge_chunks(
-            output_file=layer.get("path"),
-            projection=layer.get("projection"),
-            layer_name=layer.get("layer_name"),
-            task_uid=layer.get("task_uid"),
-            bbox=layer.get("bbox"),
-            stage_dir=base_path,
-            base_url=layer.get("url"),
-            cert_info=layer.get("cert_info"),
-            task_points=task_points,
-            feature_data=feature_data,
-        )
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
@@ -935,9 +940,16 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
 
 
 def download_chunks(
-    task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_info=None,
+    task_points=100,
+    feature_data=False,
+    level=15,
 ):
-    tile_bboxes = get_chunked_bbox(bbox)
+    tile_bboxes = get_chunked_bbox(bbox, level=level)
     chunks = []
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
