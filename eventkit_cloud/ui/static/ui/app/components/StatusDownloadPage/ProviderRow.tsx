@@ -31,12 +31,17 @@ import {Link} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
 import {MatomoClickTracker} from "../MatomoHandler";
 
+const taskPaddingLeft = '44';
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
         width: '44px',
         padding: '0px',
     },
-    sizeColumnn: {
+    headingInsetColumn: {
+        width: '10px',
+        padding: '0px',
+    },
+    sizeColumn: {
         width: '80px',
         paddingRight: '0px',
         paddingLeft: '0px',
@@ -61,15 +66,26 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     taskLinkColumn: {
         paddingRight: '12px',
-        paddingLeft: '0px',
+        paddingLeft: `${taskPaddingLeft}px`,
         fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+        },
+    },
+    headingColumn: {
+        color: theme.eventkit.colors.black,
+        fontWeight: 'bold',
+        marginLeft: '0px',
+        paddingRight: '12px',
+        paddingLeft: '0px',
+        fontSize: '13px',
         [theme.breakpoints.up('md')]: {
             fontSize: '14px',
         },
     },
     zoomLevelColumn: {
         paddingRight: '12px',
-        paddingLeft: '0px',
+        paddingLeft: `${taskPaddingLeft}px`,
         fontSize: '12px',
         [theme.breakpoints.up('md')]: {
             fontSize: '14px',
@@ -142,6 +158,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         fontWeight: 600,
         cursor: 'pointer',
     },
+    nestedRows: {
+        borderBottom: '0px',
+        lineHeight: '1',
+        paddingBottom: '0.2em',
+    },
 });
 
 export interface ProviderRowProps {
@@ -165,7 +186,9 @@ export function ProviderRow(props: ProviderRowProps) {
     const {run} = useRunContext();
 
     const [openTable, setOpenTable] = useState(false);
-    const [fileSize, setFileSize] = useState(getFileSize(props.providerTask.tasks));
+    const exportTasks = providerTask.tasks.filter(task => (task.display !== false && !task.hide_download));
+    const preprocessingTasks = providerTask.tasks.filter(task => (task.display !== false && task.hide_download));
+    const [fileSize, setFileSize] = useState(getFileSize(exportTasks));
     const [providerDesc, setProviderDesc] = useState('');
     const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
@@ -187,7 +210,7 @@ export function ProviderRow(props: ProviderRowProps) {
     };
 
     useEffect(() => {
-        setFileSize(getFileSize(props.providerTask.tasks));
+        setFileSize(getFileSize(exportTasks));
     }, [props.providerTask.status]);
 
     function getFileSize(tasks: Eventkit.Task[]): string {
@@ -357,6 +380,9 @@ export function ProviderRow(props: ProviderRowProps) {
                 </span>
             );
         }
+        if (task.hide_download) {
+            return task.name;
+        }
         return (
             <MatomoClickTracker
                 eventAction="Download Task File"
@@ -455,6 +481,9 @@ export function ProviderRow(props: ProviderRowProps) {
                     }}
                 />
             );
+        }
+        if (task.hide_download) {
+            return null;
         }
         return (
             <MatomoClickTracker
@@ -594,8 +623,6 @@ export function ProviderRow(props: ProviderRowProps) {
         ),
     );
 
-    const tasks = providerTask.tasks.filter(task => (task.display !== false));
-
     let tableData;
     if (openTable) {
         tableData = (
@@ -604,24 +631,99 @@ export function ProviderRow(props: ProviderRowProps) {
                     className="qa-ProviderRow-TableBody"
                 >
                     {licenseData}
+
+                    {/* Preprocessing Info */}
                     <TableRow
                         className="qa-ProviderRow-TableRow-task"
                     >
-                        <TableCell classes={{root: classes.insetColumn}}/>
+                        <TableCell classes={{root: classes.headingInsetColumn}}/>
 
                         <TableCell
-                            className="qa-ProviderRow-TableCell-zoomLevels"
-                            classes={{root: classes.zoomLevelColumn}}
+                            className="qa-ProviderRow-TableCell-processingInfo"
+                            classes={{root: classes.headingColumn}}
                         >
-                            Zoom Levels {min_zoom} - {max_zoom}
+                            Preprocessing Information
                         </TableCell>
-                        <TableCell classes={{root: classes.sizeColumnn}}/>
+                        <TableCell classes={{root: classes.sizeColumn}}/>
                         <TableCell classes={{root: classes.estimatedFinishColumn}}/>
                         <TableCell classes={{root: classes.taskStatusColumn}}/>
                         <TableCell classes={{root: classes.menuColumn}}/>
                         <TableCell classes={{root: classes.arrowColumn}}/>
                     </TableRow>
-                    {tasks.map(task => (
+                    
+                    <TableRow
+                        className="qa-ProviderRow-TableRow-task"
+                    >
+                        <TableCell classes={{root: classes.insetColumn, body: classes.nestedRows}}/>
+
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-zoomLevels"
+                            classes={{root: classes.taskLinkColumn, body: classes.nestedRows}}
+                        >
+                            Zoom Levels {min_zoom} - {max_zoom}
+                        </TableCell>
+                        <TableCell classes={{root: classes.sizeColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.menuColumn, body: classes.nestedRows}}/>
+                        <TableCell classes={{root: classes.arrowColumn, body: classes.nestedRows}}/>
+                    </TableRow>
+                    {preprocessingTasks.map(task => (
+                        <TableRow
+                            className="qa-ProviderRow-TableRow-task"
+                            key={task.uid}
+                        >
+                            <TableCell classes={{root: classes.insetColumn, body: classes.nestedRows}}/>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-taskLinks"
+                                classes={{root: classes.taskLinkColumn, body: classes.nestedRows}}
+                            >
+                                {getTaskLink(task)}
+                                {getTaskDownloadIcon(task)}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-size"
+                                classes={{root: classes.sizeColumn, body: classes.nestedRows}}
+                            >
+                                {(task.hide_download || task.result == null) ? null : task.result.size}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-estimatedFinish"
+                                classes={{root: classes.estimatedFinishColumn, body: classes.nestedRows}}
+                                style={{fontSize: '.85em'}}
+                            >
+                                {getEstimatedFinish(task)}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-status"
+                                classes={{root: classes.taskStatusColumn, body: classes.nestedRows}}
+                            >
+                                {getTaskStatus(task)}
+                            </TableCell>
+                            <TableCell classes={{root: classes.menuColumn, body: classes.nestedRows}}/>
+                            <TableCell classes={{root: classes.arrowColumn, body: classes.nestedRows}}/>
+                        </TableRow>
+                    ))}
+                    
+                    {/* Downloads */}
+                    <TableRow
+                        className="qa-ProviderRow-TableRow-task"
+                    >
+                        <TableCell classes={{root: classes.headingInsetColumn}}/>
+
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-downloads"
+                            classes={{root: classes.headingColumn}}
+                        >
+                            Downloads
+                        </TableCell>
+                        <TableCell classes={{root: classes.sizeColumn}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn}}/>
+                        <TableCell classes={{root: classes.menuColumn}}/>
+                        <TableCell classes={{root: classes.arrowColumn}}/>
+                    </TableRow>
+                    {exportTasks.map(task => (
                         <TableRow
                             className="qa-ProviderRow-TableRow-task"
                             key={task.uid}
@@ -636,9 +738,9 @@ export function ProviderRow(props: ProviderRowProps) {
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-size"
-                                classes={{root: classes.sizeColumnn}}
+                                classes={{root: classes.sizeColumn}}
                             >
-                                {task.result == null ? '' : task.result.size}
+                                {(task.hide_download || task.result == null) ? null : task.result.size}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
@@ -692,7 +794,7 @@ export function ProviderRow(props: ProviderRowProps) {
                             className="qa-ProviderRow-TableCell-estimatedFinish"
                             classes={{root: classes.estimatedFinishColumn}}
                         >
-                            {getLastEstimatedFinish(tasks)}
+                            {getLastEstimatedFinish(exportTasks)}
                         </TableCell>
                         <TableCell
                             className="qa-ProviderRow-TableCell-providerStatus"

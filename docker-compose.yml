@@ -76,6 +76,7 @@ services:
       - MATOMO_SITE_ID
       - MATOMO_APPNAME
       - SECRET_KEY
+      - CONDA_REPO
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -233,7 +234,7 @@ services:
       - "5672"
       - "15672"
   mkdocs:
-    image: cfinfrastructure/mkdocs
+    image: cfinfrastructure/mkdocs:latest
     working_dir: /build
     volumes:
       - ./mkdocs.yml:/build/mkdocs.yml
@@ -294,6 +295,7 @@ services:
       - SSL_VERIFICATION
       - SECRET_KEY
   webpack:
+    image: eventkit/eventkit-webpack:1.9.0
     build:
       context: .
       dockerfile: config/Dockerfile_webpack

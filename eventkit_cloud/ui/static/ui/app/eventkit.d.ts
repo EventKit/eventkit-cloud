@@ -52,6 +52,7 @@ declare namespace Eventkit {
         };
         errors: Exception[];
         display: boolean;
+        hide_download: boolean;
     }
 
 
