@@ -1,0 +1,73 @@
+stages:
+  - pending
+  - test
+  - results
+
+variables:
+  MOUNT_POINT: $CI_PROJECT_DIR
+  BRANCH: "master"
+  NEXUS_BASE_URL: $NEXUS_BASE_URL
+  NEXUS_REPO: "EventKit_eventkit"
+  BASE_URL: "http://cloud.eventkit.test:6080"
+  SITE_NAME: "cloud.eventkit.test"
+  SITE_IP: "127.0.0.1"
+  SECRET_KEY: "TESTING"
+
+image:
+  name: $DOCKER_IMAGE
+
+lint:
+  when: always
+  stage: test
+  tags:
+    - dind
+  script:
+    - python scripts/ci_utils.py
+    - docker-compose up -d webpack eventkit
+    - docker-compose exec -T webpack npm run eslint
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --config /var/lib/eventkit/config/pyproject.toml --check /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud'
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud'
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"'
+
+unit-tests:
+  when: always
+  stage: test
+  tags:
+    - dind
+  script:
+    - python scripts/ci_utils.py
+    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=80 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+    - docker-compose run --rm --user=root -T webpack npm run coverage
+
+integration-tests:
+  when: always
+  stage: test
+  tags:
+    - dind
+  script:
+    - python scripts/ci_utils.py
+    - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
+    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py migrate'
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
+    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
+
+pending-tests:
+  when: always
+  stage: pending
+  script:
+    - python scripts/github.py pending "Waiting for tests."
+
+pass-tests:
+  when: on_success
+  stage: results
+  script:
+    - python scripts/github.py success "All tests pass."
+
+fail-tests:
+  when: on_failure
+  stage: results
+  script:
+    - python scripts/github.py failure "The pipeline failed."
