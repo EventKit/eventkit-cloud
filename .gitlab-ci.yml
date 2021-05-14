@@ -1,8 +1,7 @@
 stages:
   - pending
   - test
-  - failure
-  - success
+  - results
 
 variables:
   MOUNT_POINT: $CI_PROJECT_DIR
@@ -63,12 +62,12 @@ pending-tests:
 
 pass-tests:
   when: on_failure
-  stage: success
+  stage: results
   script:
     - python scripts/github.py success "All tests pass."
 
 fail-tests:
   when: on_failure
-  stage: failure
+  stage: results
   script:
     - python scripts/github.py failure "The pipeline failed."

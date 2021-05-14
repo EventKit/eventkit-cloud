@@ -13,13 +13,11 @@ def get_git_sha():
 
 
 def post_status(status, user, token):
-    git_url = run_subprocess('git config remote.origin.url').stdout.decode().strip()
-    if "github" in git_url:
-        git_sha = get_git_sha()
-        r = requests.post(f"https://api.github.com/repos/eventkit/eventkit-cloud/statuses/{git_sha}",
-                            data=json.dumps(status),
-                            auth=(user, token), headers={"accept": "application/vnd.github.v3+json"})
-        r.raise_for_status()
+    git_sha = get_git_sha()
+    r = requests.post(f"https://api.github.com/repos/eventkit/eventkit-cloud/statuses/{git_sha}",
+                        data=json.dumps(status),
+                        auth=(user, token), headers={"accept": "application/vnd.github.v3+json"})
+    r.raise_for_status()
 
 
 def get_status(state, message):
