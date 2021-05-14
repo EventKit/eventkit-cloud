@@ -1,5 +1,7 @@
 stages:
   - test
+  - failure
+  - success
 
 variables:
   MOUNT_POINT: $CI_PROJECT_DIR
@@ -51,3 +53,15 @@ integration-tests:
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
+
+pass-tests:
+  when: on_failure
+  stage: success
+  script:
+    - python scripts/github.py success "All tests pass."
+
+fail-tests:
+  when: on_failure
+  stage: failure
+  script:
+    - python scripts/github.py failure "The pipeline failed."

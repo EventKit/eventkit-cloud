@@ -1,8 +1,9 @@
+import json
 import logging
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
-
+import requests
 import yaml
 
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ def pull_and_rename_docker_image(image: str):
         f"docker tag {os.getenv('CI_REGISTRY_PATH').rstrip('/')}/{image_name}:{image_tag} {image_name}:{image_tag}"
     )
     logger.info(f"Locally tagged {image}")
+
 
 
 def setup_eventkit():
