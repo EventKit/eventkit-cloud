@@ -511,7 +511,13 @@ class JobViewSet(viewsets.ModelViewSet):
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.apply_async(
-                queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
+                queue="runs",
+                routing_key="runs",
+                kwargs={
+                    "run_uid": run_uid,
+                    "user_details": user_details,
+                    "session_token": request.session.get("access_token"),
+                },
             )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:

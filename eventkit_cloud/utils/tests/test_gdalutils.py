@@ -236,6 +236,7 @@ class TestGdalUtils(TestCase):
             boundary=geojson_file,
             bbox=None,
             task_uid=self.task_uid,
+            distinct_field=None,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
