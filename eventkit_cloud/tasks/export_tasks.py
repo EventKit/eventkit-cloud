@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import requests
 import shutil
 import socket
 import time
@@ -71,6 +72,8 @@ from eventkit_cloud.tasks.helpers import (
     download_data,
     download_concurrently,
     merge_chunks,
+    find_in_zip,
+    extract_metadata_files,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -84,9 +87,12 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
+from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from pathlib import Path
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1597,6 +1603,7 @@ def pick_up_run_task(
     user_details=None,
     data_provider_slugs=None,
     run_zip_file_slug_sets=None,
+    session_token=None,
     *args,
     **kwargs,
 ):
@@ -1620,6 +1627,7 @@ def pick_up_run_task(
             user_details=user_details,
             data_provider_slugs=data_provider_slugs,
             run_zip_file_slug_sets=run_zip_file_slug_sets,
+            session_token=session_token,
         )
     except Exception as e:
         run.status = TaskState.FAILED.value
@@ -1699,6 +1707,7 @@ def create_zip_task(
 
     metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
+
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
@@ -1710,6 +1719,17 @@ def create_zip_task(
         # No need to add QGIS file if there aren't any files to be zipped.
         include_files += [generate_qgs_style(metadata)]
         include_files += [get_human_readable_metadata_document(metadata)]
+
+        ogc_metadata_dir = os.path.join(
+            os.path.join(get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug), "metadata"
+        )
+
+        # TODO: make sure files are placed in the '../metadata' directory.
+        if os.path.isdir(ogc_metadata_dir):
+            path = Path(ogc_metadata_dir)
+            files = [str(file_) for file_ in path.rglob("*")]
+            include_files.extend(files)
+
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
@@ -2268,3 +2288,86 @@ def make_dirs(path):
     except OSError:
         if not os.path.isdir(path):
             raise
+
+
+@app.task(name="OGC Processes", bind=True, base=ExportTask, abort_on_error=True)
+def ogcapi_process_export_task(
+    self,
+    result=None,
+    layer=None,
+    config=None,
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    bbox=None,
+    service_url=None,
+    name=None,
+    service_type=None,
+    user_details=None,
+    projection=4326,
+    session_token=None,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining OGC API Processes export.
+    """
+
+    result = result or {}
+    export_task_record = get_export_task_record(task_uid)
+    provider_slug = export_task_record.export_provider_task.provider.slug
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+    download_path = get_export_filepath(stage_dir, f"{job_name}-source_zip", projection, provider_slug, "zip")
+    configuration = load_provider_config(config)
+
+    try:
+        ogc_process = OgcApiProcess(
+            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid
+        )
+        ogc_process.create_job(bbox=bbox)
+        download_url = ogc_process.get_job_results()
+        if not download_url:
+            raise Exception("Invalid response from OGC API server")
+    except Exception as e:
+        raise Exception(f"Error creating OGC API Process job:{e}")
+
+    update_progress(export_task_record.uid, progress=50, subtask_percentage=50)
+
+    ogc_config = configuration.get("ogcapi_process", dict())
+    download_credentials = ogc_config.get("download_credentials", dict())
+
+    if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
+        session = EventKitClient(
+            getattr(settings, "SITE_URL"),
+            username=os.getenv(download_credentials.get("user_var")),
+            password=os.getenv(download_credentials.get("pass_var")),
+        )
+        session = session.client
+        cert_info = None
+    else:
+        session = requests.Session()
+        cert_info = download_credentials.get("cert_info")
+
+    download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
+
+    source_data = find_in_zip(download_path, ogc_config.get("inputs", dict()).get("file_format"), stage_dir)
+    extract_metadata_files(download_path, stage_dir)
+
+    out = gdalutils.convert(
+        driver="gpkg",
+        input_file=source_data,
+        output_file=gpkg,
+        task_uid=task_uid,
+        projection=projection,
+        boundary=bbox,
+    )
+
+    update_progress(export_task_record.uid, progress=90, subtask_percentage=90)
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    result["gpkg"] = out
+
+    return result

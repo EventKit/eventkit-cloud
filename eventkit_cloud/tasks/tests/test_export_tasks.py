@@ -49,6 +49,7 @@ from eventkit_cloud.tasks.export_tasks import (
     raster_file_export_task,
     osm_data_collection_pipeline,
     reprojection_task,
+    ogcapi_process_export_task,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -1213,6 +1214,7 @@ class TestExportTasks(ExportTaskBase):
             worker="test",
             data_provider_slugs=None,
             run_zip_file_slug_sets=None,
+            session_token=None,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.logger")
@@ -1806,6 +1808,125 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_mapproxy().convert.assert_called_once()
+
+    @patch("eventkit_cloud.tasks.export_tasks.OgcApiProcess")
+    @patch("eventkit_cloud.tasks.export_tasks.extract_metadata_files")
+    @patch("eventkit_cloud.tasks.export_tasks.find_in_zip")
+    @patch("eventkit_cloud.tasks.export_tasks.download_data")
+    @patch("eventkit_cloud.tasks.export_tasks.requests.Session")
+    # @patch("time.sleep", return_value=None)
+    @patch("eventkit_cloud.tasks.export_tasks.update_progress")
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
+    def test_ogcapi_process_export_task(
+        self,
+        mock_request,
+        mock_convert,
+        mock_update_progress,
+        # patch_time,
+        mock_session,
+        mock_download_data,
+        mock_find_in_zip,
+        mock_extract_metadata_files,
+        mock_ogc_process,
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        projection = 4326
+        bbox = [1, 2, 3, 4]
+        expected_provider_slug = "ogc_api_proc"
+        self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
+        self.provider.slug = expected_provider_slug
+        self.provider.config = None
+        self.provider.save()
+        date = default_format_time(timezone.now())
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_outzip = f"{job_name}-source_zip-{projection}-{expected_provider_slug}-{date}.zip"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        expected_outzip_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outzip
+        )
+        source_file = "foo.gpkg"
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskState.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task,
+            status=TaskState.PENDING.value,
+            name=ogcapi_process_export_task.name,
+        )
+        task_uid = str(saved_export_task.uid)
+        ogcapi_process_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=task_uid)
+
+        config = """
+                process: 'eventkit'
+                inputs:
+                    product: 'random'
+                    file_format: 'gpkg'
+                outputs:
+                    archive_format: 'application/zip'
+                source_config:
+                    user_var: "USER_VAR"
+                    pass_var: "PASS_VAR"
+                """
+
+        configuration = yaml.load(config)
+        service_url = "http://bundler.io/v1/"
+        download_url = "http://source-service.net/downloads/foo"
+        session_token = "_some_token_"
+
+        process = mock_ogc_process(
+            url=service_url, config=configuration, session_token=session_token, task_id=saved_export_task.uid
+        )
+        process.get_job_results.return_value = download_url
+        mock_convert.return_value = expected_output_path
+        mock_download_data.return_value = expected_outzip_path
+
+        mock_find_in_zip.return_value = source_file
+
+        ogcapi_process_export_task.run(
+            run_uid=self.run.uid,
+            result=None,
+            task_uid=task_uid,
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=None,
+            config=config,
+            bbox=bbox,
+            session_token=session_token,
+        )
+
+        mock_ogc_process.assert_called_with(
+            url=service_url, config=configuration, session_token=session_token, task_id=saved_export_task.uid
+        )
+
+        process.create_job.assert_called_once_with(bbox=bbox)
+
+        process.get_job_results.assert_called_once()
+        self.assertEqual(len(mock_update_progress.mock_calls), 2)
+
+        mock_download_data.assert_called_once_with(
+            task_uid, download_url, expected_outzip_path, session=mock_session(), cert_info=None
+        )
+
+        mock_find_in_zip.assert_called_once_with(expected_outzip_path, configuration.get("file_format"), stage_dir)
+
+        mock_extract_metadata_files.assert_called_once_with(expected_outzip_path, stage_dir)
+
+        mock_convert.assert_called_once_with(
+            driver="gpkg",
+            input_file=source_file,
+            output_file=expected_output_path,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=bbox,
+        )
 
 
 class TestFormatTasks(ExportTaskBase):
