@@ -1,4 +1,5 @@
 stages:
+  - pending
   - test
   - failure
   - success
@@ -53,6 +54,12 @@ integration-tests:
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
+
+pending-tests:
+  when: always
+  stage: pending
+  script:
+    - python scripts/github.py pending "Waiting for tests."
 
 pass-tests:
   when: on_failure
