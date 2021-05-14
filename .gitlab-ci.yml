@@ -61,7 +61,7 @@ pending-tests:
     - python scripts/github.py pending "Waiting for tests."
 
 pass-tests:
-  when: on_failure
+  when: on_success
   stage: results
   script:
     - python scripts/github.py success "All tests pass."
