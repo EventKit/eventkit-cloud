@@ -345,6 +345,7 @@ class TestExportTasks(ExportTaskBase):
             boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
             access_mode="append",
+            distinct_field=None,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -905,6 +906,7 @@ class TestExportTasks(ExportTaskBase):
             layer_name=expected_provider_slug,
             boundary=bbox,
             access_mode="append",
+            distinct_field=None,
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
@@ -931,6 +933,7 @@ class TestExportTasks(ExportTaskBase):
 
         layer_name_1 = "foo"
         layer_name_2 = "bar"
+        expected_field = "baz"
 
         config = f"""
         vector_layers:
@@ -938,10 +941,11 @@ class TestExportTasks(ExportTaskBase):
               url: '{url_1}'
             - name: '{layer_name_2}'
               url: '{url_2}'
+              distinct_field: '{expected_field}'
         """
 
-        expected_path_1 = f"{stage_dir}{job_name}-{layer_name_1}-{projection}-{expected_provider_slug}-{date}.json"
-        expected_path_2 = f"{stage_dir}{job_name}-{layer_name_2}-{projection}-{expected_provider_slug}-{date}.json"
+        expected_path_1 = f"{stage_dir}{job_name}-{layer_name_1}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_path_2 = f"{stage_dir}{job_name}-{layer_name_2}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_url_1 = f"{url_1}/{query_string}"
         expected_url_2 = f"{url_2}/{query_string}"
         expected_layers = {
@@ -954,6 +958,7 @@ class TestExportTasks(ExportTaskBase):
                 "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_1,
+                "distinct_field": None,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -964,6 +969,7 @@ class TestExportTasks(ExportTaskBase):
                 "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_2,
+                "distinct_field": expected_field,
             },
         }
 
