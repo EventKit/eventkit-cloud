@@ -34,7 +34,8 @@ unit-tests:
     - dind
   script:
     - python scripts/ci_utils.py
-    - docker-compose run --rm -T  -e COVERAGE=True -e COVERAGE_THRESHOLD=80 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=80 eventkit python manage.py test -v=2 --noinput eventkit_cloud
     - docker-compose run --rm --user=root -T webpack npm run coverage
 
 integration-tests:
@@ -45,9 +46,7 @@ integration-tests:
   script:
     - python scripts/ci_utils.py
     - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
-    - mkdir -p exports_stage exports_download || echo $?
-    - chmod 777 exports_stage exports_download || echo $?
-    - chown -R 8800:880 . || echo $?
+    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
     - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
