@@ -88,7 +88,10 @@ def logout(request):
 
 def has_valid_access_token(request) -> bool:
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
-        access_token = request.session.get("access_token")
+        if isinstance(request, str):
+            access_token = request
+        else:
+            access_token = request.session.get("access_token")
         if access_token:
             try:
                 # This returns a call to get_user which updates the oauth profile.
