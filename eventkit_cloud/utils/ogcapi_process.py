@@ -1,12 +1,21 @@
 import requests
 import time
+import logging
 
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils import auth_requests, gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.tasks.task_process import update_progress
 from django.conf import settings
 from urllib.parse import urljoin
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+logger = logging.getLogger(__name__)
 
 
 class OgcApiProcess:
@@ -19,7 +28,7 @@ class OgcApiProcess:
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = auth_requests.AuthSession().session
+        self.session = get_or_update_session(requests.session(), *args, **kwargs)
         self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
 
     def create_job(self, bbox):
@@ -40,12 +49,16 @@ class OgcApiProcess:
             response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
+            logger.error("Failed to post OGC Process payload:")
+            logger.error(payload)
+            logger.error(jobs_endpoint)
             raise Exception(f"Unsuccessful request:{e}")
 
         response_content = response.json()
         job_id = response_content.get("jobID")
         if not job_id:
-            raise Exception("Invalid response from OGC API server")
+            logger.error(response_content)
+            raise Exception("Unable to post to OGC process request.")
 
         self.job_url = urljoin(jobs_endpoint, f"{job_id}/")
 
@@ -60,6 +73,7 @@ class OgcApiProcess:
         # poll job status
         ogc_job = self.wait_for_ogc_process_job(self.job_url, self.task_id)
         if ogc_job.get("status") != OGC_Status.SUCCESSFUL.value:
+            logger.error(ogc_job)
             raise Exception(f"Unsuccessful OGC export. {ogc_job.get('status')}: {ogc_job.get('message')}")
 
         update_progress(self.task_id, progress=50, subtask_percentage=50)
@@ -77,7 +91,8 @@ class OgcApiProcess:
         download_url = response_content.get("archive_format", dict()).get("href")
 
         if not download_url:
-            raise Exception("Invalid response from OGC API server")
+            logger.error(response_content)
+            raise Exception("The OGC Process server did not produce a download.")
 
         return download_url
 
@@ -99,7 +114,7 @@ class OgcApiProcess:
             response_content = response.json()
             job_status = response_content.get("status")
             if not job_status:
-                raise Exception("Invalid response from OGC API server")
+                raise Exception("OGC API Process service did not provide a valid status.")
             if task_id:
                 update_progress(task_id, progress=25, subtask_percentage=response_content.get("progress", 50))
 

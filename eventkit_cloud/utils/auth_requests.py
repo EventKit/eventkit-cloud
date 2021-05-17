@@ -10,10 +10,11 @@ import requests_pkcs12
 from functools import wraps
 from tempfile import NamedTemporaryFile
 from django.conf import settings
-from requests_pkcs12 import Pkcs12Adapter, create_ssl_context
+from requests_pkcs12 import create_ssl_context
 
 import requests
 from mapproxy.client import http as mapproxy_http
+
 
 logger = logging.getLogger(__name__)
 
@@ -154,26 +155,6 @@ def handle_basic_auth(func):
     return wrapper
 
 
-class AuthSession(object):
-    def __init__(self,):
-        self.session = requests.session()
-        self.cookies = self.session.cookies
-
-    @handle_basic_auth
-    def get(self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
-        if not (cert_path is None or cert_pass is None):
-            self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
-        return self.session.get(*args, **kwargs)
-
-    @handle_basic_auth
-    def post(self, *args, **kwargs):
-        cert_path, cert_pass = get_cert_info(kwargs)
-        if not (cert_path is None or cert_pass is None):
-            self.session.mount(kwargs.get("url"), Pkcs12Adapter(pkcs12_filename=cert_path, pkcs12_password=cert_pass))
-        return self.session.post(*args, **kwargs)
-
-
 @cert_var_to_cert
 @handle_basic_auth
 def get(url=None, **kwargs):
@@ -290,3 +271,34 @@ def unpatch_https():
     :return: None
     """
     http.client.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
+
+
+def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cred_var=None,
+                          cert_info=None):
+    if not session:
+        session = requests.Session()
+
+    if username and password:
+        session.auth = (username, password)
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+    if cred_var:
+        credentials = get_cred(cred_var=cred_var)
+        logger.error(f"Using credentials: {credentials}")
+        session.auth = tuple(credentials)
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+    cert_path, cert_pass = get_cert_info({"cert_info": cert_info})
+    if cert_path and cert_pass:
+        adapter = requests_pkcs12.Pkcs12Adapter(
+            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
+        )
+        session.mount("https://", adapter)
+
+    logger.debug("Using %s for SSL verification.", str(verify))
+    session.verify = verify
+    return session

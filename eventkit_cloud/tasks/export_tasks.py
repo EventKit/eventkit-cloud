@@ -2323,7 +2323,8 @@ def ogcapi_process_export_task(
 
     try:
         ogc_process = OgcApiProcess(
-            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid
+            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid,
+            cred_var=configuration.get("cred_var"), cert_info=configuration.get("cert_info")
         )
         ogc_process.create_job(bbox=bbox)
         download_url = ogc_process.get_job_results()
@@ -2338,6 +2339,7 @@ def ogcapi_process_export_task(
     download_credentials = ogc_config.get("download_credentials", dict())
 
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
+        logger.error(f"****LOGGING INTO EVENTKIT WITH CREDS: {download_credentials}")
         session = EventKitClient(
             getattr(settings, "SITE_URL"),
             username=os.getenv(download_credentials.get("user_var")),
@@ -2350,8 +2352,9 @@ def ogcapi_process_export_task(
         cert_info = download_credentials.get("cert_info")
 
     download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
+    output_ext = ogc_config.get("inputs", dict()).get("file_format") or ogc_config.get("inputs", dict()).get("file_format")
+    source_data = find_in_zip(download_path, output_ext, stage_dir)
 
-    source_data = find_in_zip(download_path, ogc_config.get("inputs", dict()).get("file_format"), stage_dir)
     extract_metadata_files(download_path, stage_dir)
 
     out = gdalutils.convert(
