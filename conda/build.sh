@@ -44,6 +44,7 @@ function create_index {
 
 echo "Converting the requirements.txt to a format compatible with conda."
 python /root/convert_requirements_to_conda.py
+cat /root/recipes/eventkit-cloud/conda-requirements.txt
 
 echo "Building recipes"
 cd /root/recipes
