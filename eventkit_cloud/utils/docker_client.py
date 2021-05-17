@@ -1,8 +1,8 @@
+import uuid
+
 import requests
 import os
 import logging
-from enum import Enum
-import json
 import docker
 
 logger = logging.getLogger(__file__)
@@ -13,62 +13,44 @@ class DockerClient(object):
         self.client = docker.from_env()
         self.session = requests.Session()
 
+    def run_task(self, name, command, disk_in_mb=None, memory_in_mb="1g", app_name="eventkit/eventkit-base:1.9.0"):
 
-    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
-        app_name = (
-                os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"), ) or app_name
-        )
         if not app_name:
-            raise Exception("An application name was not provided to run_task.")
-        app_guid = self.get_app_guid(app_name)
-        if not app_guid:
-            raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
-        if not disk_in_mb:
-            disk_in_mb = os.getenv("CELERY_TASK_DISK", "2048")
+            raise Exception("An app_name (docker image) was not provided to run_task.")
         if not memory_in_mb:
-            memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2048")
-        payload = {
-            "name": name,
-            "command": command,
-            "disk_in_mb": disk_in_mb,
-            "memory_in_mb": memory_in_mb,
-        }
-        url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), app_guid)
-        return self.session.post(
-            url,
-            json=payload,
-            headers={
-                "Authorization": "bearer {0}".format(self.token),
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        ).json()
+            memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2G")
+        # TODO: Do we need to clean any host specific environment variables.
+        name = f"celery_task_{uuid.uuid4()}"
+        return self.client.containers.run(
+            app_name, command, name=name, environment=dict(os.environ), detach=True, mem_limit=memory_in_mb
+        )
 
-
-    def get_running_tasks(self, app_name: str = None, names: str = None) -> list:
+    def get_running_tasks(self) -> dict:
         """
-        Get running pcf tasks.
-        :param app_name: The name of the PCF app.
-        :param names:  A comma separated list of names given to the tasks when they were originally called.
+        Get running celery tasks.
         :return: A list of the running task names.
         """
-        containers = self.client.containers.list(filters={"ancestor": app_name, "labels": names})
+        containers = self.client.containers.list(filters={"name": "celery_task"})
         result = {"resources": []}
-        for c in containers:
-            result['resources'].append({"guid": c.name})
-        #todo: looks like the pcf client returns a dictionary of the running tasks with their various properties
-        #will need to to `c.stat(stream=False)` on each container and format the results to emulate the pcf results
-        return json.dumps(result)
+        for container in containers:
+            result["resources"].append(
+                {
+                    "guid": container.name,
+                    "memory_in_mb": container.stats(stream=False)["memory_stats"]["limit"] / 1000000,
+                }
+            )
+        return result
 
-    def get_running_tasks_memory(self, app_name: str) -> int:
+    def get_running_tasks_memory(self) -> int:
         """
         Get running tasks memory for a single app.
         :param app_name: Name of app running tasks
         :return: Running task memory in mb.
         """
 
-        running_tasks = self.get_running_tasks(app_name)
+        running_tasks = self.get_running_tasks()
         running_tasks_memory = 0
+        print(running_tasks)
         for task in running_tasks["resources"]:
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
