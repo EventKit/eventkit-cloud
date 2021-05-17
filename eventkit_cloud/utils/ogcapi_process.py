@@ -2,12 +2,17 @@ import requests
 import time
 import logging
 
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils import auth_requests, gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.tasks.task_process import update_progress
 from django.conf import settings
 from urllib.parse import urljoin
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +28,7 @@ class OgcApiProcess:
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = auth_requests.AuthSession().session
+        self.session = get_or_update_session(requests.session(), *args, **kwargs)
         self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
 
     def create_job(self, bbox):
@@ -44,6 +49,9 @@ class OgcApiProcess:
             response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
+            logger.error("Failed to post OGC Process payload:")
+            logger.error(payload)
+            logger.error(jobs_endpoint)
             raise Exception(f"Unsuccessful request:{e}")
 
         response_content = response.json()

@@ -2323,7 +2323,8 @@ def ogcapi_process_export_task(
 
     try:
         ogc_process = OgcApiProcess(
-            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid
+            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid,
+            cred_var=configuration.get("cred_var"), cert_info=configuration.get("cert_info")
         )
         ogc_process.create_job(bbox=bbox)
         download_url = ogc_process.get_job_results()

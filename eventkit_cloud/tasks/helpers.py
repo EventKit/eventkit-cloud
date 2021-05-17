@@ -5,7 +5,6 @@ import os
 import pickle
 import re
 import requests
-import requests_pkcs12
 import signal
 import time
 import urllib.parse
@@ -36,6 +35,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests, gdalutils
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -963,29 +963,6 @@ def download_chunks(
         download_function(task_uid, url, outfile, cert_info, task_points=task_points)
         chunks.append(outfile)
     return chunks
-
-
-def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
-    if not session:
-        session = requests.Session()
-
-    if username and password:
-        logger.error(f"setting {username} and {password} for session")
-        session.auth = (username, password)
-        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
-    if cert_path and cert_pass:
-        adapter = requests_pkcs12.Pkcs12Adapter(
-            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
-        )
-        session.mount("https://", adapter)
-
-    logger.debug("Using %s for SSL verification.", str(verify))
-    session.verify = verify
-    return session
 
 
 def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, session=None, task_points=100):
