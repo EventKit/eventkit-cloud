@@ -16,6 +16,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import yaml
 from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
+from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
@@ -151,6 +152,8 @@ class ExportTask(EventKitBaseTask):
     # whether to abort the whole provider if this task fails.
     abort_on_error = False
     name = "ExportTask"
+    display = True
+    hide_download = True
 
     def __call__(self, *args, **kwargs) -> dict:
         task_uid = kwargs.get("task_uid")
@@ -161,6 +164,8 @@ class ExportTask(EventKitBaseTask):
                 .select_related("export_provider_task__provider")
                 .get(uid=task_uid)
             )
+            if self.hide_download:
+                task.hide_download = True
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -174,7 +179,11 @@ class ExportTask(EventKitBaseTask):
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
             if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
-                retval = super(ExportTask, self).__call__(*args, **kwargs)
+                try:
+                    retval = super(ExportTask, self).__call__(*args, **kwargs)
+                except SoftTimeLimitExceeded as e:
+                    logger.error(e)
+                    raise Exception("Task time limit exceeded. Try again or contact us.") from e
 
             """
             Update the successfully completed task as follows:
@@ -345,6 +354,7 @@ class FormatTask(ExportTask):
 
     name = "FormatTask"
     display = True
+    hide_download = False
 
 
 class ZipFileTask(FormatTask):
@@ -489,7 +499,7 @@ def osm_data_collection_pipeline(
     return result
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create OSM", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -771,7 +781,7 @@ def sqlite_export_task(
     return result
 
 
-@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
+@app.task(name="Create Area of Interest", bind=True, base=ExportTask, acks_late=True)
 def output_selection_geojson_task(
     self,
     result=None,
@@ -1089,7 +1099,7 @@ def reprojection_task(
     return result
 
 
-@app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create WFS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wfs_export_task(
     self,
     result=None,
@@ -1229,7 +1239,7 @@ def get_wfs_query_url(
     return url
 
 
-@app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wcs_export_task(
     self,
     result=None,
@@ -1286,7 +1296,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create ArcGIS FeatureService Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1320,7 +1330,8 @@ def arcgis_feature_service_export_task(
     if len(vector_layer_data):
         layers = {}
         for layer in vector_layer_data:
-            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "json")
+            # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
+            path = get_export_filepath(stage_dir, job_name, f"{layer.get('name')}-{projection}", provider_slug, "gpkg")
             url = get_arcgis_query_url(layer.get("url"))
             layers[layer["name"]] = {
                 "task_uid": task_uid,
@@ -1331,6 +1342,7 @@ def arcgis_feature_service_export_task(
                 "cert_info": configuration.get("cert_info"),
                 "layer_name": layer.get("name"),
                 "projection": projection,
+                "distinct_field": layer.get("distinct_field"),
             }
 
             try:
@@ -1401,7 +1413,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
     return query_url
 
 
-@app.task(name="VectorFileExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create Vector File Export", bind=True, base=ExportTask, abort_on_error=True)
 def vector_file_export_task(
     self,
     result=None,
@@ -1452,7 +1464,7 @@ def vector_file_export_task(
     return result
 
 
-@app.task(name="RasterFileExport", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="Create Raster File Export", bind=True, base=ExportTask, abort_on_error=True)
 def raster_file_export_task(
     self,
     result=None,
@@ -1502,7 +1514,7 @@ def raster_file_export_task(
     return result
 
 
-@app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
+@app.task(name="Create Bounds Export", bind=True, base=ExportTask)
 def bounds_export_task(
     self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs
 ):
@@ -1529,7 +1541,7 @@ def bounds_export_task(
     return result
 
 
-@app.task(name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="Create Raster Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def mapproxy_export_task(
     self,
     result=None,

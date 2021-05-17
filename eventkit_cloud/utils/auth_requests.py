@@ -100,9 +100,9 @@ def get_cred(cred_var=None, url=None, params=None):
     if cred_var:
         env_slug = cred_var.replace("-", "_")
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED") or os.getenv(env_slug)
-    if cred is not None and ":" in cred and all(cred.split(":")):
-        logger.debug("Found credentials for %s in env var", cred_var)
-        return cred.split(":")
+        if cred is not None and ":" in cred and all(cred.split(":")):
+            logger.debug("Found credentials for %s in env var", cred_var)
+            return cred.split(":")
 
     # Check url and params for http credentials
     if url:
@@ -139,10 +139,10 @@ def handle_basic_auth(func):
             cert_path, cert_pass = get_cert_info(kwargs)
             if cert_path is None or cert_pass is None:
                 cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
-            url = kwargs.get("url")
-            cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
-            if cred:
-                kwargs["auth"] = tuple(cred)
+                url = kwargs.get("url")
+                cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
+                if cred:
+                    kwargs["auth"] = tuple(cred)
             logger.debug(
                 "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()])
             )

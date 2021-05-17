@@ -218,6 +218,7 @@ If the data source is secure then some additional information will need to be pr
 The desired layers for **WFS** and **ArcGIS Feature** service providers can be specified through the configuration. All specified layers will be present and individually addressable in the exported datapack.
 
 In order to specify the desired layers, a YAML configuration must be supplied. The configuration must include a `vector_layers` key, whose value is a list of objects, with each object containing the properties `name` and `url`.
+Additionally (currently for ArcgGIS FeatureServices) specify a "distinct_field" to ensure group features on that field.
 
 ##### Example ArcGIS Configuration
 ```yaml
@@ -228,6 +229,7 @@ vector_layers:
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/3' 
   - name: 'Subbasin'
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/4'
+    distinct_field: 'OBJECTID'
 ```
 For ArcGIS providers, the specific URL for each layer must be provided.
 

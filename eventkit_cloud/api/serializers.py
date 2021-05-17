@@ -201,6 +201,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
             "result",
             "errors",
             "display",
+            "hide_download",
         )
 
     def get_result(self, obj):
