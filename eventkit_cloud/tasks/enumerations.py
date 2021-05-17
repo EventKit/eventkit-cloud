@@ -31,3 +31,29 @@ class TaskState(Enum):
     @staticmethod
     def get_not_finished_states():
         return [TaskState.PENDING, TaskState.RUNNING, TaskState.SUBMITTED]
+
+
+class OGC_Status(Enum):
+    # finished status
+    SUCCESSFUL = "successful"  # Used for when a job is completed successfully.
+    FAILED = "failed"  # Used for when a job fails to process.
+    DISMISSED = "dismissed"  # Used for when a job is not processed.
+
+    # incomplete status
+    ACCEPTED = "accepted"
+    RUNNING = "running"
+
+    @staticmethod
+    def get_finished_status():
+        return [
+            OGC_Status.SUCCESSFUL.value,
+            OGC_Status.FAILED.value,
+            OGC_Status.DISMISSED.value,
+        ]
+
+    @staticmethod
+    def get_incomplete_states():
+        return [
+            OGC_Status.ACCEPTED.value,
+            OGC_Status.RUNNING.value,
+        ]

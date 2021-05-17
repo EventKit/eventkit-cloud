@@ -30,6 +30,7 @@ from eventkit_cloud.tasks.export_tasks import (
     arcgis_feature_service_export_task,
     vector_file_export_task,
     raster_file_export_task,
+    ogcapi_process_export_task,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
@@ -66,10 +67,17 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
             "vector-file": vector_file_export_task,
             "raster-file": raster_file_export_task,
+            "ogcapi-process": ogcapi_process_export_task,
         }
 
     def parse_tasks(
-        self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None, run_zip_file_slug_sets=None
+        self,
+        worker=None,
+        run_uid=None,
+        user_details=None,
+        data_provider_slugs=None,
+        run_zip_file_slug_sets=None,
+        session_token=None,
     ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
@@ -172,6 +180,7 @@ class TaskFactory:
                         "service_type": provider_task.provider.export_provider_type.type_name,
                         "worker": worker,
                         "user_details": user_details,
+                        "session_token": session_token,
                     }
 
                     (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
