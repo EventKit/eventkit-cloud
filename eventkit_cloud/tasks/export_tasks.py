@@ -82,6 +82,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
@@ -1596,7 +1597,6 @@ def pick_up_run_task(
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
-
     run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
@@ -1615,8 +1615,10 @@ def pick_up_run_task(
         logger.error(str(e))
         raise
     wait_for_run(run_uid=run_uid)
-    # TODO: If we are scaling on runs, after the work is done, shut down the worker.
-    #  (and thus the container (pcf task or docker container))
+    if os.getenv("CELERY_SCALE_BY_RUN"):
+        queue_name = "runs"
+        logger.info(f"Shutting down celery workers on the {queue_name} queue...")
+        shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
 
 
 def wait_for_run(run_uid: str = None) -> None:

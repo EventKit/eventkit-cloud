@@ -16,16 +16,13 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     send_warning_email,
     check_provider_availability_task,
     clean_up_queues_task,
-    scale_celery_task,
     list_to_dict,
     get_celery_task_details,
     order_celery_tasks,
     scale_by_tasks,
     get_celery_tasks_scale_by_task,
-    get_celery_tasks_scale_by_run,
     scale_by_runs,
 )
-from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
@@ -85,24 +82,25 @@ class TestExpireRunsTask(TestCase):
 
 class TestPcfScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_message_count")
-    @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
-    def test_scale_by_runs(self, mock_pcf_client, mock_get_message_count):
+    @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
+    def test_scale_by_runs(self, mock_client, mock_get_message_count):
 
-        client = DockerClient()
-        # TODO: Should mock this and test this function separately.
-        celery_tasks = get_celery_tasks_scale_by_run()
+        celery_tasks = {"WORKER_1": {"command": "echo hello world", "disk": 2048, "memory": 2048}}
+
+        # Test zero runs
+        mock_get_message_count.return_value = 0
+        mock_client().run_task.assert_not_called()
 
         example_memory_used = 2048
         mock_get_message_count.return_value = 1
         # If running_tasks_memory > max_tasks_memory do not scale.
-        mock_pcf_client().get_running_tasks_memory.return_value = example_memory_used
+        mock_client().get_running_tasks_memory.return_value = example_memory_used
         scale_by_runs(celery_tasks, 2000)
-        mock_pcf_client().run_task.assert_not_called()
+        mock_client().run_task.assert_not_called()
 
-        # TODO: This doesn't seem right though because now we would be OVER our limit.
         # Assert that a task was run.
         scale_by_runs(celery_tasks, 3000)
-        mock_pcf_client().run_task.assert_called_once()
+        mock_client().run_task.assert_called_once()
 
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.order_celery_tasks")

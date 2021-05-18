@@ -35,7 +35,7 @@ services:
       - SITE_NAME
       - SITE_IP
       - TERM
-      - DEBUG
+      - DEBUG=True
       - PRODUCTION
       - DJANGO_LOG_LEVEL
       - LOG_LEVEL
@@ -120,66 +120,13 @@ services:
       - SECRET_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-#  celery:
-#    image: eventkit/eventkit-base:1.9.0
-#    volumes:
-#      - ./:/var/lib/eventkit/
-#      - /var/run/docker.sock:/var/run/docker.sock
-#      - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
-#    user: eventkit
-#    depends_on:
-#      - postgis
-#      - rabbitmq
-#      - eventkit
-#      - memcached
-#    links:
-#      - postgis
-#      - rabbitmq
-#      - memcached
-#    environment:
-#      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-#      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-#      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
-#      - MEMCACHED=memcached:11211
-#      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
-#      - CELERY_GROUP_NAME=GROUP_A
-#      - QT_QPA_PLATFORM=offscreen
-#      - SITE_NAME
-#      - SITE_IP
-#      - TERM
-#      - DEBUG
-#      - PRODUCTION
-#      - DJANGO_LOG_LEVEL
-#      - LOG_LEVEL
-#      - MAPPROXY_LOGS_REQUESTS
-#      - MAPPROXY_LOGS_VERBOSE
-#      - MAPPROXY_LOGS_SILENT
-#      - EXPORT_DOWNLOAD_ROOT
-#      - PYTHONWARNINGS
-#      - SSL_VERIFICATION
-#      - MAX_EXPORTRUN_EXPIRATION_DAYS
-#      - CONCURRENCY=4
-#      - MAPPROXY_CONCURRENCY=4
-#      - OSM_CONCURRENCY=1
-#      - RUNS_CONCURRENCY=1
-#      - CONTAINER_CODE_PATH
-#      - DEV_MACHINE_CODE_PATH
-#      - MAX_TASK_ATTEMPTS
-#      - USE_S3
-#      - AWS_STORAGE_BUCKET_NAME
-#      - AWS_ACCESS_KEY_ID
-#      - AWS_SECRET_ACCESS_KEY
-#      - SECRET_KEY
-#    extra_hosts:
-#      - "${SITE_NAME}:${SITE_IP}"
-#    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
   memcached:
     image: eventkit/eventkit-base:1.9.0
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 10m"
-  celery-beat:
+  celery:
     image: eventkit/eventkit-base:1.9.0
     volumes:
       - ./:/var/lib/eventkit/
@@ -205,7 +152,7 @@ services:
       - SITE_NAME
       - SITE_IP
       - TERM
-      - DEBUG
+      - DEBUG=True
       - PRODUCTION
       - DJANGO_LOG_LEVEL
       - LOG_LEVEL=INFO
@@ -216,6 +163,7 @@ services:
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - SECRET_KEY
+      - BIND_MOUNT_LOCATION
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh

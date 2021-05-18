@@ -32,7 +32,7 @@ class TestUtilTasks(TestCase):
     @patch("eventkit_cloud.tasks.task_factory.create_run")
     @patch("eventkit_cloud.tasks.util_tasks.shutil")
     @patch("eventkit_cloud.tasks.util_tasks.os")
-    @patch("eventkit_cloud.tasks.util_tasks.pick_up_run_task")
+    @patch("eventkit_cloud.tasks.export_tasks.pick_up_run_task")
     def test_rerun_data_provider_records(self, pickup_mock, os_mock, shutil_mock, create_run_mock):
         expected_slugs = ["osm"]
         new_run_uid, run_zip_file_slug_sets = create_run_mock.return_value = (

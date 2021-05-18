@@ -21,7 +21,7 @@ from eventkit_cloud.core.helpers import (
 )
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, get_message_count
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.pcf import PcfClient
 
@@ -103,25 +103,20 @@ def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
 
 
 def scale_by_runs(celery_tasks, max_tasks_memory):
-    print("Scale By Runs")
+    # Immediately return if there are no pending runs.
+    number_of_runs = get_message_count("runs")
+    if number_of_runs == 0:
+        return
+
+    print("Scaling By Runs")
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    # Check the runs queue, are there any pending runs?
-    number_of_runs = get_message_count("runs")
-    if number_of_runs == 0:
-        return
-
-    # # TODO: What is this queue name supposed to be?  Is it always runs in this case since we are scaling on runs?
-    # #   Apparently this needs to be something like f"WORKER_{worker}" because
-    # #   that's the only key in this celery_tasks dict.
+    # TODO: Is this the best way to name the queues?
     queue_name = "WORKER_1"
 
-    # TODO: What's the best way to do this?  I would think the clients should both implement an abstract base class.
-    #   So that way we can just change the client based on an environment variable and the rest of the code should
-    #   stay the same.
     if os.getenv("PCF_SCALING"):
         client = PcfClient()
         client.login()
@@ -129,9 +124,10 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
         client = DockerClient()
         app_name = "eventkit/eventkit-base:1.9.0"  # TODO: This should not be hard coded.
 
-    celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
-    running_tasks_memory = celery_pcf_task_details["memory"]
+    celery_task_details = get_celery_task_details(client, app_name, celery_tasks)
+    running_tasks_memory = celery_task_details["memory"] + celery_tasks[queue_name]["memory"]
 
+    print(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
     if running_tasks_memory >= max_tasks_memory:
         return
 
@@ -139,8 +135,6 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
     if number_of_runs > 0:
         # print(f"CELERY TASKS: {celery_tasks}")
         run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
-
-    # Once the run completes, have the task check for more pending runs before shutting down.
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -196,7 +190,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
                 )
-                pcf_shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
+                shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(

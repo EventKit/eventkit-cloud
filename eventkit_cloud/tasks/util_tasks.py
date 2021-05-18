@@ -12,10 +12,10 @@ from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
+from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.tasks.helpers import get_provider_staging_dir, get_run_staging_dir
-from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
@@ -26,11 +26,11 @@ User = get_user_model()
 logger = get_task_logger(__name__)
 
 
-@app.task(name="PCF Shutdown Celery Workers", base=UserDetailsBase, bind=True, default_retry_delay=60)
-def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
+@app.task(name="Shutdown Celery Workers", base=UserDetailsBase, bind=True, default_retry_delay=60)
+def shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
-    more tasks to pick up. Only call this task on PCF based deploys.
+    more tasks to pick up.
 
     :param self: The Task instance.
     :param queue_name: The full name of the queue, such as GROUP_A.large
@@ -43,8 +43,13 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    client = PcfClient()
-    client.login()
+    if os.getenv("PCF_SCALING"):
+        client = PcfClient()
+        client.login()
+    else:
+        client = DockerClient()
+        app_name = "eventkit/eventkit-base:1.9.0"  # TODO: This should not be hard coded.
+
     # The message was a generic shutdown sent to a specific queue_name.
     if not (hostname or queue_type):
         queue_type, hostname = self.request.hostname.split("@")
@@ -54,6 +59,7 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
         return {"action": "skip_shutdown", "workers": workers}
     messages = get_message_count(queue_name)
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
+    print(f"RUNNING TASKS BY QUEUE: {running_tasks_by_queue}")
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
     export_tasks = ExportTaskRecord.objects.filter(
         worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
@@ -89,7 +95,7 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 @app.task(name="Rerun data provider records", bind=True, base=UserDetailsBase)
 def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provider_slugs):
-
+    from eventkit_cloud.tasks.export_tasks import pick_up_run_task
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
     # old_run
