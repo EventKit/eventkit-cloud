@@ -1615,6 +1615,7 @@ def pick_up_run_task(
         logger.error(str(e))
         raise
     wait_for_run(run_uid=run_uid)
+    # TODO: If we are scaling on runs, after the work is done, shut down the worker. (and thus the container (pcf task or docker container))
 
 
 def wait_for_run(run_uid: str = None) -> None:

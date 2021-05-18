@@ -44,20 +44,18 @@ BEAT_SCHEDULE = {
     },
 }
 
-PCF_SCALING = os.getenv("PCF_SCALING", False)
-if PCF_SCALING:
-    BEAT_SCHEDULE.update(
-        {
-            "pcf-scale-celery": {
-                "task": "PCF Scale Celery",
-                "schedule": 60.0,
-                "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
-                "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
-            },
-        }
-    )
+BEAT_SCHEDULE.update(
+    {
+        "scale-celery": {
+            "task": "Scale Celery",
+            "schedule": 60.0,
+            "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
+            "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
+        },
+    }
+)
 
-PCF_SCALE_BY_RUN = is_true(os.getenv("PCF_SCALE_BY_RUN", False))
+CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 
 
 app.conf.beat_schedule = BEAT_SCHEDULE

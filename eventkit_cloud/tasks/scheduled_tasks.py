@@ -19,9 +19,10 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, get_message_count
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
+from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.pcf import PcfClient
 
 logger = get_task_logger(__name__)
@@ -85,13 +86,67 @@ def expire_runs_task():
             run.save()
 
 
-@app.task(name="PCF Scale Celery", base=LockingTask)
-def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = "pcf_scale_celery"):  # NOQA
+@app.task(name="Scale Celery", base=LockingTask)
+def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
     """
-    Built specifically for PCF deployments.
+    Built specifically for Docker or PCF deployments.
     Scales up celery instances when necessary.
     """
 
+    # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
+    if getattr(settings, "CELERY_SCALE_BY_RUN"):
+        celery_tasks = get_celery_tasks_scale_by_run()
+        scale_by_runs(celery_tasks, max_tasks_memory)
+    else:
+        celery_tasks = get_celery_tasks_scale_by_task()
+        scale_by_tasks(celery_tasks, max_tasks_memory)
+
+
+def scale_by_runs(celery_tasks, max_tasks_memory):
+    print("Scale By Runs")
+    if os.getenv("CELERY_TASK_APP"):
+        app_name = os.getenv("CELERY_TASK_APP")
+    else:
+        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+
+    # Check the runs queue, are there any pending runs?
+    number_of_runs = get_message_count("runs")
+    if number_of_runs == 0:
+        return
+
+    broker_api_url = getattr(settings, "BROKER_API_URL")
+    queue_class = "queues"
+
+    # # TODO: What is this queue name supposed to be?  Is it always runs in this case since we are scaling on runs?
+    # #   Apparently this needs to be something like f"WORKER_{worker}" because
+    # #   that's the only key in this celery_tasks dict.
+    queue_name = "WORKER_1"
+
+    # TODO: What's the best way to do this?  I would think the clients should both implement an abstract base class.
+    #   So that way we can just change the client based on an environment variable and the rest of the code should
+    #   stay the same.
+    if os.getenv("PCF_SCALING"):
+        client = PcfClient()
+        client.login()
+    else:
+        client = DockerClient()
+        app_name = "eventkit/eventkit-base:1.9.0"  # TODO: This should not be hard coded.
+
+    celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
+    running_tasks_memory = celery_pcf_task_details["memory"]
+
+    if running_tasks_memory >= max_tasks_memory:
+        return
+
+    # If there's a run, scale up a new task and assign that run to that task.
+    if number_of_runs > 0:
+        # print(f"CELERY TASKS: {celery_tasks}")
+        run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
+
+    # Once the run completes, have the task check for more pending runs before shutting down.
+
+
+def scale_by_tasks(celery_tasks, max_tasks_memory):
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
     else:
@@ -103,14 +158,7 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
     client = PcfClient()
     client.login()
 
-    # TODO: Too complex, clean up.
-    # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
-    if getattr(settings, "PCF_SCALE_BY_RUN"):
-        celery_tasks = get_celery_tasks_scale_by_run()
-    else:
-        celery_tasks = get_celery_tasks_scale_by_task()
-
-    celery_pcf_task_details = get_celery_pcf_task_details(client, app_name, celery_tasks)
+    celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
 
     logger.info(f"Running Tasks Memory used: {celery_pcf_task_details['memory']} MB")
 
@@ -146,6 +194,9 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
                     if running_tasks_by_queue_count >= limit:
                         continue
                 if running_tasks_memory + celery_tasks[queue_name]["memory"] <= max_tasks_memory:
+                    print(
+                        f"RUNNING TASK WITH {client}, for app {app_name} using queue {queue_name} with celery_tasks queue name {celery_tasks[queue_name]}"
+                    )
                     run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
                     has_run_task = True
             elif running_tasks_by_queue_count and not pending_messages:
@@ -164,11 +215,10 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
             break
 
 
-
-def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
+def get_celery_task_details(client, app_name: str, celery_tasks: Union[dict, list]):
     """
     Gets information about currently running tasks.
-    :param client: PcfClient
+    :param client:
     :param app_name: The name of the celery app running the tasks.
     :param celery_tasks: A dictionary with information about the celery tasks.
     :return: A dict of information with task counts and resource usage.
@@ -207,10 +257,12 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param task:A dict containing the command, memory, and disk for the task to run.
     :return: None
     """
+    print(f"RUN TASK COMMAND TASK DICT: {task}")
     command = task["command"]
     disk = task["disk"]
     memory = task["memory"]
 
+    # TODO: Is queue_name really the right term here?
     logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
     client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
@@ -316,17 +368,38 @@ def get_celery_health_check_command(node_type: str):
     return health_check_command
 
 
-def get_celery_tasks_scale_by_run(num_of_workers=3):
-    default_command = "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME & " \
-                      "exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large & " \
-                      "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & " \
-                      "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority"
+def get_celery_tasks_scale_by_run(num_of_workers=3, celery_group_name="GROUP_A"):
+    # TODO: If the runs queue is the first command, and we shut down that worker the rest of them should
+    #  (maybe) shut down with it.
 
-    celery_tasks = {f"WORKER_{worker}": {"command": default_command,
-                                         # NOQA
-                                         "disk": 12288,
-                                         "memory": 8192,
-                                         } for worker in range(num_of_workers)}
+    #  TODO: Something is wrong with this command.  Run docker logs <name> for the logs.
+    runs_concurrency = os.getenv("RUNS_CONCURRENCY", "1")
+    log_level = os.getenv("LOG_LEVEL", "info")
+
+    # TODO: What is happening here?  The command fails...
+    # proj - INFO - using libproj for coordinate transformation
+    # usage: celery worker [options]
+    # celery: error: unrecognized arguments: & exec celery worker
+
+    # & should be sending these tasks to the background and running the next...but instead the command think it's another option and is unrecognized.
+    default_command = (
+        f"celery worker -A eventkit_cloud --concurrency={runs_concurrency} --loglevel={log_level} -n runs@%h -Q runs & "
+        f"celery worker -A eventkit_cloud --loglevel={log_level} -n worker@%h -Q {celery_group_name} & "
+        f"celery worker -A eventkit_cloud --concurrency=1 --loglevel={log_level} -n large@%h -Q {celery_group_name}.large & "
+        f"celery worker -A eventkit_cloud --loglevel={log_level} -n celery@%h -Q celery & "
+        f"celery worker -A eventkit_cloud --loglevel={log_level} -n priority@%h -Q {celery_group_name}.priority"
+    )
+    print(f"DEFAULT COMMAND IS: {default_command}")
+    # TODO:
+    celery_tasks = {
+        f"WORKER_{worker}": {
+            "command": default_command,
+            # NOQA
+            "disk": 12288,
+            "memory": 8192,
+        }
+        for worker in range(num_of_workers)
+    }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
 

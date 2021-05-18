@@ -13,7 +13,7 @@ class DockerClient(object):
         self.client = docker.from_env()
         self.session = requests.Session()
 
-    def run_task(self, name, command, disk_in_mb=None, memory_in_mb="1g", app_name="eventkit/eventkit-base:1.9.0"):
+    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name="eventkit/eventkit-base:1.9.0"):
 
         if not app_name:
             raise Exception("An app_name (docker image) was not provided to run_task.")
@@ -21,11 +21,27 @@ class DockerClient(object):
             memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2G")
         # TODO: Do we need to clean any host specific environment variables.
         name = f"celery_task_{uuid.uuid4()}"
+        print(f"MEMORY IS {memory_in_mb}")
+        print(f"COMMAND IS {command}")
+        # Docker client assumes the value is in bytes if you don't append an identifier.
+        if isinstance(memory_in_mb, int):
+            memory_in_mb = f"{memory_in_mb}m"
+
+        # TODO: How do we avoid hard coding network?
         return self.client.containers.run(
-            app_name, command, name=name, environment=dict(os.environ), detach=True, mem_limit=memory_in_mb
+            image=app_name,
+            command=["sh", "-c", command],
+            name=name,
+            environment=dict(os.environ),
+            detach=True,
+            mem_limit=memory_in_mb,
+            network="eventkit-cloud_default",
+            auto_remove=False,  # TODO: Change this after testing.
+            stdout=True,
+            stderr=True,
         )
 
-    def get_running_tasks(self) -> dict:
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
         """
         Get running celery tasks.
         :return: A list of the running task names.
@@ -33,10 +49,12 @@ class DockerClient(object):
         containers = self.client.containers.list(filters={"name": "celery_task"})
         result = {"resources": []}
         for container in containers:
+            stats = container.stats(stream=False)
             result["resources"].append(
                 {
-                    "guid": container.name,
-                    "memory_in_mb": container.stats(stream=False)["memory_stats"]["limit"] / 1000000,
+                    "name": container.name,
+                    "memory_in_mb": stats["memory_stats"]["limit"] / 1000000,
+                    "disk_in_mb": 0,  # Docker doesn't provider disk stats.
                 }
             )
         return result
