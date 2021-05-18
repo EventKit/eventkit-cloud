@@ -4,6 +4,8 @@ import logging
 from enum import Enum
 import json
 
+from eventkit_cloud.utils.scale_client import ScaleClient
+
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -14,7 +16,7 @@ class PcfTaskStates(Enum):
     FAILED = "FAILED"  # Used for runs that have not been started
 
 
-class PcfClient(object):
+class PcfClient(ScaleClient):
     def __init__(self, api_url=None, org_name=None, space_name=None):
         self.api_url = os.getenv("PCF_API_URL", api_url)
         if not self.api_url:
@@ -179,7 +181,7 @@ class PcfClient(object):
             },
         ).json()
 
-    def get_running_tasks(self, app_name: str = None, names: str = None) -> list:
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
         """
         Get running pcf tasks.
         :param app_name: The name of the PCF app.

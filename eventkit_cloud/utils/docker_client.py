@@ -5,10 +5,13 @@ import os
 import logging
 import docker
 
+from eventkit_cloud.utils.scale_client import ScaleClient
+
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)
 
-class DockerClient(object):
+
+class DockerClient(ScaleClient):
     def __init__(self):
         self.client = docker.from_env()
         self.session = requests.Session()
@@ -59,14 +62,14 @@ class DockerClient(object):
             )
         return result
 
-    def get_running_tasks_memory(self) -> int:
+    def get_running_tasks_memory(self, app_name: str) -> int:
         """
         Get running tasks memory for a single app.
         :param app_name: Name of app running tasks
         :return: Running task memory in mb.
         """
 
-        running_tasks = self.get_running_tasks()
+        running_tasks = self.get_running_tasks(app_name)
         running_tasks_memory = 0
         print(running_tasks)
         for task in running_tasks["resources"]:

@@ -114,9 +114,6 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
     if number_of_runs == 0:
         return
 
-    broker_api_url = getattr(settings, "BROKER_API_URL")
-    queue_class = "queues"
-
     # # TODO: What is this queue name supposed to be?  Is it always runs in this case since we are scaling on runs?
     # #   Apparently this needs to be something like f"WORKER_{worker}" because
     # #   that's the only key in this celery_tasks dict.
@@ -194,11 +191,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
                     if running_tasks_by_queue_count >= limit:
                         continue
                 if running_tasks_memory + celery_tasks[queue_name]["memory"] <= max_tasks_memory:
-                    print(
-                        f"RUNNING TASK WITH {client}, for app {app_name} using queue {queue_name} with celery_tasks queue name {celery_tasks[queue_name]}"
-                    )
                     run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
-                    has_run_task = True
             elif running_tasks_by_queue_count and not pending_messages:
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
@@ -381,7 +374,8 @@ def get_celery_tasks_scale_by_run(num_of_workers=3, celery_group_name="GROUP_A")
     # usage: celery worker [options]
     # celery: error: unrecognized arguments: & exec celery worker
 
-    # & should be sending these tasks to the background and running the next...but instead the command think it's another option and is unrecognized.
+    # & should be sending these tasks to the background and running the next...
+    # but instead the command think it's another option and is unrecognized.
     default_command = (
         f"celery worker -A eventkit_cloud --concurrency={runs_concurrency} --loglevel={log_level} -n runs@%h -Q runs & "
         f"celery worker -A eventkit_cloud --loglevel={log_level} -n worker@%h -Q {celery_group_name} & "
