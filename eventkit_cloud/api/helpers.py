@@ -28,12 +28,7 @@ def get_session(request, provider):
     if valid_token:
         auth_session = auth_requests.AuthSession().session
         auth_session.headers.update({"Authorization": f"Bearer: {session_token}"})
-    return get_or_update_session(
-        username=username,
-        password=password,
-        session=auth_session,
-        cert_info=cert_info
-    )
+    return get_or_update_session(username=username, password=password, session=auth_session, cert_info=cert_info)
 
 
 def get_process(provider, session):
@@ -41,16 +36,13 @@ def get_process(provider, session):
     service_url = provider.url
     service_url = service_url.rstrip("/\\")
     service_url += "/"
-    
+
     process = config.get("ogcapi_process").get("process")
     cache_key = f"{process}-cache"
     process_json = cache.get(cache_key, None)
     if process_json is None:
         try:
-            response = session.get(
-                f"{service_url}processes/{process}",
-                stream=True,
-            )
+            response = session.get(f"{service_url}processes/{process}", stream=True,)
             response.raise_for_status()
             process_json = json.loads(response.content)
             cache.set(cache_key, process_json, PROCESS_CACHE_TIMEOUT)
@@ -63,14 +55,15 @@ def get_process(provider, session):
 def get_process_formats_from_json(process_json):
     """Extract format information from a valid JSON object representing an OGC Process."""
     inputs = process_json.get("inputs", list())
-    formats = list(filter(
-        lambda input: input.get("id", None) == "file_format",
-        inputs)
-    )[0].get("input").get("literalDataDomains")[0].get("valueDefinition").get("valuesDescription", dict()).values()
-    return [dict(
-        slug=_format.get("value"),
-        **_format,
-    ) for _format in formats]
+    formats = (
+        list(filter(lambda input: input.get("id", None) == "file_format", inputs))[0]
+        .get("input")
+        .get("literalDataDomains")[0]
+        .get("valueDefinition")
+        .get("valuesDescription", dict())
+        .values()
+    )
+    return [dict(slug=_format.get("value"), **_format,) for _format in formats]
 
 
 def get_process_formats(provider, request):

@@ -12,6 +12,7 @@ import uuid
 import xml.etree.ElementTree as ET
 import yaml
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from django.core.cache import cache
 from django.db.models import Q
 from django.template.loader import render_to_string
@@ -965,19 +966,35 @@ def download_chunks(
     return chunks
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, session=None, task_points=100):
+def download_data(
+    task_uid: str,
+    input_url: str,
+    out_file: str,
+    username=None,
+    password=None,
+    cert_info=None,
+    session=None,
+    task_points=100,
+):
     """
     Function for downloading data, optionally using a certificate.
     """
+    response = None
     try:
-        logger.error(f"****Attempting download using cert_info {cert_info}")
-        auth_session = get_or_update_session(session=session, cert_info=cert_info,
-                                             verify=getattr(settings, "SSL_VERIFICATION", True))
+        auth_session = get_or_update_session(
+            session=session,
+            username=username,
+            password=password,
+            cert_info=cert_info,
+            verify=getattr(settings, "SSL_VERIFICATION", True),
+        )
         response = auth_session.get(input_url, stream=True)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
+        if response:
+            logger.error(response.text)
+        raise Exception("Failed to download data.") from e
 
     from audit_logging.file_logging import logging_open
 
@@ -1084,3 +1101,14 @@ def extract_metadata_files(
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
+
+
+def get_geometry(bbox, selection=None):
+    geom = Polygon.from_bbox(bbox)
+    if selection:
+        try:
+            with open(selection, "r") as geojson:
+                geom = Polygon(geojson)
+        except Exception as e:
+            logger.error(e)
+    return geom

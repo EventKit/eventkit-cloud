@@ -159,8 +159,8 @@ class TestJobViewSet(APITestCase):
                     "name": "test",
                     "level_from": 0,
                     "level_to": 1,
-                    "url": "http://coolproviderurl.to",
-                    "preview_url": "http://coolproviderurl.to",
+                    "url": "http://coolproviderurl.test",
+                    "preview_url": "http://coolproviderurl.test",
                 }
             ],
             "user": serializers.serialize("json", [self.user]),

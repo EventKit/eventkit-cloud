@@ -257,31 +257,25 @@ Below is a sample configuration.
 
 ```yaml
 ogcapi_process:
-  process: some-ogc-process
-  inputs: 
-    product: elevation
-    file_format: gpkg
+  id: "example_process_id"
+  inputs:
+    input_key_name: 
+      value: "a_value"
+    another_input_key_name: 
+       value: "a_different_value" 
   outputs:
-    archive_format: "application/zip"
+     output_key_name: 
+       format:
+         mediaType: "application/zip"
+  area:
+      name: "geojson"
+      type: "geojson"
+  output_file_ext: ".gpkg"   
   download_credentials:
     cert_info:
-      cert_path: path/to/cert.p12
-      cert_pass_var: CERT_PASS
-```
-
-Alternative configuration.
-
-```yaml
-ogcapi_process:
-  process: another-ogc-process
-  inputs: 
-    product: hydro
-    file_format: gpkg
-  outputs:
-    archive_format: "application/zip"
-  download_credentials:
-    user_var: SOURCE_USER
-    pass_var: SOURCE_PASS
+      cert_path: /path/to/keystore.pfx
+      cert_pass_var: CERT_PASS_ENV_VAR
+    cred_var: CRED_ENV_VAR
 ```
 
 The *source* in `source_config` refers to the provider the bundler will fetch data from.

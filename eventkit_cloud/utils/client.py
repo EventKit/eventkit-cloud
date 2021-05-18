@@ -40,7 +40,7 @@ class EventKitClient(object):
             )
         else:
             raise Exception("Unable to login without a certificate or username/password.")
-        response = self.client.get(self.runs_url)
+        response = self.client.get(self.providers_url)
         if response.status_code in [401, 403]:
             raise Exception("Invalid Credentials were provided to EventKitClient")
         self.client.get(self.base_url)

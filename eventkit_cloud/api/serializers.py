@@ -72,7 +72,7 @@ class CreatableFormatSlugRelatedField(serializers.SlugRelatedField):
         except ObjectDoesNotExist:
             return data
         except (TypeError, ValueError):
-            self.fail('invalid')
+            self.fail("invalid")
 
 
 class ProviderTaskSerializer(serializers.ModelSerializer):

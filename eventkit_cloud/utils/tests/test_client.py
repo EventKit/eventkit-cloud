@@ -27,6 +27,7 @@ class TestClient(TestCase):
         self.mock_requests.post("{0}/api/login/".format(self.url), status_code=200, cookies=cookies)
         self.mock_requests.get(self.url, status_code=200, cookies=cookies)
         self.mock_requests.get("{0}/create".format(self.url), status_code=200, cookies=cookies)
+        self.mock_requests.get("{0}/api/providers".format(self.url), status_code=200)
         self.mock_requests.get("{0}/api/runs".format(self.url), status_code=200, cookies=cookies)
         with self.settings(SESSION_COOKIE_DOMAIN=self.url):
             self.client = EventKitClient(self.url, self.username, self.pcode)

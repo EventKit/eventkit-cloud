@@ -68,6 +68,9 @@ class TaskFactory:
             "vector-file": vector_file_export_task,
             "raster-file": raster_file_export_task,
             "ogcapi-process": ogcapi_process_export_task,
+            "ogcapi-process-raster": ogcapi_process_export_task,
+            "ogcapi-process-elevation": ogcapi_process_export_task,
+            "ogcapi-process-vector": ogcapi_process_export_task,
         }
 
     def parse_tasks(

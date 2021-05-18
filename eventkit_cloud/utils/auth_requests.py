@@ -273,8 +273,9 @@ def unpatch_https():
     http.client.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
 
 
-def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cred_var=None,
-                          cert_info=None):
+def get_or_update_session(
+    username=None, password=None, session=None, max_retries=3, verify=True, cred_var=None, cert_info=None
+):
     if not session:
         session = requests.Session()
 

@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import requests
 import shutil
 import socket
 import time
@@ -22,7 +21,6 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import Polygon
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -74,6 +72,7 @@ from eventkit_cloud.tasks.helpers import (
     merge_chunks,
     find_in_zip,
     extract_metadata_files,
+    get_geometry,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -450,13 +449,7 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(clean_config(config))
 
     update_progress(export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage")
-    geom = Polygon.from_bbox(bbox)
-    if selection:
-        try:
-            with open(selection, "r") as geojson:
-                geom = Polygon(geojson)
-        except Exception as e:
-            logger.error(e)
+    geom = get_geometry(bbox, selection)
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
@@ -481,7 +474,7 @@ def osm_data_collection_pipeline(
         name=database["NAME"],
     )
     gdalutils.convert(
-        boundary=bbox,
+        boundary=selection,
         input_file=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
@@ -2315,18 +2308,31 @@ def ogcapi_process_export_task(
     """
 
     result = result or {}
+    selection = parse_result("selection")
     export_task_record = get_export_task_record(task_uid)
     provider_slug = export_task_record.export_provider_task.provider.slug
-    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+    if export_task_record.export_provider_task.provider.data_type == GeospatialDataType.ELEVATION.value:
+        output_file = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
+        driver = "gtiff"
+    else:
+        output_file = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+        driver = "gpkg"
+    # TODO: The download path might not be a zip, use the mediatype to determine the file format.
     download_path = get_export_filepath(stage_dir, f"{job_name}-source_zip", projection, provider_slug, "zip")
     configuration = load_provider_config(config)
 
+    geom = get_geometry(bbox, selection)
+
     try:
         ogc_process = OgcApiProcess(
-            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid,
-            cred_var=configuration.get("cred_var"), cert_info=configuration.get("cert_info")
+            url=service_url,
+            config=configuration["ogcapi_process"],
+            session_token=session_token,
+            task_id=export_task_record.uid,
+            cred_var=configuration.get("cred_var"),
+            cert_info=configuration.get("cert_info"),
         )
-        ogc_process.create_job(bbox=bbox)
+        ogc_process.create_job(geom)
         download_url = ogc_process.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
@@ -2337,30 +2343,35 @@ def ogcapi_process_export_task(
 
     ogc_config = configuration.get("ogcapi_process", dict())
     download_credentials = ogc_config.get("download_credentials", dict())
-
+    basic_auth = download_credentials.get("cred_var")
+    username = password = session = None
+    if basic_auth:
+        username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        logger.error(f"****LOGGING INTO EVENTKIT WITH CREDS: {download_credentials}")
-        session = EventKitClient(
-            getattr(settings, "SITE_URL"),
-            username=os.getenv(download_credentials.get("user_var")),
-            password=os.getenv(download_credentials.get("pass_var")),
-        )
+        logger.error(f"****LOGGING INTO EVENTKIT WITH CREDS: {username, password}")
+        session = EventKitClient(getattr(settings, "SITE_URL"), username=username, password=password,)
         session = session.client
         cert_info = None
     else:
-        session = requests.Session()
         cert_info = download_credentials.get("cert_info")
 
-    download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
-    output_ext = ogc_config.get("inputs", dict()).get("file_format") or ogc_config.get("inputs", dict()).get("file_format")
-    source_data = find_in_zip(download_path, output_ext, stage_dir)
-
+    download_path = download_data(
+        task_uid,
+        download_url,
+        download_path,
+        username=username,
+        password=password,
+        session=session,
+        cert_info=cert_info,
+    )
+    # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
+    source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir)
     extract_metadata_files(download_path, stage_dir)
 
     out = gdalutils.convert(
-        driver="gpkg",
+        driver=driver,
         input_file=source_data,
-        output_file=gpkg,
+        output_file=output_file,
         task_uid=task_uid,
         projection=projection,
         boundary=bbox,
@@ -2368,7 +2379,7 @@ def ogcapi_process_export_task(
 
     update_progress(export_task_record.uid, progress=90, subtask_percentage=90)
 
-    result["driver"] = "gpkg"
+    result["driver"] = driver
     result["result"] = out
     result["source"] = out
     result["gpkg"] = out

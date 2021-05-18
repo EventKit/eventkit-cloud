@@ -1809,12 +1809,12 @@ class TestExportTasks(ExportTaskBase):
 
         mock_mapproxy().convert.assert_called_once()
 
+    @patch("eventkit_cloud.tasks.export_tasks.get_geometry")
+    @patch("eventkit_cloud.tasks.export_tasks.os.getenv")
     @patch("eventkit_cloud.tasks.export_tasks.OgcApiProcess")
     @patch("eventkit_cloud.tasks.export_tasks.extract_metadata_files")
     @patch("eventkit_cloud.tasks.export_tasks.find_in_zip")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.requests.Session")
-    # @patch("time.sleep", return_value=None)
     @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -1823,12 +1823,12 @@ class TestExportTasks(ExportTaskBase):
         mock_request,
         mock_convert,
         mock_update_progress,
-        # patch_time,
-        mock_session,
         mock_download_data,
         mock_find_in_zip,
         mock_extract_metadata_files,
         mock_ogc_process,
+        mock_getenv,
+        mock_get_geometry,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -1859,24 +1859,33 @@ class TestExportTasks(ExportTaskBase):
             status=TaskState.PENDING.value,
             name=ogcapi_process_export_task.name,
         )
+        username = "user"
+        password = "password"
+        mock_getenv.return_value = f"{username}:{password}"
         task_uid = str(saved_export_task.uid)
         ogcapi_process_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=task_uid)
-
-        config = """
-                process: 'eventkit'
-                inputs:
-                    product: 'random'
-                    file_format: 'gpkg'
-                outputs:
-                    archive_format: 'application/zip'
-                source_config:
-                    user_var: "USER_VAR"
-                    pass_var: "PASS_VAR"
+        mock_geometry = Mock()
+        mock_get_geometry.return_value = mock_geometry
+        cred_var = "USER_PASS_ENV_VAR"
+        config = f"""
+                ogcapi_process:
+                  id: 'eventkit'
+                  inputs:
+                    input:
+                      value: 'random'
+                    format: 
+                      value: 'gpkg'
+                  outputs:
+                      format: 
+                        mediaType: 'application/zip'
+                  download_credentials:
+                      cred_var: '{cred_var}'
+                cred_var: '{cred_var}'
                 """
 
-        configuration = yaml.load(config)
-        service_url = "http://bundler.io/v1/"
-        download_url = "http://source-service.net/downloads/foo"
+        configuration = yaml.load(config)["ogcapi_process"]
+        service_url = "http://example.test/v1/"
+        download_url = "http:///file_provider.test/foo"
         session_token = "_some_token_"
 
         process = mock_ogc_process(
@@ -1903,16 +1912,27 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_ogc_process.assert_called_with(
-            url=service_url, config=configuration, session_token=session_token, task_id=saved_export_task.uid
+            url=service_url,
+            config=configuration,
+            session_token=session_token,
+            task_id=saved_export_task.uid,
+            cert_info=None,
+            cred_var=cred_var,
         )
 
-        process.create_job.assert_called_once_with(bbox=bbox)
+        process.create_job.assert_called_once_with(mock_geometry)
 
         process.get_job_results.assert_called_once()
         self.assertEqual(len(mock_update_progress.mock_calls), 2)
 
         mock_download_data.assert_called_once_with(
-            task_uid, download_url, expected_outzip_path, session=mock_session(), cert_info=None
+            task_uid,
+            download_url,
+            expected_outzip_path,
+            cert_info=None,
+            password=password,
+            session=None,
+            username=username,
         )
 
         mock_find_in_zip.assert_called_once_with(expected_outzip_path, configuration.get("file_format"), stage_dir)

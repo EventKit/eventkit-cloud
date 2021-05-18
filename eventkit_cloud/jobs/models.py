@@ -148,7 +148,13 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
     """
-    safe_kwargs = ["name", "slug", "description", "cmd",]
+
+    safe_kwargs = [
+        "name",
+        "slug",
+        "description",
+        "cmd",
+    ]
 
     name = models.CharField(max_length=100)
     slug = LowerCaseCharField(max_length=20, unique=True, default="")
@@ -177,7 +183,6 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
         except ObjectDoesNotExist:
             format = cls.objects.create(**kwargs)
         return format
-
 
 
 class DataProviderType(TimeStampedModelMixin):

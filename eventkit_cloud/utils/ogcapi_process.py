@@ -1,19 +1,18 @@
-import requests
-import time
+import copy
+import json
 import logging
+import time
+from urllib.parse import urljoin
 
-from eventkit_cloud.utils.auth_requests import get_or_update_session
-from eventkit_cloud.utils import auth_requests, gdalutils
+import requests
+from django.conf import settings
+from django.contrib.gis.geos import WKTWriter
+
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.tasks.task_process import update_progress
-from django.conf import settings
-from urllib.parse import urljoin
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+from eventkit_cloud.utils import gdalutils
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 
 logger = logging.getLogger(__name__)
 
@@ -22,26 +21,20 @@ class OgcApiProcess:
     def __init__(self, url, config, session_token, task_id, *args, **kwargs):
         self.base_url = url.rstrip("/\\")
         self.base_url += "/"
-        self.config = validate_ogc_config(config)
+        self.config = config
         self.task_id = task_id
 
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = get_or_update_session(requests.session(), *args, **kwargs)
+        self.session = get_or_update_session(*args, **kwargs)
         self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
 
-    def create_job(self, bbox):
-        payload = get_job_payload(
-            process_id=self.config.get("process"),
-            product=self.config.get("inputs", dict()).get("product"),
-            bbox=bbox,
-            file_format=self.config.get("inputs", dict()).get("file_format"),
-            archive_format=self.config.get("outputs", dict()).get("archive_format"),
-        )
+    def create_job(self, geometry):
+        payload = get_job_payload(self.config, geometry)
 
         jobs_endpoint = urljoin(self.base_url, "jobs/")
-
+        response = None
         try:
             response = self.session.post(
                 jobs_endpoint, json=payload, verify=getattr(settings, "SSL_VERIFICATION", True),
@@ -50,9 +43,11 @@ class OgcApiProcess:
 
         except requests.exceptions.RequestException as e:
             logger.error("Failed to post OGC Process payload:")
-            logger.error(payload)
+            logger.error(json.dumps(payload))
             logger.error(jobs_endpoint)
-            raise Exception(f"Unsuccessful request:{e}")
+            if response:
+                logger.error(response.content)
+            raise Exception("Failed to post request to remote service.") from e
 
         response_content = response.json()
         job_id = response_content.get("jobID")
@@ -114,6 +109,7 @@ class OgcApiProcess:
             response_content = response.json()
             job_status = response_content.get("status")
             if not job_status:
+                logger.error(response_content)
                 raise Exception("OGC API Process service did not provide a valid status.")
             if task_id:
                 update_progress(task_id, progress=25, subtask_percentage=response_content.get("progress", 50))
@@ -122,49 +118,30 @@ class OgcApiProcess:
             return response_content
 
 
-def validate_ogc_config(config: dict()):
-    """
-    Function takes data provider configuration.
-    Ensures config has all the necessary parametres needed to create an OGC API Process job
-    Returns dictionary containing only the values of "ogcapi_process" if present.
-    """
-    try:
-        ogc_config = config.get("ogcapi_process")
-        if ogc_config is None:
-            raise Exception()
-
-        inputs = ogc_config.get("inputs")
-        outputs = ogc_config.get("outputs")
-        process = ogc_config.get("process")
-
-        if None in [inputs, outputs, process]:
-            raise Exception()
-
-        if None in [
-            inputs.get("product"),
-            inputs.get("file_format"),
-            outputs.get("archive_format"),
-        ]:
-            raise Exception()
-
-    except Exception as e:
-        raise Exception(f"Invalid OGC API Process provider configuration: {e}")
-
-    return ogc_config
-
-
-def get_job_payload(
-    process_id: str, product: str, bbox, file_format: str = "gpkg", archive_format: str = "application/zip"
-):
+def get_job_payload(config, geometry):
     """
     Function generates the request body needed for a POST request to the OGC /jobs endpoint.
     """
-    payload = {
-        "id": process_id,
-        "inputs": {"product": {"value": product}, "file_format": {"value": file_format}, "bbox": {"bbox": bbox}},
-        "outputs": {"archive_format": {"format": {"mediaType": archive_format}, "transmissionMode": "reference"}},
-        "mode": "auto",
-        "response": "document",
-    }
-
+    payload = copy.deepcopy(config)
+    payload["mode"] = "async"
+    payload["response"] = "document"
+    payload["outputs"] = payload["outputs"] or {}
+    for output in payload["outputs"]:
+        payload["outputs"][output]["transmissionMode"] = "reference"
+    convert_geometry(payload, geometry)
     return payload
+
+
+def convert_geometry(config, geometry):
+    area = config.get("area")
+    config["inputs"][area["name"]] = dict()
+    if area["type"] == "wkt":
+        config["inputs"][area["name"]]["value"] = WKTWriter().write(geometry)
+    if area["type"] == "geojson":
+        config["inputs"][area["name"]]["value"] = {
+            "type": "FeatureCollection",
+            "features": [{"type": "Feature", "geometry": json.loads(geometry.geojson)}],
+        }
+    if area["type"] == "bbox":
+        config["inputs"]["boundingBoxInput"]["bbox"] = list(geometry.extent)
+    return config
