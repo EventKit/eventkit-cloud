@@ -395,6 +395,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     result = models.OneToOneField(
         "FileProducingTaskResult", on_delete=models.CASCADE, null=True, blank=True, related_name="export_task",
     )
+    hide_download = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["created_at"]

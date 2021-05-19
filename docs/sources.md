@@ -218,6 +218,7 @@ If the data source is secure then some additional information will need to be pr
 The desired layers for **WFS** and **ArcGIS Feature** service providers can be specified through the configuration. All specified layers will be present and individually addressable in the exported datapack.
 
 In order to specify the desired layers, a YAML configuration must be supplied. The configuration must include a `vector_layers` key, whose value is a list of objects, with each object containing the properties `name` and `url`.
+Additionally (currently for ArcgGIS FeatureServices) specify a "distinct_field" to ensure group features on that field.
 
 ##### Example ArcGIS Configuration
 ```yaml
@@ -228,6 +229,7 @@ vector_layers:
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/3' 
   - name: 'Subbasin'
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/4'
+    distinct_field: 'OBJECTID'
 ```
 For ArcGIS providers, the specific URL for each layer must be provided.
 
@@ -247,3 +249,41 @@ To set up a vector or raster file provider:
 1) `Service URL` must be a URL to a geospatial file.
 2) `Service Type` must be set to match the type of geospatial file. The two available options are `raster-file` and `vector-file`.
 3) `Data Type` must also match the type of data being provided.
+
+##### OGC Process Configuration
+
+An OGC API process provider can be configured through the use of YAML syntax. 
+Below is a sample configuration.
+
+```yaml
+ogcapi_process:
+  process: some-ogc-process
+  inputs: 
+    product: elevation
+    file_format: gpkg
+  outputs:
+    archive_format: "application/zip"
+  download_credentials:
+    cert_info:
+      cert_path: path/to/cert.p12
+      cert_pass_var: CERT_PASS
+```
+
+Alternative configuration.
+
+```yaml
+ogcapi_process:
+  process: another-ogc-process
+  inputs: 
+    product: hydro
+    file_format: gpkg
+  outputs:
+    archive_format: "application/zip"
+  download_credentials:
+    user_var: SOURCE_USER
+    pass_var: SOURCE_PASS
+```
+
+The *source* in `source_config` refers to the provider the bundler will fetch data from.
+
+`GPKG` and `zip` are the only file and archive formats currently supported by the EventKit OGC provider.

@@ -4,6 +4,7 @@ import json
 import os
 import socket
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from typing import Union
 
 from celery.utils.log import get_task_logger
@@ -24,6 +25,7 @@ from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
 logger = get_task_logger(__name__)
 
@@ -331,8 +333,8 @@ def clear_user_sessions_task():
 
 
 @app.task(name="Update Statistics Caches", base=EventKitBaseTask)
-def update_all_statistics_caches_tasks():
-    call_command("update_statistics_cache")
+def update_all_statistics_caches_task():
+    update_all_statistics_caches(executor=ThreadPoolExecutor)
 
 
 def get_celery_health_check_command(node_type: str):

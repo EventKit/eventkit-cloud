@@ -312,7 +312,9 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format="json")
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         pickup_mock.apply_async.assert_called_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs"
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
+            queue="runs",
+            routing_key="runs",
         )
         msg = "status_code {} != {}: {}".format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
@@ -360,7 +362,9 @@ class TestJobViewSet(APITestCase):
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs"
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
+            queue="runs",
+            routing_key="runs",
         )
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -414,7 +418,9 @@ class TestJobViewSet(APITestCase):
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs"
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
+            queue="runs",
+            routing_key="runs",
         )
 
         # test the response headers
@@ -464,7 +470,9 @@ class TestJobViewSet(APITestCase):
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs"
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
+            queue="runs",
+            routing_key="runs",
         )
 
         # test the response headers
@@ -725,7 +733,7 @@ class TestBBoxSearch(APITestCase):
             response = self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": True, "is_staff": False}
             pickup_mock.apply_async.assert_called_with(
-                kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details},
+                kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
                 queue="runs",
                 routing_key="runs",
             )
