@@ -988,13 +988,15 @@ def get_or_update_session(username=None, password=None, session=None, max_retrie
     return session
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, session=None, task_points=100):
+def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100, session=None):
     """
     Function for downloading data, optionally using a certificate.
     """
     try:
-        auth_session = get_or_update_session(session=session, cert_info=cert_info)
-        response = auth_session.get(input_url, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),)
+        session = get_or_update_session(
+            session=session, cert_info=cert_info, verify=getattr(settings, "SSL_VERIFICATION", True)
+        )
+        response = session.get(input_url, stream=True)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
