@@ -244,11 +244,7 @@ services:
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
-<<<<<<< HEAD
       - SECRET_KEY=changme
-=======
-      - SECRET_KEY
->>>>>>> master
   webpack:
     image: eventkit/eventkit-webpack:1.9.0
     build:
