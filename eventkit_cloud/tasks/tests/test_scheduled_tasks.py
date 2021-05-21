@@ -85,7 +85,7 @@ class TestPcfScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
     def test_scale_by_runs(self, mock_client, mock_get_message_count):
 
-        celery_tasks = {"WORKER_1": {"command": "echo hello world", "disk": 2048, "memory": 2048}}
+        celery_tasks = {"runs_worker": {"command": "echo hello world", "disk": 2048, "memory": 2048}}
 
         # Test zero runs
         mock_get_message_count.return_value = 0
@@ -136,7 +136,6 @@ class TestPcfScaleCeleryTask(TestCase):
             }
         )
         mock_order_celery_tasks.return_value = ordered_celery_tasks
-        # TODO: Should mock this and test this function separately.
         celery_tasks = get_celery_tasks_scale_by_task()
         scale_by_tasks(celery_tasks, 8000)
         mock_pcf_client().run_task.assert_called_once()

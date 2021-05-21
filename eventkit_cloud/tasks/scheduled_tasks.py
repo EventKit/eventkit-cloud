@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import socket
+import uuid
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from typing import Union
@@ -106,7 +107,7 @@ def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
 
 def scale_by_runs(celery_tasks, max_tasks_memory):
     # Immediately return if there are no pending runs.
-    number_of_runs = get_message_count("runs")
+    number_of_runs = get_message_count(queue_name="runs", message_type="messages_ready")
     if number_of_runs == 0:
         return
 
@@ -116,27 +117,22 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    # TODO: Is this the best way to name the queues?
-    queue_name = "WORKER_1"
-
     if os.getenv("PCF_SCALING"):
         client = PcfClient()
         client.login()
     else:
         client = DockerClient()
-        app_name = "eventkit/eventkit-base:1.9.0"  # TODO: This should not be hard coded.
+        app_name = settings.DOCKER_IMAGE_NAME
 
+    queue_name = "runs_worker"
     celery_task_details = get_celery_task_details(client, app_name, celery_tasks)
     running_tasks_memory = celery_task_details["memory"] + celery_tasks[queue_name]["memory"]
 
-    print(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
-    if running_tasks_memory >= max_tasks_memory:
-        return
-
-    # If there's a run, scale up a new task and assign that run to that task.
-    if number_of_runs > 0:
-        # print(f"CELERY TASKS: {celery_tasks}")
+    while number_of_runs > 0 and running_tasks_memory < max_tasks_memory:
+        print(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
         run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
+        running_tasks_memory += celery_tasks[queue_name]["memory"]
+        number_of_runs -= 1
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -357,38 +353,27 @@ def get_celery_health_check_command(node_type: str):
     return health_check_command
 
 
-def get_celery_tasks_scale_by_run(num_of_workers=3, celery_group_name="GROUP_A"):
-    # TODO: If the runs queue is the first command, and we shut down that worker the rest of them should
-    #  (maybe) shut down with it.
+def get_celery_tasks_scale_by_run():
+    celery_group_name = uuid.uuid4()
 
-    #  TODO: Something is wrong with this command.  Run docker logs <name> for the logs.
-    runs_concurrency = os.getenv("RUNS_CONCURRENCY", "1")
-    log_level = os.getenv("LOG_LEVEL", "info")
-
-    # TODO: What is happening here?  The command fails...
-    # proj - INFO - using libproj for coordinate transformation
-    # usage: celery worker [options]
-    # celery: error: unrecognized arguments: & exec celery worker
-
-    # & should be sending these tasks to the background and running the next...
-    # but instead the command think it's another option and is unrecognized.
     default_command = (
-        f"celery worker -A eventkit_cloud --concurrency={runs_concurrency} --loglevel={log_level} -n runs@%h -Q runs & "
-        f"celery worker -A eventkit_cloud --loglevel={log_level} -n worker@%h -Q {celery_group_name} & "
-        f"celery worker -A eventkit_cloud --concurrency=1 --loglevel={log_level} -n large@%h -Q {celery_group_name}.large & "
-        f"celery worker -A eventkit_cloud --loglevel={log_level} -n celery@%h -Q celery & "
-        f"celery worker -A eventkit_cloud --loglevel={log_level} -n priority@%h -Q {celery_group_name}.priority"
+        f"CELERY_GROUP_NAME={celery_group_name} "
+        f"celery worker -A eventkit_cloud --concurrency=$RUNS_CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs & "
+        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & "
+        f"celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h "
+        f"-Q {celery_group_name}.large & "
+        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & "
+        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h "
+        f"-Q {celery_group_name}.priority,$HOSTNAME.priority"
     )
-    print(f"DEFAULT COMMAND IS: {default_command}")
-    # TODO:
+
     celery_tasks = {
-        f"WORKER_{worker}": {
+        "runs_worker": {
             "command": default_command,
             # NOQA
             "disk": 12288,
             "memory": 8192,
         }
-        for worker in range(num_of_workers)
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks

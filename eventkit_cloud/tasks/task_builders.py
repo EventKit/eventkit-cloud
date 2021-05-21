@@ -93,10 +93,17 @@ class TaskChainBuilder(object):
                 msg = "Error importing export task: {0}".format(e)
                 logger.debug(msg)
 
-        # run the tasks
-        data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
-        )
+        # In case a worker previously tried to complete this run, check to see if these already exist.
+        try:
+            data_provider_task_record = DataProviderTaskRecord.objects.get(
+                run=run, name=data_provider.name, provider=data_provider, display=True
+            )
+            print("Already exists, grabbing.")
+        except DataProviderTaskRecord.DoesNotExist:
+            print("Does not exist, creating new.")
+            data_provider_task_record = DataProviderTaskRecord.objects.create(
+                run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
+            )
         projections = get_metadata([data_provider_task_record.uid])["projections"]
 
         """
@@ -257,17 +264,26 @@ def create_format_task(task_format):
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
-        export_task = ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task,
-            status=TaskState.PENDING.value,
-            name=task_name,
-            worker=worker,
-            display=display,
+        export_task = ExportTaskRecord.objects.get(
+            export_provider_task=export_provider_task, name=task_name, display=display,
         )
-        logger.debug("Saved task: {0}".format(task_name))
-    except DatabaseError as e:
-        logger.error("Saving task {0} threw: {1}".format(task_name, e))
-        raise e
+        export_task.worker = worker
+        export_task.save()
+        print("ETR already exists, grabbing.")
+    except ExportTaskRecord.DoesNotExist:
+        try:
+            print("ETR does not exist, creating.")
+            export_task = ExportTaskRecord.objects.create(
+                export_provider_task=export_provider_task,
+                status=TaskState.PENDING.value,
+                name=task_name,
+                worker=worker,
+                display=display,
+            )
+            logger.debug("Saved task: {0}".format(task_name))
+        except DatabaseError as e:
+            logger.error("Saving task {0} threw: {1}".format(task_name, e))
+            raise e
     return export_task
 
 

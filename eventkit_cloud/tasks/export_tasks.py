@@ -1596,7 +1596,7 @@ def mapproxy_export_task(
         raise e
 
 
-@app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
+@app.task(name="Pickup Run", bind=True, base=UserDetailsBase, acks_late=True)
 def pick_up_run_task(
     self,
     result=None,
@@ -1635,6 +1635,7 @@ def pick_up_run_task(
         logger.error(str(e))
         raise
     wait_for_run(run_uid=run_uid)
+
     if os.getenv("CELERY_SCALE_BY_RUN"):
         queue_name = "runs"
         logger.info(f"Shutting down celery workers on the {queue_name} queue...")
@@ -1643,7 +1644,6 @@ def pick_up_run_task(
 
 def wait_for_run(run_uid: str = None) -> None:
     """
-
     :param run_uid: The uid of the run to wait on.
     :return: None
     """

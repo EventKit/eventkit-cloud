@@ -4,6 +4,7 @@ import shutil
 
 from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
+from django.conf import settings
 
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext as _
@@ -48,7 +49,7 @@ def shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
         client.login()
     else:
         client = DockerClient()
-        app_name = "eventkit/eventkit-base:1.9.0"  # TODO: This should not be hard coded.
+        app_name = settings.DOCKER_IMAGE_NAME
 
     # The message was a generic shutdown sent to a specific queue_name.
     if not (hostname or queue_type):
@@ -64,6 +65,10 @@ def shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     export_tasks = ExportTaskRecord.objects.filter(
         worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
     )
+    # Always shut down after the run is complete if scaling by runs.
+    if os.getenv("CELERY_SCALE_BY_RUN"):
+        app.control.broadcast("shutdown", destination=workers)
+        return {"action": "shutdown", "workers": workers}
     if not export_tasks:
         if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):
             logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")

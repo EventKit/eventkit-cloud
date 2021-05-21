@@ -707,19 +707,21 @@ def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force
                     logger.info(f"There are {messages} messages")
 
 
-def get_message_count(queue_name: str) -> int:
+def get_message_count(queue_name: str, message_type: str = "messages") -> int:
     """
     :param queue_name: The queue that you want to check messages for.
+    :param message_type: The type of message you want.  e.g. messages or messages_ready
     :return: An integer count of pending messages.
     """
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-        print(f"QUEUE NAME: {queue.get('name')} has {queue.get('messages')} pending messages.")
+        print(f"QUEUE NAME: {queue.get('name')} has {queue.get(message_type)} pending {message_type}")
         if queue.get("name") == queue_name:
             try:
-                return queue.get("messages", 0)
+                print(f"QUEUE IS: {queue}")
+                return queue.get(message_type, 0)
             except Exception as e:
                 logger.info(e)
 
