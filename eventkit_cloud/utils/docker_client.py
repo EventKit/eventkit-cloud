@@ -3,7 +3,10 @@ import uuid
 import requests
 import os
 import logging
-import docker
+try:
+    import docker
+except ModuleNotFoundError:
+    pass
 
 from eventkit_cloud.utils.scale_client import ScaleClient
 
