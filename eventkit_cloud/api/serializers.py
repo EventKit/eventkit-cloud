@@ -22,6 +22,7 @@ from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 from rest_framework.serializers import ValidationError
 
+import eventkit_cloud.jobs.models
 from . import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
@@ -59,8 +60,6 @@ from collections import OrderedDict
 
 # Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
-from .helpers import get_process_formats
-
 
 logger = logging.getLogger(__name__)
 
@@ -97,14 +96,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         except DataProvider.DoesNotExist:
             raise Exception(f"The DataProvider for {provider_slug} does not exist.")
         provider_task = DataProviderTask.objects.create(provider=provider_model)
-
-        process_formats = get_process_formats(provider_model, self.context["request"])
-        if len(process_formats):
-            process_formats = list(filter(lambda _format: _format.get("slug") in formats, process_formats))
-            for _format in process_formats:
-                format = ExportFormat.get_or_create(**_format)
-                format.save()
-            formats = [_format for _format in formats if not isinstance(_format, str)]
 
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
@@ -1017,9 +1008,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return obj.export_provider_type.type_name
 
     def get_supported_formats(self, obj):
-        process_formats = get_process_formats(obj, self.context["request"])
         formats = list(obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description"))
-        formats.extend(process_formats)
+        formats += list(ExportFormat.objects.filter(options__providers__contains=obj.slug).values("uid", "name", "slug", "description"))
         return formats
 
     def get_thumbnail_url(self, obj):

@@ -582,7 +582,7 @@ class TestJobViewSet(APITestCase):
             "provider_tasks": [{"provider": "osm-generic", "formats": ["broken-format-one", "broken-format-two"]}],
         }
         response = self.client.post(url, request_data, format="json")
-
+        print(response.content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response["Content-Language"], "en")

@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 
+import eventkit_cloud.jobs.models
 from eventkit_cloud.jobs.models import (
     DataProvider,
     Job,

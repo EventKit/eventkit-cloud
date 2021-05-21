@@ -12,6 +12,7 @@ from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
 from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
+from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -27,7 +28,7 @@ from eventkit_cloud.jobs.models import (
     DataProviderTask,
     JobPermission,
 )
-from eventkit_cloud.jobs.helpers import clean_config
+from eventkit_cloud.utils.ogcapi_process import get_process_formats
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +196,7 @@ class DataProviderForm(forms.ModelForm):
                 )
             if not ogcapi_process.get("id"):
                 raise forms.ValidationError("OGC API Process requires a process id.")
+
         return config
 
 
@@ -214,6 +216,23 @@ class DataProviderAdmin(admin.ModelAdmin):
         "display",
     ]
 
+    def save_model(self, request, obj, *args):
+        super().save_model(request, obj, *args)
+        process_formats = get_process_formats(obj, request)
+        logger.error(f"Process_formats: {process_formats}")
+        for process_format in process_formats:
+            export_format, created = ExportFormat.get_or_create(**process_format)
+            if created:
+                export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
+                export_format.supported_projections.add(Projection.objects.get(srid=4326))
+            else:
+                providers = export_format.options.get('providers')
+                if providers:
+                    providers = list(set(providers + [obj.slug]))
+                    export_format.options['providers'] = providers
+                else:
+                    export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
+            export_format.save()
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
 # way to do this is to unregister them using admin.site.unregister, but that also means that you can't use the plus

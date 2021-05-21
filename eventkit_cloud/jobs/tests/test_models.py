@@ -11,6 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
 from unittest.mock import call, patch
 
+import eventkit_cloud.jobs.models
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -416,7 +417,7 @@ class TestDataProvider(TestCase):
         self.data_provider.save()
 
         cache_call = [call(f"base-config-{self.data_provider.slug}")]
-        mocked_cache.delete.assert_has_calls(cache_call)
+        eventkit_cloud.jobs.models.delete.assert_has_calls(cache_call)
 
     @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
     def test_metadata(self, mock_get_mapproxy_metadata_url):

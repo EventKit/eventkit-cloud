@@ -3,6 +3,8 @@ import requests
 from django.conf import settings
 from django.test import TestCase, override_settings
 from unittest.mock import patch
+
+import eventkit_cloud.jobs.models
 from eventkit_cloud.utils.geocoding.geocode_auth import (
     get_auth_headers,
     CACHE_COOKIE_KEY,
@@ -78,4 +80,4 @@ class TestGeoCodeAuth(TestCase):
         with self.settings(GEOCODING_AUTH_URL="http://test.test"):
             mock_auth_requests.get().json.side_effect = requests.exceptions.RequestException()
             self.assertIsNone(authenticate())
-            mock_cache.delete.assert_called_once_with(CACHE_TOKEN_KEY)
+            eventkit_cloud.jobs.models.delete.assert_called_once_with(CACHE_TOKEN_KEY)

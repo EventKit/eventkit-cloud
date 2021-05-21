@@ -2,6 +2,8 @@
 
 from django.db import migrations
 
+import eventkit_cloud.jobs.models
+
 
 class Migration(migrations.Migration):
     def add_ogc_process_provider(apps, schema_editor):

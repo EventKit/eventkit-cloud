@@ -2,6 +2,8 @@
 
 from django.db import migrations
 
+import eventkit_cloud.jobs.models
+
 
 class Migration(migrations.Migration):
 

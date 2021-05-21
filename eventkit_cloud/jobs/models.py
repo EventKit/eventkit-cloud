@@ -15,10 +15,9 @@ from django.contrib.gis.geos import (
 )
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields.jsonb import JSONField
+from django.core.cache import cache
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
-from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
 from django.utils import timezone
@@ -94,7 +93,7 @@ class DatamodelPreset(TimeStampedModelMixin):
     """
 
     name = models.CharField(max_length=10)
-    json_tags = JSONField(default=list)
+    json_tags = models.JSONField(default=list)
 
     class Meta:
         db_table = "datamodel_preset"
@@ -159,7 +158,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100)
     slug = LowerCaseCharField(max_length=20, unique=True, default="")
     description = models.CharField(max_length=255)
-    cmd = models.TextField(max_length=1000)
+    options = models.JSONField(default=dict, null=True, blank=True)
     objects = models.Manager()
     supported_projections = models.ManyToManyField(Projection, related_name="supported_projections")
 
@@ -173,6 +172,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     @classmethod
     def get_or_create(cls, **kwargs):
         blacklisted_keys = []
+        created = False
         for _key in kwargs:
             if _key not in cls.safe_kwargs:
                 blacklisted_keys.append(_key)
@@ -182,7 +182,8 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
             format = cls.objects.get(**kwargs)
         except ObjectDoesNotExist:
             format = cls.objects.create(**kwargs)
-        return format
+            created = True
+        return format, created
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -321,6 +322,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     def save(self, *args, **kwargs):
+        from eventkit_cloud.utils.ogcapi_process import get_process_formats
+
         if not self.slug:
             self.slug = self.name.replace(" ", "_").lower()
             if len(self.slug) > 40:
@@ -328,6 +331,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         cache.delete(f"base-config-{self.slug}")
         super(DataProvider, self).save(*args, **kwargs)
+
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -465,13 +469,13 @@ class RegionalPolicy(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=255)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="policies")
     providers = models.ManyToManyField(DataProvider, related_name="regional_policies")
-    policies = JSONField()
+    policies = models.JSONField()
     policy_title_text = models.CharField(max_length=255)
     policy_header_text = models.TextField(null=True, blank=True)
     policy_footer_text = models.TextField(null=True, blank=True)
     policy_cancel_text = models.CharField(max_length=255, null=True, blank=True)
     policy_cancel_button_text = models.CharField(max_length=255)
-    justification_options = JSONField()
+    justification_options = models.JSONField()
 
     class Meta:
         verbose_name_plural = "Regional Policies"
@@ -534,7 +538,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         verbose_name="The original map selection", srid=4326, default=GeometryCollection(), null=True, blank=True
     )
     include_zipfile = models.BooleanField(default=False)
-    json_tags = JSONField(default=dict)
+    json_tags = models.JSONField(default=dict)
     last_export_run = models.ForeignKey(
         "tasks.ExportRun", on_delete=models.CASCADE, null=True, related_name="last_export_run"
     )
@@ -895,3 +899,15 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
+
+
+def delete(self, *args, **kwargs):
+    for job_permission in JobPermission.objects.filter(object_id=self.pk):
+        job_permission.content_type = ContentType.objects.get_for_model(User)
+        job_permission.object_id = job_permission.job.user.pk
+        job_permission.save()
+
+    super(Group, self).delete(*args, **kwargs)
+
+
+Group.delete = delete

@@ -7,6 +7,8 @@ from celery.utils.log import get_task_logger
 
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext as _
+
+import eventkit_cloud.jobs.models
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState

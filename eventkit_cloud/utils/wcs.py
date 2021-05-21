@@ -10,6 +10,7 @@ from django.conf import settings
 
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox
 
 logger = logging.getLogger(__name__)
@@ -165,12 +166,11 @@ class WCSConverter(object):
         tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
-        auth_session = auth_requests.AuthSession()
+        session = get_or_update_session(cert_info=self.config.get("cert_info"))
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
             try:
-                cert_info = self.config.get("cert_info")
                 for _bbox_idx, _tile_bbox, in enumerate(tile_bboxes):
                     outfile = "{0}-{1}-{2}{3}".format(file_path, idx, _bbox_idx, ext)
                     try:
@@ -190,10 +190,9 @@ class WCSConverter(object):
                         params["height"] = self.config.get("tile_size")
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
-                    req = auth_session.get(
+                    req = session.get(
                         self.service_url,
                         params=params,
-                        cert_info=cert_info,
                         stream=True,
                         verify=getattr(settings, "SSL_VERIFICATION", True),
                     )

@@ -4,6 +4,8 @@ import os
 import requests
 from django.conf import settings
 from django.core.cache import cache
+
+import eventkit_cloud.jobs.models
 from eventkit_cloud.utils import auth_requests
 
 logger = logging.getLogger(__name__)

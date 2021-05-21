@@ -178,9 +178,9 @@ def get_export_task_record(export_task_record_uid: str) -> ExportTaskRecord:
     return ExportTaskRecord.objects.select_related("export_provider_task__provider").get(uid=export_task_record_uid)
 
 
-def get_supported_projections(format_slug: str) -> List[int]:
+def get_supported_projections(export_format: ExportFormat) -> List[int]:
     supported_projections = (
-        ExportFormat.objects.get(slug=format_slug).supported_projections.all().values_list("srid", flat=True)
+        export_format.supported_projections.all().values_list("srid", flat=True)
     )
     return supported_projections
 

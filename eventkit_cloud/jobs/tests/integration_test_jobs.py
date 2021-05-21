@@ -10,6 +10,7 @@ from django.test import TestCase
 from django.utils import timezone
 from typing import Union
 
+import eventkit_cloud.jobs.models
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient

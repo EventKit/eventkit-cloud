@@ -14,7 +14,7 @@ from enum import Enum
 from notifications.models import Notification
 import logging
 from typing import List, Callable, Tuple
-from django.contrib.postgres.fields import JSONField
+
 from typing import Union
 
 
@@ -180,19 +180,19 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
 
     name = models.CharField(max_length=100, blank=False, unique=True)
     slug = LowerCaseCharField(max_length=40, blank=False, unique=True, db_index=True)
-    filter = JSONField(
+    filter = models.JSONField(
         null=True,
         blank=True,
         help_text="This field should be a dict which is passed directly to the user model for filtering users. "
         "For help see django docs on filtering models.",
     )
-    exclude = JSONField(
+    exclude = models.JSONField(
         null=True,
         blank=True,
         help_text="This field should be a dict which is passed directly to the user model for excluding users. "
         "For help see django docs on excluding models.",
     )
-    complex = JSONField(
+    complex = models.JSONField(
         null=True,
         blank=True,
         unique=True,
