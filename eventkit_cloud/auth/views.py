@@ -87,6 +87,9 @@ def logout(request):
 
 
 def has_valid_access_token(request) -> bool:
+    # TODO: Remove this after testing.
+    if request.user.is_superuser:
+        return True
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         if isinstance(request, str):
             access_token = request
