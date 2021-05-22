@@ -355,7 +355,7 @@ def get_celery_health_check_command(node_type: str):
 
 def get_celery_tasks_scale_by_run():
     celery_group_name = uuid.uuid4()
-
+    logger.info(f"CELERY_GROUP_NAME:{celery_group_name}")
     default_command = (
         f"CELERY_GROUP_NAME={celery_group_name} "
         f"celery worker -A eventkit_cloud --concurrency=$RUNS_CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs & "

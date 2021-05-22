@@ -2116,7 +2116,9 @@ def create_datapack_preview(
         result["result"] = filepath
 
     except Exception as e:
+        logger.info(f"create_datapack_preview hit an exception, printing exception.")
         logger.exception(e)
+    logger.info(f"Returning create_datapack_preview result: {result}")
     return result
 
 

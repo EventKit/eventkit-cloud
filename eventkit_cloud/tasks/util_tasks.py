@@ -67,6 +67,7 @@ def shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     )
     # Always shut down after the run is complete if scaling by runs.
     if os.getenv("CELERY_SCALE_BY_RUN"):
+        logger.info(f"Shutting down workers {workers} after run completed.")
         app.control.broadcast("shutdown", destination=workers)
         return {"action": "shutdown", "workers": workers}
     if not export_tasks:
