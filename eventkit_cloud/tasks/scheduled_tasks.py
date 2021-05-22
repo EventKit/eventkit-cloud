@@ -128,11 +128,11 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
     celery_task_details = get_celery_task_details(client, app_name, celery_tasks)
     running_tasks_memory = celery_task_details["memory"] + celery_tasks[queue_name]["memory"]
 
-    while number_of_runs > 0 and running_tasks_memory < max_tasks_memory:
-        print(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
+    # If there's a run, scale up a new task and assign that run to that task.
+    if number_of_runs > 0:
+        logger.info(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
+        logger.info(f"CELERY TASKS: {celery_tasks}")
         run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
-        running_tasks_memory += celery_tasks[queue_name]["memory"]
-        number_of_runs -= 1
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
