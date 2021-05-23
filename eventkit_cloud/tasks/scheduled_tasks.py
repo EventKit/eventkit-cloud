@@ -371,8 +371,8 @@ def get_celery_tasks_scale_by_run():
         "runs_worker": {
             "command": default_command,
             # NOQA
-            "disk": 12288,
-            "memory": 8192,
+            "disk": os.getenv("CELERY_TASK_DISK", 12288),
+            "memory": os.getenv("CELERY_TASK_MEMORY", 8192),
         }
     }
 
