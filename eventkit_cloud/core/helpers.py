@@ -162,14 +162,6 @@ def get_or_update_session(session=None, max_retries=3, headers=None, **auth_info
     cert_pass = auth_info.get("cert_pass")
     ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
 
-    # TODO: remove
-    logger.error("************************************")
-    logger.error("username: {}".format(username))
-    logger.error("password: {}".format(password))
-    logger.error("cert_path: {}".format(cert_path))
-    logger.error("cert_pass: {}".format(cert_pass))
-    logger.error("************************************")
-
     if not session:
         session = requests.Session()
 
