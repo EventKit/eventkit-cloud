@@ -151,11 +151,11 @@ def scale_by_runs(max_tasks_memory):
             logger.error(f"task {task} ")
             if queue and not queue.get("consumers"):
                 logger.info(f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
-                run_task_command(client, app_name, run.uid, task)
+                run_task_command(client, app_name, str(run.uid), task)
             if not queue:
                 logger.info(
                     f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
-                run_task_command(client, app_name, run.uid, task)
+                run_task_command(client, app_name, str(run.uid), task)
         else:
             break
 
