@@ -3,6 +3,7 @@ import uuid
 import requests
 import os
 import logging
+# TODO: What's the best way to only import this when we want to?  i.e. Not PCF deploys.
 try:
     import docker
 except ModuleNotFoundError:
@@ -25,8 +26,6 @@ class DockerClient(ScaleClient):
             raise Exception("An app_name (docker image) was not provided to run_task.")
         if not memory_in_mb:
             memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2G")
-        # TODO: Do we need to clean any host specific environment variables.
-        name = f"celery_task_{uuid.uuid4()}"
         print(f"MEMORY IS {memory_in_mb}")
         print(f"COMMAND IS {command}")
         # Docker client assumes the value is in bytes if you don't append an identifier.

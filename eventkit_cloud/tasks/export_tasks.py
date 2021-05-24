@@ -1617,18 +1617,21 @@ def pick_up_run_task(
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
+    # if os.getenv("CELERY_SCALE_BY_RUN"):
+    #     os.environ["CELERY_GROUP_NAME"] = run.uid
     try:
         worker = socket.gethostname()
+        if not run.worker:
+            TaskFactory().parse_tasks(
+                worker=worker,
+                run_uid=run_uid,
+                user_details=user_details,
+                data_provider_slugs=data_provider_slugs,
+                run_zip_file_slug_sets=run_zip_file_slug_sets,
+                session_token=session_token,
+            )
         run.worker = worker
         run.save()
-        TaskFactory().parse_tasks(
-            worker=worker,
-            run_uid=run_uid,
-            user_details=user_details,
-            data_provider_slugs=data_provider_slugs,
-            run_zip_file_slug_sets=run_zip_file_slug_sets,
-            session_token=session_token,
-        )
     except Exception as e:
         run.status = TaskState.FAILED.value
         run.save()

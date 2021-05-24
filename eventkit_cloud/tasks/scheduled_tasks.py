@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import datetime
 import json
 import os
@@ -21,7 +22,9 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, get_message_count
+from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.docker_client import DockerClient
@@ -88,7 +91,10 @@ def expire_runs_task():
             run.notified = now
             run.save()
 
-
+# Get all runs that are not done from the database.  In progress or not started.
+# Make sure that any in progress runs have an active listener.  If not, spin up the run and use that run uid.
+# Otherwise grab the next run uid and spin up a new worker for it.
+# Run uids vs. queues.  If there's a queue with that run uid with no listeners spin up a new one.
 @app.task(name="Scale Celery", base=LockingTask)
 def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
     """
@@ -98,15 +104,17 @@ def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
 
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
     if getattr(settings, "CELERY_SCALE_BY_RUN"):
-        celery_tasks = get_celery_tasks_scale_by_run()
-        scale_by_runs(celery_tasks, max_tasks_memory)
+        scale_by_runs(max_tasks_memory)
     else:
         celery_tasks = get_celery_tasks_scale_by_task()
         scale_by_tasks(celery_tasks, max_tasks_memory)
 
 
-def scale_by_runs(celery_tasks, max_tasks_memory):
+def scale_by_runs(max_tasks_memory):
     # Immediately return if there are no pending runs.
+    broker_api_url = getattr(settings, "BROKER_API_URL")
+    queue_class = "queues"
+
     number_of_runs = get_message_count(queue_name="runs", message_type="messages_ready")
     if number_of_runs == 0:
         return
@@ -124,15 +132,32 @@ def scale_by_runs(celery_tasks, max_tasks_memory):
         client = DockerClient()
         app_name = settings.DOCKER_IMAGE_NAME
 
-    queue_name = "runs_worker"
-    celery_task_details = get_celery_task_details(client, app_name, celery_tasks)
-    running_tasks_memory = int(celery_task_details["memory"]) + int(celery_tasks[queue_name]["memory"])
-
+    celery_task_details = get_celery_task_details(client, app_name)
+    running_tasks_memory = int(celery_task_details['memory'])
+    celery_task = get_celery_tasks_scale_by_run()
     # If there's a run, scale up a new task and assign that run to that task.
-    if number_of_runs > 0:
-        logger.info(f"This would put us at {running_tasks_memory} of a max {max_tasks_memory}")
-        logger.info(f"CELERY TASKS: {celery_tasks}")
-        run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
+    queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
+    queues = list_to_dict(queues, "name")
+    # Get run in progress
+    runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value)
+    logger.error(f"CHecking runs {runs}")
+    for run in runs:
+        logger.error(f"if {number_of_runs} > 0 and {running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
+        if number_of_runs > 0 and running_tasks_memory + celery_task['memory'] < max_tasks_memory:
+            queue = queues.get(run.uid)
+            task = copy.deepcopy(celery_task)
+            task["command"] = task["command"].format(celery_group_name=run.uid)
+            logger.error(f"queue {queue} ")
+            logger.error(f"task {task} ")
+            if queue and not queue.get("consumers"):
+                logger.info(f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
+                run_task_command(client, app_name, run.uid, task)
+            if not queue:
+                logger.info(
+                    f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
+                run_task_command(client, app_name, run.uid, task)
+        else:
+            break
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -200,7 +225,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
             break
 
 
-def get_celery_task_details(client, app_name: str, celery_tasks: Union[dict, list]):
+def get_celery_task_details(client, app_name: str, celery_tasks: Union[dict, list] = None):
     """
     Gets information about currently running tasks.
     :param client:
@@ -212,7 +237,7 @@ def get_celery_task_details(client, app_name: str, celery_tasks: Union[dict, lis
     running_tasks = client.get_running_tasks(app_name)
     total_memory = 0
     total_disk = 0
-    task_counts = dict.fromkeys(celery_tasks, 0)
+    task_counts = dict.fromkeys(celery_tasks, 0) if celery_tasks else {}
     for running_task in running_tasks["resources"]:
         total_memory += running_task["memory_in_mb"]
         total_disk += running_task["disk_in_mb"]
@@ -354,26 +379,22 @@ def get_celery_health_check_command(node_type: str):
 
 
 def get_celery_tasks_scale_by_run():
-    celery_group_name = uuid.uuid4()
-    logger.info(f"CELERY_GROUP_NAME:{celery_group_name}")
     default_command = (
-        f"CELERY_GROUP_NAME={celery_group_name} "
-        f"celery worker -A eventkit_cloud --concurrency=$RUNS_CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs & "
-        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & "
-        f"celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h "
-        f"-Q {celery_group_name}.large & "
-        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & "
-        f"celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h "
-        f"-Q {celery_group_name}.priority,$HOSTNAME.priority"
+        "CELERY_GROUP_NAME={celery_group_name} "
+        "celery worker -A eventkit_cloud --concurrency=$RUNS_CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs & "
+        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & "
+        "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h "
+        "-Q {celery_group_name}.large & "
+        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & "
+        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h "
+        "-Q {celery_group_name}.priority,$HOSTNAME.priority"
     )
 
     celery_tasks = {
-        "runs_worker": {
-            "command": default_command,
-            # NOQA
-            "disk": os.getenv("CELERY_TASK_DISK", 12288),
-            "memory": os.getenv("CELERY_TASK_MEMORY", 8192),
-        }
+        "command": default_command,
+        # NOQA
+        "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
+        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192))
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
