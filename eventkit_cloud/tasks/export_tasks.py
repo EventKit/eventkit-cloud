@@ -86,7 +86,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, rerun_data_provider_records
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
 from eventkit_cloud.utils.client import EventKitClient
@@ -1617,8 +1617,6 @@ def pick_up_run_task(
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
-    # if os.getenv("CELERY_SCALE_BY_RUN"):
-    #     os.environ["CELERY_GROUP_NAME"] = run.uid
     try:
         worker = socket.gethostname()
         if not run.worker:
@@ -1630,6 +1628,9 @@ def pick_up_run_task(
                 run_zip_file_slug_sets=run_zip_file_slug_sets,
                 session_token=session_token,
             )
+        else:
+            data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.exclude(status=TaskState.COMPLETED.value)]
+            rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
         run.save()
     except Exception as e:
