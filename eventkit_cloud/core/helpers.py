@@ -166,7 +166,7 @@ def get_or_update_session(session=None, max_retries=3, headers=None, **auth_info
         session = requests.Session()
 
     if username and password:
-        logger.error(f"setting {username} and {password} for session")
+        logger.debug(f"setting {username} and {password} for session")
         session.auth = (username, password)
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
