@@ -228,7 +228,7 @@ export function DataProvider(props: Props) {
     }
 
     function handleLicenseClose() {
-        setLicenseOpen(true);
+        setLicenseOpen(false);
     }
 
     function handleExpand() {
