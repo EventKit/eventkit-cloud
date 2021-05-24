@@ -139,7 +139,7 @@ def scale_by_runs(max_tasks_memory):
     queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
     queues = list_to_dict(queues, "name")
     # Get run in progress
-    runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value)
+    runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
     logger.error(f"CHecking runs {runs}")
     for run in runs:
         logger.error(f"if {number_of_runs} > 0 and {running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
