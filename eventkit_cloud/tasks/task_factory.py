@@ -144,10 +144,9 @@ class TaskFactory:
 
             finalized_provider_task_chain_list = []
             # Create a task record which can hold tasks for the run (datapack)
-            run_task_record, created = DataProviderTaskRecord.objects.get_or_create(
+            run_task_record = DataProviderTaskRecord.objects.create(
                 run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
             )
-            print(f"RUN TASK RECORD IS: {run_task_record}, created bool is {created}")
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             if not os.path.exists(stage_dir):
                 os.makedirs(stage_dir, 0o750)
