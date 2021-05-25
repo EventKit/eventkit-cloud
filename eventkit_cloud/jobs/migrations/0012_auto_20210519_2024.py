@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0012_add_ogc_process_provider'),
+        ('jobs', '0011_add_file_data_providers'),
     ]
 
     operations = [
