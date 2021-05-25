@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 from logging import getLogger
+from urllib.parse import parse_qs
+
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
-from urllib.parse import parse_qs
-from eventkit_cloud.utils.mapproxy import create_mapproxy_app
-from eventkit_cloud.utils.map_query import get_map_query
+
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.tasks.models import DataProvider
+from eventkit_cloud.utils.map_query import get_map_query
+from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 
 logger = getLogger(__file__)
 

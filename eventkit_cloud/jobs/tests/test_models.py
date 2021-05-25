@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from unittest.mock import call, patch
+
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -9,9 +11,7 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
-from unittest.mock import call, patch
 
-import eventkit_cloud.jobs.models
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -417,9 +417,9 @@ class TestDataProvider(TestCase):
         self.data_provider.save()
 
         cache_call = [call(f"base-config-{self.data_provider.slug}")]
-        eventkit_cloud.jobs.models.delete.assert_has_calls(cache_call)
+        mocked_cache.delete.assert_has_calls(cache_call)
 
-    @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
+    @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_metadata_url")
     def test_metadata(self, mock_get_mapproxy_metadata_url):
         example_url = "http://test.test"
         expected_url = "http://ek.test/metadata/"
@@ -429,14 +429,14 @@ class TestDataProvider(TestCase):
         self.data_provider.config = yaml.dump(config)
         self.assertEqual(expected_metadata, self.data_provider.metadata)
 
-        @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
-        def test_footprint_url(self, mock_get_mapproxy_footprint_url):
-            example_url = "http://test.test"
-            expected_url = "http://ek.test/footprint/"
-            mock_get_mapproxy_footprint_url.return_value = expected_url
-            config = {"sources": {"footprint": {"req": {"url": example_url}}}}
-            self.data_provider.config = yaml.dump(config)
-            self.assertEqual(expected_url, self.data_provider.footprint_url)
+    @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_footprint_url")
+    def test_footprint_url(self, mock_get_mapproxy_footprint_url):
+        example_url = "http://test.test"
+        expected_url = "http://ek.test/footprint/"
+        mock_get_mapproxy_footprint_url.return_value = expected_url
+        config = {"sources": {"footprint": {"req": {"url": example_url}}}}
+        self.data_provider.config = yaml.dump(config)
+        self.assertEqual(expected_url, self.data_provider.footprint_url)
 
     def test_layers(self,):
 

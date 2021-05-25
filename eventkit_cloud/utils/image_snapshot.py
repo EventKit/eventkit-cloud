@@ -1,30 +1,29 @@
+import copy
+import logging
 import os
 import shutil
-from requests import Response
-from webtest.response import TestResponse
-import logging
-import copy
+from io import BytesIO
+from typing import Union
+from urllib.parse import urlparse
 
 from PIL import Image
-from io import BytesIO
-
 from django.conf import settings
-from eventkit_cloud.utils import s3
-from eventkit_cloud.jobs.models import MapImageSnapshot
+from mapproxy.grid import tile_grid
+from requests import Response
+from webtest.response import TestResponse
+
 from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_dir,
     get_provider_image_download_path,
 )
+from eventkit_cloud.jobs.models import MapImageSnapshot
 from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.helpers import (
     get_download_paths,
     get_relative_path_from_staging,
 )
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
-from urllib.parse import urlparse
-from typing import Union
-
-from mapproxy.grid import tile_grid
 
 logger = logging.getLogger(__name__)
 

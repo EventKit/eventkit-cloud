@@ -8,6 +8,7 @@ import shutil
 import socket
 import time
 import traceback
+from pathlib import Path
 from typing import List, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -29,17 +30,14 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
     NotificationLevel,
 )
-
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.helpers import clean_config
-from eventkit_cloud.jobs.models import DataProviderTask, DataProvider, ExportFormat
+from eventkit_cloud.jobs.models import DataProviderTask, DataProvider, ExportFormat, load_provider_config, clean_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -72,7 +70,9 @@ from eventkit_cloud.tasks.helpers import (
     merge_chunks,
     find_in_zip,
     extract_metadata_files,
-    get_geometry, )
+    get_geometry,
+    update_progress,
+)
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
@@ -83,14 +83,12 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
-from pathlib import Path
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -704,10 +702,7 @@ def gpx_export_task(
 
 @app.task(name="OSM PBF (.pbf)", bind=True, base=FormatTask, acks_late=True)
 def pbf_export_task(
-    self,
-    result=None,
-    *args,
-    **kwargs,
+    self, result=None, *args, **kwargs,
 ):
     """
     Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
@@ -759,19 +754,20 @@ def ogcapi_process_export_task(
         output_file = get_export_filepath(stage_dir, job_name, projection, data_provider.slug, "gpkg")
         driver = "gpkg"
     ogc_config = clean_config(config, return_dict=True).get("ogcapi_process", dict())
-    download_path = get_export_filepath(stage_dir, f"{job_name}-source", projection,
-                                        data_provider.slug, "zip")
+    download_path = get_export_filepath(stage_dir, f"{job_name}-source", projection, data_provider.slug, "zip")
 
     # TODO: The download path might not be a zip, use the mediatype to determine the file format.
-    download_path = get_ogcapi_data(config=config,
-                                    task_uid=task_uid,
-                                    stage_dir=stage_dir,
-                                    bbox=bbox,
-                                    service_url=service_url,
-                                    session_token=session_token,
-                                    export_format_slug=export_format_slug,
-                                    selection=selection,
-                                    download_path=download_path)
+    download_path = get_ogcapi_data(
+        config=config,
+        task_uid=task_uid,
+        stage_dir=stage_dir,
+        bbox=bbox,
+        service_url=service_url,
+        session_token=session_token,
+        export_format_slug=export_format_slug,
+        selection=selection,
+        download_path=download_path,
+    )
 
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
@@ -785,15 +781,14 @@ def ogcapi_process_export_task(
             boundary=bbox,
         )
 
-        update_progress(export_task_record.uid, progress=90, subtask_percentage=90)
-
         result["driver"] = driver
         result["file_extension"] = ogc_config.get("output_file_ext")
+        result["ogcapi_process"] = download_path
         result["source"] = out
         result[driver] = out
 
     result["result"] = download_path
-
+    logger.error(f"OGC PROCESS RESULT: {result}")
     return result
 
 
@@ -823,24 +818,32 @@ def ogc_result_task(
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
     export_format = ExportFormat.objects.get(slug=export_format_slug)
-    ogcapi_config = load_provider_config(data_provider.config).get('ogcapi_process')
+    ogcapi_config = load_provider_config(data_provider.config).get("ogcapi_process")
     if ogcapi_config:
         format_field = get_format_field_from_config(ogcapi_config)
         if format_field:
-            if ogcapi_config['inputs'][format_field]['value'] == export_format_slug:
+            if ogcapi_config["inputs"][format_field]["value"] == export_format_slug:
+                logger.error(f"OGC DATA RESULT: {result}")
+                result["result"] = result["ogcapi_process"]
                 return result
-    download_path = get_export_filepath(stage_dir, f"{job_name}-{normalize_name(export_format.name)}", projection, data_provider.slug, "zip")
-    download_path = get_ogcapi_data(config=data_provider.config,
-                                    task_uid=task_uid,
-                                    stage_dir=stage_dir,
-                                    bbox=bbox,
-                                    service_url=service_url,
-                                    session_token=session_token,
-                                    export_format_slug=export_format_slug,
-                                    selection=selection,
-                                    download_path=download_path)
+    download_path = get_export_filepath(
+        stage_dir, f"{job_name}-{normalize_name(export_format.name)}", projection, data_provider.slug, "zip"
+    )
+    download_path = get_ogcapi_data(
+        config=data_provider.config,
+        task_uid=task_uid,
+        stage_dir=stage_dir,
+        bbox=bbox,
+        service_url=service_url,
+        session_token=session_token,
+        export_format_slug=export_format_slug,
+        selection=selection,
+        download_path=download_path,
+    )
 
-    result['result'] = download_path
+    result["result"] = download_path
+    logger.error(f"OGC DATA RESULT: {result}")
+
     return result
 
 
@@ -1013,25 +1016,27 @@ def geotiff_export_task(
     Function defining geopackage export function.
     """
     result = result or {}
-    gtiff_in_dataset = parse_result(result, "source")
-    provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
-    gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
-    selection = parse_result(result, "selection")
+    gtiff_out_dataset = parse_result(result, "gtiff")
+    if not gtiff_out_dataset:
+        gtiff_in_dataset = parse_result(result, "source")
+        provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
+        gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
+        selection = parse_result(result, "selection")
 
-    warp_params, translate_params = get_creation_options(config, "gtiff")
+        warp_params, translate_params = get_creation_options(config, "gtiff")
 
-    if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
-        gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
+        if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
+            gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-    gtiff_out_dataset = gdalutils.convert(
-        driver="gtiff",
-        input_file=gtiff_in_dataset,
-        output_file=gtiff_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        warp_params=warp_params,
-        translate_params=translate_params,
-    )
+        gtiff_out_dataset = gdalutils.convert(
+            driver="gtiff",
+            input_file=gtiff_in_dataset,
+            output_file=gtiff_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            warp_params=warp_params,
+            translate_params=translate_params,
+        )
 
     result["file_extension"] = "tif"
     result["driver"] = "gtiff"
@@ -1286,19 +1291,6 @@ def wfs_export_task(
         logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
 
     return result
-
-
-def load_provider_config(config: str) -> dict:
-    """
-    Function deserializes a yaml object from a given string.
-    """
-
-    try:
-        configuration = yaml.safe_load(config) or dict()
-    except yaml.YAMLError as e:
-        logger.error(f"Unable to load provider configuration: {e}")
-        raise Exception(e)
-    return configuration
 
 
 def get_wfs_query_url(
@@ -2393,15 +2385,17 @@ def make_dirs(path):
             raise
 
 
-def get_ogcapi_data(config=None,
-                    task_uid=None,
-                    stage_dir=None,
-                    bbox=None,
-                    service_url=None,
-                    session_token=None,
-                    export_format_slug=None,
-                    selection=None,
-                    download_path=None):
+def get_ogcapi_data(
+    config=None,
+    task_uid=None,
+    stage_dir=None,
+    bbox=None,
+    service_url=None,
+    session_token=None,
+    export_format_slug=None,
+    selection=None,
+    download_path=None,
+):
     if download_path is None:
         raise Exception("A download path is required to download ogcapi data.")
 
@@ -2416,7 +2410,7 @@ def get_ogcapi_data(config=None,
             session_token=session_token,
             task_id=task_uid,
             cred_var=configuration.get("cred_var"),
-            cert_info=configuration.get("cert_info")
+            cert_info=configuration.get("cert_info"),
         )
         ogc_process.create_job(geom, file_format=export_format_slug)
         download_url = ogc_process.get_job_results()
@@ -2433,11 +2427,13 @@ def get_ogcapi_data(config=None,
     if basic_auth:
         username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(getattr(settings, "SITE_URL"), username=username, password=password, )
+        session = EventKitClient(getattr(settings, "SITE_URL"), username=username, password=password,)
         session = session.client
         cert_info = None
     else:
         cert_info = download_credentials.get("cert_info")
+        cookie = download_credentials.get("cookie")
+        cookie = json.loads(cookie) if cookie else None
 
     download_path = download_data(
         task_uid,
@@ -2447,6 +2443,7 @@ def get_ogcapi_data(config=None,
         password=password,
         session=session,
         cert_info=cert_info,
+        cookie=cookie,
     )
     extract_metadata_files(download_path, stage_dir)
 

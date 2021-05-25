@@ -1,7 +1,8 @@
+import json
 import logging
 from typing import Optional
+
 import requests
-import json
 
 logger = logging.getLogger(__name__)
 

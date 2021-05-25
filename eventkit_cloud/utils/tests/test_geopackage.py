@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from unittest.mock import Mock, patch, call
 from uuid import uuid4
 
 from django.test import TransactionTestCase
-from unittest.mock import Mock, patch, call
 
 from eventkit_cloud.utils.geopackage import (
     add_geojson_to_geopackage,
@@ -25,7 +25,6 @@ from eventkit_cloud.utils.geopackage import (
     create_extension_table,
     add_file_metadata,
 )
-
 
 logger = logging.getLogger(__name__)
 

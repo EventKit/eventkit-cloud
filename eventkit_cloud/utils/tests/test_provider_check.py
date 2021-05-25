@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from unittest.mock import patch, MagicMock
 
 import requests
 from django.conf import settings
 from django.test import TransactionTestCase
-from unittest.mock import patch, MagicMock
 
 from eventkit_cloud.utils.provider_check import (
     WCSProviderCheck,

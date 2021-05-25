@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
+import base64
 import logging
 import urllib
+from unittest.mock import patch, MagicMock
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.urls import reverse
 from django.test import Client, override_settings, RequestFactory
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
+from django.urls import reverse
 
 from eventkit_cloud.auth.auth import OAuthError
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.auth.views import callback, oauth, has_valid_access_token
-
-import base64
 
 logger = logging.getLogger(__name__)
 

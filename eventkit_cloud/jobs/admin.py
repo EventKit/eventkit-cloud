@@ -12,7 +12,6 @@ from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
 from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
-from eventkit_cloud.jobs.helpers import clean_config
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -27,6 +26,7 @@ from eventkit_cloud.jobs.models import (
     DataProviderStatus,
     DataProviderTask,
     JobPermission,
+    clean_config,
 )
 from eventkit_cloud.utils.ogcapi_process import get_process_formats
 
@@ -226,13 +226,14 @@ class DataProviderAdmin(admin.ModelAdmin):
                 export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             else:
-                providers = export_format.options.get('providers')
+                providers = export_format.options.get("providers")
                 if providers:
                     providers = list(set(providers + [obj.slug]))
-                    export_format.options['providers'] = providers
+                    export_format.options["providers"] = providers
                 else:
                     export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
             export_format.save()
+
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
 # way to do this is to unregister them using admin.site.unregister, but that also means that you can't use the plus

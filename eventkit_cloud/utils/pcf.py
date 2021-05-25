@@ -1,8 +1,9 @@
-import requests
-import os
-import logging
-from enum import Enum
 import json
+import logging
+import os
+from enum import Enum
+
+import requests
 
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)

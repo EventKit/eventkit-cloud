@@ -94,11 +94,10 @@ class TestGeoCodeAuthResponse(TestCase):
         mock_get_or_update_session().session.cookies = example_cookies
         self.assertEquals(expected_response, get_auth_response(example_url, example_payload))
         mock_update_session_cookies.assert_called_once_with(example_cookies)
-        mock_get_or_update_session().get.assert_called_once_with(
-            example_url,
-            params=example_payload,
-            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR"),
+        mock_get_or_update_session.assert_called_with(
+            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR")
         )
+        mock_get_or_update_session().get.assert_called_once_with(example_url, params=example_payload)
 
         expected_response = Mock(ok=False)
         mock_get_or_update_session().get.return_value = expected_response

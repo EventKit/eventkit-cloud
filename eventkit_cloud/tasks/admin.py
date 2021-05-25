@@ -1,3 +1,7 @@
+import logging
+import pickle
+import traceback
+
 from django.contrib import admin
 
 from eventkit_cloud.tasks.models import (
@@ -9,10 +13,6 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
     FileProducingTaskResult,
 )
-
-import logging
-import pickle
-import traceback
 
 logger = logging.getLogger(__name__)
 

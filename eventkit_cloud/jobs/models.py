@@ -1,33 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
 import logging
+import os
 import uuid
-import yaml
+from enum import Enum
+from typing import Union, List
 
+import yaml
 from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.db import models
 from django.contrib.gis.geos import (
     GEOSGeometry,
     GeometryCollection,
     Polygon,
     MultiPolygon,
 )
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.serializers import serialize
-from django.contrib.gis.db import models
 from django.core.exceptions import ObjectDoesNotExist
-
-from django.utils import timezone
-from enum import Enum
+from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
+from django.utils import timezone
+from django.utils.text import slugify
 
-from typing import Union, List
-
-from eventkit_cloud.jobs.helpers import clean_config
-
+from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -38,7 +36,6 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url, get_mapproxy_footprint_url
 
 logger = logging.getLogger(__name__)
 
@@ -322,7 +319,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     def save(self, *args, **kwargs):
-        from eventkit_cloud.utils.ogcapi_process import get_process_formats
 
         if not self.slug:
             self.slug = self.name.replace(" ", "_").lower()
@@ -332,12 +328,13 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         cache.delete(f"base-config-{self.slug}")
         super(DataProvider, self).save(*args, **kwargs)
 
-
     def __str__(self):
         return "{0}".format(self.name)
 
     @property
     def metadata(self):
+        from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url
+
         if not self.config:
             return None
         config = yaml.load(self.config)
@@ -348,6 +345,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def footprint_url(self):
+        from eventkit_cloud.utils.mapproxy import get_mapproxy_footprint_url
+
         if not self.config:
             return None
         config = yaml.load(self.config)
@@ -911,3 +910,67 @@ def delete(self, *args, **kwargs):
 
 
 Group.delete = delete
+
+
+def load_provider_config(config: str) -> dict:
+    """
+    Function deserializes a yaml object from a given string.
+    """
+
+    try:
+        if isinstance(config, dict):
+            return config
+        configuration = yaml.safe_load(config) or dict()
+    except yaml.YAMLError as e:
+        logger.error(f"Unable to load provider configuration: {e}")
+        raise Exception(e)
+    return configuration
+
+
+def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    service_keys = [
+        "cert_info",
+        "cert_cred",
+        "concurrency",
+        "max_repeat",
+        "overpass_query",
+        "max_data_size",
+        "pbf_file",
+        "tile_size",
+    ]
+
+    conf = yaml.safe_load(config) or dict()
+
+    for service_key in service_keys:
+        conf.pop(service_key, None)
+    if return_dict:
+        return conf
+    return yaml.dump(conf)
+
+
+def get_data_provider_label(data_provider_slug):
+    try:
+        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
+    except DataProvider.DoesNotExist:
+        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
+        raise
+
+
+def get_data_type_from_provider(data_provider: DataProvider) -> str:
+    """
+    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
+    and should be removed if custom cartography is made configurable.
+    :param data_provider:
+    :return:
+    """
+    if data_provider.slug.lower() in ["nome", "osm"]:
+        return data_provider.slug.lower()
+    else:
+        return data_provider.data_type

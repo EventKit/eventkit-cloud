@@ -72,7 +72,11 @@ class TaskChainBuilder(object):
 
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
-        data_provider_task = DataProviderTask.objects.select_related("provider").prefetch_related("formats__supported_projections").get(uid=provider_task_uid)
+        data_provider_task = (
+            DataProviderTask.objects.select_related("provider")
+            .prefetch_related("formats__supported_projections")
+            .get(uid=provider_task_uid)
+        )
         data_provider = data_provider_task.provider
         job = run.job
 
@@ -120,8 +124,12 @@ class TaskChainBuilder(object):
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
             logger.error(f"Setting up task for format: {export_format.name} with {export_format.options}")
-            export_format_key = "ogcapi-process" if export_format.options.get('proxy') and (
-                        data_provider.slug in export_format.options.get('providers', [])) else export_format.slug
+            export_format_key = (
+                "ogcapi-process"
+                if export_format.options.get("proxy")
+                and (data_provider.slug in export_format.options.get("providers", []))
+                else export_format.slug
+            )
             export_task = create_format_task(export_format_key)
             default_projection = get_default_projection(get_supported_projections(export_format), projections)
             task_name = export_format.name
@@ -158,28 +166,25 @@ class TaskChainBuilder(object):
                 default_projection = get_default_projection(supported_projections, selected_projections=projections)
 
                 subtasks.append(
-                    export_task
-                    .s(
+                    export_task.s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
                         job_name=job_name,
                         task_uid=export_task_record.uid,
                         user_details=user_details,
-                        locking_task_key=data_provider_task_record.uid,
+                        locking_task_key=export_task_record.uid,
                         config=data_provider.config,
                         service_url=data_provider.url,
                         export_format_slug=current_format.slug,
                         bbox=bbox,
                         session_token=session_token,
                         provider_slug=data_provider.slug,
-                        overpass_url=data_provider.url,
                         export_provider_task_record_uid=data_provider_task_record.uid,
                         worker=worker,
                         selection=job.the_geom.geojson,
                         layer=data_provider.layer,
                         service_type=service_type,
-                    )
-                    .set(queue=queue_group, routing_key=queue_group)
+                    ).set(queue=queue_group, routing_key=queue_group)
                 )
 
                 for projection in list(set(supported_projections) & set(projections)):

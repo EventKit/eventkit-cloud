@@ -3,11 +3,11 @@
 # For many users this is the default python, for other users they may have to specify this location
 # for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
 
-import os
+import json
 import logging
+import os
 import shutil
 from multiprocessing import Pool
-import json
 
 try:
     input = raw_input

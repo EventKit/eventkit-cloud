@@ -2,14 +2,16 @@
 
 import json
 import logging
-import requests_mock
-import signal
-
-from django.test import TestCase
-from django.conf import settings
-from django.utils import timezone
-from unittest.mock import patch, call, Mock, MagicMock
 import os
+import signal
+from unittest.mock import patch, call, Mock, MagicMock
+
+import requests_mock
+from django.conf import settings
+from django.test import TestCase
+from django.utils import timezone
+
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
     get_style_files,
     get_file_paths,
@@ -24,10 +26,8 @@ from eventkit_cloud.tasks.helpers import (
     delete_rabbit_objects,
     get_download_filename,
     get_data_package_manifest,
+    update_progress,
 )
-
-from eventkit_cloud.tasks.enumerations import TaskState
-
 from eventkit_cloud.tasks.helpers import progressive_kill
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class TestHelpers(TestCase):
         returned_value = get_metadata_url(test_url, "arcgis-raster")
         self.assertEqual(test_url, returned_value)
 
-    @patch("eventkit_cloud.tasks.helpers.get_cached_model")
+    @patch("eventkit_cloud.core.helpers.get_cached_model")
     def test_get_download_filename(self, mock_get_cached_model):
         name = "test_datapack"
         ext = ".gpkg"
@@ -397,3 +397,17 @@ class TestHelpers(TestCase):
         expected_output_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(example_uid), "manifest.xml")
         mock_open.assert_called_once_with(expected_output_file, "w")
         mock_open().__enter__().write.assert_called_once_with(expected_xml)
+
+    @patch("eventkit_cloud.tasks.helpers.set_cache_value")
+    @patch("django.db.connection.close")
+    def test_update_progress(self, mock_close, mock_set_cache_value):
+        uid = "1234"
+        estimated = timezone.now()
+        update_progress(uid, progress=50, estimated_finish=estimated)
+        mock_close.assert_called_once()
+        mock_set_cache_value.assert_has_calls(
+            [
+                call(uid=uid, attribute="progress", model_name="ExportTaskRecord", value=50),
+                call(uid=uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated),
+            ]
+        )

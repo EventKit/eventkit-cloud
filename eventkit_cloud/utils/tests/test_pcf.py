@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from unittest.mock import patch
 import os
+from unittest.mock import patch
 
 import requests_mock
-
 from django.test import TestCase
 
 from eventkit_cloud.utils.pcf import PcfClient

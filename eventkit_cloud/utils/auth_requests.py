@@ -3,18 +3,17 @@ import http.client
 import logging
 import os
 import re
-import urllib.request
 import urllib.error
 import urllib.parse
-import requests_pkcs12
+import urllib.request
 from functools import wraps
 from tempfile import NamedTemporaryFile
-from django.conf import settings
-from requests_pkcs12 import create_ssl_context
 
 import requests
+import requests_pkcs12
+from django.conf import settings
 from mapproxy.client import http as mapproxy_http
-
+from requests_pkcs12 import create_ssl_context
 
 logger = logging.getLogger(__name__)
 
@@ -274,8 +273,9 @@ def unpatch_https():
 
 
 def get_or_update_session(
-    username=None, password=None, session=None, max_retries=3, verify=True, cred_var=None, cert_info=None
+    username=None, password=None, session=None, max_retries=3, verify=None, cred_var=None, cert_info=None, cookie=None
 ):
+    verify = verify or getattr(settings, "SSL_VERIFICATION", True)
     if not session:
         session = requests.Session()
 
@@ -287,7 +287,6 @@ def get_or_update_session(
 
     if cred_var:
         credentials = get_cred(cred_var=cred_var)
-        logger.error(f"Using credentials: {credentials}")
         session.auth = tuple(credentials)
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
@@ -299,7 +298,8 @@ def get_or_update_session(
             pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
         )
         session.mount("https://", adapter)
-
+    if cookie:
+        session.cookies.set(**cookie)
     logger.debug("Using %s for SSL verification.", str(verify))
     session.verify = verify
     return session

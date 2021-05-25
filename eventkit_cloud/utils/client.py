@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import logging
-import requests
-from datetime import timedelta, datetime
-import statistics
 import json
+import logging
 import re
+import statistics
+from datetime import timedelta, datetime
 from time import sleep
+
+import requests
 
 logger = logging.getLogger(__name__)
 

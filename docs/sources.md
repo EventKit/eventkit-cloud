@@ -276,6 +276,8 @@ ogcapi_process:
       cert_path: /path/to/keystore.pfx
       cert_pass_var: CERT_PASS_ENV_VAR
     cred_var: CRED_ENV_VAR
+    # FOR DEBUGGING ONLY
+    cookie: <A cookie represented in JSON>
 ```
 
 The *source* in `source_config` refers to the provider the bundler will fetch data from.

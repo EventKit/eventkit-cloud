@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from django.core.cache import cache
-from django.apps import apps as django_apps
-
 import logging
+
+from django.apps import apps as django_apps
+from django.core.cache import cache
 
 logger = logging.getLogger(__file__)
 

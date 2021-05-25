@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from django.test import TransactionTestCase
-from unittest.mock import Mock, patch
 
 from eventkit_cloud.utils.pbf import OSMToPBF
 

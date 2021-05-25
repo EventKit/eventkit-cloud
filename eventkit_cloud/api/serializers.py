@@ -5,27 +5,30 @@ See `DRF serializer documentation  <http://www.django-rest-framework.org/api-gui
 Used by the View classes api/views.py to serialize API responses as JSON or HTML.
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
-# -*- coding: utf-8 -*-
-import pickle
 import json
 import logging
 
+# -*- coding: utf-8 -*-
+import pickle
+from collections import OrderedDict
+
+from audit_logging.models import AuditEvent
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
-from audit_logging.models import AuditEvent
 from notifications.models import Notification
 from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
 from rest_framework.serializers import ValidationError
+from rest_framework_gis import serializers as geo_serializers
 
-import eventkit_cloud.jobs.models
-from . import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
+
+# Get an instance of a logger
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -42,6 +45,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity,
     JobPermission,
 )
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -53,29 +57,13 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
-from eventkit_cloud.tasks.enumerations import TaskState
-from django.core.exceptions import ObjectDoesNotExist
-
-from collections import OrderedDict
-
-# Get an instance of a logger
-from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+from . import validators
 
 logger = logging.getLogger(__name__)
 
 
-class CreatableFormatSlugRelatedField(serializers.SlugRelatedField):
-    def to_internal_value(self, data):
-        try:
-            return self.get_queryset().get(**{self.slug_field: data})
-        except ObjectDoesNotExist:
-            return data
-        except (TypeError, ValueError):
-            self.fail("invalid")
-
-
 class ProviderTaskSerializer(serializers.ModelSerializer):
-    formats = CreatableFormatSlugRelatedField(
+    formats = serializers.SlugRelatedField(
         many=True,
         queryset=ExportFormat.objects.all(),
         slug_field="slug",
@@ -1009,7 +997,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         formats = list(obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description"))
-        formats += list(ExportFormat.objects.filter(options__providers__contains=obj.slug).values("uid", "name", "slug", "description"))
+        formats += list(
+            ExportFormat.objects.filter(options__providers__contains=obj.slug).values(
+                "uid", "name", "slug", "description"
+            )
+        )
         return formats
 
     def get_thumbnail_url(self, obj):

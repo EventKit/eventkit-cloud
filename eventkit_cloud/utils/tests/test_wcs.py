@@ -2,11 +2,11 @@
 import logging
 import os
 from string import Template
+from unittest.mock import Mock, patch, ANY
 from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase
-from unittest.mock import Mock, patch, ANY
 
 from eventkit_cloud.utils.wcs import WCSConverter
 

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
+from unittest.mock import Mock, patch, mock_open
 
 from django.test import TestCase
 
-import os
-
-from unittest.mock import Mock, patch, mock_open
 from eventkit_cloud.ui.helpers import (
     file_to_geojson,
     read_json_file,
@@ -14,7 +13,6 @@ from eventkit_cloud.ui.helpers import (
     is_mgrs,
     is_lat_lon,
 )
-
 
 logger = logging.getLogger(__name__)
 

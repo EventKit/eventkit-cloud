@@ -3,14 +3,13 @@ import logging
 import os
 import shutil
 from time import sleep
-
-from django.conf import settings
-from django.urls import reverse
-from django.test import TestCase
-from django.utils import timezone
 from typing import Union
 
-import eventkit_cloud.jobs.models
+from django.conf import settings
+from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
+
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient
