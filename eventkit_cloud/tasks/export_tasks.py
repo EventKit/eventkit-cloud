@@ -1619,7 +1619,7 @@ def pick_up_run_task(
     run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
-        if not run.worker:
+        if not (run.worker and run.data_provider_task_records.all()):
             TaskFactory().parse_tasks(
                 worker=worker,
                 run_uid=run_uid,
@@ -1629,6 +1629,8 @@ def pick_up_run_task(
                 session_token=session_token,
             )
         else:
+            # Run has already been created, but we got here because
+            # something happened to the last worker and the run didn't finish.
             data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.exclude(status=TaskState.COMPLETED.value)]
             rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
@@ -1641,7 +1643,7 @@ def pick_up_run_task(
     wait_for_run(run_uid=run_uid)
 
     if os.getenv("CELERY_SCALE_BY_RUN"):
-        queue_name = "runs"
+        queue_name = run_uid
         logger.info(f"Shutting down celery workers on the {queue_name} queue...")
         shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
 

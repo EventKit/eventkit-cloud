@@ -140,24 +140,31 @@ def scale_by_runs(max_tasks_memory):
     queues = list_to_dict(queues, "name")
     # Get run in progress
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
-    logger.error(f"CHecking runs {runs}")
+    logger.error(f"Checking runs {runs}")
+
     for run in runs:
         logger.error(f"if {number_of_runs} > 0 and {running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
-        if number_of_runs > 0 and running_tasks_memory + celery_task['memory'] < max_tasks_memory:
-            queue = queues.get(run.uid)
-            task = copy.deepcopy(celery_task)
-            task["command"] = task["command"].format(celery_group_name=run.uid)
-            logger.error(f"queue {queue} ")
-            logger.error(f"task {task} ")
-            if queue and not queue.get("consumers"):
-                logger.info(f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
-                run_task_command(client, app_name, str(run.uid), task)
-            if not queue:
-                logger.info(
-                    f"Running task command with client: {client}, app_name: {app_name}, uid: {run.uid}, and task: {task}")
-                run_task_command(client, app_name, str(run.uid), task)
-        else:
+        if not number_of_runs:
+            # TODO: There needs to be more certainty about runs.  Checking the database for runs is fine, but do we still need the runs queue?
+            logger.error("No runs in the queue, but there are runs that aren't finished.")
             break
+        if running_tasks_memory + celery_task['memory'] >= max_tasks_memory:
+            logger.info("Not enough available memory to scale another run.")
+            break
+        task_name = run.uid
+        queue = queues.get(task_name)
+        task = copy.deepcopy(celery_task)
+        task["command"] = task["command"].format(celery_group_name=task_name)
+        logger.error(f"queue {queue} ")
+        logger.error(f"task {task} ")
+        running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
+        running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
+        logger.error(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
+        if (queue and queue.get("consumers")) or running_tasks_by_queue_count:
+            logger.info(f"Already a consumer for {queue}")
+            continue
+        logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
+        run_task_command(client, app_name, str(run.uid), task)
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -379,16 +386,7 @@ def get_celery_health_check_command(node_type: str):
 
 
 def get_celery_tasks_scale_by_run():
-    default_command = (
-        "CELERY_GROUP_NAME={celery_group_name} "
-        "celery worker -A eventkit_cloud --concurrency=$RUNS_CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs & "
-        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & "
-        "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h "
-        "-Q {celery_group_name}.large & "
-        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & "
-        "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h "
-        "-Q {celery_group_name}.priority,$HOSTNAME.priority"
-    )
+    default_command = "export CELERY_GROUP_NAME={celery_group_name} & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n runs@%h -Q runs"
 
     celery_tasks = {
         "command": default_command,

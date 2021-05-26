@@ -128,6 +128,7 @@ class TaskFactory:
                 os.makedirs(run_dir, 0o750)
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+            logger.error(f"Creating providers for {queue_group}")
             wait_for_providers_settings = {
                 "queue": f"{queue_group}.priority",
                 "routing_key": f"{queue_group}.priority",
