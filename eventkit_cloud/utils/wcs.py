@@ -236,9 +236,7 @@ class WCSConverter(object):
             raise Exception("Nothing was returned from the WCS service.")
 
     @retry
-    def convert(
-        self,
-    ):
+    def convert(self):
         """
         Download WCS data and convert to geopackage
         """

@@ -26,9 +26,7 @@ def get_status(result):
 
 
 class TestProviderCheck(TransactionTestCase):
-    def setUp(
-        self,
-    ):
+    def setUp(self):
         self.path = settings.ABS_PATH()
         self.aoi_geojson = (
             '{"features": [{"geometry": {"type": "Polygon", "coordinates": '

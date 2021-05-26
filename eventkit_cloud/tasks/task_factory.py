@@ -55,9 +55,7 @@ class TaskFactory:
     A class to assemble task chains (using TaskChainBuilders) based on an Export Run.
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         self.type_task_map = {
             "osm": osm_data_collection_task,
             "wfs": wfs_export_task,

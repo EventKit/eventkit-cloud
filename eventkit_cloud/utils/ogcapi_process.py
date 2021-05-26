@@ -53,9 +53,7 @@ class OgcApiProcess:
 
         return response_content
 
-    def get_job_results(
-        self,
-    ):
+    def get_job_results(self):
         """
         Fetches the job results
         Returns the results' download URL.

@@ -41,9 +41,7 @@ class OSMToPBF(object):
         except Exception:
             pass
 
-    def convert(
-        self,
-    ):
+    def convert(self):
         """
         Convert the raw osm to pbf.
         """

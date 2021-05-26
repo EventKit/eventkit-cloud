@@ -82,9 +82,7 @@ class Overpass(object):
         except Exception:
             pass
 
-    def get_query(
-        self,
-    ):
+    def get_query(self):
         """Get the overpass query used for this extract."""
         return self.query
 

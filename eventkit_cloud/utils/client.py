@@ -54,9 +54,7 @@ class EventKitClient(object):
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies.get("csrftoken")
 
-    def get_providers(
-        self,
-    ):
+    def get_providers(self):
         response = self.client.get(
             self.providers_url,
             headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
