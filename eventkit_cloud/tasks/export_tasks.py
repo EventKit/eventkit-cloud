@@ -2423,7 +2423,7 @@ def get_ogcapi_data(
 
     download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
     basic_auth = download_credentials.get("cred_var")
-    username = password = session = None
+    username = password = session = cookie = None
     if basic_auth:
         username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
