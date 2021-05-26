@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import re
+import sqlite3
+
 import requests
 import shutil
 import socket
@@ -449,7 +451,7 @@ def osm_data_collection_pipeline(
 
     feature_selection = FeatureSelection.example(clean_config(config))
 
-    update_progress(export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage")
+    update_progress(export_task_record_uid, msg="Converting data to Geopackage")
     geom = Polygon.from_bbox(bbox)
     if selection:
         try:
@@ -487,7 +489,20 @@ def osm_data_collection_pipeline(
         layers=["land_polygons"],
         driver="gpkg",
         is_raster=False,
+        access_mode="append",
+        layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
     )
+
+    # TODO:  The arcgis templates as of version 1.9.0 rely on both OGC_FID and FID field existing.
+    #  Just add the fid field if missing for now.
+    with sqlite3.connect(gpkg_filepath) as conn:
+        for column in ["fid", "ogc_fid"]:
+            try:
+                print(conn.execute(f"ALTER TABLE land_polygons ADD COLUMN {column};"))
+            except Exception as e:
+                logger.error(e)
+                # Column exists move on.
+                pass
 
     ret_gpkg_filepath = g.results[0].parts[0]
     assert ret_gpkg_filepath == gpkg_filepath
