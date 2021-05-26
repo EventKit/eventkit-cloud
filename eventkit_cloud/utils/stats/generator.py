@@ -503,14 +503,7 @@ def get_provider_grid(provider, min_zoom=None, max_zoom=None):
 
 
 def query(
-    provider_slug,
-    field,
-    statistic_name,
-    bbox,
-    bbox_srs,
-    gap_fill_thresh=0.1,
-    default_value=None,
-    custom_stats=None,
+    provider_slug, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None, custom_stats=None
 ):
     """
     Finds the highest resolution of the requested statistic:

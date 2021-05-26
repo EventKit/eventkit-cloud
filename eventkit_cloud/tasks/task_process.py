@@ -63,13 +63,7 @@ class TaskProcess(object):
 
 
 def update_progress(
-    task_uid,
-    progress=None,
-    subtask_percentage=100.0,
-    subtask_start=0,
-    estimated_finish=None,
-    eta=None,
-    msg=None,
+    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None
 ):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.

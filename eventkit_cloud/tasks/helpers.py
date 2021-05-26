@@ -1095,9 +1095,7 @@ def find_in_zip(
 
 
 def extract_metadata_files(
-    zip_filepath: str,
-    destination: str,
-    extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
+    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]
 ):
     """
     Function extract metadata files from archives.
