@@ -5,6 +5,7 @@ import os
 import pickle
 import re
 import requests
+import requests_pkcs12
 import signal
 import time
 import urllib.parse
@@ -24,6 +25,8 @@ from operator import itemgetter
 from typing import List, Optional, ValuesView
 from xml.dom import minidom
 from concurrent import futures
+from pathlib import Path
+from zipfile import ZipFile
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
@@ -284,7 +287,9 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
 
     if len(provider_details) == 1:
         style_file_name = "{0}-{1}-{2}.qgs".format(
-            job_name, normalize_name(provider_details[0]["slug"]), default_format_time(timezone.now()),
+            job_name,
+            normalize_name(provider_details[0]["slug"]),
+            default_format_time(timezone.now()),
         )
     else:
         style_file_name = "{0}-{1}.qgs".format(job_name, default_format_time(timezone.now()))
@@ -302,16 +307,21 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     }
 
     with open(style_file, "wb") as open_file:
-        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
+        open_file.write(
+            render_to_string(
+                "styles/Style.qgs",
+                context=context,
+            ).encode()
+        )
     return style_file
 
 
 def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_FORMATS):
     """
-        Used to remove formats from the metadata especially so that they don't show up in the cartography.
-        :param data_sources: A dict of metadata provided by get_metadata.
-        :param formats: A list of unsupported file extensions (i.e. .gpx)
-        :return: The path to the generated qgs file.
+    Used to remove formats from the metadata especially so that they don't show up in the cartography.
+    :param data_sources: A dict of metadata provided by get_metadata.
+    :param formats: A list of unsupported file extensions (i.e. .gpx)
+    :return: The path to the generated qgs file.
     """
     # Create a new dict to not alter the input data.
     if metadata is None:
@@ -568,7 +578,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
             if full_file_path not in map(itemgetter("full_file_path"), current_files):
                 file_ext = os.path.splitext(filename)[1]
-                # Only include files relavant to the user that we can actually add to the carto.
+                # Only include files relevant to the user that we can actually add to the carto.
                 if export_task.display and ("project file" not in export_task.name.lower()):
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], file_ext)
 
@@ -848,6 +858,7 @@ def merge_chunks(
     cert_info=None,
     task_points=100,
     feature_data=False,
+    distinct_field=None,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
     out = gdalutils.convert(
@@ -859,30 +870,34 @@ def merge_chunks(
         layer_name=layer_name,
         projection=projection,
         access_mode="append",
+        distinct_field=distinct_field,
     )
     return out
+
+
+def download_chunks_concurrently(layer, task_points, feature_data):
+    base_path = layer.get("base_path")
+    if not os.path.exists(base_path):
+        os.mkdir(base_path)
+    merge_chunks(
+        output_file=layer.get("path"),
+        projection=layer.get("projection"),
+        layer_name=layer.get("layer_name"),
+        task_uid=layer.get("task_uid"),
+        bbox=layer.get("bbox"),
+        stage_dir=base_path,
+        base_url=layer.get("url"),
+        cert_info=layer.get("cert_info"),
+        task_points=task_points,
+        feature_data=feature_data,
+        distinct_field=layer.get("distinct_field"),
+    )
 
 
 def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
-
-    def download_chunks_concurrently(layer, task_points, feature_data):
-        base_path = layer.get("base_path")
-        os.mkdir(base_path)
-        merge_chunks(
-            output_file=layer.get("path"),
-            projection=layer.get("projection"),
-            layer_name=layer.get("layer_name"),
-            task_uid=layer.get("task_uid"),
-            bbox=layer.get("bbox"),
-            stage_dir=base_path,
-            base_url=layer.get("url"),
-            cert_info=layer.get("cert_info"),
-            task_points=task_points,
-            feature_data=feature_data,
-        )
 
     try:
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
@@ -935,9 +950,16 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
 
 
 def download_chunks(
-    task_uid: str, bbox: list, stage_dir: str, base_url: str, cert_info=None, task_points=100, feature_data=False
+    task_uid: str,
+    bbox: list,
+    stage_dir: str,
+    base_url: str,
+    cert_info=None,
+    task_points=100,
+    feature_data=False,
+    level=15,
 ):
-    tile_bboxes = get_chunked_bbox(bbox)
+    tile_bboxes = get_chunked_bbox(bbox, level=level)
     chunks = []
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
@@ -950,16 +972,42 @@ def download_chunks(
     return chunks
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
+def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
+    if not session:
+        session = requests.Session()
+
+    if username and password:
+        logger.error(f"setting {username} and {password} for session")
+        session.auth = (username, password)
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
+    if cert_path and cert_pass:
+        adapter = requests_pkcs12.Pkcs12Adapter(
+            pkcs12_filename=cert_path,
+            pkcs12_password=cert_pass,
+            max_retries=max_retries,
+        )
+        session.mount("https://", adapter)
+
+    logger.debug("Using %s for SSL verification.", str(verify))
+    session.verify = verify
+    return session
+
+
+def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100, session=None):
     """
     Function for downloading data, optionally using a certificate.
     """
     try:
-        auth_session = auth_requests.AuthSession()
-        response = auth_session.get(
-            input_url, cert_info=cert_info, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+        session = get_or_update_session(
+            session=session, cert_info=cert_info, verify=getattr(settings, "SSL_VERIFICATION", True)
         )
+        response = session.get(input_url, stream=True)
         response.raise_for_status()
+
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
 
@@ -972,6 +1020,13 @@ def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, 
             total_size = len(response.content)
         else:
             raise Exception("Request failed to return any data.")
+
+    try:
+        content_type = response.headers.get("content-type")
+        if Path(out_file).suffix.replace(".", "") not in content_type:
+            raise Exception("The returned data is not in the expected format.")
+    except Exception:
+        logger.error("Unable to verify data type.")
 
     written_size = 0
     update_interval = total_size / 100
@@ -1012,3 +1067,54 @@ def get_task_progress_cache_key(task_uid: str):
 
 def get_last_update_cache_key(task_uid: str):
     return f"{task_uid}_mb_since_update"
+
+
+def find_in_zip(
+    zip_filepath: str, extension: str, stage_dir: str, archive_extension: str = "zip", matched_files: list = list()
+):
+    """
+    Function finds files within archives and returns their vsi path.
+    """
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+    extension = extension.lower()
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        if extension in file_path.suffix.lower() and file_path not in matched_files:
+            return f"/vsizip/{zip_filepath}/{filepath}"
+
+        if archive_extension in file_path.suffix:
+            nested = Path(f"{stage_dir}/{filepath}")
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            with open(nested, "wb") as f:
+                f.write(zip_file.read(filepath))
+
+            return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
+
+
+def extract_metadata_files(
+    zip_filepath: str,
+    destination: str,
+    extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
+):
+    """
+    Function extract metadata files from archives.
+    The function will look for any files that match the extensions that were provided,
+    and will extract those files into a metadata directory.
+    """
+
+    zip_file = ZipFile(zip_filepath)
+    files_in_zip = zip_file.namelist()
+
+    metadata_dir = Path(f"{destination}/metadata/")
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+
+    for filepath in files_in_zip:
+        file_path = Path(filepath)
+
+        if file_path.suffix in extensions:
+            zip_file.extract(filepath, path=metadata_dir)
+
+    return str(metadata_dir)

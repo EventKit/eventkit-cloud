@@ -1,9 +1,9 @@
+import collections
 import logging
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
-from billiard import Process
 from django.db import connection
-import collections
 
 from eventkit_cloud.tasks import set_cache_value
 
@@ -24,7 +24,7 @@ class TaskProcess(object):
         self.stderr = None
         self.export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
 
-    def start_process(self, command=None, billiard=False, *args, **kwargs):
+    def start_process(self, command=None, *args, **kwargs):
         from eventkit_cloud.tasks.enumerations import TaskState
 
         # We need to close the existing connection because the logger could be using a forked process which,
@@ -32,15 +32,11 @@ class TaskProcess(object):
         connection.close()
 
         if isinstance(command, collections.Callable):
-            command()
-        elif billiard:
-            proc = Process(daemon=False, *args, **kwargs)
-            proc.start()
-            self.store_pid(pid=proc.pid)
-            proc.join()
-            self.exitcode = proc.exitcode
+            with ThreadPoolExecutor() as executor:
+                future = executor.submit(command)
+                future.result()
         else:
-            proc = subprocess.Popen(command, **kwargs)
+            proc = subprocess.Popen(command, *args, **kwargs)
             (self.stdout, self.stderr) = proc.communicate()
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
@@ -49,7 +45,8 @@ class TaskProcess(object):
             from eventkit_cloud.tasks.exceptions import CancelException
 
             raise CancelException(
-                task_name=self.export_task.export_provider_task.name, user_name=self.export_task.cancel_user.username,
+                task_name=self.export_task.export_provider_task.name,
+                user_name=self.export_task.cancel_user.username,
             )
 
     def store_pid(self, pid=None):
@@ -66,7 +63,13 @@ class TaskProcess(object):
 
 
 def update_progress(
-    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
+    task_uid,
+    progress=None,
+    subtask_percentage=100.0,
+    subtask_start=0,
+    estimated_finish=None,
+    eta=None,
+    msg=None,
 ):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.
@@ -98,17 +101,26 @@ def update_progress(
 
     if absolute_progress:
         set_cache_value(
-            uid=task_uid, attribute="progress", model_name="ExportTaskRecord", value=absolute_progress,
+            uid=task_uid,
+            attribute="progress",
+            model_name="ExportTaskRecord",
+            value=absolute_progress,
         )
         if eta is not None:
             eta.update(absolute_progress / 100.0, dbg_msg=msg)  # convert to [0-1.0]
 
     if estimated_finish:
         set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated_finish,
+            uid=task_uid,
+            attribute="estimated_finish",
+            model_name="ExportTaskRecord",
+            value=estimated_finish,
         )
     elif eta is not None:
         # Use the updated ETA estimator to determine an estimated_finish
         set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=eta.eta_datetime(),
+            uid=task_uid,
+            attribute="estimated_finish",
+            model_name="ExportTaskRecord",
+            value=eta.eta_datetime(),
         )

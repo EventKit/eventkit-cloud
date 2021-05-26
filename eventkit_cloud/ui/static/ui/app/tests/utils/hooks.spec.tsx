@@ -48,7 +48,7 @@ function ApiHookTester() {
     return (<div>{status}</div>);
 }
 
-it('should render correctly based on status', async () => {
+it('should render correctly based on status', () => {
     const mock = new MockAdapter(axios, { delayResponse: 1 });
     mock.onGet(apiUrl).reply(500);
 
@@ -57,7 +57,5 @@ it('should render correctly based on status', async () => {
 
     const getButton = wrapper.find('button');
     getButton.simulate('click');
-    return new Promise((resolve) => setImmediate(resolve)).then(() => {
-        expect(wrapper.find('div').html()).toContain('fetching');
-    });
+    expect(wrapper.find('div').html()).toContain('fetching');
 });
