@@ -21,11 +21,7 @@ from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportTaskRecord, ExportRun, DataProviderTaskRecord
 from eventkit_cloud.utils.client import parse_duration
-from eventkit_cloud.utils.stats.geomutils import (
-    get_area_bbox,
-    get_bbox_intersect,
-    get_geometry_description,
-)
+from eventkit_cloud.utils.stats.geomutils import get_area_bbox, get_bbox_intersect, get_geometry_description
 
 logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0

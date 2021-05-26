@@ -16,11 +16,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import (
-    ProxyConfiguration,
-    ConfigurationError,
-    validate_references,
-)
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 

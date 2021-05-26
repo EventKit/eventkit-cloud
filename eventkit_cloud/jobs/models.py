@@ -7,12 +7,7 @@ import uuid
 import yaml
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import (
-    GEOSGeometry,
-    GeometryCollection,
-    Polygon,
-    MultiPolygon,
-)
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields.jsonb import JSONField

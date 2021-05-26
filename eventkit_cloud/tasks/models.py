@@ -14,29 +14,10 @@ from django.utils import timezone
 
 from storages.backends.s3boto3 import S3Boto3Storage
 
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
-from eventkit_cloud.core.models import (
-    UIDMixin,
-    TimeStampedModelMixin,
-    TimeTrackingModelMixin,
-    LowerCaseCharField,
-)
-from eventkit_cloud.jobs.models import (
-    Job,
-    DataProvider,
-    JobPermissionLevel,
-    JobPermission,
-    RegionalPolicy,
-)
-from eventkit_cloud.tasks import (
-    DEFAULT_CACHE_EXPIRATION,
-    get_cache_value,
-    set_cache_value,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, LowerCaseCharField
+from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission, RegionalPolicy
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, get_cache_value, set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 from notifications.models import Notification
@@ -161,11 +142,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
 
     def clone(self, new_run):
         from eventkit_cloud.tasks.export_tasks import make_file_downloadable
-        from eventkit_cloud.tasks.helpers import (
-            get_download_filename,
-            get_run_download_dir,
-            get_run_staging_dir,
-        )
+        from eventkit_cloud.tasks.helpers import get_download_filename, get_run_download_dir, get_run_staging_dir
 
         old_run = self.export_task.export_provider_task.run
         downloads = list(self.downloads.all())
@@ -319,11 +296,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     estimated_size = models.FloatField(null=True, blank=True)
     estimated_duration = models.FloatField(null=True, blank=True)
     preview = models.ForeignKey(
-        MapImageSnapshot,
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text="A preview for a provider task.",
+        MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL, help_text="A preview for a provider task."
     )
 
     class Meta:
@@ -397,11 +370,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
     display = models.BooleanField(default=False)
     result = models.OneToOneField(
-        "FileProducingTaskResult",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="export_task",
+        "FileProducingTaskResult", on_delete=models.CASCADE, null=True, blank=True, related_name="export_task"
     )
     hide_download = models.BooleanField(default=False)
 

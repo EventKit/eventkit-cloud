@@ -16,16 +16,10 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.jobs.helpers import (
-    get_provider_image_dir,
-    get_provider_thumbnail_name,
-)
+from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
 from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
 from eventkit_cloud.utils.mapproxy import get_mapproxy_config_template
-from eventkit_cloud.utils.image_snapshot import (
-    make_thumbnail_downloadable,
-    save_thumbnail,
-)
+from eventkit_cloud.utils.image_snapshot import make_thumbnail_downloadable, save_thumbnail
 
 from eventkit_cloud.tasks.export_tasks import make_dirs
 

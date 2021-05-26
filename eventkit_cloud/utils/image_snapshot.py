@@ -11,15 +11,9 @@ from io import BytesIO
 from django.conf import settings
 from eventkit_cloud.utils import s3
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.jobs.helpers import (
-    get_provider_image_download_dir,
-    get_provider_image_download_path,
-)
+from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
 from eventkit_cloud.tasks.export_tasks import make_dirs
-from eventkit_cloud.utils.helpers import (
-    get_download_paths,
-    get_relative_path_from_staging,
-)
+from eventkit_cloud.utils.helpers import get_download_paths, get_relative_path_from_staging
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 from urllib.parse import urlparse
 from typing import Union

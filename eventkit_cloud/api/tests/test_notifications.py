@@ -15,10 +15,7 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 
 
 class TestNotifications(APITestCase):
-    fixtures = (
-        "osm_provider.json",
-        "datamodel_presets.json",
-    )
+    fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def __init__(self, *args, **kwargs):
         super(TestNotifications, self).__init__(*args, **kwargs)
