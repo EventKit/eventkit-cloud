@@ -11,11 +11,13 @@ from typing import Union
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.contrib.sessions.models import Session
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.utils import timezone
 from django.core.management import call_command
 
+from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -23,6 +25,7 @@ from eventkit_cloud.core.helpers import (
     NotificationLevel,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, get_message_count
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
@@ -115,10 +118,6 @@ def scale_by_runs(max_tasks_memory):
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
-    number_of_runs = get_message_count(queue_name="runs", message_type="messages_ready")
-    if number_of_runs == 0:
-        return
-
     print("Scaling By Runs")
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
@@ -143,26 +142,25 @@ def scale_by_runs(max_tasks_memory):
     logger.error(f"Checking runs {runs}")
 
     for run in runs:
-        logger.error(f"if {number_of_runs} > 0 and {running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
-        if not number_of_runs:
-            # TODO: There needs to be more certainty about runs.  Checking the database for runs is fine, but do we still need the runs queue?
-            logger.error("No runs in the queue, but there are runs that aren't finished.")
-            break
+        logger.error(f"{running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
         if running_tasks_memory + celery_task['memory'] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
             break
         task_name = run.uid
-        queue = queues.get(task_name)
         task = copy.deepcopy(celery_task)
         task["command"] = task["command"].format(celery_group_name=task_name)
-        logger.error(f"queue {queue} ")
-        logger.error(f"task {task} ")
         running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
         running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
         logger.error(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
-        if (queue and queue.get("consumers")) or running_tasks_by_queue_count:
-            logger.info(f"Already a consumer for {queue}")
+        if running_tasks_by_queue_count:
+            logger.info(f"Already a consumer for {task_name}")
             continue
+        logger.info(f"Running pick up run for {run.uid}")
+        user_session = UserSession.objects.filter(user=run.user).last()
+        session = Session.objects.get(session_key=user_session.session_id)
+        session_token = session.get_decoded().get("session_token")
+        pick_up_run_task(run_uid=run.uid, session_token=session_token)
+        logger.info("Spinning up a worker to complete those tasks...")
         logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
         run_task_command(client, app_name, str(run.uid), task)
 
@@ -386,7 +384,7 @@ def get_celery_health_check_command(node_type: str):
 
 
 def get_celery_tasks_scale_by_run():
-    default_command = "export CELERY_GROUP_NAME={celery_group_name} & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name} & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n runs@%h -Q runs"
+    default_command = "export CELERY_GROUP_NAME={celery_group_name} & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
 
     celery_tasks = {
         "command": default_command,

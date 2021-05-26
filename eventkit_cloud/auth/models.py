@@ -2,6 +2,9 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.conf import settings
+from django.db import models
+from django.contrib.sessions.models import Session
 
 from eventkit_cloud.core.models import update_all_attribute_classes_with_user
 from eventkit_cloud.jobs.models import JobPermission
@@ -36,3 +39,8 @@ def delete(self, *args, **kwargs):
 
 
 Group.delete = delete
+
+
+class UserSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)

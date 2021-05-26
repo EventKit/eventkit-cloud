@@ -1614,11 +1614,13 @@ def pick_up_run_task(
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
     # This is just to make it easier to trace when user_details haven't been sent
+    logger.error(f"PICKING UP RUN FOR {run_uid}")
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
+        logger.error(f"WORKER FOR RUN {run.uid} is {worker}")
         if not (run.worker and run.data_provider_task_records.all()):
             TaskFactory().parse_tasks(
                 worker=worker,
@@ -1642,7 +1644,7 @@ def pick_up_run_task(
         raise
     wait_for_run(run_uid=run_uid)
 
-    if os.getenv("CELERY_SCALE_BY_RUN"):
+    if getattr(settings, "CELERY_SCALE_BY_RUN", False):
         queue_name = run_uid
         logger.info(f"Shutting down celery workers on the {queue_name} queue...")
         shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)

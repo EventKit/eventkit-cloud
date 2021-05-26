@@ -504,16 +504,18 @@ class JobViewSet(viewsets.ModelViewSet):
 
             running = JobSerializer(job, context={"request": request})
 
-            # Run is passed to celery to start the tasks.
-            pick_up_run_task.apply_async(
-                queue="runs",
-                routing_key="runs",
-                kwargs={
-                    "run_uid": run_uid,
-                    "user_details": user_details,
-                    "session_token": request.session.get("access_token"),
-                },
-            )
+            # It scaling by run we don't put the task on the queue we just run on demand.
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                # Run is passed to celery to start the tasks.
+                pick_up_run_task.apply_async(
+                    queue="runs",
+                    routing_key="runs",
+                    kwargs={
+                        "run_uid": run_uid,
+                        "user_details": user_details,
+                        "session_token": request.session.get("access_token"),
+                    },
+                )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
