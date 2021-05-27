@@ -973,7 +973,6 @@ def get_or_update_session(username=None, password=None, session=None, max_retrie
         session = requests.Session()
 
     if username and password:
-        logger.error(f"setting {username} and {password} for session")
         session.auth = (username, password)
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)

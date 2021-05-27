@@ -134,14 +134,19 @@ def scale_by_runs(max_tasks_memory):
     celery_task_details = get_celery_task_details(client, app_name)
     running_tasks_memory = int(celery_task_details['memory'])
     celery_task = get_celery_tasks_scale_by_run()
-    # If there's a run, scale up a new task and assign that run to that task.
-    queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
-    queues = list_to_dict(queues, "name")
     # Get run in progress
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
     logger.error(f"Checking runs {runs}")
 
+    total_tasks = 0
+    running_tasks = client.get_running_tasks(app_name)
+    if running_tasks:
+        total_tasks = running_tasks["pagination"].get("total_results", 0)
     for run in runs:
+        max_runs = int(os.getenv("RUNS_CONCURRENCY", 0))
+        if max_runs and total_tasks >= max_runs:
+            logger.error(f"The maximum amount of tasks ({max_runs})")
+            break
         logger.error(f"{running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
         if running_tasks_memory + celery_task['memory'] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
@@ -149,21 +154,25 @@ def scale_by_runs(max_tasks_memory):
         task_name = run.uid
         task = copy.deepcopy(celery_task)
         task["command"] = task["command"].format(celery_group_name=task_name)
+
         running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
         running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
+
         logger.error(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
         if running_tasks_by_queue_count:
             logger.info(f"Already a consumer for {task_name}")
             continue
-        logger.info(f"Running pick up run for {run.uid}")
+        logger.info(f"Running pick up run for {task_name}")
         user_session = UserSession.objects.filter(user=run.user).last()
-        session = Session.objects.get(session_key=user_session.session_id)
-        session_token = session.get_decoded().get("session_token")
+        session_token = None
+        if user_session:
+            session = Session.objects.get(session_key=user_session.session_id)
+            session_token = session.get_decoded().get("session_token")
         pick_up_run_task(run_uid=run.uid, session_token=session_token)
         logger.info("Spinning up a worker to complete those tasks...")
         logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
-        run_task_command(client, app_name, str(run.uid), task)
-
+        run_task_command(client, app_name, str(task_name), task)
+        max_runs += 1
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
     if os.getenv("CELERY_TASK_APP"):

@@ -1642,9 +1642,8 @@ def pick_up_run_task(
         run.save()
         logger.error(str(e))
         raise
-    wait_for_run(run_uid=run_uid)
-
-    if getattr(settings, "CELERY_SCALE_BY_RUN", False):
+    if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+        wait_for_run(run_uid=run_uid)
         queue_name = run_uid
         logger.info(f"Shutting down celery workers on the {queue_name} queue...")
         shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
@@ -1967,6 +1966,10 @@ class FinalizeRunBase(EventKitBaseTask):
             if stage_dir and os.path.isdir(stage_dir):
                 if not os.getenv("KEEP_STAGE", False):
                     shutil.rmtree(stage_dir)
+            if getattr(settings, "CELERY_SCALE_BY_RUN"):
+                queue_name = None if retval is None else retval.get("run_uid")
+                if queue_name:
+                    shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 
@@ -2028,6 +2031,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
 
+    result["run_uid"] = run_uid
     result["stage_dir"] = stage_dir
     return result
 

@@ -131,7 +131,7 @@ def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provi
         if os.path.exists(stage_dir):
             shutil.rmtree(stage_dir)
 
-    if run:
+    if run and not getattr(settings, "CELERY_SCALE_BY_RUN"):
         pick_up_run_task.apply_async(
             queue="runs",
             routing_key="runs",
