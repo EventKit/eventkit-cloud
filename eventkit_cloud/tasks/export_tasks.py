@@ -1622,8 +1622,9 @@ def pick_up_run_task(
     run = ExportRun.objects.get(uid=run_uid)
     try:
         logger.info(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
-        logger.info(f"Current tasks for run: {[dptr.name for dptr in run.data_provider_task_records.all()]}")
-        if not run.data_provider_task_records.all():
+        data_provider_task_records = run.data_provider_task_records.filter(~Q(slug="run"))
+        logger.info(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
+        if not data_provider_task_records:
             logger.error(f"YAY Parsing and executing a new run {run_uid}.")
             TaskFactory().parse_tasks(
                 worker=worker,
@@ -1638,7 +1639,8 @@ def pick_up_run_task(
             # Run has already been created, but we got here because
             # something happened to the last worker and the run didn't finish.
             logger.info(f"Run {run.uid} was already in progress!")
-            data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.exclude(status=TaskState.COMPLETED.value)]
+            data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.filter(
+                ~Q(slug="run") | ~Q(status=TaskState.COMPLETED.value))]
             logger.info(f"Rerunning data providers {data_provider_slugs}")
             rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
