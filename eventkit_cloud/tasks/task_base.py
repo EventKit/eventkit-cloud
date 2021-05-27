@@ -76,8 +76,6 @@ class LockingTask(UserDetailsBase):
         retry = False
         logger.debug("enter __call__ for {0}".format(self.request.id))
         lock_key = kwargs.get("locking_task_key")
-        worker = kwargs.get("worker")
-        celery_queue_group = get_celery_queue_group(run_uid=kwargs.get("run_uid"), worker=worker)
         if lock_key:
             retry = True
         else:
@@ -86,15 +84,13 @@ class LockingTask(UserDetailsBase):
         if self.acquire_lock(lock_key=lock_key, value=self.request.id):
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
-            logger.error(f"Calling super with {args} and {kwargs}")
             result = super(LockingTask, self).__call__(*args, **kwargs)
-            logger.error(f"The result from the locking task base was {result}")
             self.release_lock()
             return result
         else:
             if retry:
                 logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
-                self.apply_async(queue=celery_queue_group, routing_key=celery_queue_group, args=args, kwargs=kwargs)
+                self.apply_async(args=args, kwargs=kwargs)
             else:
                 logger.info("Task {0} skipped due to lock".format(self.request.id))
 
