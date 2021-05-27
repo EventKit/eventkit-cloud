@@ -1119,7 +1119,8 @@ def get_celery_queue_group(run_uid=None, worker=None):
         if not run_uid:
             logger.warning("Attempted to get a celery_queue_group for scaling by run without a run uid.")
         else:
-            return run_uid
+            # Celery group names have to be strings, make sure we always return the UID as a string.
+            return str(run_uid)
     # If scaling by run we need to keep tasks for a specific run organized together.
     if not worker:
         raise Exception("Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly.")

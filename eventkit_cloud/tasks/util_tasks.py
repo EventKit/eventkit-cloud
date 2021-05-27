@@ -100,11 +100,11 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 
 @app.task(name="Rerun data provider records", bind=True, base=UserDetailsBase)
-def rerun_data_provider_records(self, new_run_uid, user_id, user_details, data_provider_slugs):
+def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provider_slugs):
     from eventkit_cloud.tasks.export_tasks import pick_up_run_task
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
-    old_run = ExportRun.objects.select_related("job__user").get(uid=new_run_uid)
+    old_run = ExportRun.objects.select_related("job__user").get(uid=run_uid)
 
     user = User.objects.get(pk=user_id)
 
@@ -118,7 +118,7 @@ def rerun_data_provider_records(self, new_run_uid, user_id, user_details, data_p
     run = ExportRun.objects.get(uid=new_run_uid)
 
     # Remove the old data provider task record for the providers we're recreating.
-    for data_provider_task_record in old_run.data_provider_task_records.all():
+    for data_provider_task_record in run.data_provider_task_records.all():
         if data_provider_task_record.provider is not None:
             if data_provider_task_record.provider.slug in data_provider_slugs:
                 data_provider_task_record.delete()
@@ -128,6 +128,7 @@ def rerun_data_provider_records(self, new_run_uid, user_id, user_details, data_p
     for data_provider_slug in data_provider_slugs:
         stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
         if os.path.exists(stage_dir):
+            logger.debug(f"REMOVING OLD STAGE DIR: {stage_dir}")
             shutil.rmtree(stage_dir)
 
     if run and not getattr(settings, "CELERY_SCALE_BY_RUN"):

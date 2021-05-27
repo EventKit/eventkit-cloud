@@ -798,8 +798,12 @@ def output_selection_geojson_task(
     Function defining geopackage export function.
     """
     result = result or {}
-
+    print(f"HIT PRINT Create Area of Interest with stage_dir: {stage_dir} that exists? {os.path.isdir(stage_dir)}")
+    logger.info(f"HIT INFO Create Area of Interest with stage_dir: {stage_dir} that exists? {os.path.isdir(stage_dir)}")
+    logger.debug(f"PRINTING STAGE DIR NAME: {stage_dir}")
+    logger.debug(f"STAGE_DIR IS A VALID DIR: {os.path.isdir(stage_dir)}")
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
+    logger.debug(f"GEOJSON FILE IS: {geojson_file}")
     if selection:
         # Test if json.
         json.loads(selection)
@@ -1617,13 +1621,14 @@ def pick_up_run_task(
     # This is just to make it easier to trace when user_details haven't been sent
     worker = socket.gethostname()
     queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
+    logger.error(f"QUEUE GROUP IS: {queue_group}")
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
     try:
-        logger.info(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
+        logger.debug(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
         data_provider_task_records = run.data_provider_task_records.filter(~Q(slug="run"))
-        logger.info(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
+        logger.debug(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
         if not data_provider_task_records:
             logger.error(f"YAY Parsing and executing a new run {run_uid}.")
             TaskFactory().parse_tasks(
