@@ -1605,7 +1605,6 @@ def pick_up_run_task(
     data_provider_slugs=None,
     run_zip_file_slug_sets=None,
     session_token=None,
-    queue_group=None,
     *args,
     **kwargs,
 ):
@@ -1623,7 +1622,9 @@ def pick_up_run_task(
     run = ExportRun.objects.get(uid=run_uid)
     try:
         logger.info(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
-        if not (run.worker and run.data_provider_task_records.all()):
+        logger.info(f"Current tasks for run: {[dptr.name for dptr in run.data_provider_task_records.all()]}")
+        if not run.data_provider_task_records.all():
+            logger.error(f"YAY Parsing and executing a new run {run_uid}.")
             TaskFactory().parse_tasks(
                 worker=worker,
                 run_uid=run_uid,
@@ -1636,7 +1637,9 @@ def pick_up_run_task(
         else:
             # Run has already been created, but we got here because
             # something happened to the last worker and the run didn't finish.
+            logger.info(f"Run {run.uid} was already in progress!")
             data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.exclude(status=TaskState.COMPLETED.value)]
+            logger.info(f"Rerunning data providers {data_provider_slugs}")
             rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
         run.save()
@@ -1645,8 +1648,6 @@ def pick_up_run_task(
         run.save()
         logger.error(str(e))
         raise
-    if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
-        wait_for_run(run_uid=run_uid)
 
 
 def wait_for_run(run_uid: str = None) -> None:

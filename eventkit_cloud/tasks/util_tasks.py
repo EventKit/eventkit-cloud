@@ -100,32 +100,31 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 
 @app.task(name="Rerun data provider records", bind=True, base=UserDetailsBase)
-def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provider_slugs):
+def rerun_data_provider_records(self, new_run_uid, user_id, user_details, data_provider_slugs):
     from eventkit_cloud.tasks.export_tasks import pick_up_run_task
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
-    # old_run
-    run = ExportRun.objects.select_related("job__user").get(uid=run_uid)
+    old_run = ExportRun.objects.select_related("job__user").get(uid=new_run_uid)
 
     user = User.objects.get(pk=user_id)
 
     try:
-        run_uid, run_zip_file_slug_sets = create_run(job_uid=run.job.uid, user=user, clone=True)
+        new_run_uid, run_zip_file_slug_sets = create_run(job_uid=old_run.job.uid, user=user, clone=True)
     except Unauthorized:
         raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to run this DataPack.")
     except (InvalidLicense, Error) as err:
         return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
 
-    run = ExportRun.objects.get(uid=run_uid)
+    run = ExportRun.objects.get(uid=new_run_uid)
 
     # Remove the old data provider task record for the providers we're recreating.
-    for data_provider_task_record in run.data_provider_task_records.all():
+    for data_provider_task_record in old_run.data_provider_task_records.all():
         if data_provider_task_record.provider is not None:
             if data_provider_task_record.provider.slug in data_provider_slugs:
                 data_provider_task_record.delete()
 
     # Remove the files for the providers we want to recreate.
-    run_dir = get_run_staging_dir(run_uid)
+    run_dir = get_run_staging_dir(new_run_uid)
     for data_provider_slug in data_provider_slugs:
         stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
         if os.path.exists(stage_dir):
@@ -136,7 +135,7 @@ def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provi
             queue="runs",
             routing_key="runs",
             kwargs={
-                "run_uid": run_uid,
+                "run_uid": new_run_uid,
                 "user_details": user_details,
                 "data_provider_slugs": data_provider_slugs,
                 "run_zip_file_slug_sets": run_zip_file_slug_sets,

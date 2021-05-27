@@ -142,7 +142,14 @@ def scale_by_runs(max_tasks_memory):
     running_tasks = client.get_running_tasks(app_name)
     if running_tasks:
         total_tasks = running_tasks["pagination"].get("total_results", 0)
+        logger.error(f"RUNNING TASKS: {running_tasks}")
+        running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
+        logger.error(running_task_names)
+        finished_runs = ExportRun.objects.filter(uid__in=running_task_names, status=TaskState.get_finished_states())
+        for finished_run in finished_runs:
+            shutdown_celery_workers(finished_run.uid)
     for run in runs:
+        logger.error(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 0))
         if max_runs and total_tasks >= max_runs:
             logger.error(f"The maximum amount of tasks ({max_runs})")
@@ -168,7 +175,7 @@ def scale_by_runs(max_tasks_memory):
         if user_session:
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
-        pick_up_run_task(run_uid=run.uid, session_token=session_token, queue_group=run.uid)
+        pick_up_run_task(run_uid=run.uid, session_token=session_token)
         logger.info("Spinning up a worker to complete those tasks...")
         logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
         run_task_command(client, app_name, str(task_name), task)
@@ -394,7 +401,7 @@ def get_celery_health_check_command(node_type: str):
 
 
 def get_celery_tasks_scale_by_run():
-    default_command = "export CELERY_GROUP_NAME={celery_group_name} & exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
+    default_command = "echo '************STARTING NEW WORKER****************' && hostname && env & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
 
     celery_tasks = {
         "command": default_command,

@@ -5,6 +5,8 @@ from celery.utils.log import get_task_logger
 from django.core.cache import caches
 from django.conf import settings
 
+from eventkit_cloud.tasks.helpers import get_celery_queue_group
+
 logger = get_task_logger(__name__)
 
 
@@ -23,7 +25,7 @@ class EventKitBaseTask(UserDetailsBase):
 
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
-            logger.info(f"{self.name} has completed, sending shutdown_celery_workers task.")
+            logger.info(f"{self.name} has completed, sending shutdown_celery_workers task to queue {queue_name}.")
             if not getattr(settings, "CELERY_SCALE_BY_RUN"):
                 shutdown_celery_workers.s(queue_name, queue_type, hostname).apply_async(
                     queue=queue_name, routing_key=queue_name
@@ -75,7 +77,7 @@ class LockingTask(UserDetailsBase):
         logger.debug("enter __call__ for {0}".format(self.request.id))
         lock_key = kwargs.get("locking_task_key")
         worker = kwargs.get("worker")
-
+        celery_queue_group = get_celery_queue_group(run_uid=kwargs.get("run_uid"), worker=worker)
         if lock_key:
             retry = True
         else:
@@ -84,16 +86,15 @@ class LockingTask(UserDetailsBase):
         if self.acquire_lock(lock_key=lock_key, value=self.request.id):
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
+            logger.error(f"Calling super with {args} and {kwargs}")
             result = super(LockingTask, self).__call__(*args, **kwargs)
+            logger.error(f"The result from the locking task base was {result}")
             self.release_lock()
             return result
         else:
             if retry:
                 logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
-                if worker:
-                    self.apply_async(args=args, kwargs=kwargs)
-                else:
-                    self.delay(*args, **kwargs)
+                self.apply_async(queue=celery_queue_group, routing_key=celery_queue_group, args=args, kwargs=kwargs)
             else:
                 logger.info("Task {0} skipped due to lock".format(self.request.id))
 

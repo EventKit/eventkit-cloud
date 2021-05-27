@@ -1113,13 +1113,14 @@ def extract_metadata_files(
 
 def get_celery_queue_group(run_uid=None, worker=None):
     # IF CELERY_GROUP_NAME is specifically set then that makes most sense to use it.
-    if getattr(settings, "CELERY_GROUP_NAME", ):
+    if getattr(settings, "CELERY_GROUP_NAME"):
         return getattr(settings, "CELERY_GROUP_NAME")
-    # If scaling by run we need to keep tasks for a specific run organized together.
     if getattr(settings, "CELERY_SCALE_BY_RUN"):
         if not run_uid:
-            raise Exception("Attempted to get a celery_queue_group for scaling by run without a run uid.")
-        return run_uid
+            logger.warning("Attempted to get a celery_queue_group for scaling by run without a run uid.")
+        else:
+            return run_uid
+    # If scaling by run we need to keep tasks for a specific run organized together.
     if not worker:
         raise Exception("Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly.")
     return worker

@@ -56,7 +56,7 @@ BEAT_SCHEDULE.update(
 )
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
-CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME")
+CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
 
 app.conf.beat_schedule = BEAT_SCHEDULE
 

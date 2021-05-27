@@ -508,9 +508,10 @@ class JobViewSet(viewsets.ModelViewSet):
             # It scaling by run we don't put the task on the queue we just run on demand.
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 # Run is passed to celery to start the tasks.
+                celery_queue_group = get_celery_queue_group(worker="runs")
                 pick_up_run_task.apply_async(
-                    queue="runs",
-                    routing_key="runs",
+                    queue=celery_queue_group,
+                    routing_key=celery_queue_group,
                     kwargs={
                         "run_uid": run_uid,
                         "user_details": user_details,
