@@ -9,7 +9,8 @@ from django.db import DatabaseError
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
-from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
+from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, \
+    get_default_projection, get_celery_queue_group
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
@@ -102,7 +103,8 @@ class TaskChainBuilder(object):
         """
         Create a celery chain which gets the data & runs export formats
         """
-        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+
+        queue_group = get_celery_queue_group(run_uid=run.uid, worker=worker)
 
         # Record estimates for size and time
         get_estimates_task.apply_async(

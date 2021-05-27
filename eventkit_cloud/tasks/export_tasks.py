@@ -73,7 +73,7 @@ from eventkit_cloud.tasks.helpers import (
     download_concurrently,
     merge_chunks,
     find_in_zip,
-    extract_metadata_files,
+    extract_metadata_files, get_celery_queue_group,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -1605,6 +1605,7 @@ def pick_up_run_task(
     data_provider_slugs=None,
     run_zip_file_slug_sets=None,
     session_token=None,
+    queue_group=None,
     *args,
     **kwargs,
 ):
@@ -1613,14 +1614,15 @@ def pick_up_run_task(
     """
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
-    # This is just to make it easier to trace when user_details haven't been sent
     logger.error(f"PICKING UP RUN FOR {run_uid}")
+    # This is just to make it easier to trace when user_details haven't been sent
+    worker = socket.gethostname()
+    queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
     try:
-        worker = socket.gethostname()
-        logger.error(f"WORKER FOR RUN {run.uid} is {worker}")
+        logger.info(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
         if not (run.worker and run.data_provider_task_records.all()):
             TaskFactory().parse_tasks(
                 worker=worker,
@@ -1629,6 +1631,7 @@ def pick_up_run_task(
                 data_provider_slugs=data_provider_slugs,
                 run_zip_file_slug_sets=run_zip_file_slug_sets,
                 session_token=session_token,
+                queue_group=queue_group
             )
         else:
             # Run has already been created, but we got here because
@@ -1644,9 +1647,6 @@ def pick_up_run_task(
         raise
     if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
         wait_for_run(run_uid=run_uid)
-        queue_name = run_uid
-        logger.info(f"Shutting down celery workers on the {queue_name} queue...")
-        shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
 
 
 def wait_for_run(run_uid: str = None) -> None:

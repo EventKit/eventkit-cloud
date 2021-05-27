@@ -58,6 +58,7 @@ from collections import OrderedDict
 
 # Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+from ..tasks.helpers import get_celery_queue_group
 
 logger = logging.getLogger(__name__)
 
@@ -539,7 +540,9 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             ).exclude(slug="run")
             obj.data_provider_task_records.set(data_provider_task_records)
             run_zip_task_chain = generate_zipfile(data_provider_task_record_uids, obj)
-            run_zip_task_chain.apply_async()
+            celery_queue_group = get_celery_queue_group(run_uid=obj.run.uid)
+            run_zip_task_chain.apply_async(queue=celery_queue_group,
+                                           routing_key=celery_queue_group)
             return obj
         else:
             raise serializers.ValidationError("Duplicate Zip File already exists.")

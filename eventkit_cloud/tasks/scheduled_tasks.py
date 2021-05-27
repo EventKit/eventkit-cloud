@@ -168,11 +168,12 @@ def scale_by_runs(max_tasks_memory):
         if user_session:
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
-        pick_up_run_task(run_uid=run.uid, session_token=session_token)
+        pick_up_run_task(run_uid=run.uid, session_token=session_token, queue_group=run.uid)
         logger.info("Spinning up a worker to complete those tasks...")
         logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
         run_task_command(client, app_name, str(task_name), task)
-        max_runs += 1
+        total_tasks += 1
+
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
     if os.getenv("CELERY_TASK_APP"):
@@ -413,7 +414,7 @@ def get_celery_tasks_scale_by_task():
     Adding or modifying queues can be done here.
     :return:
     """
-    celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
+    celery_group_name = getattr(settings, "CELERY_GROUP_NAME", socket.gethostname())
 
     priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
 

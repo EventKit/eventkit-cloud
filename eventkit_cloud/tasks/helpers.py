@@ -4,6 +4,8 @@ import logging
 import os
 import pickle
 import re
+import socket
+
 import requests
 import requests_pkcs12
 import signal
@@ -1107,3 +1109,17 @@ def extract_metadata_files(
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
+
+
+def get_celery_queue_group(run_uid=None, worker=None):
+    # IF CELERY_GROUP_NAME is specifically set then that makes most sense to use it.
+    if getattr(settings, "CELERY_GROUP_NAME", ):
+        return getattr(settings, "CELERY_GROUP_NAME")
+    # If scaling by run we need to keep tasks for a specific run organized together.
+    if getattr(settings, "CELERY_SCALE_BY_RUN"):
+        if not run_uid:
+            raise Exception("Attempted to get a celery_queue_group for scaling by run without a run uid.")
+        return run_uid
+    if not worker:
+        raise Exception("Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly.")
+    return worker
