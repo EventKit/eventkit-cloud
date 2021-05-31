@@ -175,7 +175,7 @@ def scale_by_runs(max_tasks_memory):
         if user_session:
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
-        pick_up_run_task(run.uid, session_token=session_token)
+        pick_up_run_task(run_uid=run.uid, session_token=session_token)
         logger.info("Spinning up a worker to complete those tasks...")
         logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
         run_task_command(client, app_name, str(task_name), task)
