@@ -173,6 +173,21 @@ class ExportTask(EventKitBaseTask):
             task.worker = socket.gethostname()
             task.save()
 
+            run = task.export_provider_task.run
+            run_dir = get_run_staging_dir(run.uid)
+
+            if not os.path.exists(run_dir):
+                os.makedirs(run_dir, 0o750)
+            logger.error(f"TASK: {task} and {dir(task)}")
+            logger.error(f"EPT DIR: {dir(task.export_provider_task)}")
+            logger.error(f"EPT TASKS: {task.export_provider_task.tasks} and dir of {dir(task.export_provider_task.tasks)}")
+            run_task_record = run.data_provider_task_records.get(slug="run")
+            # run_task_record = task.export_provider_task.tasks.get(slug="run")
+
+            stage_dir = kwargs.get("stage_dir", get_provider_staging_dir(run_dir, run_task_record.slug))
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir, 0o750)
+
             try:
                 task_state_result = args[0]
             except IndexError:
@@ -181,7 +196,7 @@ class ExportTask(EventKitBaseTask):
 
             if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
                 try:
-                    retval = super(ExportTask, self).__call__(*args, **kwargs)
+                    retval = super(ExportTask, self).__call__(stage_dir=stage_dir, *args, **kwargs)
                 except SoftTimeLimitExceeded as e:
                     logger.error(e)
                     raise Exception("Task time limit exceeded. Try again or contact us.") from e
@@ -798,9 +813,6 @@ def output_selection_geojson_task(
     Function defining geopackage export function.
     """
     result = result or {}
-
-    if not os.path.exists(stage_dir):
-        os.makedirs(stage_dir, 0o750)
 
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
 
