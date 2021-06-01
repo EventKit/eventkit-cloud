@@ -21,7 +21,7 @@ from zipfile import ZipFile
 import requests
 import yaml
 from django.conf import settings
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q
@@ -926,28 +926,6 @@ def download_chunks(
         chunks.append(outfile)
     return chunks
 
-
-def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
-    if not session:
-        session = requests.Session()
-
-    if username and password:
-        logger.error(f"setting {username} and {password} for session")
-        session.auth = (username, password)
-        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
-    if cert_path and cert_pass:
-        adapter = requests_pkcs12.Pkcs12Adapter(
-            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
-        )
-        session.mount("https://", adapter)
-
-    logger.debug("Using %s for SSL verification.", str(verify))
-    session.verify = verify
-    return session
 
 def download_data(
     task_uid: str,

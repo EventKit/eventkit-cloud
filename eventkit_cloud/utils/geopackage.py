@@ -7,15 +7,10 @@ from string import Template
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.geos import Polygon
-from osgeo import gdal, osr
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
-from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.tasks.helpers import update_progress
-from eventkit_cloud.tasks.task_process import TaskProcess  # NOQA
-from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
 from eventkit_cloud.utils import gdalutils
 from .artifact import Artifact
 

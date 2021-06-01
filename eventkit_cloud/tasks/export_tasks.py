@@ -14,7 +14,6 @@ from typing import List, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
 
-import requests
 import yaml
 from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
@@ -24,7 +23,6 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import Polygon, GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction

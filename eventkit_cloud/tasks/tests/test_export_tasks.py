@@ -611,7 +611,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_task_record,
         mock_get_export_filepath,
         mock_cancel_provider_task,
-        mock_connect
+        mock_connect,
     ):
         provider_slug = "osm"
         mock_get_export_task_record.return_value = Mock(export_provider_task=Mock(provider=Mock(slug=provider_slug)))

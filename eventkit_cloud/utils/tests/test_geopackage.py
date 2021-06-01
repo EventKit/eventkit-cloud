@@ -32,9 +32,6 @@ logger = logging.getLogger(__name__)
 class TestGeopackage(TransactionTestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.task_process_patcher = patch("eventkit_cloud.utils.geopackage.TaskProcess")
-        self.task_process = self.task_process_patcher.start()
-        self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
     @patch("eventkit_cloud.utils.geopackage.sqlite3")
