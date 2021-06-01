@@ -627,6 +627,7 @@ def convert_vector(
             logger.info(f"calling gdal.VectorTranslate('{output_file}', '{_input_file}', {stringify_params(options)})")
             gdal.VectorTranslate(output_file, _input_file, **options)
     else:
+        logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
         gdal.VectorTranslate(output_file, input_file, **options)
 
     if distinct_field:
