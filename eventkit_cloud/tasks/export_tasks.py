@@ -798,12 +798,12 @@ def output_selection_geojson_task(
     Function defining geopackage export function.
     """
     result = result or {}
-    print(f"HIT PRINT Create Area of Interest with stage_dir: {stage_dir} that exists? {os.path.isdir(stage_dir)}")
-    logger.info(f"HIT INFO Create Area of Interest with stage_dir: {stage_dir} that exists? {os.path.isdir(stage_dir)}")
-    logger.debug(f"PRINTING STAGE DIR NAME: {stage_dir}")
-    logger.debug(f"STAGE_DIR IS A VALID DIR: {os.path.isdir(stage_dir)}")
+
+    if not os.path.exists(stage_dir):
+        os.makedirs(stage_dir, 0o750)
+
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
-    logger.debug(f"GEOJSON FILE IS: {geojson_file}")
+
     if selection:
         # Test if json.
         json.loads(selection)

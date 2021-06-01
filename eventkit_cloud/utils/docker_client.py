@@ -1,5 +1,3 @@
-import uuid
-
 import requests
 import os
 import logging
@@ -53,6 +51,7 @@ class DockerClient(ScaleClient):
             # stderr=True,
             entrypoint="/bin/bash -c ",
             volumes=volumes,
+            user="root",
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
