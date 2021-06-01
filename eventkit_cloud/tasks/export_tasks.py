@@ -4,17 +4,17 @@ import json
 import logging
 import os
 import re
-import sqlite3
-
-import requests
 import shutil
 import socket
+import sqlite3
 import time
 import traceback
+from pathlib import Path
 from typing import List, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import requests
 import yaml
 from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
@@ -24,7 +24,7 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import Polygon, GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -33,13 +33,11 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
     NotificationLevel,
 )
-
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.helpers import clean_config
@@ -89,12 +87,11 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
-from pathlib import Path
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -452,13 +449,16 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(clean_config(config))
 
     update_progress(export_task_record_uid, msg="Converting data to Geopackage")
-    geom = Polygon.from_bbox(bbox)
+
+    geom = GEOSGeometry(Polygon.from_bbox(bbox))
+
     if selection:
         try:
-            with open(selection, "r") as geojson:
-                geom = Polygon(geojson)
+            with open(selection, "r") as geojson_file:
+                geom = GEOSGeometry(geojson_file.read())
         except Exception as e:
             logger.error(e)
+
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
@@ -483,7 +483,7 @@ def osm_data_collection_pipeline(
         name=database["NAME"],
     )
     gdalutils.convert(
-        boundary=bbox,
+        boundary=selection,
         input_file=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
@@ -497,8 +497,10 @@ def osm_data_collection_pipeline(
     #  Just add the fid field if missing for now.
     with sqlite3.connect(gpkg_filepath) as conn:
         for column in ["fid", "ogc_fid"]:
+            other_column = "ogc_fid" if column == "fid" else "fid"
             try:
-                print(conn.execute(f"ALTER TABLE land_polygons ADD COLUMN {column};"))
+                conn.execute(f"ALTER TABLE land_polygons ADD COLUMN {column} INTEGER NOT NULL DEFAULT (0);")
+                conn.execute(f"UPDATE TABLE land_polygons SET {column} = {other_column};")
             except Exception as e:
                 logger.error(e)
                 # Column exists move on.

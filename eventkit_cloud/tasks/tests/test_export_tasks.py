@@ -587,6 +587,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(example_input_file, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.sqlite3.connect")
     @patch("eventkit_cloud.tasks.export_tasks.cancel_export_provider_task.run")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
@@ -609,6 +610,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_task_record,
         mock_get_export_filepath,
         mock_cancel_provider_task,
+        mock_connect
     ):
         provider_slug = "osm"
         mock_get_export_task_record.return_value = Mock(export_provider_task=Mock(provider=Mock(slug=provider_slug)))
@@ -624,7 +626,7 @@ class TestExportTasks(ExportTaskBase):
         osm_data_collection_pipeline(
             example_export_task_record_uid, stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
         )
-
+        mock_connect.assert_called_once()
         mock_overpass.Overpass.assert_called_once()
         mock_pbf.OSMToPBF.assert_called_once()
         mock_feature_selection.example.assert_called_once()

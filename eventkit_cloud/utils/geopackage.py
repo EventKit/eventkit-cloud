@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
+import sqlite3
 from string import Template
 
-import json
 from django.conf import settings
-from django.contrib.gis.geos import Polygon
-
-from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
+from django.contrib.gis.geos import GEOSGeometry
 from osgeo import gdal, osr
-import sqlite3
 
-from .artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
+from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
 from eventkit_cloud.utils import gdalutils
-
+from .artifact import Artifact
 
 logger = logging.getLogger(__name__)
 
@@ -257,7 +255,7 @@ class Geopackage(object):
         output_gpkg,
         stage_dir,
         feature_selection,
-        aoi_geom: Polygon,
+        aoi_geom: GEOSGeometry,
         tempdir=None,
         per_theme=False,
         progress=None,
