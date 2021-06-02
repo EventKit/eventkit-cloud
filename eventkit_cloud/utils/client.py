@@ -149,18 +149,18 @@ class EventKitClient(object):
 
     def download_file(self, result_uid, file_path=None):
         response = self.client.get(self.download_url, params={"uid": result_uid}, stream=True)
-        if response.status_code == 200:
+        if response.ok:
             with open(file_path, "wb") as open_file:
                 for chunk in response:
                     open_file.write(chunk)
             return file_path
         else:
             logger.error(f"Failed to download {result_uid}, STATUS_CODE: {response.status_code}")
-        return None
+            logger.error(response.content)
+            response.raise_for_status()
 
     def get_averages(self, runs):
         """
-
         :param runs: Runs is a list of runs provided by get_runs:
         :return: A dict with average time per provider per kilometer
            {

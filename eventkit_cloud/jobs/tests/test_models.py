@@ -176,6 +176,13 @@ class TestExportFormat(TestCase):
         kml = ExportFormat.objects.get(slug="kml")
         self.assertEqual(str(kml), "KML Format")
 
+    def test_get_or_create(self):
+        export_format1, created = ExportFormat.get_or_create(**{"name": "test", "slug": "test", "description": "test"})
+        self.assertTrue(created)
+        export_format2, created = ExportFormat.get_or_create(**{"name": "test", "slug": "test", "description": "test"})
+        self.assertFalse(created)
+        self.assertEqual(export_format1, export_format2)
+
 
 class TestRegion(TestCase):
     def test_load_region(self,):
