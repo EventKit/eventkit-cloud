@@ -2,7 +2,7 @@
 
 import json
 import logging
-import os
+import requests_mock
 import signal
 from unittest.mock import patch, call, Mock, MagicMock
 
