@@ -389,8 +389,8 @@ class TestJob(TestCase):
         #     for task in provider_task["tasks"]:
         #         if "geopackage" in task["name"].lower() or "gpkg" in task["name"].lower():
         #             self.check_geopackage(task["result"]["uid"], check_zoom=check_zoom)
-        # if not keep_job:
-        #     self.client.delete_job(job_uid=job_uid)
+        if not keep_job:
+            self.client.delete_job(job_uid=job_uid)
         return run
 
     def check_geopackage(self, result_uid, check_zoom=False):
