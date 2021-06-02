@@ -383,7 +383,7 @@ class TestJob(TestCase):
         assert ".zip" in zip_result["filename"]
 
         self.assertTrue(run["status"] == "COMPLETED")
-        # TODO: Debug download and check files in ci pipeline. 
+        # TODO: Debug download and check files in ci pipeline.
         # for provider_task in run["provider_tasks"]:
         #     check_zoom = True if provider_task.get("provider", {}).get("data_type") == "raster" else False
         #     for task in provider_task["tasks"]:
