@@ -16,7 +16,7 @@ DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 class EventKitClient(object):
     def __init__(self, url, username=None, password=None, certificate=None, verify=True):
-        self.base_url = url
+        self.base_url = url.rstrip("/")
         self.login_url = self.base_url + "/api/login/"
         self.cert_url = self.base_url + "/oauth"
         self.create_export_url = self.base_url + "/create"
@@ -24,6 +24,7 @@ class EventKitClient(object):
         self.runs_url = self.base_url + "/api/runs"
         self.providers_url = self.base_url + "/api/providers"
         self.provider_tasks_url = self.base_url + "/api/provider_tasks"
+        self.download_url = self.base_url + "/download"
 
         self.client = requests.session()
         self.client.verify = verify
@@ -145,6 +146,18 @@ class EventKitClient(object):
             logger.error(response.content.decode())
             logger.error(url)
         return response.json()
+
+    def download_file(self, result_uid, file_path=None):
+        from eventkit_cloud.tasks.helpers import normalize_name
+        response = self.client.get(self.download_url, params={"uid": result_uid}, stream=True)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                for chunk in response:
+                    f.write(chunk)
+            return file_path
+        else:
+            logger.error(f"Failed to download {result_uid}, STATUS_CODE: {r.status_code}")
+        return None
 
     def get_averages(self, runs):
         """

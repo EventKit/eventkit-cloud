@@ -10,6 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from eventkit_cloud.core.helpers import download_file
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient
@@ -47,9 +48,9 @@ class TestJob(TestCase):
         self.create_export_url = self.base_url + "/status/create"
         self.jobs_url = self.base_url + reverse("api:jobs-list")
         self.runs_url = self.base_url + reverse("api:runs-list")
-        self.download_dir = os.path.join(os.getenv("EXPORT_STAGING_ROOT", "."), "test")
+        self.download_dir = os.path.join(getattr(settings, "EXPORT_STAGING_ROOT"), "test")
         if not os.path.exists(self.download_dir):
-            os.makedirs(self.download_dir, mode=0o660)
+            os.makedirs(self.download_dir)
         self.client = self.get_client(
             self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
@@ -217,7 +218,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {
-            "name": "TestGPKG-WMTS",
+            "name": "Test-gtiff-WMTS",
             "description": "Test Description",
             "include_zipfile": True,
             "project": "TestProject",
@@ -384,34 +385,22 @@ class TestJob(TestCase):
 
         self.assertTrue(run["status"] == "COMPLETED")
         for provider_task in run["provider_tasks"]:
-            geopackage_url = self.get_gpkg_url(run, provider_task["name"])
-            if not geopackage_url:
-                continue
-            geopackage_file = self.download_file(geopackage_url)
-            self.assertTrue(os.path.isfile(geopackage_file))
-            self.assertTrue(check_content_exists(geopackage_file))
-            self.assertTrue(check_zoom_levels(geopackage_file))
-            os.remove(geopackage_file)
-        for provider_task in run["provider_tasks"]:
-            geopackage_url = self.get_gpkg_url(run, provider_task["name"])
-            if not geopackage_url:
-                continue
-            geopackage_file = self.download_file(geopackage_url)
-            self.assertNotTrue(os.path.isfile(geopackage_file))
-            if os.path.isfile(geopackage_file):
-                os.remove(geopackage_file)
+            check_zoom = True if provider_task.get('provider', {}).get('data_type') == "raster" else False
+            for task in provider_task['tasks']:
+                if "geopackage" in task['name'].lower() or "gpkg" in task['name'].lower():
+                    self.check_geopackage(task["result"]["uid"], check_zoom=check_zoom)
         if not keep_job:
             self.client.delete_job(job_uid=job_uid)
         return run
 
-    @staticmethod
-    def get_gpkg_url(run, provider_task_name):
-        for provider_task in run.get("provider_tasks"):
-            if provider_task.get("name") == provider_task_name:
-                for task in provider_task.get("tasks"):
-                    if task.get("name") == "Geopackage":
-                        return task.get("result").get("url")
-        return None
+    def check_geopackage(self, result_uid, check_zoom=False):
+        file_path = os.path.join(self.download_dir, f"{result_uid}.gpkg")
+        geopackage_file = self.client.download_file(result_uid, file_path)
+        self.assertTrue(os.path.isfile(geopackage_file))
+        self.assertTrue(check_content_exists(geopackage_file))
+        if check_zoom:
+            self.assertTrue(check_zoom_levels(geopackage_file))
+        os.remove(geopackage_file)
 
     def get_all_displayed_provider_slugs(self):
         provider_slugs = []

@@ -35,8 +35,9 @@ def get_cached_model(model: Type[models.Model], prop: str, value: str) -> Type[m
 
 
 def download_file(url, download_dir=None):
+    from eventkit_cloud.tasks.helpers import normalize_name
     download_dir = download_dir or settings.EXPORT_STAGING_ROOT
-    file_location = os.path.join(download_dir, os.path.basename(url))
+    file_location = os.path.join(download_dir, normalize_name(os.path.basename(url)))
     r = requests.get(url, stream=True)
     if r.status_code == 200:
         with open(file_location, "wb") as f:
