@@ -10,7 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
-from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
+from eventkit_cloud.tasks.helpers import update_progress
 from eventkit_cloud.utils import gdalutils
 from .artifact import Artifact
 
@@ -501,6 +501,8 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
 def is_alnum(data):
     """
     Used to ensure that only 'safe' data can be used to query or create data.
+    @param: String of data to be tested.
+    @return: if data is only alphanumeric or '_' chars.
     >>> is_alnum("test")
     True
     >>> is_alnum("test_2")
@@ -509,8 +511,6 @@ def is_alnum(data):
     False
     >>> is_alnum("test 4")
     False
-    @param: String of data to be tested.
-    @return: if data is only alphanumeric or '_' chars.
     """
     import re
 
@@ -844,3 +844,9 @@ VALUES ('geopackage', NULL, NULL, NULL, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 1,
                  """
         logger.debug(command)
         conn.execute(command)
+
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()

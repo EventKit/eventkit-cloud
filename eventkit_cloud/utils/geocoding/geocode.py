@@ -2,10 +2,10 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
+
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geocoding.geocode_auth import get_geocode_cert_info
 from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
-
 
 logger = logging.getLogger(__name__)
 

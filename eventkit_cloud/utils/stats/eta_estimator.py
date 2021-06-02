@@ -1,5 +1,5 @@
-import time
 import datetime
+import time
 
 
 class ETA(object):

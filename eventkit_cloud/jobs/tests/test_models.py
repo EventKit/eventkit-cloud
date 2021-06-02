@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from unittest.mock import call, patch
+
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -9,7 +11,6 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
-from unittest.mock import call, patch
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
@@ -174,6 +175,13 @@ class TestExportFormat(TestCase):
     def test_str(self,):
         kml = ExportFormat.objects.get(slug="kml")
         self.assertEqual(str(kml), "KML Format")
+
+    def test_get_or_create(self):
+        export_format1, created = ExportFormat.get_or_create(**{"name": "test", "slug": "test", "description": "test"})
+        self.assertTrue(created)
+        export_format2, created = ExportFormat.get_or_create(**{"name": "test", "slug": "test", "description": "test"})
+        self.assertFalse(created)
+        self.assertEqual(export_format1, export_format2)
 
 
 class TestRegion(TestCase):
@@ -418,7 +426,7 @@ class TestDataProvider(TestCase):
         cache_call = [call(f"base-config-{self.data_provider.slug}")]
         mocked_cache.delete.assert_has_calls(cache_call)
 
-    @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
+    @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_metadata_url")
     def test_metadata(self, mock_get_mapproxy_metadata_url):
         example_url = "http://test.test"
         expected_url = "http://ek.test/metadata/"
@@ -428,14 +436,14 @@ class TestDataProvider(TestCase):
         self.data_provider.config = yaml.dump(config)
         self.assertEqual(expected_metadata, self.data_provider.metadata)
 
-        @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
-        def test_footprint_url(self, mock_get_mapproxy_footprint_url):
-            example_url = "http://test.test"
-            expected_url = "http://ek.test/footprint/"
-            mock_get_mapproxy_footprint_url.return_value = expected_url
-            config = {"sources": {"footprint": {"req": {"url": example_url}}}}
-            self.data_provider.config = yaml.dump(config)
-            self.assertEqual(expected_url, self.data_provider.footprint_url)
+    @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_footprint_url")
+    def test_footprint_url(self, mock_get_mapproxy_footprint_url):
+        example_url = "http://test.test"
+        expected_url = "http://ek.test/footprint/"
+        mock_get_mapproxy_footprint_url.return_value = expected_url
+        config = {"sources": {"footprint": {"req": {"url": example_url}}}}
+        self.data_provider.config = yaml.dump(config)
+        self.assertEqual(expected_url, self.data_provider.footprint_url)
 
     def test_layers(self,):
 

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from unittest.mock import Mock, patch, call, MagicMock, ANY
 from uuid import uuid4
 
 from django.test import TestCase
-from unittest.mock import Mock, patch, call, MagicMock, ANY
 from osgeo import gdal, ogr
 
 from eventkit_cloud.utils.gdalutils import (
@@ -410,7 +410,7 @@ class TestGdalUtils(TestCase):
         mock_gdal.Open.return_value.GetRasterBand.return_value.GetStatistics.side_effect = [Exception]
         self.assertIsNone(get_band_statistics(in_file))
 
-    @patch("eventkit_cloud.utils.gdalutils.update_progress")
+    @patch("eventkit_cloud.tasks.helpers.update_progress")
     def test_progress_callback(self, mock_update_progress):
         example_percentage = 0.10
         example_message = "message"

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
+from unittest.mock import Mock, patch, MagicMock
 from uuid import uuid4
 
 import yaml as real_yaml
 from django.conf import settings
 from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
-from unittest.mock import Mock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
@@ -56,74 +56,75 @@ class TestGeopackage(TransactionTestCase):
         mock_set_gpkg_contents_bounds,
         patch_https,
     ):
-        gpkgfile = "/var/lib/eventkit/test.gpkg"
-        config = (
-            "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  "
-            "default:\r\n    type: tile\r\n    grid: default\r\n    "
-            "url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    "
-            "srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        )
-        json_config = real_yaml.safe_load(config)
-        mapproxy_config = load_default_config()
-        bbox = [-2, -2, 2, 2]
-        cache_template.return_value = {
-            "sources": ["default"],
-            "cache": {"type": "geopackage", "filename": "/var/lib/eventkit/test.gpkg"},
-            "grids": ["default"],
-        }
-        seed_template.return_value = {
-            "coverages": {"geom": {"srs": "EPSG:4326", "bbox": [-2, -2, 2, 2]}},
-            "seeds": {
-                "seed": {
-                    "coverages": ["geom"],
-                    "refresh_before": {"minutes": 0},
-                    "levels": {"to": 10, "from": 0},
-                    "caches": ["default"],
-                }
-            },
-        }
-        self.task_process.return_value = Mock(exitcode=0)
-        w2g = MapproxyGeopackage(
-            config=config,
-            gpkgfile=gpkgfile,
-            bbox=bbox,
-            service_url="http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&"
-            "TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
-            layer="imagery",
-            debug=True,
-            name="imagery",
-            level_from=0,
-            level_to=10,
-            service_type="wmts",
-            task_uid=self.task_uid,
-        )
-        result = w2g.convert()
-        mock_check_zoom_levels.assert_called_once()
-        connections.close_all.assert_called_once()
-        self.assertEqual(result, gpkgfile)
-
-        cache_template.assert_called_once_with(
-            ["imagery"], [grids for grids in json_config.get("grids")], gpkgfile, table_name="imagery"
-        )
-        json_config["caches"] = {
-            "default": {
+        with self.settings(SSL_VERIFICATION=True):
+            gpkgfile = "/var/lib/eventkit/test.gpkg"
+            config = (
+                "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  "
+                "default:\r\n    type: tile\r\n    grid: default\r\n    "
+                "url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    "
+                "srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+            )
+            json_config = real_yaml.safe_load(config)
+            mapproxy_config = load_default_config()
+            bbox = [-2, -2, 2, 2]
+            cache_template.return_value = {
                 "sources": ["default"],
                 "cache": {"type": "geopackage", "filename": "/var/lib/eventkit/test.gpkg"},
                 "grids": ["default"],
             }
-        }
-        json_config["services"] = ["demo"]
+            seed_template.return_value = {
+                "coverages": {"geom": {"srs": "EPSG:4326", "bbox": [-2, -2, 2, 2]}},
+                "seeds": {
+                    "seed": {
+                        "coverages": ["geom"],
+                        "refresh_before": {"minutes": 0},
+                        "levels": {"to": 10, "from": 0},
+                        "caches": ["default"],
+                    }
+                },
+            }
+            self.task_process.return_value = Mock(exitcode=0)
+            w2g = MapproxyGeopackage(
+                config=config,
+                gpkgfile=gpkgfile,
+                bbox=bbox,
+                service_url="http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&"
+                "TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
+                layer="imagery",
+                debug=True,
+                name="imagery",
+                level_from=0,
+                level_to=10,
+                service_type="wmts",
+                task_uid=self.task_uid,
+            )
+            result = w2g.convert()
+            mock_check_zoom_levels.assert_called_once()
+            connections.close_all.assert_called_once()
+            self.assertEqual(result, gpkgfile)
 
-        patch_https.assert_called_once_with(cert_info=None)
-        load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
-        remove_zoom_levels.assert_called_once_with(gpkgfile)
-        mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, "imagery", bbox)
-        seed_template.assert_called_once_with(bbox=bbox, coverage_file=None, level_from=0, level_to=10, projection=None)
-        self.task_process.side_effect = Exception()
-        with self.assertRaises(Exception):
-            w2g.convert()
+            cache_template.assert_called_once_with(
+                ["imagery"], [grids for grids in json_config.get("grids")], gpkgfile, table_name="imagery"
+            )
+            json_config["caches"] = {
+                "default": {
+                    "sources": ["default"],
+                    "cache": {"type": "geopackage", "filename": "/var/lib/eventkit/test.gpkg"},
+                    "grids": ["default"],
+                }
+            }
+            json_config["services"] = ["demo"]
 
-        # test reproject
+            patch_https.assert_called_once_with(cert_info=None)
+            load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
+            remove_zoom_levels.assert_called_once_with(gpkgfile)
+            mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, "imagery", bbox)
+            seed_template.assert_called_once_with(
+                bbox=bbox, coverage_file=None, level_from=0, level_to=10, projection=None
+            )
+            self.task_process.side_effect = Exception()
+            with self.assertRaises(Exception):
+                w2g.convert()
 
 
 class TestHelpers(TransactionTestCase):
@@ -240,7 +241,7 @@ class TestHelpers(TransactionTestCase):
 
 class TestLogger(TransactionTestCase):
     @patch("eventkit_cloud.utils.mapproxy.get_cache_value")
-    @patch("eventkit_cloud.tasks.task_process.update_progress")
+    @patch("eventkit_cloud.tasks.helpers.update_progress")
     def test_log_step(self, mock_update_progress, mock_get_cache_value):
         test_task_uid = "1234"
         test_progress = 0.42

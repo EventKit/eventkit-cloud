@@ -77,6 +77,7 @@ services:
       - MATOMO_APPNAME
       - SECRET_KEY
       - CONDA_REPO
+      - EVENTKIT_CRED
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -161,7 +162,7 @@ services:
       - CONCURRENCY=4
       - MAPPROXY_CONCURRENCY=4
       - OSM_CONCURRENCY=1
-      - RUNS_CONCURRENCY=1
+      - RUNS_CONCURRENCY=4
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - MAX_TASK_ATTEMPTS
@@ -171,6 +172,8 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - SECRET_KEY
       - TASK_TIMEOUT
+      - EVENTKIT_CRED
+      - EVENTKIT_CERT_PASS
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh

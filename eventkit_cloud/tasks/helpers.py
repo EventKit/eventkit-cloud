@@ -4,38 +4,38 @@ import logging
 import os
 import pickle
 import re
-import requests
-import requests_pkcs12
 import signal
 import time
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
+from concurrent import futures
+from enum import Enum
+from functools import reduce
+from operator import itemgetter
+from pathlib import Path
+from typing import List, Optional, ValuesView
+from xml.dom import minidom
+from zipfile import ZipFile
+
+import requests
 import yaml
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.cache import cache
+from django.db import connection
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.text import slugify
-from enum import Enum
-from functools import reduce
 from numpy import linspace
-from operator import itemgetter
-from typing import List, Optional, ValuesView
-from xml.dom import minidom
-from concurrent import futures
-from pathlib import Path
-from zipfile import ZipFile
 
-from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, ExportFormat
-from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION
+from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, get_data_type_from_provider, DataProvider
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
-from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils import auth_requests, gdalutils
+from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -177,10 +177,8 @@ def get_export_task_record(export_task_record_uid: str) -> ExportTaskRecord:
     return ExportTaskRecord.objects.select_related("export_provider_task__provider").get(uid=export_task_record_uid)
 
 
-def get_supported_projections(format_slug: str) -> List[int]:
-    supported_projections = (
-        ExportFormat.objects.get(slug=format_slug).supported_projections.all().values_list("srid", flat=True)
-    )
+def get_supported_projections(export_format: ExportFormat) -> List[int]:
+    supported_projections = export_format.supported_projections.all().values_list("srid", flat=True)
     return supported_projections
 
 
@@ -194,15 +192,6 @@ def get_default_projection(supported_projections: List[int], selected_projection
         if supported_projection in selected_projections:
             return supported_projection
     return None
-
-
-def get_data_provider_label(data_provider_slug):
-    try:
-        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
-        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
-    except DataProvider.DoesNotExist:
-        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
-        raise
 
 
 def get_export_filepath(stage_dir: str, job_name: str, projection: int, data_provider_slug: str, extension: str):
@@ -244,25 +233,6 @@ def get_style_files():
     arcgis_dir = os.path.join(os.path.dirname(__file__), "arcgis")
     files = get_file_paths(arcgis_dir, files)
     return files
-
-
-def create_license_file(provider_task):
-    # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
-    data_provider_license = DataProvider.objects.get(slug=provider_task.provider.slug).license
-
-    # DataProviders are not required to have a license
-    if data_provider_license is None:
-        return
-
-    license_file_path = os.path.join(
-        get_provider_staging_dir(provider_task.run.uid, provider_task.provider.slug),
-        "{0}.txt".format(normalize_name(data_provider_license.name)),
-    )
-
-    with open(license_file_path, "wb") as license_file:
-        license_file.write(data_provider_license.text.encode())
-
-    return license_file_path
 
 
 def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
@@ -594,14 +564,18 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                         == GeospatialDataType.ELEVATION.value
                     ):
                         # Get statistics to update ranges in template.
-                        band_stats = get_band_statistics(full_file_path)
-                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        file_data["band_stats"] = band_stats
-                        # Calculate the value for each elevation step (of 16)
                         try:
-                            steps = linspace(band_stats[0], band_stats[1], num=16)
-                            file_data["ramp_shader_steps"] = list(map(int, steps))
-                        except TypeError:
+                            band_stats = get_band_statistics(full_file_path)
+                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            file_data["band_stats"] = band_stats
+                            # Calculate the value for each elevation step (of 16)
+                            try:
+                                steps = linspace(band_stats[0], band_stats[1], num=16)
+                                file_data["ramp_shader_steps"] = list(map(int, steps))
+                            except TypeError:
+                                file_data["ramp_shader_steps"] = None
+                        except Exception:
+                            # TODO: Allow file paths for vszip or extract zip data.
                             file_data["ramp_shader_steps"] = None
 
                     metadata["data_sources"][data_provider_task_record.provider.slug]["files"] += [file_data]
@@ -640,19 +614,6 @@ def get_arcgis_metadata(metadata):
     return arcgis_metadata
 
 
-def get_data_type_from_provider(data_provider: DataProvider) -> str:
-    """
-    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
-    and should be removed if custom cartography is made configurable.
-    :param data_provider:
-    :return:
-    """
-    if data_provider.slug.lower() in ["nome", "osm"]:
-        return data_provider.slug.lower()
-    else:
-        return data_provider.data_type
-
-
 def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
     """
     :param api_url: The http api url including authentication values.
@@ -664,9 +625,10 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
     response = None
     try:
         logger.info(f"Getting all {rabbit_class}")
-        response = requests.get(url, params=params).json()
-        rabbit_objects = response["items"]
-        pages = response.get("page_count", 0)
+        response = requests.get(url, params=params)
+        objects_page = response.json()
+        rabbit_objects = objects_page.get("items")
+        pages = objects_page.get("page_count", 0)
         for page in range(2, pages + 1):
             logger.info(f"Getting page: {page} of {pages} for {rabbit_class}")
             params["page"] = page
@@ -965,42 +927,32 @@ def download_chunks(
     return chunks
 
 
-def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
-    if not session:
-        session = requests.Session()
-
-    if username and password:
-        logger.error(f"setting {username} and {password} for session")
-        session.auth = (username, password)
-        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
-    if cert_path and cert_pass:
-        adapter = requests_pkcs12.Pkcs12Adapter(
-            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
-        )
-        session.mount("https://", adapter)
-
-    logger.debug("Using %s for SSL verification.", str(verify))
-    session.verify = verify
-    return session
-
-
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100, session=None):
+def download_data(
+    task_uid: str,
+    input_url: str,
+    out_file: str,
+    username=None,
+    password=None,
+    cert_info=None,
+    session=None,
+    task_points=100,
+    cookie=None,
+):
     """
     Function for downloading data, optionally using a certificate.
     """
+    response = None
     try:
-        session = get_or_update_session(
-            session=session, cert_info=cert_info, verify=getattr(settings, "SSL_VERIFICATION", True)
+        auth_session = get_or_update_session(
+            session=session, username=username, password=password, cert_info=cert_info, cookie=cookie
         )
-        response = session.get(input_url, stream=True)
+        response = auth_session.get(input_url, stream=True)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
-        raise Exception(f"Unsuccessful request:{e}")
+        if response:
+            logger.error(response.text)
+        raise Exception("Failed to download data.") from e
 
     from audit_logging.file_logging import logging_open
 
@@ -1107,3 +1059,82 @@ def extract_metadata_files(
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
+
+
+def get_geometry(bbox, selection=None):
+    geom = GEOSGeometry(Polygon.from_bbox(bbox))
+    if selection:
+        try:
+            with open(selection, "r") as geojson:
+                geom = GEOSGeometry(geojson)
+        except Exception as e:
+            logger.error(e)
+    return geom
+
+
+def update_progress(
+    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
+):
+    """
+    Updates the progress of the ExportTaskRecord from the given task_uid.
+    :param task_uid: A uid to reference the ExportTaskRecord.
+    :param progress: The percent of completion for the task or subtask [0-100]
+    :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up. [0-100]
+    :param subtask_start: is the beginning of where this subtask's percentage block beings [0-100]
+                          (e.g. when subtask_percentage=0.0 the absolute_progress=subtask_start)
+    :param estimated_finish: The datetime of when the entire task is expected to finish, overrides eta estimator
+    :param eta: The ETA estimator for this task will be used to automatically determine estimated_finish
+    :param msg: Message describing the current activity of the task
+    """
+    if task_uid is None:
+        return
+
+    if not progress and not estimated_finish:
+        return
+
+    subtask_percentage = subtask_percentage or 100.0
+    subtask_start = subtask_start or 0
+
+    if progress is not None:
+        subtask_progress = min(progress, 100.0)
+        absolute_progress = min(subtask_start + subtask_progress * (subtask_percentage / 100.0), 100.0)
+
+    # We need to close the existing connection because the logger could be using a forked process which
+    # will be invalid and throw an error.
+    connection.close()
+
+    if absolute_progress:
+        set_cache_value(
+            uid=task_uid, attribute="progress", model_name="ExportTaskRecord", value=absolute_progress,
+        )
+        if eta is not None:
+            eta.update(absolute_progress / 100.0, dbg_msg=msg)  # convert to [0-1.0]
+
+    if estimated_finish:
+        set_cache_value(
+            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated_finish,
+        )
+    elif eta is not None:
+        # Use the updated ETA estimator to determine an estimated_finish
+        set_cache_value(
+            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=eta.eta_datetime(),
+        )
+
+
+def create_license_file(provider_task):
+    # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
+    data_provider_license = DataProvider.objects.get(slug=provider_task.provider.slug).license
+
+    # DataProviders are not required to have a license
+    if data_provider_license is None:
+        return
+
+    license_file_path = os.path.join(
+        get_provider_staging_dir(provider_task.run.uid, provider_task.provider.slug),
+        "{0}.txt".format(normalize_name(data_provider_license.name)),
+    )
+
+    with open(license_file_path, "wb") as license_file:
+        license_file.write(data_provider_license.text.encode())
+
+    return license_file_path

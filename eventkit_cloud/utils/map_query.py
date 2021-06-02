@@ -1,8 +1,9 @@
+import json
+import logging
 from abc import ABC
 from collections import defaultdict
+
 from eventkit_cloud.utils.arcgis2geojson import convert as convert_arcgis_to_geojson
-import logging
-import json
 
 logger = logging.getLogger(__name__)
 

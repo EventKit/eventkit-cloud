@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import json
 from functools import wraps
 from logging import getLogger
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import login
@@ -13,10 +15,6 @@ from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError, Unauthorized
 from eventkit_cloud.core.helpers import get_id
-
-from urllib.parse import urlencode
-
-import base64
 
 logger = getLogger(__name__)
 

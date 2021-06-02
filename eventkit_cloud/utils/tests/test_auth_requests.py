@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import http.client
 import logging
-import urllib
 import os
+import urllib
 from unittest.mock import patch, MagicMock, ANY, mock_open
 
 import requests
-from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
-
 from django.test import TransactionTestCase
+from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
 
 from eventkit_cloud.utils import auth_requests
 

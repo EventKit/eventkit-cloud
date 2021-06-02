@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
+from unittest.mock import Mock
+
+from django.test import TestCase
 
 from eventkit_cloud.utils.map_query import ArcGISQuery
-from unittest.mock import Mock
-from django.test import TestCase
-import json
 
 logger = logging.getLogger(__name__)
 

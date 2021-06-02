@@ -3,20 +3,22 @@ import json
 import logging
 import os
 import uuid
-import yaml
 from datetime import datetime, timedelta
+from unittest.mock import patch, Mock
+
+import yaml
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
 from django.utils import timezone
-from unittest.mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase
+
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, AttributeClass
@@ -159,8 +161,8 @@ class TestJobViewSet(APITestCase):
                     "name": "test",
                     "level_from": 0,
                     "level_to": 1,
-                    "url": "http://coolproviderurl.to",
-                    "preview_url": "http://coolproviderurl.to",
+                    "url": "http://coolproviderurl.test",
+                    "preview_url": "http://coolproviderurl.test",
                 }
             ],
             "user": serializers.serialize("json", [self.user]),
@@ -582,7 +584,6 @@ class TestJobViewSet(APITestCase):
             "provider_tasks": [{"provider": "osm-generic", "formats": ["broken-format-one", "broken-format-two"]}],
         }
         response = self.client.post(url, request_data, format="json")
-
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response["Content-Language"], "en")

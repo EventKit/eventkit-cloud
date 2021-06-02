@@ -1,9 +1,10 @@
-import dateutil.parser
 import json
 import logging
+from datetime import datetime, timedelta
+
+import dateutil.parser
 import pytz
 import requests
-from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import logout as auth_logout

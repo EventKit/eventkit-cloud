@@ -9,7 +9,11 @@ logger = get_task_logger(__name__)
 
 
 def build_abstract(*args):
-    """Combines multiple messages into a single abstract over multiple lines."""
+    """Combines multiple messages into a single abstract over multiple lines.
+
+    >>> build_abstract("test1", "test2")
+    'test1\\ntest2'
+    """
     return "\n".join([_arg for _arg in args if _arg])
 
 
@@ -45,3 +49,8 @@ def add_geopackage_metadata(filepath, job, provider):
 
 
 metadata_tasks = {".gpkg": add_geopackage_metadata}
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()

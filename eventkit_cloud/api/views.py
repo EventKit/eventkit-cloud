@@ -2,9 +2,9 @@
 
 """Provides classes for handling API requests."""
 import logging
-from audit_logging.models import AuditEvent
-
 from datetime import datetime, timedelta
+
+from audit_logging.models import AuditEvent
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -66,8 +66,8 @@ from eventkit_cloud.api.serializers import (
     UserDataSerializer,
     UserJobActivitySerializer,
 )
-from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.api.utils import get_run_zip_file
+from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,

@@ -375,8 +375,7 @@ LOGGING = {
 ssl_verification_settings = os.getenv("SSL_VERIFICATION", "true")
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
-    if not os.getenv("REQUESTS_CA_BUNDLE"):
-        os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
+    os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
     SSL_VERIFICATION = is_true(ssl_verification_settings)
 

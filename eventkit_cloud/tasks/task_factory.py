@@ -7,6 +7,7 @@ import os
 
 from celery import chain
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
@@ -16,6 +17,7 @@ from eventkit_cloud.core.helpers import (
     NotificationLevel,
 )
 from eventkit_cloud.jobs.models import Job, JobPermission, JobPermissionLevel
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
     finalize_export_provider_task,
     TaskPriority,
@@ -32,7 +34,6 @@ from eventkit_cloud.tasks.export_tasks import (
     raster_file_export_task,
     ogcapi_process_export_task,
 )
-from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_provider_staging_dir,
@@ -42,7 +43,6 @@ from eventkit_cloud.tasks.task_builders import (
     TaskChainBuilder,
     create_export_task_record,
 )
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -68,6 +68,9 @@ class TaskFactory:
             "vector-file": vector_file_export_task,
             "raster-file": raster_file_export_task,
             "ogcapi-process": ogcapi_process_export_task,
+            "ogcapi-process-raster": ogcapi_process_export_task,
+            "ogcapi-process-elevation": ogcapi_process_export_task,
+            "ogcapi-process-vector": ogcapi_process_export_task,
         }
 
     def parse_tasks(
@@ -181,6 +184,7 @@ class TaskFactory:
                         "worker": worker,
                         "user_details": user_details,
                         "session_token": session_token,
+                        "config": provider_task.provider.config,
                     }
 
                     (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
