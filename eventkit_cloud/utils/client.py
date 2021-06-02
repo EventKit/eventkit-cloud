@@ -148,15 +148,14 @@ class EventKitClient(object):
         return response.json()
 
     def download_file(self, result_uid, file_path=None):
-        from eventkit_cloud.tasks.helpers import normalize_name
         response = self.client.get(self.download_url, params={"uid": result_uid}, stream=True)
         if response.status_code == 200:
-            with open(file_path, "wb") as f:
+            with open(file_path, "wb") as open_file:
                 for chunk in response:
-                    f.write(chunk)
+                    open_file.write(chunk)
             return file_path
         else:
-            logger.error(f"Failed to download {result_uid}, STATUS_CODE: {r.status_code}")
+            logger.error(f"Failed to download {result_uid}, STATUS_CODE: {response.status_code}")
         return None
 
     def get_averages(self, runs):

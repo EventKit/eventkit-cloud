@@ -10,7 +10,6 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from eventkit_cloud.core.helpers import download_file
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient
@@ -385,9 +384,9 @@ class TestJob(TestCase):
 
         self.assertTrue(run["status"] == "COMPLETED")
         for provider_task in run["provider_tasks"]:
-            check_zoom = True if provider_task.get('provider', {}).get('data_type') == "raster" else False
-            for task in provider_task['tasks']:
-                if "geopackage" in task['name'].lower() or "gpkg" in task['name'].lower():
+            check_zoom = True if provider_task.get("provider", {}).get("data_type") == "raster" else False
+            for task in provider_task["tasks"]:
+                if "geopackage" in task["name"].lower() or "gpkg" in task["name"].lower():
                     self.check_geopackage(task["result"]["uid"], check_zoom=check_zoom)
         if not keep_job:
             self.client.delete_job(job_uid=job_uid)
