@@ -1,8 +1,9 @@
-import requests
-import os
-import logging
-from enum import Enum
 import json
+import logging
+import os
+from enum import Enum
+
+import requests
 
 from eventkit_cloud.utils.scale_client import ScaleClient
 

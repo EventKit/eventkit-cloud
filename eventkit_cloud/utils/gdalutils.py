@@ -1,23 +1,21 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from typing import List, Tuple
-
 import math
 import multiprocessing
 import os
 import time
-from tempfile import NamedTemporaryFile
 from functools import wraps
+from tempfile import NamedTemporaryFile
+from typing import List, Tuple
 
+from django.conf import settings
 from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
 
-
-from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
+from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +67,8 @@ def retry(f):
 
 
 def progress_callback(pct, msg, user_data):
+    from eventkit_cloud.tasks.helpers import update_progress
+
     update_progress(
         user_data.get("task_uid"),
         progress=round(pct * 100),
@@ -627,6 +627,7 @@ def convert_vector(
             logger.info(f"calling gdal.VectorTranslate('{output_file}', '{_input_file}', {stringify_params(options)})")
             gdal.VectorTranslate(output_file, _input_file, **options)
     else:
+        logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
         gdal.VectorTranslate(output_file, input_file, **options)
 
     if distinct_field:

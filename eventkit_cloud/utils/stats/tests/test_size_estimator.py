@@ -1,12 +1,12 @@
+import json
+import logging
 import math
 import statistics
 import time
-import json
-import logging
 
-from eventkit_cloud.tasks.models import ExportTaskRecord
 import eventkit_cloud.utils.stats.aoi_estimators as estimator
 import eventkit_cloud.utils.stats.generator as ek_stats
+from eventkit_cloud.tasks.models import ExportTaskRecord
 from eventkit_cloud.utils.stats.geomutils import get_geometry_description
 
 logger = logging.getLogger(__name__)

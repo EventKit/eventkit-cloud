@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from django.test import TestCase
 from unittest.mock import patch
 
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
+from django.test import TestCase
+
 from eventkit_cloud.jobs.models import Job, DataProvider
 from eventkit_cloud.tasks.models import ExportRun
-
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 
 

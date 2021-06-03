@@ -82,26 +82,25 @@ class TestGeoCodeAuthResponse(TestCase):
 
     @patch.dict(os.environ, {"GEOCODING_AUTH_CERT_PATH": "FAKE/GEO/PATH", "GEOCODING_AUTH_CERT_PASS_VAR": "FAKEPASS"})
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.check_data")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.auth_requests")
+    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_or_update_session")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.update_session_cookies")
-    def test_get_auth_response(self, mock_update_session_cookies, mock_auth_requests, mock_check_data):
+    def test_get_auth_response(self, mock_update_session_cookies, mock_get_or_update_session, mock_check_data):
         example_url = "test_headers"
         example_payload = {"test": "payload"}
         example_cookies = "test_cookies"
         example_headers = "test_headers"
         expected_response = Mock(ok=True, headers=example_headers)
-        mock_auth_requests.AuthSession().get.return_value = expected_response
-        mock_auth_requests.AuthSession().session.cookies = example_cookies
+        mock_get_or_update_session().get.return_value = expected_response
+        mock_get_or_update_session().session.cookies = example_cookies
         self.assertEquals(expected_response, get_auth_response(example_url, example_payload))
         mock_update_session_cookies.assert_called_once_with(example_cookies)
-        mock_auth_requests.AuthSession().get.assert_called_once_with(
-            example_url,
-            params=example_payload,
-            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR"),
+        mock_get_or_update_session.assert_called_with(
+            cert_info=dict(cert_path="FAKE/GEO/PATH", cert_pass_var="GEOCODING_AUTH_CERT_PASS_VAR")
         )
+        mock_get_or_update_session().get.assert_called_once_with(example_url, params=example_payload)
 
         expected_response = Mock(ok=False)
-        mock_auth_requests.AuthSession().get.return_value = expected_response
+        mock_get_or_update_session().get.return_value = expected_response
         self.assertIsNone(get_auth_response(example_url, example_payload))
 
     def test_check_data(self):

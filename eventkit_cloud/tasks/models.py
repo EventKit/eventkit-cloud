@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 import shutil
-import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
-
+from notifications.models import Notification
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from eventkit_cloud.core.helpers import (
@@ -25,6 +25,7 @@ from eventkit_cloud.core.models import (
     TimeTrackingModelMixin,
     LowerCaseCharField,
 )
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
     Job,
     DataProvider,
@@ -39,9 +40,6 @@ from eventkit_cloud.tasks import (
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.s3 import download_folder_from_s3
-from notifications.models import Notification
-
-from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 
 logger = logging.getLogger(__name__)
 

@@ -1,33 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
 import logging
+import os
 import uuid
-import yaml
+from enum import Enum
+from typing import Union, List
 
+import yaml
 from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.db import models
 from django.contrib.gis.geos import (
     GEOSGeometry,
     GeometryCollection,
     Polygon,
     MultiPolygon,
 )
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields.jsonb import JSONField
-from django.core.serializers import serialize
-from django.contrib.gis.db import models
 from django.core.cache import cache
-
-from django.utils import timezone
-from enum import Enum
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
+from django.utils import timezone
+from django.utils.text import slugify
 
-from typing import Union, List
-
-from eventkit_cloud.jobs.helpers import clean_config
-
+from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -38,7 +36,6 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url, get_mapproxy_footprint_url
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +90,7 @@ class DatamodelPreset(TimeStampedModelMixin):
     """
 
     name = models.CharField(max_length=10)
-    json_tags = JSONField(default=list)
+    json_tags = models.JSONField(default=list)
 
     class Meta:
         db_table = "datamodel_preset"
@@ -148,10 +145,17 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     Model for a ExportFormat.
     """
 
+    safe_kwargs = [
+        "name",
+        "slug",
+        "description",
+        "cmd",
+    ]
+
     name = models.CharField(max_length=100)
     slug = LowerCaseCharField(max_length=20, unique=True, default="")
     description = models.CharField(max_length=255)
-    cmd = models.TextField(max_length=1000)
+    options = models.JSONField(default=dict, null=True, blank=True)
     objects = models.Manager()
     supported_projections = models.ManyToManyField(Projection, related_name="supported_projections")
 
@@ -161,6 +165,22 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
 
     def __str__(self):
         return "{0}".format(self.name)
+
+    @classmethod
+    def get_or_create(cls, **kwargs):
+        blacklisted_keys = []
+        created = False
+        for _key in kwargs:
+            if _key not in cls.safe_kwargs:
+                blacklisted_keys.append(_key)
+        for _key in blacklisted_keys:
+            del kwargs[_key]
+        try:
+            format = cls.objects.get(**kwargs)
+        except ObjectDoesNotExist:
+            format = cls.objects.create(**kwargs)
+            created = True
+        return format, created
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -299,6 +319,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     def save(self, *args, **kwargs):
+
         if not self.slug:
             self.slug = self.name.replace(" ", "_").lower()
             if len(self.slug) > 40:
@@ -312,6 +333,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def metadata(self):
+        from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url
+
         if not self.config:
             return None
         config = yaml.load(self.config)
@@ -322,6 +345,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def footprint_url(self):
+        from eventkit_cloud.utils.mapproxy import get_mapproxy_footprint_url
+
         if not self.config:
             return None
         config = yaml.load(self.config)
@@ -443,13 +468,13 @@ class RegionalPolicy(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=255)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="policies")
     providers = models.ManyToManyField(DataProvider, related_name="regional_policies")
-    policies = JSONField()
+    policies = models.JSONField()
     policy_title_text = models.CharField(max_length=255)
     policy_header_text = models.TextField(null=True, blank=True)
     policy_footer_text = models.TextField(null=True, blank=True)
     policy_cancel_text = models.CharField(max_length=255, null=True, blank=True)
     policy_cancel_button_text = models.CharField(max_length=255)
-    justification_options = JSONField()
+    justification_options = models.JSONField()
 
     class Meta:
         verbose_name_plural = "Regional Policies"
@@ -512,7 +537,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         verbose_name="The original map selection", srid=4326, default=GeometryCollection(), null=True, blank=True
     )
     include_zipfile = models.BooleanField(default=False)
-    json_tags = JSONField(default=dict)
+    json_tags = models.JSONField(default=dict)
     last_export_run = models.ForeignKey(
         "tasks.ExportRun", on_delete=models.CASCADE, null=True, related_name="last_export_run"
     )
@@ -873,3 +898,79 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
+
+
+def delete(self, *args, **kwargs):
+    for job_permission in JobPermission.objects.filter(object_id=self.pk):
+        job_permission.content_type = ContentType.objects.get_for_model(User)
+        job_permission.object_id = job_permission.job.user.pk
+        job_permission.save()
+
+    super(Group, self).delete(*args, **kwargs)
+
+
+Group.delete = delete
+
+
+def load_provider_config(config: str) -> dict:
+    """
+    Function deserializes a yaml object from a given string.
+    """
+
+    try:
+        if isinstance(config, dict):
+            return config
+        configuration = yaml.safe_load(config) or dict()
+    except yaml.YAMLError as e:
+        logger.error(f"Unable to load provider configuration: {e}")
+        raise Exception(e)
+    return configuration
+
+
+def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    service_keys = [
+        "cert_info",
+        "cert_cred",
+        "concurrency",
+        "max_repeat",
+        "overpass_query",
+        "max_data_size",
+        "pbf_file",
+        "tile_size",
+    ]
+
+    conf = yaml.safe_load(config) or dict()
+
+    for service_key in service_keys:
+        conf.pop(service_key, None)
+    if return_dict:
+        return conf
+    return yaml.dump(conf)
+
+
+def get_data_provider_label(data_provider_slug):
+    try:
+        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
+    except DataProvider.DoesNotExist:
+        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
+        raise
+
+
+def get_data_type_from_provider(data_provider: DataProvider) -> str:
+    """
+    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
+    and should be removed if custom cartography is made configurable.
+    :param data_provider:
+    :return:
+    """
+    if data_provider.slug.lower() in ["nome", "osm"]:
+        return data_provider.slug.lower()
+    else:
+        return data_provider.data_type

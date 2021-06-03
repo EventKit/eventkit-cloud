@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from unittest.mock import patch
 import os
+from unittest.mock import patch
 
 import requests_mock
-
 from django.test import TestCase
 
 from eventkit_cloud.utils.pcf import PcfClient
@@ -19,9 +18,9 @@ class TestPcfClient(TestCase):
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
 
-        self.api_url = "http://api.example.dev"
-        self.auth_url = "http://auth.example.dev"
-        self.token_url = "http://token.example.dev"
+        self.api_url = "http://api.example.test"
+        self.auth_url = "http://auth.example.test"
+        self.token_url = "http://token.example.test"
         self.routing_url = f"{self.api_url}/routing"
         self.org = "org"
         self.space = "space"

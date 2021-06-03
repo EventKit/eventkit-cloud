@@ -2,6 +2,7 @@ import json
 import os
 
 import django
+
 from eventkit_cloud.jobs.models import DatamodelPreset
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")

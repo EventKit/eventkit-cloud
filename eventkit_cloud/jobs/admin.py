@@ -26,8 +26,9 @@ from eventkit_cloud.jobs.models import (
     DataProviderStatus,
     DataProviderTask,
     JobPermission,
+    clean_config,
 )
-from eventkit_cloud.jobs.helpers import clean_config
+from eventkit_cloud.utils.ogcapi_process import get_process_formats
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +175,27 @@ class DataProviderForm(forms.ModelForm):
             feature_selection.valid
             if feature_selection.errors:
                 raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
+        elif service_type in ["ogcapi-process"]:
+            if not config:
+                raise forms.ValidationError("Configuration is required for OGC API Process")
+            cleaned_config = clean_config(config, return_dict=True)
+            ogcapi_process = cleaned_config.get("ogcapi_process")
+            if not ogcapi_process:
+                raise forms.ValidationError("OGC API Process requires an ogcapi_process key with valid configuration")
+            area = ogcapi_process.get("area")
+            if not area:
+                raise forms.ValidationError("OGC API Process requires an area key with a name and a type.")
+            if not area.get("name"):
+                raise forms.ValidationError("OGC API Process requires the name of the field to submit the area.")
+            if area.get("type") not in ["geojson", "bbox", "wkt"]:
+                raise forms.ValidationError("OGC API Process requires an area type of geojson, bbox, or wkt.")
+            if not ogcapi_process.get("output_file_ext"):
+                raise forms.ValidationError(
+                    "OGC API Process requires an output_file_ext which is used as the search path for file conversion "
+                    "(e.g. .gpkg)."
+                )
+            if not ogcapi_process.get("id"):
+                raise forms.ValidationError("OGC API Process requires a process id.")
 
         return config
 
@@ -193,6 +215,24 @@ class DataProviderAdmin(admin.ModelAdmin):
         "license",
         "display",
     ]
+
+    def save_model(self, request, obj, *args):
+        super().save_model(request, obj, *args)
+        process_formats = get_process_formats(obj, request)
+        logger.error(f"Process_formats: {process_formats}")
+        for process_format in process_formats:
+            export_format, created = ExportFormat.get_or_create(**process_format)
+            if created:
+                export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
+                export_format.supported_projections.add(Projection.objects.get(srid=4326))
+            else:
+                providers = export_format.options.get("providers")
+                if providers:
+                    providers = list(set(providers + [obj.slug]))
+                    export_format.options["providers"] = providers
+                else:
+                    export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
+            export_format.save()
 
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest

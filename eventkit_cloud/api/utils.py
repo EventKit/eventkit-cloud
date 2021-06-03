@@ -1,8 +1,9 @@
 import logging
+from functools import reduce
+
 import rest_framework.status
 from django.conf import settings
 from django.db.models import Count
-from functools import reduce
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler

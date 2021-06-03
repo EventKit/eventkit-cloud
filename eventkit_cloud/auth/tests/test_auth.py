@@ -3,13 +3,13 @@
 
 import json
 import logging
+from unittest.mock import patch
 
 import requests
 import requests_mock
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
-from unittest.mock import patch
 
 from eventkit_cloud.auth.auth import (
     get_user,

@@ -5,26 +5,30 @@ See `DRF serializer documentation  <http://www.django-rest-framework.org/api-gui
 Used by the View classes api/views.py to serialize API responses as JSON or HTML.
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
-# -*- coding: utf-8 -*-
-import pickle
 import json
 import logging
+# -*- coding: utf-8 -*-
+import pickle
+from collections import OrderedDict
 
+from audit_logging.models import AuditEvent
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
-from audit_logging.models import AuditEvent
 from notifications.models import Notification
 from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
 from rest_framework.serializers import ValidationError
+from rest_framework_gis import serializers as geo_serializers
 
-from . import validators
+from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
+# Get an instance of a logger
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+# Get an instance of a logger
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -41,6 +45,8 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity,
     JobPermission,
 )
+from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.helpers import get_celery_queue_group
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -52,13 +58,6 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
-from eventkit_cloud.tasks.enumerations import TaskState
-
-from collections import OrderedDict
-
-# Get an instance of a logger
-from eventkit_cloud.jobs.helpers import get_valid_regional_justification
-from ..tasks.helpers import get_celery_queue_group
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         model = DataProviderTask
         fields = ("provider", "formats", "min_zoom", "max_zoom")
 
-    @staticmethod
-    def create(validated_data, **kwargs):
+    def create(self, validated_data):
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
         provider_slug = validated_data.get("provider")
@@ -86,6 +84,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         except DataProvider.DoesNotExist:
             raise Exception(f"The DataProvider for {provider_slug} does not exist.")
         provider_task = DataProviderTask.objects.create(provider=provider_model)
+
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
         provider_task.max_zoom = validated_data.pop("max_zoom", None)
@@ -998,9 +997,14 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_type(obj):
         return obj.export_provider_type.type_name
 
-    @staticmethod
-    def get_supported_formats(obj):
-        return obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description")
+    def get_supported_formats(self, obj):
+        formats = list(obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description"))
+        formats += list(
+            ExportFormat.objects.filter(options__providers__contains=obj.slug).values(
+                "uid", "name", "slug", "description"
+            )
+        )
+        return formats
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult

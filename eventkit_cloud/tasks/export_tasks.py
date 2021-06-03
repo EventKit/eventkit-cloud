@@ -4,11 +4,12 @@ import json
 import logging
 import os
 import re
-import requests
 import shutil
 import socket
+import sqlite3
 import time
 import traceback
+from pathlib import Path
 from typing import List
 from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -22,7 +23,6 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import Polygon
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -31,17 +31,14 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
     NotificationLevel,
 )
-
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.helpers import clean_config
-from eventkit_cloud.jobs.models import DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask, DataProvider, ExportFormat, load_provider_config, clean_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -73,7 +70,15 @@ from eventkit_cloud.tasks.helpers import (
     download_concurrently,
     merge_chunks,
     find_in_zip,
+
+    get_geometry, update_progress
+<<<<<<< HEAD
     extract_metadata_files, get_celery_queue_group,
+=======
+    extract_metadata_files,
+    get_geometry,
+    update_progress,
+>>>>>>> master
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -85,15 +90,13 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, rerun_data_provider_records
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
-from pathlib import Path
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -466,13 +469,8 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(clean_config(config))
 
     update_progress(export_task_record_uid, progress=67, eta=eta, msg="Converting data to Geopackage")
-    geom = Polygon.from_bbox(bbox)
-    if selection:
-        try:
-            with open(selection, "r") as geojson:
-                geom = Polygon(geojson)
-        except Exception as e:
-            logger.error(e)
+    geom = get_geometry(bbox, selection)
+
     g = geopackage.Geopackage(
         pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
     )
@@ -497,13 +495,28 @@ def osm_data_collection_pipeline(
         name=database["NAME"],
     )
     gdalutils.convert(
-        boundary=bbox,
+        boundary=selection,
         input_file=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
         driver="gpkg",
         is_raster=False,
+        access_mode="append",
+        layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
     )
+
+    # TODO:  The arcgis templates as of version 1.9.0 rely on both OGC_FID and FID field existing.
+    #  Just add the fid field if missing for now.
+    with sqlite3.connect(gpkg_filepath) as conn:
+        for column in ["fid", "ogc_fid"]:
+            other_column = "ogc_fid" if column == "fid" else "fid"
+            try:
+                conn.execute(f"ALTER TABLE land_polygons ADD COLUMN {column} INTEGER NOT NULL DEFAULT (0);")
+                conn.execute(f"UPDATE TABLE land_polygons SET {column} = {other_column};")
+            except Exception as e:
+                logger.error(e)
+                # Column exists move on.
+                pass
 
     ret_gpkg_filepath = g.results[0].parts[0]
     assert ret_gpkg_filepath == gpkg_filepath
@@ -728,17 +741,7 @@ def gpx_export_task(
 
 @app.task(name="OSM PBF (.pbf)", bind=True, base=FormatTask, acks_late=True)
 def pbf_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+    self, result=None, *args, **kwargs,
 ):
     """
     Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
@@ -757,6 +760,130 @@ def pbf_export_task(
     except Exception as e:
         logger.error("Raised exception in pbf export, %s", str(e))
         raise Exception(e)
+
+
+@app.task(name="OGC API Process", bind=True, base=ExportTask, abort_on_error=True)
+def ogcapi_process_export_task(
+    self,
+    result=None,
+    config=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    bbox=None,
+    service_url=None,
+    projection=4326,
+    session_token=None,
+    export_format_slug=None,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining OGC API Processes export.
+    """
+
+    result = result or {}
+    selection = parse_result(result, "selection")
+    export_task_record = get_export_task_record(task_uid)
+    data_provider = export_task_record.export_provider_task.provider
+    if export_task_record.export_provider_task.provider.data_type == GeospatialDataType.ELEVATION.value:
+        output_file = get_export_filepath(stage_dir, job_name, projection, data_provider.slug, "tif")
+        driver = "gtiff"
+    else:
+        output_file = get_export_filepath(stage_dir, job_name, projection, data_provider.slug, "gpkg")
+        driver = "gpkg"
+    ogc_config = clean_config(config, return_dict=True).get("ogcapi_process", dict())
+    download_path = get_export_filepath(stage_dir, f"{job_name}-source", projection, data_provider.slug, "zip")
+
+    # TODO: The download path might not be a zip, use the mediatype to determine the file format.
+    download_path = get_ogcapi_data(
+        config=config,
+        task_uid=task_uid,
+        stage_dir=stage_dir,
+        bbox=bbox,
+        service_url=service_url,
+        session_token=session_token,
+        export_format_slug=export_format_slug,
+        selection=selection,
+        download_path=download_path,
+    )
+
+    if not export_format_slug:
+        # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
+        source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir)
+        out = gdalutils.convert(
+            driver=driver,
+            input_file=source_data,
+            output_file=output_file,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=bbox,
+        )
+
+        result["driver"] = driver
+        result["file_extension"] = ogc_config.get("output_file_ext")
+        result["ogcapi_process"] = download_path
+        result["source"] = out
+        result[driver] = out
+
+    result["result"] = download_path
+    logger.error(f"OGC PROCESS RESULT: {result}")
+    return result
+
+
+@app.task(name="OGC API Process Data", bind=True, base=FormatTask, acks_late=True)
+def ogc_result_task(
+    self,
+    result,
+    task_uid=None,
+    export_format_slug=None,
+    stage_dir=None,
+    job_name=None,
+    projection=None,
+    bbox=None,
+    service_url=None,
+    session_token=None,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
+    exposed and passed through.
+    """
+
+    result = result or {}
+
+    export_task_record = get_export_task_record(task_uid)
+    selection = parse_result(result, "selection")
+    data_provider: DataProvider = export_task_record.export_provider_task.provider
+    export_format = ExportFormat.objects.get(slug=export_format_slug)
+    ogcapi_config = load_provider_config(data_provider.config).get("ogcapi_process")
+    if ogcapi_config:
+        format_field = get_format_field_from_config(ogcapi_config)
+        if format_field:
+            if ogcapi_config["inputs"][format_field]["value"] == export_format_slug:
+                logger.error(f"OGC DATA RESULT: {result}")
+                result["result"] = result["ogcapi_process"]
+                return result
+    download_path = get_export_filepath(
+        stage_dir, f"{job_name}-{normalize_name(export_format.name)}", projection, data_provider.slug, "zip"
+    )
+    download_path = get_ogcapi_data(
+        config=data_provider.config,
+        task_uid=task_uid,
+        stage_dir=stage_dir,
+        bbox=bbox,
+        service_url=service_url,
+        session_token=session_token,
+        export_format_slug=export_format_slug,
+        selection=selection,
+        download_path=download_path,
+    )
+
+    result["result"] = download_path
+    logger.error(f"OGC DATA RESULT: {result}")
+
+    return result
 
 
 @app.task(name="SQLITE Format", bind=True, base=FormatTask, acks_late=True)
@@ -848,26 +975,28 @@ def geopackage_export_task(
     Function defining geopackage export function.
     """
     result = result or {}
-    gpkg_in_dataset = parse_result(result, "source")
+    gpkg = parse_result(result, "gpkg")
+    if not gpkg:
+        gpkg_in_dataset = parse_result(result, "source")
 
-    provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
-    gpkg_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
-    selection = parse_result(result, "selection")
+        provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
+        gpkg_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
+        selection = parse_result(result, "selection")
 
-    # This assumes that the source dataset has already been "clipped".  Since most things are tiles or selected
-    # based on area it doesn't make sense to run this again.  If that isn't true this may need to be updated.
-    if os.path.splitext(gpkg_in_dataset)[1] == ".gpkg":
-        os.rename(gpkg_in_dataset, gpkg_out_dataset)
-        gpkg = gpkg_out_dataset
-    else:
-        gpkg = gdalutils.convert(
-            driver="gpkg",
-            input_file=gpkg_in_dataset,
-            output_file=gpkg_out_dataset,
-            task_uid=task_uid,
-            boundary=selection,
-            projection=projection,
-        )
+        # This assumes that the source dataset has already been "clipped".  Since most things are tiles or selected
+        # based on area it doesn't make sense to run this again.  If that isn't true this may need to be updated.
+        if os.path.splitext(gpkg_in_dataset)[1] == ".gpkg":
+            os.rename(gpkg_in_dataset, gpkg_out_dataset)
+            gpkg = gpkg_out_dataset
+        else:
+            gpkg = gdalutils.convert(
+                driver="gpkg",
+                input_file=gpkg_in_dataset,
+                output_file=gpkg_out_dataset,
+                task_uid=task_uid,
+                boundary=selection,
+                projection=projection,
+            )
 
     result["driver"] = "gpkg"
     result["result"] = gpkg
@@ -927,25 +1056,27 @@ def geotiff_export_task(
     Function defining geopackage export function.
     """
     result = result or {}
-    gtiff_in_dataset = parse_result(result, "source")
-    provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
-    gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
-    selection = parse_result(result, "selection")
+    gtiff_out_dataset = parse_result(result, "gtiff")
+    if not gtiff_out_dataset:
+        gtiff_in_dataset = parse_result(result, "source")
+        provider_slug = get_export_task_record(task_uid).export_provider_task.provider.slug
+        gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
+        selection = parse_result(result, "selection")
 
-    warp_params, translate_params = get_creation_options(config, "gtiff")
+        warp_params, translate_params = get_creation_options(config, "gtiff")
 
-    if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
-        gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
+        if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
+            gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-    gtiff_out_dataset = gdalutils.convert(
-        driver="gtiff",
-        input_file=gtiff_in_dataset,
-        output_file=gtiff_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        warp_params=warp_params,
-        translate_params=translate_params,
-    )
+        gtiff_out_dataset = gdalutils.convert(
+            driver="gtiff",
+            input_file=gtiff_in_dataset,
+            output_file=gtiff_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            warp_params=warp_params,
+            translate_params=translate_params,
+        )
 
     result["file_extension"] = "tif"
     result["driver"] = "gtiff"
@@ -1200,19 +1331,6 @@ def wfs_export_task(
         logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
 
     return result
-
-
-def load_provider_config(config: str) -> dict:
-    """
-    Function deserializes a yaml object from a given string.
-    """
-
-    try:
-        configuration = yaml.safe_load(config) or dict()
-    except yaml.YAMLError as e:
-        logger.error(f"Unable to load provider configuration: {e}")
-        raise Exception(e)
-    return configuration
 
 
 def get_wfs_query_url(
@@ -2328,84 +2446,66 @@ def make_dirs(path):
             raise
 
 
-@app.task(name="OGC Processes", bind=True, base=ExportTask, abort_on_error=True)
-def ogcapi_process_export_task(
-    self,
-    result=None,
-    layer=None,
+def get_ogcapi_data(
     config=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
-    projection=4326,
     session_token=None,
-    *args,
-    **kwargs,
+    export_format_slug=None,
+    selection=None,
+    download_path=None,
 ):
-    """
-    Function defining OGC API Processes export.
-    """
+    if download_path is None:
+        raise Exception("A download path is required to download ogcapi data.")
 
-    result = result or {}
-    export_task_record = get_export_task_record(task_uid)
-    provider_slug = export_task_record.export_provider_task.provider.slug
-    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
-    download_path = get_export_filepath(stage_dir, f"{job_name}-source_zip", projection, provider_slug, "zip")
     configuration = load_provider_config(config)
+
+    geom = get_geometry(bbox, selection)
 
     try:
         ogc_process = OgcApiProcess(
-            url=service_url, config=configuration, session_token=session_token, task_id=export_task_record.uid
+            url=service_url,
+            config=configuration["ogcapi_process"],
+            session_token=session_token,
+            task_id=task_uid,
+            cred_var=configuration.get("cred_var"),
+            cert_info=configuration.get("cert_info"),
         )
-        ogc_process.create_job(bbox=bbox)
+        ogc_process.create_job(geom, file_format=export_format_slug)
         download_url = ogc_process.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
     except Exception as e:
         raise Exception(f"Error creating OGC API Process job:{e}")
 
-    update_progress(export_task_record.uid, progress=50, subtask_percentage=50)
+    update_progress(task_uid, progress=50, subtask_percentage=50)
 
-    ogc_config = configuration.get("ogcapi_process", dict())
-    download_credentials = ogc_config.get("download_credentials", dict())
-
+    download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
+    basic_auth = download_credentials.get("cred_var")
+    username = password = session = cookie = None
+    if basic_auth:
+        username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(
-            getattr(settings, "SITE_URL"),
-            username=os.getenv(download_credentials.get("user_var")),
-            password=os.getenv(download_credentials.get("pass_var")),
-        )
+        session = EventKitClient(getattr(settings, "SITE_URL"), username=username, password=password,)
         session = session.client
         cert_info = None
     else:
-        session = requests.Session()
         cert_info = download_credentials.get("cert_info")
+        cookie = download_credentials.get("cookie")
+        cookie = json.loads(cookie) if cookie else None
 
-    download_path = download_data(task_uid, download_url, download_path, session=session, cert_info=cert_info)
-
-    source_data = find_in_zip(download_path, ogc_config.get("inputs", dict()).get("file_format"), stage_dir)
+    download_path = download_data(
+        task_uid,
+        download_url,
+        download_path,
+        username=username,
+        password=password,
+        session=session,
+        cert_info=cert_info,
+        cookie=cookie,
+    )
     extract_metadata_files(download_path, stage_dir)
 
-    out = gdalutils.convert(
-        driver="gpkg",
-        input_file=source_data,
-        output_file=gpkg,
-        task_uid=task_uid,
-        projection=projection,
-        boundary=bbox,
-    )
-
-    update_progress(export_task_record.uid, progress=90, subtask_percentage=90)
-
-    result["driver"] = "gpkg"
-    result["result"] = out
-    result["source"] = out
-    result["gpkg"] = out
-
-    return result
+    return download_path

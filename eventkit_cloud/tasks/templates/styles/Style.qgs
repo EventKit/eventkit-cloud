@@ -232,7 +232,7 @@
       <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygonsnome_{{ job_date_time }}__{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</item>
-      <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</item>
+      <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</item>
       {% endfor %}
       {% endif %}
       {% if provider.slug == "osm" %}
@@ -254,7 +254,7 @@
       <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
-      <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</item>
+      <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</item>
       {% endfor %}
       {% endif %}
       {%  if provider.type == "vector" %}
@@ -515,7 +515,7 @@
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</id>
+      <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</id>
       <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary</datasource>
       <keywordList>
         <value></value>
@@ -9209,7 +9209,7 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</id>
+      <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</id>
       <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary</datasource>
       <keywordList>
         <value></value>
@@ -23336,7 +23336,7 @@ def my_form_open(dialog, layer, feature):
     <Digitizing>
       <DefaultSnapToleranceUnit type="int">2</DefaultSnapToleranceUnit>
       <LayerSnappingList type="QStringList">
-        <value>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</value>
+        <value>osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</value>

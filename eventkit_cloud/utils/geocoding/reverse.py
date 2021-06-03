@@ -6,7 +6,6 @@ from django.conf import settings
 
 from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
 
-
 logger = logging.getLogger(__name__)
 
 

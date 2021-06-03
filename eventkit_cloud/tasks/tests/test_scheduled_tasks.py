@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import json
+import logging
+from collections import OrderedDict
+from unittest.mock import patch, call
+
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.template.loader import get_template
 from django.test import TestCase
 from django.utils import timezone
-from collections import OrderedDict
+from notifications.models import Notification
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
@@ -24,12 +29,6 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_runs,
 )
 from eventkit_cloud.utils.provider_check import CheckResults
-
-import json
-import logging
-from unittest.mock import patch, call
-
-from notifications.models import Notification
 
 logger = logging.getLogger(__name__)
 

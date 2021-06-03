@@ -43,7 +43,6 @@ def pull_and_rename_docker_image(image: str):
     logger.info(f"Locally tagged {image}")
 
 
-
 def setup_eventkit():
     logger.info("Pulling images...")
     run_subprocess("cp /etc/ssl/certs/cacert.pem ./conda/cacert.pem")

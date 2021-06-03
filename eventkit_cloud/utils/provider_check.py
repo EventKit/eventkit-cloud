@@ -5,19 +5,19 @@ import json
 import logging
 import re
 import xml.etree.ElementTree as ET
+from enum import Enum
 from io import StringIO
 from typing import Type
+from urllib.parse import urljoin
 
 import requests
+import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
 from django.utils.translation import ugettext as _
-from enum import Enum
-import yaml
 
-from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.jobs.models import DataProvider
-from urllib.parse import urljoin
+from eventkit_cloud.utils import auth_requests
 
 logger = logging.getLogger(__name__)
 

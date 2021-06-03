@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+from unittest.mock import patch, Mock
 
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
-from unittest.mock import patch, Mock
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import (

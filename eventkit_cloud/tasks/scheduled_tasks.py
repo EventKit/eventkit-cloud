@@ -13,9 +13,9 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.mail import EmailMultiAlternatives
+from django.core.management import call_command
 from django.template.loader import get_template
 from django.utils import timezone
-from django.core.management import call_command
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
