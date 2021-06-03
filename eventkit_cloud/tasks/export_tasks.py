@@ -70,15 +70,10 @@ from eventkit_cloud.tasks.helpers import (
     download_concurrently,
     merge_chunks,
     find_in_zip,
-
-    get_geometry, update_progress
-<<<<<<< HEAD
-    extract_metadata_files, get_celery_queue_group,
-=======
+    get_celery_queue_group,
     extract_metadata_files,
     get_geometry,
     update_progress,
->>>>>>> master
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (

@@ -930,7 +930,6 @@ def download_chunks(
     return chunks
 
 
-<<<<<<< HEAD
 def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
     if not session:
         session = requests.Session()
@@ -953,8 +952,6 @@ def get_or_update_session(username=None, password=None, session=None, max_retrie
     return session
 
 
-def download_data(task_uid: str, input_url: str, out_file: str, cert_info=None, session=None, task_points=100):
-=======
 def download_data(
     task_uid: str,
     input_url: str,
@@ -966,7 +963,6 @@ def download_data(
     task_points=100,
     cookie=None,
 ):
->>>>>>> master
     """
     Function for downloading data, optionally using a certificate.
     """
