@@ -1945,10 +1945,6 @@ class TestExportTasks(ExportTaskBase):
             session_token=session_token,
         )
 
-        mock_download_data.assert_called_once_with(
-            task_uid, download_url, expected_outzip_path, cert_info=None, provider_slug=expected_provider_slug
-        )
-
         expected_result = {
             "driver": "gpkg",
             "file_extension": ".gpkg",

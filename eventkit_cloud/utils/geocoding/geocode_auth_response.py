@@ -45,11 +45,7 @@ def get_auth_response(url, payload):
     session = get_or_update_session(cert_info=get_geocode_cert_info())
     response = session.get(url, params=payload)
     if response.ok and check_data(response):
-<<<<<<< HEAD
-        update_session_cookies(session.session.cookies)
-=======
         update_session_cookies(session.cookies)
->>>>>>> pass slug as cred var to allow basic auth
         return response
 
 

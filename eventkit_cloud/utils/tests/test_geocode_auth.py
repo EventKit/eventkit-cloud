@@ -1,5 +1,6 @@
 import logging
 import os
+from unittest.mock import patch
 
 import requests
 from django.conf import settings

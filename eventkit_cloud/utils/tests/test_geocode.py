@@ -1,8 +1,9 @@
 import json
 import logging
-from unittest.mock import patch
-
 import requests_mock
+import requests
+
+from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase, override_settings
 

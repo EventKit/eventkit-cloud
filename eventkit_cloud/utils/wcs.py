@@ -6,12 +6,10 @@ import tempfile
 from string import Template
 
 import yaml
-from django.conf import settings
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox
 
 logger = logging.getLogger(__name__)

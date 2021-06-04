@@ -310,22 +310,7 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-<<<<<<< HEAD
-            cert_info = self.config.get("cert_info")
-
-            query = "out meta;"
-            response = auth_requests.post(
-                url=self.service_url, cert_info=cert_info, data=query, timeout=self.timeout, verify=self.verify
-            )
-            if not response.ok:
-                # Workaround for https://bugs.python.org/issue27777
-                query = {"data": query}
-                response = auth_requests.post(
-                    self.service_url, cert_info=cert_info, data=query, timeout=self.timeout, verify=self.verify
-                )
-=======
             response = self.session.post(url=self.service_url, data="out meta;", timeout=self.timeout)
->>>>>>> pass slug as cred var to allow basic auth
 
             self.token_dict["status"] = response.status_code
 

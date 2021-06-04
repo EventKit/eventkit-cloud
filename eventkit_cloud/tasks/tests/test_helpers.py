@@ -2,17 +2,15 @@
 
 import json
 import logging
-import requests_mock
 import signal
-from unittest.mock import patch, call, Mock, MagicMock
-
 import requests_mock
+import requests
+
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
 from eventkit_cloud.tasks.enumerations import TaskState
-from requests import Session
 from unittest.mock import patch, call, Mock, MagicMock
 import os
 from eventkit_cloud.tasks.helpers import (
@@ -83,7 +81,7 @@ class TestHelpers(TestCase):
         get_last_update(test_url, test_type)
         mock_get_osm_last_update.assert_called_once_with(test_url, cert_info=None)
 
-    @patch.object(Session, "get")
+    @patch.object(requests.Session, "get")
     def test_get_osm_last_update(self, mock_get):
         test_url = "https://test/interpreter"
         expected_url = "https://test/timestamp"

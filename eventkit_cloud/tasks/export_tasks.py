@@ -2461,7 +2461,6 @@ def get_ogcapi_data(
         session=session,
         cert_info=cert_info,
         cookie=cookie,
-        provider_slug=provider_slug,
     )
     extract_metadata_files(download_path, stage_dir)
 

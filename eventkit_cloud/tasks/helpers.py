@@ -38,7 +38,6 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.utils import auth_requests, gdalutils
-from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -945,7 +944,6 @@ def download_data(
     """
     Function for downloading data, optionally using a certificate.
     """
-    from eventkit_cloud.core.helpers import get_or_update_session
 
     try:
         session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
