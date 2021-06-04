@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         DataProviderType.objects.all().update(use_bbox=False)
 
     dependencies = [
-        ('jobs', '0012_dataprovidertype_use_bbox'),
+        ('jobs', '0014_dataprovidertype_use_bbox'),
     ]
 
     operations = [
