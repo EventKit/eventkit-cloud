@@ -945,6 +945,7 @@ def download_data(
     Function for downloading data, optionally using a certificate.
     """
 
+    response=None
     try:
         session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
         response = session.get(input_url, stream=True)

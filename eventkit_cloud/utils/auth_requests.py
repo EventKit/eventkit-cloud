@@ -109,7 +109,6 @@ def get_cred(cred_var=None, url=None, params=None):
 _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
 _ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
-
 def patch_https(cert_info: dict = None):
     """
     Given cert info for a provider, establishes a SSSLContext object using requests_pkcs12 for HTTPSConnection.
