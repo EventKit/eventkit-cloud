@@ -885,7 +885,7 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
     # or redirect to a parent URL if a resource is not found.
 
     try:
-        out_file = download_data(task_uid, input_url, out_file, cert_info, task_points)
+        out_file = download_data(task_uid, input_url, out_file, cert_info=cert_info, task_points=task_points)
         with open(out_file) as f:
             json_response = json.load(f)
 
@@ -922,7 +922,7 @@ def download_chunks(
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_feature_data if feature_data else download_data
-        download_function(task_uid, url, outfile, cert_info, task_points=task_points)
+        download_function(task_uid, url, outfile, cert_info=cert_info, task_points=task_points)
         chunks.append(outfile)
     return chunks
 

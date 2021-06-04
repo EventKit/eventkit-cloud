@@ -78,6 +78,7 @@ services:
       - SECRET_KEY
       - CONDA_REPO
       - EVENTKIT_CRED
+      - EVENTKIT_CERT_PASS
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:

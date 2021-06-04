@@ -50,7 +50,7 @@ class TestJob(TestCase):
         self.download_dir = os.path.join(getattr(settings, "EXPORT_STAGING_ROOT"), "test")
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir)
-        self.client = self.get_client(
+        self.client: EventKitClient = self.get_client(
             self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
         self.selection = {
@@ -115,7 +115,7 @@ class TestJob(TestCase):
         # export_provider.save()
 
         job_data = {
-            "name": "eventkit-integration-test-wmts",
+            "name": "osm",
             "description": "Test Description",
             "project": "TestProject",
             "selection": self.selection,
@@ -321,7 +321,7 @@ class TestJob(TestCase):
             "selection": self.selection,
             "tags": [],
         }
-        self.assertTrue(self.run_job(job_data, run_timeout=1200))  # This needs more time to complete
+        self.assertTrue(self.run_job(job_data, run_timeout=1800))  # This needs more time to complete
 
     def test_all(self):
         """
@@ -352,9 +352,9 @@ class TestJob(TestCase):
             ],
         }
         # This is to test creating an initial job.
-        run = self.run_job(job_data, keep_job=True, run_timeout=1200)  # This needs more time to complete
+        run = self.run_job(job_data, keep_job=True, run_timeout=1800)  # This needs more time to complete
         # This is to test rerunning that job.
-        self.run_job(job_uid=run["job"]["uid"], run_timeout=1200)  # This needs more time to complete
+        self.run_job(job_uid=run["job"]["uid"], run_timeout=1800)  # This needs more time to complete
 
     def run_job(self, data=None, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT, job_uid=None, keep_job=False):
 

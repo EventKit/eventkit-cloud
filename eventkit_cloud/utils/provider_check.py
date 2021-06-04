@@ -308,9 +308,16 @@ class OverpassProviderCheck(ProviderCheck):
 
             cert_info = self.config.get("cert_info")
 
+            query = "out meta;"
             response = auth_requests.post(
-                url=self.service_url, cert_info=cert_info, data="out meta;", timeout=self.timeout, verify=self.verify
+                url=self.service_url, cert_info=cert_info, data=query, timeout=self.timeout, verify=self.verify
             )
+            if not response.ok:
+                # Workaround for https://bugs.python.org/issue27777
+                query = {"data": query}
+                response = auth_requests.post(
+                    self.service_url, cert_info=cert_info, data=query, timeout=self.timeout, verify=self.verify
+                )
 
             self.token_dict["status"] = response.status_code
 
