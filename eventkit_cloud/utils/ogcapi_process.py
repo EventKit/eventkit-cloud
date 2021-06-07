@@ -2,12 +2,11 @@ import copy
 import json
 import logging
 import time
-from urllib.parse import urljoin
-
 import requests
-from django.conf import settings
+
 from django.contrib.gis.geos import WKTWriter
 from django.core.cache import cache
+from urllib.parse import urljoin
 
 from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
@@ -16,8 +15,11 @@ from eventkit_cloud.jobs.models import load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import update_progress
-from django.conf import settings
-from urllib.parse import urljoin
+
+logger = logging.getLogger(__name__)
+
+
+PROCESS_CACHE_TIMEOUT = 600
 
 
 class OgcApiProcess:

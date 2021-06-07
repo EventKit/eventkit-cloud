@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from string import Template
 
-import yaml
 from django.conf import settings
 from requests import exceptions
 from eventkit_cloud.core.helpers import get_or_update_session

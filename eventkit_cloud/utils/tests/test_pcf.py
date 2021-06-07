@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from unittest.mock import patch
 import os
 from unittest.mock import patch
 

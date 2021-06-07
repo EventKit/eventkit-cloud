@@ -8,7 +8,6 @@ import xml.etree.ElementTree as ET
 from enum import Enum
 from io import StringIO
 from typing import Type
-from urllib.parse import urljoin
 
 import requests
 import yaml
@@ -727,8 +726,6 @@ class FileProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            cert_info = self.config.get("cert_info")
-
             response = self.session.head(url=self.service_url, timeout=self.timeout)
 
             self.token_dict["status"] = response.status_code
@@ -783,7 +780,6 @@ class OGCProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            cert_info = self.config.get("cert_info")
             service_url = self.service_url.rstrip("/\\")
             processes_endpoint = urljoin(service_url, "processes/")
 

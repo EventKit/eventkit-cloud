@@ -10,7 +10,6 @@ import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from concurrent import futures
-from enum import Enum
 from functools import reduce
 from operator import itemgetter
 from pathlib import Path
@@ -28,16 +27,15 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from enum import Enum
-from functools import reduce, wraps
 from numpy import linspace
 
-from eventkit_cloud.core.helpers import get_cached_model, get_or_update_session
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, get_data_type_from_provider, DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
-from eventkit_cloud.utils import auth_requests, gdalutils
+from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -939,13 +937,13 @@ def download_data(
     session=None,
     task_points=100,
     cookie=None,
-    provider_slug: str=None,
+    provider_slug: str = None,
 ):
     """
     Function for downloading data, optionally using a certificate.
     """
 
-    response=None
+    response = None
     try:
         session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
         response = session.get(input_url, stream=True)
