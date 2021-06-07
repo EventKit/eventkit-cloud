@@ -42,21 +42,6 @@ class TestAuthResult(TransactionTestCase):
         self.assertEqual("test", result.content)
 
     @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.get")
-    def test_get(self, get_patch):
-        self.do_tests(auth_requests.get, get_patch)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.head")
-    def test_head(self, get_patch):
-        self.do_tests(auth_requests.head, get_patch)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.post")
-    def test_post(self, post_patch):
-        self.do_tests(auth_requests.post, post_patch)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.create_ssl_context")
     @patch("eventkit_cloud.utils.auth_requests.os.getenv")
     def test_patch_https(self, getenv, create_ssl_sslcontext):
