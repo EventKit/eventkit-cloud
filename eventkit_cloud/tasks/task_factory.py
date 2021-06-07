@@ -123,7 +123,7 @@ class TaskFactory:
             user_details = {"username": "TaskFactory-parse_tasks"}
 
         if run_uid:
-            run = ExportRun.objects.get(uid=run_uid)
+            run: ExportRun = ExportRun.objects.prefetch_related("job__data_provider_tasks").get(uid=run_uid)
             job = run.job
             run_dir = get_run_staging_dir(run.uid)
 
@@ -223,7 +223,8 @@ class TaskFactory:
                         ).set(**finalize_task_settings)
 
                         # add zip if required
-                        if provider_task.provider.zip:
+                        # skip zip if there is only one source in the data pack (they would be redundant files).
+                        if provider_task.provider.zip and len(job.data_provider_tasks.all()) > 1:
                             zip_export_provider_sig = get_zip_task_chain(
                                 data_provider_task_record_uid=provider_task_record_uid,
                                 data_provider_task_record_uids=[provider_task_record_uid],
