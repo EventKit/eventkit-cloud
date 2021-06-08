@@ -23,6 +23,7 @@ from eventkit_cloud.jobs.models import (
     DatamodelPreset,
     JobPermission,
     JobPermissionLevel,
+    DataProviderType,
 )
 
 logger = logging.getLogger(__name__)
@@ -474,3 +475,15 @@ class TestDataProvider(TestCase):
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = yaml.dump({"vector_layers": [{"name": layer} for layer in expected_layers]})
         self.assertEqual(self.data_provider.layers, expected_layers)
+
+    def test_get_use_bbox_no_export_type(self,):
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        self.data_provider.export_provider_type = None
+        self.assertEqual(self.data_provider.get_use_bbox(), False)
+
+    def test_get_use_bbox(self,):
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        prov_type = DataProviderType()
+        prov_type.use_bbox = True
+        self.data_provider.export_provider_type = prov_type
+        self.assertEqual(self.data_provider.get_use_bbox(), True)
