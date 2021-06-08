@@ -182,7 +182,14 @@ class ExportTask(EventKitBaseTask):
             run_task_record = run.data_provider_task_records.get(slug="run")
             # run_task_record = task.export_provider_task.tasks.get(slug="run")
 
+            # Returns the default only if the key does not exist in the dictionary.
             stage_dir = kwargs.get("stage_dir", get_provider_staging_dir(run_dir, run_task_record.slug))
+
+            # Check for None because the above statement could return None.
+            if stage_dir is None:
+                stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
+            kwargs["stage_dir"] = stage_dir
+
             if not os.path.exists(stage_dir):
                 os.makedirs(stage_dir, 0o750)
 
@@ -194,7 +201,7 @@ class ExportTask(EventKitBaseTask):
 
             if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
                 try:
-                    retval = super(ExportTask, self).__call__(stage_dir=stage_dir, *args, **kwargs)
+                    retval = super(ExportTask, self).__call__(*args, **kwargs)
                 except SoftTimeLimitExceeded as e:
                     logger.error(e)
                     raise Exception("Task time limit exceeded. Try again or contact us.") from e
