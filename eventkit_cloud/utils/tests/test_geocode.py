@@ -1,8 +1,9 @@
 import json
 import logging
-from unittest.mock import patch
-
 import requests_mock
+import requests
+
+from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase, override_settings
 
@@ -14,12 +15,14 @@ logger = logging.getLogger(__name__)
 @override_settings(GEOCODING_AUTH_URL=None)
 class TestGeoCode(TestCase):
     def setUp(self):
-        self.mock_requests = requests_mock.Mocker()
-        self.mock_requests.start()
-        self.addCleanup(self.mock_requests.stop)
+        self.adapter = requests_mock.Adapter()
+        self.session = requests.Session()
+        self.session.mount("mock://", self.adapter)
 
-    def geocode_test(self, api_response):
-        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_or_update_session")
+    def geocode_test(self, api_response, mock_get_session):
+        mock_get_session.return_value = self.session
+        self.adapter.register_uri("GET", settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         geocode = Geocode()
         result = geocode.search("test")
         self.assertIsNotNone(result.get("features"))
@@ -35,7 +38,7 @@ class TestGeoCode(TestCase):
             for property in GeocodeAdapter._properties:
                 self.assertTrue(property in properties)
 
-    @override_settings(GEOCODING_API_URL="http://geonames.url/", GEOCODING_API_TYPE="geonames")
+    @override_settings(GEOCODING_API_URL="mock://geonames.url/", GEOCODING_API_TYPE="geonames")
     def test_geonames_success(self):
         geonames_response = {
             "totalResultsCount": 2786,
@@ -80,9 +83,9 @@ class TestGeoCode(TestCase):
         self.geocode_test(geonames_response)
 
     @override_settings(
-        GEOCODING_API_URL="http://geonames.url/",
+        GEOCODING_API_URL="mock://geonames.url/",
         GEOCODING_API_TYPE="geonames",
-        GEOCODING_UPDATE_URL="http://geonames.url/fake-update",
+        GEOCODING_UPDATE_URL="mock://geonames.url/fake-update",
     )
     def test_geonames_add_bbox(self):
         in_result = {
@@ -113,7 +116,7 @@ class TestGeoCode(TestCase):
         result = geocode.add_bbox(in_result)
         self.assertEqual(result, in_result)
 
-    @override_settings(GEOCODING_API_URL="http://pelias.url/", GEOCODING_API_TYPE="pelias")
+    @override_settings(GEOCODING_API_URL="mock://pelias.url/", GEOCODING_API_TYPE="pelias")
     def test_pelias_success(self):
         pelias_response = {
             "geocoding": {
@@ -191,13 +194,15 @@ class TestGeoCode(TestCase):
 
         self.geocode_test(pelias_response)
 
+    @patch("eventkit_cloud.utils.geocoding.geocode.get_or_update_session")
     @patch("eventkit_cloud.utils.geocoding.geocode.get_geocode_cert_info")
     @override_settings(
-        GEOCODING_API_URL="http://pelias.url/",
+        GEOCODING_API_URL="mock://pelias.url/",
         GEOCODING_API_TYPE="pelias",
-        GEOCODING_UPDATE_URL="http://pelias.url/place",
+        GEOCODING_UPDATE_URL="mock://pelias.url/place",
     )
-    def test_pelias_add_bbox(self, get_cert_info):
+    def test_pelias_add_bbox(self, get_cert_info, mock_get_session):
+        mock_get_session.return_value = self.session
         get_cert_info.return_value = None
         in_result = {
             "type": "Feature",
@@ -263,7 +268,7 @@ class TestGeoCode(TestCase):
             ],
             "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544],
         }
-        self.mock_requests.get(settings.GEOCODING_UPDATE_URL, text=json.dumps(api_response), status_code=200)
+        self.adapter.register_uri("GET", settings.GEOCODING_UPDATE_URL, text=json.dumps(api_response), status_code=200)
         expected_bbox = api_response.get("bbox")
         geocode = Geocode()
         result = geocode.add_bbox(in_result)
@@ -271,7 +276,7 @@ class TestGeoCode(TestCase):
         self.assertEqual(result.get("bbox"), expected_bbox)
         self.assertEqual(result.get("properties").get("bbox"), expected_bbox)
 
-    @override_settings(GEOCODING_API_URL="http://pelias.url/", GEOCODING_API_TYPE="pelias", GEOCODING_UPDATE_URL="")
+    @override_settings(GEOCODING_API_URL="mock://pelias.url/", GEOCODING_API_TYPE="pelias", GEOCODING_UPDATE_URL="")
     def test_geocode_no_update_url(self):
         in_result = {
             "type": "Feature",
@@ -349,18 +354,20 @@ class TestGeoCode(TestCase):
         self.assertFalse(is_valid_bbox(bbox))
 
     @override_settings(
-        GEOCODING_API_URL="http://pelias.url/",
+        GEOCODING_API_URL="mock://pelias.url/",
         GEOCODING_API_TYPE="pelias",
-        GEOCODING_UPDATE_URL="http://pelias.url/place",
+        GEOCODING_UPDATE_URL="mock://pelias.url/place",
     )
-    def test_pelias_point_geometry(self):
+    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_or_update_session")
+    def test_pelias_point_geometry(self, mock_get_session):
         bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
         api_response = {
             "features": [
                 {"type": "Feature", "geometry": {"type": "Point", "coordinates": []}, "properties": {}, "bbox": bbox}
             ]
         }
-        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        mock_get_session.return_value = self.session
+        self.adapter.register_uri("GET", settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         geocode = Geocode()
         result = geocode.search("test")
         self.assertEqual(
@@ -377,11 +384,13 @@ class TestGeoCode(TestCase):
         )
 
     @override_settings(
-        GEOCODING_API_URL="http://pelias.url/",
+        GEOCODING_API_URL="mock://pelias.url/",
         GEOCODING_API_TYPE="pelias",
-        GEOCODING_UPDATE_URL="http://pelias.url/place",
+        GEOCODING_UPDATE_URL="mock://pelias.url/place",
     )
-    def test_pelias_polygon_geometry(self):
+    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.get_or_update_session")
+    def test_pelias_polygon_geometry(self, mock_get_session):
+        mock_get_session.return_value = self.session
         polygonCoordinates = [[[0, 1], [1, 0], [0, 3]]]
         bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
         api_response = {
@@ -394,12 +403,12 @@ class TestGeoCode(TestCase):
                 }
             ]
         }
-        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        self.adapter.register_uri("GET", settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         geocode = Geocode()
         result = geocode.search("test")
         self.assertEqual(result.get("features")[0].get("geometry").get("coordinates"), polygonCoordinates)
 
-        @override_settings(GEOCODING_API_URL="http://nominatim.url/", GEOCODING_API_TYPE="nominatim")
+        @override_settings(GEOCODING_API_URL="mock://nominatim.url/", GEOCODING_API_TYPE="nominatim")
         def test_nominatim_success(self):
             nominatim_response = [
                 {
