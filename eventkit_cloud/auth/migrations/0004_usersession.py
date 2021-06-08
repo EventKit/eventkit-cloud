@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('sessions', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('eventkit_cloud.auth', '0002_auto_20191127_1425'),
+        ('eventkit_cloud_auth', '0003_auto_20210519_2024'),
     ]
 
     operations = [

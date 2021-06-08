@@ -24,3 +24,8 @@ class OAuth(models.Model):
 
     def __str__(self):
         return "{0}".format(self.commonname)
+
+
+class UserSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
