@@ -144,8 +144,10 @@ class TestJobViewSet(APITestCase):
         url = reverse("api:jobs-list")
         self.assertEqual(expected, url)
 
-    def test_make_job_with_export_providers(self,):
+    @patch("eventkit_cloud.api.validators.get_area_in_sqkm")
+    def test_make_job_with_export_providers(self, mock_get_area):
         """tests job creation with export providers"""
+        mock_get_area.return_value = 16
         export_providers = DataProvider.objects.all()
         export_providers_start_len = len(export_providers)
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -181,6 +183,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
         self.assertEqual(response["exports"][0]["provider"], "test")
+        mock_get_area.assert_called_once()
 
         request_data["export_providers"][0]["name"] = "test 2"
         # should be idempotent

@@ -94,9 +94,8 @@ class TestWCSConverter(TransactionTestCase):
         with self.assertRaises(Exception):
             wcs_conv.convert()
 
-    @patch("eventkit_cloud.utils.wcs.retry")
     @patch("eventkit_cloud.utils.wcs.os.path.exists")
-    def test_convert_geopackage(self, exists, mock_retry):
+    def test_convert_geopackage(self, exists):
         geotiff = "/path/to/geopackage.gpkg"
         bbox = [-45, -45, 45, 45]
         layer = "awesomeLayer"
@@ -140,3 +139,8 @@ class TestWCSConverter(TransactionTestCase):
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
             wcs_conv.convert()
+
+        self.task_process.return_value = Mock(exitcode=1)
+        with patch("requests.Session.get", return_value=None):
+            with self.assertRaises(Exception):
+                wcs_conv.convert()
