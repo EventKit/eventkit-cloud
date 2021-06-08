@@ -71,6 +71,8 @@ test_cert_info = """
         cert_pass_var: 'fakepass'
 """
 
+expected_cert_info = {"cert_path": "/path/to/fake/cert", "cert_pass_var": "fakepass"}
+
 
 class TestLockingTask(TestCase):
     def test_locking_task(self):
@@ -1616,8 +1618,9 @@ class TestExportTasks(ExportTaskBase):
         mock_download_data.assert_called_once_with(
             str(saved_export_task.uid),
             service_url,
-            ANY,
-            cert_info={"cert_path": "/path/to/fake/cert", "cert_pass_var": "fakepass"},
+            expected_output_path,
+            cert_info=expected_cert_info,
+            provider_slug=expected_provider_slug,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
@@ -1639,11 +1642,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = """
-                 cert_info:
-                     cert_path: '/path/to/cert'
-                     cert_pass_var: 'fake_pass'
-                 """
+        config = test_cert_info
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1689,8 +1688,9 @@ class TestExportTasks(ExportTaskBase):
         mock_download_data.assert_called_once_with(
             str(saved_export_task.uid),
             service_url,
-            ANY,
-            cert_info={"cert_path": "/path/to/cert", "cert_pass_var": "fake_pass"},
+            expected_output_path,
+            cert_info=expected_cert_info,
+            provider_slug=expected_provider_slug,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")

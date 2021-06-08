@@ -1,14 +1,12 @@
 import logging
 import os
-
-from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.auth_requests import get_or_update_session
 from eventkit_cloud.utils.geocoding.geocode_auth import (
     get_session_cookies,
     get_auth_headers,
     update_session_cookies,
     get_geocode_cert_info,
 )
+from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,8 @@ class GeocodeAuthResponse(object):
             else:
                 raise Exception(error_message)
         else:
-            response = auth_requests.get(self.url, params=payload)
+            session = get_or_update_session()
+            response = session.get(self.url, params=payload)
             if not response.ok:
                 raise Exception(error_message)
             return response
@@ -36,7 +35,8 @@ class GeocodeAuthResponse(object):
 def get_cached_response(url, payload):
     cookies = get_session_cookies()
     headers = get_auth_headers()
-    response = auth_requests.get(url, params=payload, cookies=cookies, headers=headers)
+    session = get_or_update_session(headers=headers)
+    response = session.get(url, params=payload, cookies=cookies)
     if response.ok and check_data(response):
         return response
 
@@ -45,7 +45,7 @@ def get_auth_response(url, payload):
     session = get_or_update_session(cert_info=get_geocode_cert_info())
     response = session.get(url, params=payload)
     if response.ok and check_data(response):
-        update_session_cookies(session.session.cookies)
+        update_session_cookies(session.cookies)
         return response
 
 
