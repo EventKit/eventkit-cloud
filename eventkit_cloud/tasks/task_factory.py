@@ -128,6 +128,7 @@ class TaskFactory:
 
         run = ExportRun.objects.get(uid=run_uid)
         job = run.job
+        run_dir = get_run_staging_dir(run.uid)
 
         logger.error(f"Creating providers for {queue_group}")
         wait_for_providers_settings = {
@@ -165,10 +166,12 @@ class TaskFactory:
 
                 primary_export_task = self.type_task_map.get(type_name)
 
+                stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
                 args = {
                     "primary_export_task": primary_export_task,
                     "user": job.user,
                     "provider_task_uid": provider_task.uid,
+                    "stage_dir": stage_dir,
                     "run": run,
                     "service_type": provider_task.provider.export_provider_type.type_name,
                     "worker": worker,
