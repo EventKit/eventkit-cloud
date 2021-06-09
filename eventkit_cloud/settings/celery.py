@@ -4,6 +4,7 @@ import os
 from celery.schedules import crontab
 
 from eventkit_cloud.celery import app
+from eventkit_cloud.settings.base import is_true
 from eventkit_cloud.settings.contrib import *  # NOQA
 
 # Celery config

@@ -398,7 +398,15 @@ def get_celery_health_check_command(node_type: str):
 
 
 def get_celery_tasks_scale_by_run():
-    default_command = "echo '************STARTING NEW WORKER****************' && hostname && env & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
+    default_command = (
+        "echo '************STARTING NEW WORKER****************' && hostname && env & "
+        "CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 "
+        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
+        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "& CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL "
+        "-n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} "
+        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
+    )
 
     celery_tasks = {
         "command": default_command,

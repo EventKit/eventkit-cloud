@@ -18,7 +18,6 @@ from xml.dom import minidom
 from zipfile import ZipFile
 
 import requests
-import requests_pkcs12
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -36,7 +35,7 @@ from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, ge
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
-from eventkit_cloud.utils import auth_requests, gdalutils
+from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
@@ -931,28 +930,6 @@ def download_chunks(
     return chunks
 
 
-def get_or_update_session(username=None, password=None, session=None, max_retries=3, verify=True, cert_info=None):
-    if not session:
-        session = requests.Session()
-
-    if username and password:
-        session.auth = (username, password)
-        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-    cert_path, cert_pass = auth_requests.get_cert_info({"cert_info": cert_info})
-    if cert_path and cert_pass:
-        adapter = requests_pkcs12.Pkcs12Adapter(
-            pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
-        )
-        session.mount("https://", adapter)
-
-    logger.debug("Using %s for SSL verification.", str(verify))
-    session.verify = verify
-    return session
-
-
 def download_data(
     task_uid: str,
     input_url: str,
@@ -971,7 +948,7 @@ def download_data(
 
     response = None
     try:
-        session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
+        session = get_or_update_session(session=session, cert_info=cert_info, cookie=cookie)
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1100,7 +1077,8 @@ def get_celery_queue_group(run_uid=None, worker=None):
     # If scaling by run we need to keep tasks for a specific run organized together.
     if not worker:
         raise Exception(
-            "Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly."
+            "Attempted to get a group name without setting CELERY_GROUP_NAME "
+            "using a RUN_UID or passing a worker explicitly."
         )
     return worker
 
