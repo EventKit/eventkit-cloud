@@ -10,7 +10,6 @@ import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from concurrent import futures
-from enum import Enum
 from functools import reduce
 from operator import itemgetter
 from pathlib import Path
@@ -28,8 +27,10 @@ from django.db import connection
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
+from enum import Enum
 from numpy import linspace
 
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, get_data_type_from_provider, DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
@@ -350,14 +351,14 @@ def get_metadata_url(url, type):
 
 def get_osm_last_update(url, cert_info=None):
     """
-
     :param url: A path to the overpass api.
     :param cert_info: Optionally cert info if needed
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
-        response = auth_requests.get(timestamp_url, cert_info=cert_info)
+        session = get_or_update_session(cert_info=cert_info)
+        response = session.get(timestamp_url)
         if response:
             return response.content.decode()
         raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
@@ -888,7 +889,7 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
     # or redirect to a parent URL if a resource is not found.
 
     try:
-        out_file = download_data(task_uid, input_url, out_file, cert_info, task_points)
+        out_file = download_data(task_uid, input_url, out_file, cert_info=cert_info, task_points=task_points)
         with open(out_file) as f:
             json_response = json.load(f)
 
@@ -925,7 +926,7 @@ def download_chunks(
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_feature_data if feature_data else download_data
-        download_function(task_uid, url, outfile, cert_info, task_points=task_points)
+        download_function(task_uid, url, outfile, cert_info=cert_info, task_points=task_points)
         chunks.append(outfile)
     return chunks
 
@@ -962,14 +963,16 @@ def download_data(
     session=None,
     task_points=100,
     cookie=None,
+    provider_slug: str = None,
 ):
     """
     Function for downloading data, optionally using a certificate.
     """
+
     response = None
     try:
-        auth_session = get_or_update_session(session=session, username=username, password=password, cert_info=cert_info)
-        response = auth_session.get(input_url, stream=True)
+        session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
+        response = session.get(input_url, stream=True)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:

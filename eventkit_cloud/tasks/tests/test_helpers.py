@@ -2,16 +2,17 @@
 
 import json
 import logging
-import os
 import signal
-from unittest.mock import patch, call, Mock, MagicMock
-
 import requests_mock
+import requests
+
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
 from eventkit_cloud.tasks.enumerations import TaskState
+from unittest.mock import patch, call, Mock, MagicMock
+import os
 from eventkit_cloud.tasks.helpers import (
     get_style_files,
     get_file_paths,
@@ -80,18 +81,18 @@ class TestHelpers(TestCase):
         get_last_update(test_url, test_type)
         mock_get_osm_last_update.assert_called_once_with(test_url, cert_info=None)
 
-    @patch("eventkit_cloud.tasks.helpers.auth_requests")
-    def test_get_osm_last_update(self, mock_auth_requests):
+    @patch.object(requests.Session, "get")
+    def test_get_osm_last_update(self, mock_get):
         test_url = "https://test/interpreter"
         expected_url = "https://test/timestamp"
         expected_time = "2017-12-29T13:09:59Z"
 
-        mock_auth_requests.get.return_value.content.decode.return_value = expected_time
+        mock_get.return_value.content.decode.return_value = expected_time
         returned_time = get_osm_last_update(test_url)
-        mock_auth_requests.get.assert_called_once_with(expected_url, cert_info=None)
+        mock_get.assert_called_once_with(expected_url)
         self.assertEqual(expected_time, returned_time)
 
-        mock_auth_requests.get.side_effect = Exception("FAIL")
+        mock_get.side_effect = Exception("FAIL")
         returned_time = get_osm_last_update(test_url)
         self.assertIsNone(returned_time)
 

@@ -71,6 +71,8 @@ test_cert_info = """
         cert_pass_var: 'fakepass'
 """
 
+expected_cert_info = {"cert_path": "/path/to/fake/cert", "cert_pass_var": "fakepass"}
+
 
 class TestLockingTask(TestCase):
     def test_locking_task(self):
@@ -473,7 +475,7 @@ class TestExportTasks(ExportTaskBase):
             bbox=[1, 2, 3, 4],
         )
         mock_download_data.assert_called_with(
-            str(saved_export_task.uid), ANY, expected_input_path[3], None, task_points=100
+            str(saved_export_task.uid), ANY, expected_input_path[3], cert_info=None, task_points=100
         )
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
@@ -895,7 +897,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_download_feature_data.assert_called_with(
-            str(saved_export_task.uid), expected_input_url, ANY, None, task_points=100
+            str(saved_export_task.uid), expected_input_url, ANY, cert_info=None, task_points=100
         )
 
         mock_convert.assert_called_once_with(
@@ -1035,7 +1037,7 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
         mock_download_feature_data.assert_called_with(
-            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", None, task_points=100
+            str(saved_export_task.uid), expected_input_url, "dir/chunk3.json", cert_info=None, task_points=100
         )
 
     @patch("celery.app.task.Task.request")
@@ -1613,7 +1615,13 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, ANY)
+        mock_download_data.assert_called_once_with(
+            str(saved_export_task.uid),
+            service_url,
+            expected_output_path,
+            cert_info=expected_cert_info,
+            provider_slug=expected_provider_slug,
+        )
 
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
@@ -1634,11 +1642,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
         layer = "foo"
-        config = """
-                 cert_info:
-                     - cert_path: '/path/to/cert'
-                       cert_pass_var: 'fake_pass'
-                 """
+        config = test_cert_info
         service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
@@ -1681,7 +1685,13 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
         self.assertEqual(expected_output_path, result["gpkg"])
 
-        mock_download_data.assert_called_once_with(service_url, ANY, ANY)
+        mock_download_data.assert_called_once_with(
+            str(saved_export_task.uid),
+            service_url,
+            expected_output_path,
+            cert_info=expected_cert_info,
+            provider_slug=expected_provider_slug,
+        )
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -1718,8 +1728,8 @@ class TestExportTasks(ExportTaskBase):
         task_uid = str(saved_export_task.uid)
         config = """
         cert_info:
-            - cert_path: '/path/to/cert'
-              cert_pass_var: 'fake_pass'
+            cert_path: '/path/to/cert'
+            cert_pass_var: 'fake_pass'
 
         """
         selection = "selection.geojson"

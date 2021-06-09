@@ -1582,7 +1582,7 @@ def vector_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(service_url, gpkg, configuration.get("cert_info"))
+    download_data(task_uid, service_url, gpkg, cert_info=configuration.get("cert_info"), provider_slug=provider_slug)
 
     out = gdalutils.convert(
         driver="gpkg",
@@ -1633,7 +1633,7 @@ def raster_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(service_url, gpkg, configuration.get("cert_info"))
+    download_data(task_uid, service_url, gpkg, cert_info=configuration.get("cert_info"), provider_slug=provider_slug)
 
     out = gdalutils.convert(
         driver="gpkg",
