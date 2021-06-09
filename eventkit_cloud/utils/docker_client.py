@@ -52,6 +52,7 @@ class DockerClient(ScaleClient):
             entrypoint="/bin/bash -c ",
             volumes=volumes,
             user="root",
+            labels={"task_type": "celery_task"}
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
@@ -59,7 +60,7 @@ class DockerClient(ScaleClient):
         Get running celery tasks, mimic the return values of the PCF client.
         :return: A list of the running task names.
         """
-        containers = self.client.containers.list(filters={"name": "celery_task"})
+        containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
         result = {"resources": [], "pagination": {}}
         result["pagination"]["total_results"] = len(containers)
         for container in containers:

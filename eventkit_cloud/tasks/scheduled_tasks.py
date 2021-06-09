@@ -144,13 +144,13 @@ def scale_by_runs(max_tasks_memory):
         total_tasks = running_tasks["pagination"].get("total_results", 0)
         logger.error(f"RUNNING TASKS: {running_tasks}")
         running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
-        logger.error(running_task_names)
+        logger.error(f"RUNNING TASK NAMES: {running_task_names}")
         finished_runs = ExportRun.objects.filter(uid__in=running_task_names, status=TaskState.get_finished_states())
         for finished_run in finished_runs:
             shutdown_celery_workers(finished_run.uid)
     for run in runs:
         logger.error(f"Checking to see if submitted run {run.uid} needs a new worker.")
-        max_runs = int(os.getenv("RUNS_CONCURRENCY", 0))
+        max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
         if max_runs and total_tasks >= max_runs:
             logger.error(f"The maximum amount of tasks ({max_runs})")
             break
