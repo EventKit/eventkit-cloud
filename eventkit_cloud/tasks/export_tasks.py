@@ -178,7 +178,9 @@ class ExportTask(EventKitBaseTask):
                 os.makedirs(run_dir, 0o750)
             logger.error(f"TASK: {task} and {dir(task)}")
             logger.error(f"EPT DIR: {dir(task.export_provider_task)}")
-            logger.error(f"EPT TASKS: {task.export_provider_task.tasks} and dir of {dir(task.export_provider_task.tasks)}")
+            logger.error(
+                f"EPT TASKS: {task.export_provider_task.tasks} and dir of {dir(task.export_provider_task.tasks)}"
+            )
             run_task_record = run.data_provider_task_records.get(slug="run")
             # run_task_record = task.export_provider_task.tasks.get(slug="run")
 
@@ -1770,14 +1772,16 @@ def pick_up_run_task(
                 data_provider_slugs=data_provider_slugs,
                 run_zip_file_slug_sets=run_zip_file_slug_sets,
                 session_token=session_token,
-                queue_group=queue_group
+                queue_group=queue_group,
             )
         else:
             # Run has already been created, but we got here because
             # something happened to the last worker and the run didn't finish.
             logger.info(f"Run {run.uid} was already in progress!")
-            data_provider_slugs = [dptr.slug for dptr in run.data_provider_task_records.filter(
-                ~Q(slug="run") | ~Q(status=TaskState.COMPLETED.value))]
+            data_provider_slugs = [
+                dptr.slug
+                for dptr in run.data_provider_task_records.filter(~Q(slug="run") | ~Q(status=TaskState.COMPLETED.value))
+            ]
             logger.info(f"Rerunning data providers {data_provider_slugs}")
             rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
@@ -2268,9 +2272,7 @@ def create_datapack_preview(
         result["result"] = filepath
 
     except Exception as e:
-        logger.info(f"create_datapack_preview hit an exception, printing exception.")
         logger.exception(e)
-    logger.info(f"Returning create_datapack_preview result: {result}")
     return result
 
 

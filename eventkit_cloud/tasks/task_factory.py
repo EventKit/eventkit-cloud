@@ -3,7 +3,6 @@
 
 import itertools
 import logging
-import os
 
 from celery import chain
 from django.conf import settings
@@ -36,7 +35,8 @@ from eventkit_cloud.tasks.export_tasks import (
 )
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
-    get_provider_staging_dir, get_celery_queue_group,
+    get_provider_staging_dir,
+    get_celery_queue_group,
 )
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import (
@@ -81,7 +81,7 @@ class TaskFactory:
         data_provider_slugs=None,
         run_zip_file_slug_sets=None,
         session_token=None,
-        queue_group=None
+        queue_group=None,
     ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
@@ -151,10 +151,7 @@ class TaskFactory:
             run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
         )
 
-        run_zip_task_chain = get_zip_task_chain(
-            data_provider_task_record_uid=run_task_record.uid,
-            worker=worker,
-        )
+        run_zip_task_chain = get_zip_task_chain(data_provider_task_record_uid=run_task_record.uid, worker=worker,)
         for provider_task in job.data_provider_tasks.all():
             # Skip any providers that weren't selected to be re-run.
             if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
@@ -375,10 +372,7 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None,
-    data_provider_task_record_uids=None,
-    run_zip_file_uid=None,
-    worker=None,
+    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None,
 ):
     return chain(
         create_task(

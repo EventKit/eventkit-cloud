@@ -1312,7 +1312,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             running = ExportRunSerializer(run, context={"request": request})
             celery_group_name = get_celery_queue_group(run_uid=run.uid)
             rerun_data_provider_records.apply_async(
-                args=(run.uid, request.user.id, user_details, data_provider_slugs), queue=celery_group_name, routing_key=celery_group_name
+                args=(run.uid, request.user.id, user_details, data_provider_slugs),
+                queue=celery_group_name,
+                routing_key=celery_group_name,
             )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:

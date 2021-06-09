@@ -968,9 +968,7 @@ def download_data(
     """
     response = None
     try:
-        auth_session = get_or_update_session(
-            session=session, username=username, password=password, cert_info=cert_info, cookie=cookie
-        )
+        auth_session = get_or_update_session(session=session, username=username, password=password, cert_info=cert_info)
         response = auth_session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1098,7 +1096,9 @@ def get_celery_queue_group(run_uid=None, worker=None):
             return str(run_uid)
     # If scaling by run we need to keep tasks for a specific run organized together.
     if not worker:
-        raise Exception("Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly.")
+        raise Exception(
+            "Attempted to get a group name without setting CELERY_GROUP_NAME using a RUN_UID or passing a worker explicitly."
+        )
     return worker
 
 

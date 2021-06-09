@@ -7,6 +7,7 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 """
 import json
 import logging
+
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
@@ -26,8 +27,10 @@ from rest_framework_gis import serializers as geo_serializers
 from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
+
 # Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+
 # Get an instance of a logger
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -540,8 +543,7 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             obj.data_provider_task_records.set(data_provider_task_records)
             run_zip_task_chain = generate_zipfile(data_provider_task_record_uids, obj)
             celery_queue_group = get_celery_queue_group(run_uid=obj.run.uid)
-            run_zip_task_chain.apply_async(queue=celery_queue_group,
-                                           routing_key=celery_queue_group)
+            run_zip_task_chain.apply_async(queue=celery_queue_group, routing_key=celery_queue_group)
             return obj
         else:
             raise serializers.ValidationError("Duplicate Zip File already exists.")

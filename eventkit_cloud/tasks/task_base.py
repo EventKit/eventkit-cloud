@@ -5,8 +5,6 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.cache import caches
 
-from eventkit_cloud.tasks.helpers import get_celery_queue_group
-
 logger = get_task_logger(__name__)
 
 

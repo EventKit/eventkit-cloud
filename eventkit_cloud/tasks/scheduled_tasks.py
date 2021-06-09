@@ -4,7 +4,6 @@ import datetime
 import json
 import os
 import socket
-import uuid
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from typing import Union
@@ -26,7 +25,7 @@ from eventkit_cloud.core.helpers import (
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, get_message_count
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
@@ -94,6 +93,7 @@ def expire_runs_task():
             run.notified = now
             run.save()
 
+
 # Get all runs that are not done from the database.  In progress or not started.
 # Make sure that any in progress runs have an active listener.  If not, spin up the run and use that run uid.
 # Otherwise grab the next run uid and spin up a new worker for it.
@@ -114,11 +114,6 @@ def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
 
 
 def scale_by_runs(max_tasks_memory):
-    # Immediately return if there are no pending runs.
-    broker_api_url = getattr(settings, "BROKER_API_URL")
-    queue_class = "queues"
-
-    print("Scaling By Runs")
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
     else:
@@ -132,7 +127,7 @@ def scale_by_runs(max_tasks_memory):
         app_name = settings.DOCKER_IMAGE_NAME
 
     celery_task_details = get_celery_task_details(client, app_name)
-    running_tasks_memory = int(celery_task_details['memory'])
+    running_tasks_memory = int(celery_task_details["memory"])
     celery_task = get_celery_tasks_scale_by_run()
     # Get run in progress
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
@@ -155,7 +150,7 @@ def scale_by_runs(max_tasks_memory):
             logger.error(f"The maximum amount of tasks ({max_runs})")
             break
         logger.error(f"{running_tasks_memory} + {celery_task['memory']} < {max_tasks_memory}")
-        if running_tasks_memory + celery_task['memory'] >= max_tasks_memory:
+        if running_tasks_memory + celery_task["memory"] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
             break
         task_name = run.uid
@@ -177,7 +172,9 @@ def scale_by_runs(max_tasks_memory):
             session_token = session.get_decoded().get("session_token")
         pick_up_run_task(run_uid=run.uid, session_token=session_token)
         logger.info("Spinning up a worker to complete those tasks...")
-        logger.info(f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}")
+        logger.info(
+            f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}"
+        )
         run_task_command(client, app_name, str(task_name), task)
         total_tasks += 1
 
@@ -407,7 +404,7 @@ def get_celery_tasks_scale_by_run():
         "command": default_command,
         # NOQA
         "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
-        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192))
+        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks

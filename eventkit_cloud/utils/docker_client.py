@@ -1,6 +1,7 @@
 import requests
 import os
 import logging
+
 # TODO: What's the best way to only import this when we want to?  i.e. Not PCF deploys.
 try:
     import docker
@@ -52,7 +53,7 @@ class DockerClient(ScaleClient):
             entrypoint="/bin/bash -c ",
             volumes=volumes,
             user="root",
-            labels={"task_type": "celery_task"}
+            labels={"task_type": "celery_task"},
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
