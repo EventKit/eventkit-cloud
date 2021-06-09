@@ -8,6 +8,7 @@ export interface JobValidationContext {
     providerLimits: ProviderLimits[];
     aoiHasArea: boolean;
     aoiArea: number;
+    aoiBboxArea: number;
     dataSizeInfo: {
         haveAvailableEstimates: string[];
         providerEstimates: Eventkit.Map<Eventkit.Store.Estimates>;

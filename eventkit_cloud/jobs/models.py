@@ -191,6 +191,7 @@ class DataProviderType(TimeStampedModelMixin):
     id = models.AutoField(primary_key=True, editable=False)
     type_name = models.CharField(verbose_name="Type Name", max_length=40, unique=True, default="")
     supported_formats = models.ManyToManyField(ExportFormat, verbose_name="Supported Export Formats", blank=True)
+    use_bbox = models.BooleanField(verbose_name="Use bounding box to calculate area", default=False)
 
     def __str__(self):
         return "{0}".format(self.type_name)
@@ -379,6 +380,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return list(config.keys())
         else:
             return [layer.get("name") for layer in config.get("vector_layers", [])]
+
+    def get_use_bbox(self):
+        if self.export_provider_type is not None:
+            return self.export_provider_type.use_bbox
+        else:
+            return False
 
     """
     Max datasize is the size in megabytes.

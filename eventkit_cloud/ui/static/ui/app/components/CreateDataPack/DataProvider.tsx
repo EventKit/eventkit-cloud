@@ -140,7 +140,7 @@ export function DataProvider(props: Props) {
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
-    const { dataSizeInfo, aoiArea, providerLimits } = useJobValidationContext();
+    const { dataSizeInfo, aoiArea, aoiBboxArea, providerLimits } = useJobValidationContext();
     const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
     const [ overSize, setOverSize ] = useState(false);
     const [ overArea, setOverArea ] = useState(false);
@@ -165,9 +165,10 @@ export function DataProvider(props: Props) {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
         const { size={value:-1} } = providerInfo.estimates || {};
         const { maxArea=-1, maxDataSize=-1 } = limits || {};
-        setOverArea(aoiArea > maxArea);
+        let area = limits.useBbox ? aoiBboxArea : aoiArea;
+        setOverArea(area > maxArea);
         setOverSize(size.value > maxDataSize);
-    }, [areEstimatesLoading, aoiArea]);
+    }, [areEstimatesLoading, aoiArea, aoiBboxArea]);
 
     function getFormatCompatibility(formatSlug: string) {
         const formatInfo = props.incompatibilityInfo.formats[formatSlug.toLowerCase()];

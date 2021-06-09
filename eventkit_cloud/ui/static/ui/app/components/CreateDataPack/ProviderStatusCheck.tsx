@@ -193,7 +193,7 @@ export function ProviderStatusCheck(props: Props) {
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;
                 title = 'AOI TOO LARGE';
-                message = makeMessage('The selected AOI larger than the maximum allowed size for this provider.', false);
+                message = makeMessage('The selected AOI is larger than the maximum allowed size for this provider.', false);
                 break;
             case STATUS.OVER_DATA_SIZE:
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
