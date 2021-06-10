@@ -166,6 +166,7 @@ class ExportTask(EventKitBaseTask):
 
             check_cached_task_failures(task.name, task_uid)
 
+            task.started_at = timezone.now()
             task.worker = socket.gethostname()
             task.save()
 
