@@ -197,7 +197,7 @@ export function AoiInfobar(props: Props) {
     const closeAlert = () => setShowAlert(false);
     const displayAlert = () => setShowAlert(true);
 
-    const { dataSizeInfo, providerLimits, aoiHasArea, aoiArea } = useJobValidationContext();
+    const { dataSizeInfo, providerLimits, aoiHasArea, aoiArea, aoiBboxArea } = useJobValidationContext();
     const { haveAvailableEstimates = [], exceedingSize = [], noMaxDataSize = [] } = dataSizeInfo || {};
 
     let needsWarning = false;
@@ -263,7 +263,7 @@ export function AoiInfobar(props: Props) {
             }
         } else {
             // Can't check max data sizes, fall back to max AoI.
-            const exceedsAreaCount = providerLimits.filter(limits => limits.maxArea <= aoiArea).length;
+            const exceedsAreaCount = providerLimits.filter(limits => limits.maxArea <= (limits.useBbox ? aoiBboxArea : aoiArea)).length;
             if (exceedsAreaCount === providerLimits.length) {
                 needsWarning = true;
                 aoiAlert = (

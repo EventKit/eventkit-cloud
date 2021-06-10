@@ -311,6 +311,20 @@ def get_area_in_sqkm(geom4326):
     return geomIn3857.area / 1e6
 
 
+def get_bbox_area_in_sqkm(geom_4326):
+    """
+    Accepts a GEOSGeometry object created in 4326, and returns the area of its bounding box/extent in square km.
+
+    :param geom_4326: GEOSGeometry object created from a 4326 feature
+    :return: float representing square km area of bbox/extent of geometry
+    """
+    # Get bbox from GEOS 4326 geometry
+    bbox_poly = Polygon.from_bbox(geom_4326.extent)
+    bbox_geom = GEOSGeometry(bbox_poly.wkt, srid=4326)
+    # Use existing area function to get bbox area
+    return get_area_in_sqkm(bbox_geom)
+
+
 def get_geodesic_area(geom):
     """
     Returns the geodesic area of the provided geometry.

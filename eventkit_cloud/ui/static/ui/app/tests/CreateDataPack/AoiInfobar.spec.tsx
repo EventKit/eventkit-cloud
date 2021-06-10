@@ -42,6 +42,7 @@ describe('AoiInfobar component', () => {
                 providerLimits: [{ maxDataSize: 100, maxArea: 100, slug: 'osm' } as ProviderLimits],
                 aoiHasArea: true,
                 aoiArea: area,
+                aoiBboxArea: area,
                 dataSizeInfo: {} as any,
                 areEstimatesLoading: false,
             }}>

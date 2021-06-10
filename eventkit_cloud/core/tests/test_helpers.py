@@ -2,11 +2,12 @@
 
 
 import logging
+import os
 from unittest.mock import patch, MagicMock, Mock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
-from eventkit_cloud.core.helpers import get_id, get_cached_model, get_model_by_params
+from eventkit_cloud.core.helpers import get_id, get_cached_model, get_model_by_params, get_or_update_session
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +44,18 @@ class TestCoreHelpers(TestCase):
         expected_call_value = f"{expected_name}-{expected_prop}-{expected_val}"
 
         mocked_cache.get_or_set.assert_called_once_with(expected_call_value, get_model, 360)
+
+    @override_settings(SSL_VERIFICATION=10)
+    @patch.dict(os.environ, {"CERT_PATH": "mytemp"})
+    @patch("eventkit_cloud.utils.auth_requests.get_cred")
+    def test_get_or_update_session(self, mock_get_cred):
+        expected_headers = {"test": "value"}
+        cert_info = {"cert_path": "path/to/file", "cert_pass_var": "CERT_PATH"}
+        expected_user = "cred_user"
+        expected_pass = "cred_pass"
+        mock_get_cred.return_value = [expected_user, expected_pass]
+        session = get_or_update_session(headers=expected_headers, cert_info=cert_info, slug="abc")
+        self.assertEqual(session.auth, (expected_user, expected_pass))
+        self.assertEqual(len(session.adapters), 2)
+        self.assertEqual(session.headers, expected_headers)
+        self.assertEqual(session.verify, 10)
