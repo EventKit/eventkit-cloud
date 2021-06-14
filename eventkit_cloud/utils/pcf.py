@@ -225,3 +225,25 @@ class PcfClient(ScaleClient):
         for task in running_tasks["resources"]:
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
+
+    def terminate_task(self, task_name: str) -> dict:
+        """
+        Get running tasks memory for a single app.
+        :param app_name: Name of app running tasks
+        :return: Running task memory in mb.
+        """
+
+        running_tasks = self.get_running_tasks(names=task_name)
+        logger.info(f"Attempting to terminate PCF task with {task_name}")
+        task_guid = running_tasks.get("resources", [{}])[0].get("guid")
+        if task_guid:
+            logger.info(f"found task {task_guid} calling cancel")
+
+            url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
+            return self.session.post(
+                url,
+                headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
+            ).json()
+        else:
+            logger.warning(f"Terminate task was called with task_name: {task_name} but no running tasks were returned.")
+            logger.warning(f"Running tasks: {running_tasks}")

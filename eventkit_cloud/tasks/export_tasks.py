@@ -2114,7 +2114,7 @@ class FinalizeRunBase(EventKitBaseTask):
             if getattr(settings, "CELERY_SCALE_BY_RUN"):
                 queue_name = None if retval is None else retval.get("run_uid")
                 if queue_name:
-                    shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
+                    shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 

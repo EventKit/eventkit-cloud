@@ -142,7 +142,7 @@ def scale_by_runs(max_tasks_memory):
         logger.error(f"RUNNING TASK NAMES: {running_task_names}")
         finished_runs = ExportRun.objects.filter(uid__in=running_task_names, status=TaskState.get_finished_states())
         for finished_run in finished_runs:
-            shutdown_celery_workers(finished_run.uid)
+            shutdown_celery_workers.s().apply_async(queue=finished_run.uid, routing_key=finished_run.uid)
     for run in runs:
         logger.error(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
@@ -232,7 +232,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
                 )
-                shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
+                shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(

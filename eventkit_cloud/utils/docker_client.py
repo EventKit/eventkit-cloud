@@ -42,7 +42,6 @@ class DockerClient(ScaleClient):
         self.client.containers.run(
             image=app_name,
             command=f'"{command}"',
-            name=name,
             environment=dict(os.environ),
             detach=True,
             mem_limit=memory_in_mb,
@@ -53,7 +52,7 @@ class DockerClient(ScaleClient):
             entrypoint="/bin/bash -c ",
             volumes=volumes,
             user="root",
-            labels={"task_type": "celery_task"},
+            labels={"task_type": "celery_task", "task_name": name},
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
@@ -61,7 +60,12 @@ class DockerClient(ScaleClient):
         Get running celery tasks, mimic the return values of the PCF client.
         :return: A list of the running task names.
         """
-        containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
+        containers = []
+        if names:
+            for name in str(names).split(","):
+                containers += self.client.containers.list(filters={"label": f"task_name={name}"})
+        else:
+            containers = self.client.containers.list(filters={"label": f"task_type=celery_task"})
         result = {"resources": [], "pagination": {}}
         result["pagination"]["total_results"] = len(containers)
         for container in containers:
@@ -69,7 +73,7 @@ class DockerClient(ScaleClient):
             print(f"PRINTING STATS: {stats}")
             result["resources"].append(
                 {
-                    "name": container.name,
+                    "name": container.labels.get("task_name"),
                     "memory_in_mb": stats["memory_stats"]["limit"] / 1000000,
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
                 }
@@ -90,3 +94,8 @@ class DockerClient(ScaleClient):
         for task in running_tasks["resources"]:
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
+
+    def terminate_task(self, task_name: str) -> dict:
+        containers = self.client.containers.list(filters={"label": "task_name=task_name"})
+        for container in containers:
+            container.stop()
