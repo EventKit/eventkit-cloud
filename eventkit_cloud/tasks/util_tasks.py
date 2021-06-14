@@ -37,7 +37,7 @@ def shutdown_celery_workers(self):
 
     :param self: The Task instance.
     """
-    subprocess.call("pkill -15 -f 'celery worker'")
+    subprocess.run("pkill -15 -f 'celery worker'", shell=True)
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
