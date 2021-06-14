@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -1012,6 +1013,8 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEqual(0, len(result))
 
+    # TODO: This function has been changed a decent amount, might need to improve this test.
+    @override_settings(CELERY_SCALE_BY_RUN=True)
     @patch("eventkit_cloud.api.views.rerun_data_provider_records")
     @patch("eventkit_cloud.api.views.check_job_permissions")
     def test_rerun_providers(self, mock_check_job_permissions, mock_rerun_records):
@@ -1020,7 +1023,7 @@ class TestExportRunViewSet(APITestCase):
             run=run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         run.data_provider_task_records.add(data_provider_task_record)
-
+        run_uid = str(run.uid)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         url = f"/api/runs/{run.uid}/rerun_providers"
         expected_slugs = ["osm-generic"]
@@ -1032,7 +1035,7 @@ class TestExportRunViewSet(APITestCase):
 
         mock_check_job_permissions.assert_called_once_with(run.job)
         mock_rerun_records.apply_async.assert_called_once_with(
-            args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue="runs", routing_key="runs"
+            args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue=run_uid, routing_key=run_uid
         )
 
 

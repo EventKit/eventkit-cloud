@@ -41,7 +41,7 @@ class TestUtilTasks(TestCase):
         )
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         rerun_data_provider_records.run(
-            new_run_uid=self.run.uid,
+            run_uid=self.run.uid,
             user_id=self.user.id,
             user_details=expected_user_details,
             data_provider_slugs=expected_slugs,
