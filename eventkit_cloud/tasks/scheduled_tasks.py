@@ -188,8 +188,12 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
-    client = PcfClient()
-    client.login()
+    if os.getenv("PCF_SCALING"):
+        client = PcfClient()
+        client.login()
+    else:
+        client = DockerClient()
+        app_name = settings.DOCKER_IMAGE_NAME
 
     celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
 

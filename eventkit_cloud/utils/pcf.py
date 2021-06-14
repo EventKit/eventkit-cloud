@@ -241,8 +241,7 @@ class PcfClient(ScaleClient):
 
             url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
             return self.session.post(
-                url,
-                headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
+                url, headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
             ).json()
         else:
             logger.warning(f"Terminate task was called with task_name: {task_name} but no running tasks were returned.")

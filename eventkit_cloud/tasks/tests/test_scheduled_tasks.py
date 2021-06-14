@@ -10,6 +10,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.template.loader import get_template
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 from notifications.models import Notification
 
@@ -79,7 +80,7 @@ class TestExpireRunsTask(TestCase):
             self.assertEqual(2, Notification.objects.all().count())
 
 
-class TestPcfScaleCeleryTask(TestCase):
+class TestScaleCeleryTask(TestCase):
     # # TODO: This function has changed significantly, rewrite test.
     # @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
     # def test_scale_by_runs(self, mock_client):
@@ -97,19 +98,20 @@ class TestPcfScaleCeleryTask(TestCase):
     #     scale_by_runs(3000)
     #     mock_client().run_task.assert_called_once()
 
+    @override_settings(PCF_SCALING=False)
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.order_celery_tasks")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
-    @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
     def test_scale_by_tasks(
-        self, mock_pcf_client, mock_get_celery_task_details, mock_order_celery_tasks, mock_get_all_rabbitmq_objects
+        self, mock_client, mock_get_celery_task_details, mock_order_celery_tasks, mock_get_all_rabbitmq_objects
     ):
 
         # Run until queues are empty.
         example_memory_used = 2048
         example_disk_used = 3072
-        mock_pcf_client().get_running_tasks_memory.return_value = example_memory_used
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 1}}
+        mock_client().get_running_tasks_memory.return_value = example_memory_used
+        mock_client().get_running_tasks.return_value = {"pagination": {"total_results": 1}}
         example_queues = [{"name": "celery", "messages": 2}]
         empty_queues = [{"name": "celery", "messages": 0}]
         mock_get_all_rabbitmq_objects.side_effect = [example_queues, empty_queues]
@@ -133,30 +135,30 @@ class TestPcfScaleCeleryTask(TestCase):
         mock_order_celery_tasks.return_value = ordered_celery_tasks
         celery_tasks = get_celery_tasks_scale_by_task()
         scale_by_tasks(celery_tasks, 8000)
-        mock_pcf_client().run_task.assert_called_once()
-        mock_pcf_client.reset_mock()
+        mock_client().run_task.assert_called_once()
+        mock_client.reset_mock()
         mock_get_all_rabbitmq_objects.side_effect = None
 
         # Run until memory is exhausted.
         mock_get_all_rabbitmq_objects.return_value = example_queues
         over_memory = 9000
-        mock_pcf_client().get_running_tasks_memory.return_value = over_memory
+        mock_client().get_running_tasks_memory.return_value = over_memory
         scale_by_tasks(celery_tasks, 8000)
-        mock_pcf_client().run_task.assert_called_once()
-        mock_pcf_client().reset_mock()
+        mock_client().run_task.assert_called_once()
+        mock_client().reset_mock()
 
         # Don't run if not enough memory.
         mock_get_all_rabbitmq_objects.return_value = example_queues
         mock_get_celery_task_details.return_value = celery_task_details
         scale_by_tasks(celery_tasks, 1000)
-        mock_pcf_client().run_task.assert_not_called()
-        mock_pcf_client().reset_mock()
+        mock_client().run_task.assert_not_called()
+        mock_client().reset_mock()
 
         # # Don't run if task limit is reached.
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 3}}
+        mock_client().get_running_tasks.return_value = {"pagination": {"total_results": 3}}
         scale_by_tasks(celery_tasks, 8000)
-        mock_pcf_client().run_task.assert_not_called()
-        mock_pcf_client().reset_mock()
+        mock_client().run_task.assert_not_called()
+        mock_client().reset_mock()
 
     @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
     def test_get_celery_task_details(self, mock_pcf_client):

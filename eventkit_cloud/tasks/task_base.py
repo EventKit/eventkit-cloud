@@ -63,12 +63,9 @@ class EventKitBaseTask(UserDetailsBase):
 
                 if not export_tasks:
                     if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):
-                        shutdown_celery_workers.s().apply_async(
-                            queue=queue_name, routing_key=queue_name
-                        )
+                        shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
                         # return value is unused but useful for storing in the celery result.
                         return {"action": "shutdown", "workers": workers}
-
 
 
 class LockingTask(UserDetailsBase):

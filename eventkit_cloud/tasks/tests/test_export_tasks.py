@@ -1218,7 +1218,7 @@ class TestExportTasks(ExportTaskBase):
             data_provider_slugs=None,
             run_zip_file_slug_sets=None,
             session_token=None,
-            queue_group="test"
+            queue_group="test",
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.logger")
