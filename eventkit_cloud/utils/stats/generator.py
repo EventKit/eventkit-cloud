@@ -186,7 +186,6 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
         "data_provider_task_count": len(processed_dptr),
         "export_task_count": export_task_count,
     }
-    # TODO: This fails with the error 'daemonic processes are not allowed to have children'
     returned_totals = process_totals_concurrently(list(all_stats.keys()), copy.deepcopy(all_stats))
     [totals.update(total) for total in returned_totals]
     tile_count = sum([provider.get("tile_count", 0) for slug, provider in totals.items() if isinstance(provider, dict)])

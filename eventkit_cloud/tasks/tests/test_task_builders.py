@@ -113,7 +113,6 @@ class TestTaskBuilder(TestCase):
         tasks = run.data_provider_task_records.first().tasks.filter(name="Geotiff Format (.tif)")
         self.assertIsNotNone(tasks)
 
-    # TODO: This is failing because the mock makes it look like the ETR already exists.
     @patch("eventkit_cloud.tasks.task_builders.ExportTaskRecord")
     def test_create_export_task_record(self, mock_export_task):
         from eventkit_cloud.tasks.enumerations import TaskState

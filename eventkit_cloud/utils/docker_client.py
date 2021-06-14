@@ -2,7 +2,6 @@ import requests
 import os
 import logging
 
-# TODO: What's the best way to only import this when we want to?  i.e. Not PCF deploys.
 try:
     import docker
 except ModuleNotFoundError:
@@ -25,8 +24,6 @@ class DockerClient(ScaleClient):
             raise Exception("An app_name (docker image) was not provided to run_task.")
         if not memory_in_mb:
             memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2G")
-        print(f"MEMORY IS {memory_in_mb}")
-        print(f"COMMAND IS {command}")
         # Docker client assumes the value is in bytes if you don't append an identifier.
         if isinstance(memory_in_mb, int):
             memory_in_mb = f"{memory_in_mb}m"
@@ -47,8 +44,6 @@ class DockerClient(ScaleClient):
             mem_limit=memory_in_mb,
             network="eventkit-cloud_default",
             auto_remove=False,  # TODO: Change this after testing.
-            # stdout=True,
-            # stderr=True,
             entrypoint="/bin/bash -c ",
             volumes=volumes,
             user="root",
@@ -70,7 +65,6 @@ class DockerClient(ScaleClient):
         result["pagination"]["total_results"] = len(containers)
         for container in containers:
             stats = container.stats(stream=False)
-            print(f"PRINTING STATS: {stats}")
             result["resources"].append(
                 {
                     "name": container.labels.get("task_name"),
@@ -78,7 +72,6 @@ class DockerClient(ScaleClient):
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
                 }
             )
-        print(f"PRINTING RESULT: {result} of type {type(result)}")
         return result
 
     def get_running_tasks_memory(self, app_name: str) -> int:

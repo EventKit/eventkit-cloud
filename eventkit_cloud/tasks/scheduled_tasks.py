@@ -94,10 +94,6 @@ def expire_runs_task():
             run.save()
 
 
-# Get all runs that are not done from the database.  In progress or not started.
-# Make sure that any in progress runs have an active listener.  If not, spin up the run and use that run uid.
-# Otherwise grab the next run uid and spin up a new worker for it.
-# Run uids vs. queues.  If there's a queue with that run uid with no listeners spin up a new one.
 @app.task(name="Scale Celery", base=LockingTask)
 def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
     """
@@ -290,12 +286,10 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param task:A dict containing the command, memory, and disk for the task to run.
     :return: None
     """
-    print(f"RUN TASK COMMAND TASK DICT: {task}")
     command = task["command"]
     disk = task["disk"]
     memory = task["memory"]
 
-    # TODO: Is queue_name really the right term here?
     logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
     client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 

@@ -35,7 +35,7 @@ services:
       - SITE_NAME
       - SITE_IP
       - TERM
-      - DEBUG=True
+      - DEBUG
       - PRODUCTION
       - DJANGO_LOG_LEVEL
       - LOG_LEVEL
@@ -155,10 +155,10 @@ services:
       - SITE_NAME
       - SITE_IP
       - TERM
-      - DEBUG=True
+      - DEBUG
       - PRODUCTION
       - DJANGO_LOG_LEVEL
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
@@ -246,7 +246,7 @@ services:
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
-      - SECRET_KEY=changme
+      - SECRET_KEY
   webpack:
     image: eventkit/eventkit-webpack:1.9.0
     build:

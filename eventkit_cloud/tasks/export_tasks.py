@@ -177,13 +177,8 @@ class ExportTask(EventKitBaseTask):
 
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir, 0o750)
-            logger.error(f"TASK: {task} and {dir(task)}")
-            logger.error(f"EPT DIR: {dir(task.export_provider_task)}")
-            logger.error(
-                f"EPT TASKS: {task.export_provider_task.tasks} and dir of {dir(task.export_provider_task.tasks)}"
-            )
+
             run_task_record = run.data_provider_task_records.get(slug="run")
-            # run_task_record = task.export_provider_task.tasks.get(slug="run")
 
             # Returns the default only if the key does not exist in the dictionary.
             stage_dir = kwargs.get("stage_dir", get_provider_staging_dir(run_dir, run_task_record.slug))
@@ -1752,11 +1747,10 @@ def pick_up_run_task(
     """
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
-    logger.error(f"PICKING UP RUN FOR {run_uid}")
     # This is just to make it easier to trace when user_details haven't been sent
     worker = socket.gethostname()
     queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
-    logger.error(f"QUEUE GROUP IS: {queue_group}")
+
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
@@ -1765,7 +1759,6 @@ def pick_up_run_task(
         data_provider_task_records = run.data_provider_task_records.filter(~Q(slug="run"))
         logger.debug(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
         if not data_provider_task_records:
-            logger.error(f"YAY Parsing and executing a new run {run_uid}.")
             TaskFactory().parse_tasks(
                 worker=worker,
                 run_uid=run_uid,

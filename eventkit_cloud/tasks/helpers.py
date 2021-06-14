@@ -679,10 +679,8 @@ def get_message_count(queue_name: str, message_type: str = "messages") -> int:
     queue_class = "queues"
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-        print(f"QUEUE NAME: {queue.get('name')} has {queue.get(message_type)} pending {message_type}")
         if queue.get("name") == queue_name:
             try:
-                print(f"QUEUE IS: {queue}")
                 return queue.get(message_type, 0)
             except Exception as e:
                 logger.info(e)
