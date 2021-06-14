@@ -65,7 +65,7 @@ class DockerClient(ScaleClient):
             for name in str(names).split(","):
                 containers += self.client.containers.list(filters={"label": f"task_name={name}"})
         else:
-            containers = self.client.containers.list(filters={"label": f"task_type=celery_task"})
+            containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
         result = {"resources": [], "pagination": {}}
         result["pagination"]["total_results"] = len(containers)
         for container in containers:

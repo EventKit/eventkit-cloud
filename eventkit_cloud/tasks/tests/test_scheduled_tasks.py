@@ -27,7 +27,6 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     order_celery_tasks,
     scale_by_tasks,
     get_celery_tasks_scale_by_task,
-    scale_by_runs,
 )
 from eventkit_cloud.utils.provider_check import CheckResults
 

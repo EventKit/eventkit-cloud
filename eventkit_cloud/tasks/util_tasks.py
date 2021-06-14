@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import socket
@@ -15,12 +14,8 @@ from rest_framework.response import Response
 
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
-from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.helpers import get_provider_staging_dir, get_run_staging_dir
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
-from eventkit_cloud.utils.docker_client import DockerClient
-from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 User = get_user_model()
