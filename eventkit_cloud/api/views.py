@@ -513,11 +513,8 @@ class JobViewSet(viewsets.ModelViewSet):
             # It scaling by run we don't put the task on the queue we just run on demand.
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 # Run is passed to celery to start the tasks.
-                celery_queue_group = get_celery_queue_group(worker="runs")
                 pick_up_run_task(
-                    run_uid=run_uid,
-                    user_details=user_details,
-                    session_token=request.session.get("access_token"),
+                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
                 )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -558,9 +555,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if run:
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 pick_up_run_task(
-                    run_uid=run_uid,
-                    user_details=user_details,
-                    session_token=request.session.get("access_token"),
+                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
                 )
             logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
