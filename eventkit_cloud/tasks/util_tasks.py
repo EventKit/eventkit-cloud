@@ -82,15 +82,10 @@ def rerun_data_provider_records(self, run_uid, user_id, user_details, data_provi
         if os.path.exists(stage_dir):
             logger.debug(f"REMOVING OLD STAGE DIR: {stage_dir}")
             shutil.rmtree(stage_dir)
-
     if run and not getattr(settings, "CELERY_SCALE_BY_RUN"):
-        pick_up_run_task.apply_async(
-            queue="runs",
-            routing_key="runs",
-            kwargs={
-                "run_uid": new_run_uid,
-                "user_details": user_details,
-                "data_provider_slugs": data_provider_slugs,
-                "run_zip_file_slug_sets": run_zip_file_slug_sets,
-            },
+        pick_up_run_task(
+            run_uid=run_uid,
+            user_details=user_details,
+            data_provider_slugs=data_provider_slugs,
+            run_zip_file_slug_sets=run_zip_file_slug_sets,
         )

@@ -432,31 +432,31 @@ def get_celery_tasks_scale_by_task():
         {
             f"{celery_group_name}": {
                 "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
-                + priority_queue_command
-                + get_celery_health_check_command("worker"),
+                + priority_queue_command,
+                # + get_celery_health_check_command("worker"),
                 # NOQA
                 "disk": 2048,
                 "memory": 2048,
             },
             f"{celery_group_name}.large": {
                 "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
-                + priority_queue_command
-                + get_celery_health_check_command("large"),
+                + priority_queue_command,
+                # + get_celery_health_check_command("large"),
                 # NOQA
                 "disk": 2048,
                 "memory": 4096,
             },
             "celery": {
                 "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-                + priority_queue_command
-                + get_celery_health_check_command("celery"),
+                + priority_queue_command,
+                # + get_celery_health_check_command("celery"),
                 "disk": 2048,
                 "memory": 2048,
                 "limit": 6,
             },
             f"{celery_group_name}.priority": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
-                + get_celery_health_check_command("priority"),  # NOQA
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority ",  # NOQA
+                # + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
                 "disk": 2048,
                 "memory": 2048,

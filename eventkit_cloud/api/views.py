@@ -514,14 +514,10 @@ class JobViewSet(viewsets.ModelViewSet):
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 # Run is passed to celery to start the tasks.
                 celery_queue_group = get_celery_queue_group(worker="runs")
-                pick_up_run_task.apply_async(
-                    queue=celery_queue_group,
-                    routing_key=celery_queue_group,
-                    kwargs={
-                        "run_uid": run_uid,
-                        "user_details": user_details,
-                        "session_token": request.session.get("access_token"),
-                    },
+                pick_up_run_task(
+                    run_uid=run_uid,
+                    user_details=user_details,
+                    session_token=request.session.get("access_token"),
                 )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -560,10 +556,12 @@ class JobViewSet(viewsets.ModelViewSet):
             )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
-            logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.apply_async(
-                queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
-            )
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                pick_up_run_task(
+                    run_uid=run_uid,
+                    user_details=user_details,
+                    session_token=request.session.get("access_token"),
+                )
             logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
             logger.debug("Returning Run Data.")

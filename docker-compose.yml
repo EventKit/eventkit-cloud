@@ -25,6 +25,7 @@ services:
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
       - MEMCACHED=memcached:11211
       - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
+      - CELERY_GROUP_NAME
       - QT_QPA_PLATFORM=offscreen
       - DATAPACKS_DEFAULT_SHARED
       - MAPPROXY_LOGS_REQUESTS
