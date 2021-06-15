@@ -588,9 +588,15 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                 include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
-        license_file = create_license_file(data_provider_task_record)
-        if license_file:
-            include_files += [license_file]
+        license_file = None
+        if include_files:
+            try:
+                license_file = create_license_file(data_provider_task_record)
+            except FileNotFoundError:
+                # This fails if run at beginning of run.
+                pass
+            if license_file:
+                include_files += [license_file]
 
         metadata["include_files"] = include_files
 
