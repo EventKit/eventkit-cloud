@@ -68,7 +68,7 @@ class DockerClient(ScaleClient):
             result["resources"].append(
                 {
                     "name": container.labels.get("task_name"),
-                    "memory_in_mb": stats["memory_stats"]["limit"] / 1000000,
+                    "memory_in_mb": stats["memory_stats"].get("limit", 0) / 1000000,
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
                 }
             )
