@@ -145,8 +145,9 @@ class TestJobViewSet(APITestCase):
         url = reverse("api:jobs-list")
         self.assertEqual(expected, url)
 
+    @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.validators.get_area_in_sqkm")
-    def test_make_job_with_export_providers(self, mock_get_area):
+    def test_make_job_with_export_providers(self, mock_get_area, pickup_mock):
         """tests job creation with export providers"""
         mock_get_area.return_value = 16
         export_providers = DataProvider.objects.all()
@@ -182,9 +183,9 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(provider_task.max_zoom, request_data["provider_tasks"][0]["max_zoom"])
 
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
-
         self.assertEqual(response["exports"][0]["provider"], "test")
         mock_get_area.assert_called_once()
+        pickup_mock.assert_called_once()
 
         request_data["export_providers"][0]["name"] = "test 2"
         # should be idempotent
@@ -317,11 +318,7 @@ class TestJobViewSet(APITestCase):
         url = reverse("api:jobs-list")
         response = self.client.post(url, request_data, format="json")
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.apply_async.assert_called_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
-            queue="runs",
-            routing_key="runs",
-        )
+        pickup_mock.assert_called_with(run_uid="some_run_uid", user_details=expected_user_details, session_token=None)
         msg = "status_code {} != {}: {}".format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data["uid"]
@@ -367,10 +364,8 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
-            queue="runs",
-            routing_key="runs",
+        pickup_mock.assert_called_once_with(
+            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
         )
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -423,10 +418,8 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
-            queue="runs",
-            routing_key="runs",
+        pickup_mock.assert_called_once_with(
+            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
         )
 
         # test the response headers
@@ -475,10 +468,8 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.apply_async.assert_called_once_with(
-            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
-            queue="runs",
-            routing_key="runs",
+        pickup_mock.assert_called_once_with(
+            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
         )
 
         # test the response headers
@@ -737,10 +728,8 @@ class TestBBoxSearch(APITestCase):
             }
             response = self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": True, "is_staff": False}
-            pickup_mock.apply_async.assert_called_with(
-                kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details, "session_token": None},
-                queue="runs",
-                routing_key="runs",
+            pickup_mock.assert_called_with(
+                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
             self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
         self.assertEqual(8, len(Job.objects.all()))
@@ -1015,6 +1004,7 @@ class TestExportRunViewSet(APITestCase):
 
     # TODO: This function has been changed a decent amount, might need to improve this test.
     @override_settings(CELERY_SCALE_BY_RUN=True)
+    @override_settings(CELERY_GROUP_NAME=None)
     @patch("eventkit_cloud.api.views.rerun_data_provider_records")
     @patch("eventkit_cloud.api.views.check_job_permissions")
     def test_rerun_providers(self, mock_check_job_permissions, mock_rerun_records):

@@ -15,6 +15,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 
 from eventkit_cloud.celery import TaskPriority, app
@@ -1202,6 +1203,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEqual(TaskState.RUNNING.value, run_task.status)
 
+    @override_settings(CELERY_GROUP_NAME="test")
     @patch("eventkit_cloud.tasks.task_factory.TaskFactory")
     @patch("eventkit_cloud.tasks.export_tasks.socket")
     def test_pickup_run_task(self, socket, task_factory):
