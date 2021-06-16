@@ -65,3 +65,5 @@ urlpatterns = [
     re_path(r"^api/", include(notifications.urls)),
     re_path(r"^api/estimate$", EstimatorView.as_view()),
 ]
+
+# urlpatterns = format_suffix_patterns(urlpatterns, allowed=['geojson', 'json', 'html'])
