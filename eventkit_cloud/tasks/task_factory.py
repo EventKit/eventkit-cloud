@@ -130,7 +130,6 @@ class TaskFactory:
         job = run.job
         run_dir = get_run_staging_dir(run.uid)
 
-        logger.error(f"Creating providers for {queue_group}")
         wait_for_providers_settings = {
             "queue": f"{queue_group}.priority",
             "routing_key": f"{queue_group}.priority",

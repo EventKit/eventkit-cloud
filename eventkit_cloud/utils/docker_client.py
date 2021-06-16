@@ -1,3 +1,5 @@
+import shlex
+
 import requests
 import os
 import logging
@@ -35,11 +37,14 @@ class DockerClient(ScaleClient):
             os.getenv("BIND_MOUNT_LOCATION"): {"bind": "/var/lib/eventkit/", "mode": "rw"},
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
         }
-        # TODO: How do we avoid hard coding network?
+
+        # Don't pass in the HOSTNAME of the main celery node.
+        environment = dict(os.environ)
+        environment.pop("HOSTNAME")
         self.client.containers.run(
             image=app_name,
-            command=f'"{command}"',
-            environment=dict(os.environ),
+            command=shlex.quote(command),
+            environment=environment,
             detach=True,
             mem_limit=memory_in_mb,
             network="eventkit-cloud_default",

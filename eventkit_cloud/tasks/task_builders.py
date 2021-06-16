@@ -129,7 +129,7 @@ class TaskChainBuilder(object):
 
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
-            logger.error(f"Setting up task for format: {export_format.name} with {export_format.options}")
+            logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
             export_format_key = (
                 "ogcapi-process"
                 if export_format.options.get("proxy")
