@@ -83,22 +83,6 @@ class TaskChainBuilder(object):
         job_name = normalize_name(job.name)
         # get the formats to export
         formats: List[ExportFormat] = list(data_provider_task.formats.all())
-        export_tasks = {}
-
-        # If WCS we will want geotiff...
-        if "wcs" in primary_export_task.name.lower():
-            formats += [ExportFormat.objects.prefetch_related("supported_projections").get(slug="gtiff")]
-
-        # build a list of celery tasks based on the export formats...
-        # for export_format in formats:
-        #     export_format_slug = "ogcapi-process" if export_format.options.proxy else export_format.slug
-        #     try:
-        #         export_tasks[export_format] = {"obj": create_format_task(export_format_slug), "task_uid": None}
-        #     except KeyError as e:
-        #         logger.debug("KeyError: export_tasks[{}] - {}".format(export_format_slug, e))
-        #     except ImportError as e:
-        #         msg = "Error importing export task: {0}".format(e)
-        #         logger.debug(msg)
 
         data_provider_task_record: DataProviderTaskRecord = DataProviderTaskRecord.objects.create(
             run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
