@@ -52,9 +52,17 @@ class TestUtilTasks(TestCase):
         os_mock.path.exists.return_value = True
         shutil_mock.rmtree.assert_called_once()
 
-        pickup_mock.assert_called_with(
-            run_uid=new_run_uid,
-            user_details=expected_user_details,
-            data_provider_slugs=expected_slugs,
-            run_zip_file_slug_sets=expected_slugs,
-        )
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            rerun_data_provider_records.run(
+                run_uid=self.run.uid,
+                user_id=self.user.id,
+                user_details=expected_user_details,
+                data_provider_slugs=expected_slugs,
+            )
+
+            pickup_mock.assert_called_with(
+                run_uid=new_run_uid,
+                user_details=expected_user_details,
+                data_provider_slugs=expected_slugs,
+                run_zip_file_slug_sets=expected_slugs,
+            )

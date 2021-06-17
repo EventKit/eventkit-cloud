@@ -185,7 +185,6 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
         self.assertEqual(response["exports"][0]["provider"], "test")
         mock_get_area.assert_called_once()
-        pickup_mock.assert_called_once()
 
         request_data["export_providers"][0]["name"] = "test 2"
         # should be idempotent
@@ -193,6 +192,10 @@ class TestJobViewSet(APITestCase):
 
         export_providers = DataProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
+            pickup_mock.assert_called_once()
 
     def test_get_job_detail(self,):
         expected = "/api/jobs/{0}".format(self.job.uid)
@@ -317,14 +320,19 @@ class TestJobViewSet(APITestCase):
 
         url = reverse("api:jobs-list")
         response = self.client.post(url, request_data, format="json")
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.assert_called_with(run_uid="some_run_uid", user_details=expected_user_details, session_token=None)
         msg = "status_code {} != {}: {}".format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data["uid"]
 
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            self.client.post(url, request_data, format="json")
+            expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
+            pickup_mock.assert_called_with(
+                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
+            )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
@@ -363,10 +371,7 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data["uid"]
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.assert_called_once_with(
-            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
-        )
+
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(response["Content-Type"], "application/json")
@@ -389,6 +394,13 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertIsNotNone(job.preset.json_tags)
         self.assertEqual(259, len(job.preset.json_tags))
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            self.client.post(url, request_data, format="json")
+            expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
+            pickup_mock.assert_called_once_with(
+                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
+            )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
@@ -417,10 +429,6 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data["uid"]
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.assert_called_once_with(
-            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
-        )
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -438,6 +446,13 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data["description"], request_data["description"])
         self.assertFalse(response.data["published"])
         self.assertEqual(259, len(self.job.preset.json_tags))
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            self.client.post(url, request_data, format="json")
+            expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
+            pickup_mock.assert_called_once_with(
+                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
+            )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
@@ -467,10 +482,6 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data["uid"]
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        pickup_mock.assert_called_once_with(
-            run_uid="some_run_uid", user_details=expected_user_details, session_token=None
-        )
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -486,6 +497,13 @@ class TestJobViewSet(APITestCase):
         )
         self.assertEqual(response.data["name"], request_data["name"])
         self.assertEqual(response.data["description"], request_data["description"])
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            self.client.post(url, request_data, format="json")
+            expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
+            pickup_mock.assert_called_once_with(
+                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
+            )
 
     def test_invalid_selection(self,):
         url = reverse("api:jobs-list")
@@ -727,12 +745,17 @@ class TestBBoxSearch(APITestCase):
                 "provider_tasks": [{"provider": "osm-generic", "formats": formats}],
             }
             response = self.client.post(url, request_data, format="json")
-            expected_user_details = {"username": "demo", "is_superuser": True, "is_staff": False}
-            pickup_mock.assert_called_with(
-                run_uid="some_run_uid", user_details=expected_user_details, session_token=None
-            )
             self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
-        self.assertEqual(8, len(Job.objects.all()))
+
+            with self.settings(CELERY_SCALE_BY_RUN=False):
+                self.client.post(url, request_data, format="json")
+                expected_user_details = {"username": "demo", "is_superuser": True, "is_staff": False}
+                pickup_mock.assert_called_with(
+                    run_uid="some_run_uid", user_details=expected_user_details, session_token=None
+                )
+                self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
+
+        self.assertEqual(16, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
     def test_bbox_search_success(self,):
