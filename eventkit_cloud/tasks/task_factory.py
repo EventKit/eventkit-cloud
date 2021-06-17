@@ -147,15 +147,15 @@ class TaskFactory:
 
             finalized_provider_task_chain_list = []
             # Create a task record which can hold tasks for the run (datapack)
-            run_task_record = DataProviderTaskRecord.objects.create(
+            run_data_provider_task_record = DataProviderTaskRecord.objects.create(
                 run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
             )
-            stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
+            stage_dir = get_provider_staging_dir(run_dir, run_data_provider_task_record.slug)
             if not os.path.exists(stage_dir):
                 os.makedirs(stage_dir, 0o750)
 
             run_zip_task_chain = get_zip_task_chain(
-                data_provider_task_record_uid=run_task_record.uid,
+                data_provider_task_record_uid=run_data_provider_task_record.uid,
                 stage_dir=get_run_staging_dir(run_uid),
                 worker=worker,
             )
@@ -194,6 +194,7 @@ class TaskFactory:
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(
                             run_uid,
+                            run_data_provider_task_record.uid,
                             run_dir,
                             run_zip_task_chain,
                             run_zip_file_slug_sets=run_zip_file_slug_sets,
@@ -441,7 +442,12 @@ class InvalidLicense(Error):
 
 
 def create_finalize_run_task_collection(
-    run_uid=None, run_dir=None, run_zip_task_chain=None, run_zip_file_slug_sets=None, apply_args=None
+    run_uid=None,
+    run_provider_task_record_uid=None,
+    run_dir=None,
+    run_zip_task_chain=None,
+    run_zip_file_slug_sets=None,
+    apply_args=None,
 ):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
@@ -460,6 +466,10 @@ def create_finalize_run_task_collection(
             if zipfile_chain:
                 all_task_sigs_list.append(zipfile_chain)
 
+    finalize_export_provider_signature = finalize_export_provider_task.s(
+        data_provider_task_uid=run_provider_task_record_uid, status=TaskState.COMPLETED.value, locking_task_key=run_uid,
+    )
+    all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)
     all_task_sigs = itertools.chain(all_task_sigs_list)
     finalize_chain = chain(*all_task_sigs)
