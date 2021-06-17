@@ -122,11 +122,12 @@ class TestExportTaskFactory(TestCase):
 
 
 class CreateFinalizeRunTaskCollectionTests(TestCase):
+    @patch("eventkit_cloud.tasks.task_factory.finalize_export_provider_task")
     @patch("eventkit_cloud.tasks.task_factory.create_zip_task")
     @patch("eventkit_cloud.tasks.task_factory.finalize_run_task")
     @patch("eventkit_cloud.tasks.task_factory.chain")
     def test_create_finalize_run_task_collection(
-        self, chain, finalize_run_task, zip_file_task,
+        self, chain, finalize_run_task, zip_file_task, finalize_export_provider_task
     ):
         """ Checks that all of the expected tasks were prepared and combined in a chain for return.
         """
@@ -160,5 +161,9 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         chain_inputs = chain.call_args[0]
         # The result of setting the args & settings for each task,
         # which unmocked would be a task signature, should be passed to celery.chain
-        expected_chain_inputs = (mock_zip_chain, finalize_run_task.si.return_value.set.return_value)
+        expected_chain_inputs = (
+            mock_zip_chain,
+            finalize_export_provider_task.s.return_value,
+            finalize_run_task.si().set.return_value,
+        )
         self.assertEqual(chain_inputs, expected_chain_inputs)
