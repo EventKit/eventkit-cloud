@@ -397,28 +397,34 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
-        from eventkit_cloud.user_requests.models import UserSizeRule
 
-        if user is None:
+        if not user:
             return self.max_data_size
 
-        try:
-            user_rule = UserSizeRule.objects.get(provider=self, user=user)
-            return user_rule.max_data_size
-        except UserSizeRule.DoesNotExist:
-            return self.max_data_size
+        # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
+        if user:
+            user_size_rule = list(
+                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
+            )
+            if user_size_rule:
+                return user_size_rule[0].max_data_size
+
+        return self.max_data_size
 
     def get_max_selection_size(self, user=None):
-        from eventkit_cloud.user_requests.models import UserSizeRule
 
-        if user is None:
+        if not user:
             return self.max_selection
 
-        try:
-            user_rule = UserSizeRule.objects.get(provider=self, user=user)
-            return user_rule.max_selection_size
-        except UserSizeRule.DoesNotExist:
-            return self.max_selection
+        # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched. 
+        if user:
+            user_size_rule = list(
+                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
+            )
+            if user_size_rule:
+                return user_size_rule[0].max_selection_size
+
+        return self.max_selection
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
