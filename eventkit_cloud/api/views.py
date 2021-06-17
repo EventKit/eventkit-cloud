@@ -21,7 +21,7 @@ from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
+from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
@@ -36,8 +36,8 @@ from eventkit_cloud.api.filters import (
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
 from eventkit_cloud.api.renderers import (
-    HOTExportApiRenderer,
     PlainTextRenderer,
+    GeojsonRenderer,
 )
 from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
@@ -65,6 +65,7 @@ from eventkit_cloud.api.serializers import (
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
     UserJobActivitySerializer,
+    ExportRunGeoFeatureSerializer,
 )
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
@@ -128,12 +129,17 @@ from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
-renderer_classes = (JSONRenderer, HOTExportApiRenderer)
+renderer_classes = (BrowsableAPIRenderer, JSONRenderer)
+
 
 ESTIMATE_CACHE_TIMEOUT = 600
 
 
-class JobViewSet(viewsets.ModelViewSet):
+class EventkitViewSet(viewsets.ModelViewSet):
+    renderer_classes = renderer_classes
+
+
+class JobViewSet(EventkitViewSet):
     """
     Main endpoint for export creation and management. Provides endpoints
     for creating, listing and deleting export jobs.
@@ -180,7 +186,7 @@ class JobViewSet(viewsets.ModelViewSet):
     )
 
     def dispatch(self, request, *args, **kwargs):
-        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
+        return EventkitViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -955,7 +961,7 @@ class RegionalPolicyViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "uid"
 
 
-class RegionalJustificationViewSet(viewsets.ModelViewSet):
+class RegionalJustificationViewSet(EventkitViewSet):
     serializer_class = RegionalJustificationSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "uid"
@@ -968,7 +974,7 @@ class RegionalJustificationViewSet(viewsets.ModelViewSet):
             return RegionalJustification.objects.filter(user=self.request.user)
 
 
-class ExportRunViewSet(viewsets.ModelViewSet):
+class ExportRunViewSet(EventkitViewSet):
     """
     **retrieve:**
 
@@ -1018,9 +1024,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     To filter by geojson send the geojson geometry in the body of a POST request under the key `geojson`.
     """
 
-    serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = LinkHeaderPagination
+    renderer_classes += (GeojsonRenderer,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_class = ExportRunFilter
     lookup_field = "uid"
@@ -1043,6 +1049,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         "job__featured",
     )
     ordering = ("-started_at",)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if (
+            self.request.query_params.get("format", "").lower() == "geojson"
+            or self.request.headers.get("content-type") == "application/geo+json"
+        ):
+            return ExportRunGeoFeatureSerializer
+        return ExportRunSerializer
 
     def get_queryset(self):
         jobs = JobPermission.userjobs(self.request.user, "READ")
@@ -1319,7 +1333,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
 
 
-class RunZipFileViewSet(viewsets.ModelViewSet):
+class RunZipFileViewSet(EventkitViewSet):
     serializer_class = RunZipFileSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "uid"
@@ -1410,7 +1424,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
-class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
+class DataProviderTaskRecordViewSet(EventkitViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
@@ -1737,7 +1751,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
         return Response({}, content_type="application/json", status=status.HTTP_200_OK)
 
 
-class GroupViewSet(viewsets.ModelViewSet):
+class GroupViewSet(EventkitViewSet):
     """
     Api components for viewing, creating, and editing groups
 
@@ -2067,7 +2081,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(EventkitViewSet):
     """
      Api components for viewing and working with notifications
     """
@@ -2191,7 +2205,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({"success": True}, status=status.HTTP_200_OK)
 
 
-class DataProviderRequestViewSet(viewsets.ModelViewSet):
+class DataProviderRequestViewSet(EventkitViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     serializer_class = DataProviderRequestSerializer
     lookup_field = "uid"
@@ -2211,7 +2225,7 @@ class DataProviderRequestViewSet(viewsets.ModelViewSet):
         return DataProviderRequest.objects.filter(user=user)
 
 
-class SizeIncreaseRequestViewSet(viewsets.ModelViewSet):
+class SizeIncreaseRequestViewSet(EventkitViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     serializer_class = SizeIncreaseRequestSerializer
     lookup_field = "uid"

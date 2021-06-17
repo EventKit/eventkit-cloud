@@ -812,9 +812,9 @@ class TestExportRunViewSet(APITestCase):
         self.attribute_class.users.add(self.user)
         self.attribute_class.save()
 
-        token = Token.objects.create(user=self.user)
+        self.token = Token.objects.create(user=self.user)
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + token.key,
+            HTTP_AUTHORIZATION="Token " + self.token.key,
             HTTP_ACCEPT="application/json; version=1.0",
             HTTP_ACCEPT_LANGUAGE="en",
             HTTP_HOST="testserver",
@@ -884,6 +884,28 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure we get the correct uid back out
         self.assertEqual(self.run_uid, result[0].get("uid"))
+        self.assertEqual(response["content-type"], "application/json")
+
+        # Test geojson response via accept header.
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + self.token.key,
+            HTTP_ACCEPT="application/geo+json",
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
+        )
+        response = self.client.get(url)
+        self.assertEqual(response["content-type"], "application/geo+json")
+
+        # Test geojson response via format parameter.
+        # Adding format as a kwarg here results in a url /api/runs/uid.geojson which eventkit isn't supporting.
+        url = f"{reverse('api:runs-detail', args=[self.run_uid])}?format=geojson"
+        expected = f"/api/runs/{self.run_uid}?format=geojson"
+        self.assertEqual(expected, url)
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + self.token.key, HTTP_ACCEPT_LANGUAGE="en", HTTP_HOST="testserver",
+        )
+        response = self.client.get(url)
+        self.assertEqual(response["content-type"], "application/geo+json")
 
     def test_retrieve_run_no_attribute_class(self,):
         expected = "/api/runs/{0}".format(self.run_uid)
