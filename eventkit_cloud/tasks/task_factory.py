@@ -418,7 +418,11 @@ class InvalidLicense(Error):
 
 
 def create_finalize_run_task_collection(
-    run_uid=None, run_zip_task_chain=None, run_zip_file_slug_sets=None, apply_args=None
+    run_uid=None,
+    run_provider_task_record_uid=None,
+    run_zip_task_chain=None,
+    run_zip_file_slug_sets=None,
+    apply_args=None,
 ):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
@@ -437,6 +441,10 @@ def create_finalize_run_task_collection(
             if zipfile_chain:
                 all_task_sigs_list.append(zipfile_chain)
 
+    finalize_export_provider_signature = finalize_export_provider_task.s(
+        data_provider_task_uid=run_provider_task_record_uid, status=TaskState.COMPLETED.value, locking_task_key=run_uid,
+    )
+    all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)
     all_task_sigs = itertools.chain(all_task_sigs_list)
     finalize_chain = chain(*all_task_sigs)

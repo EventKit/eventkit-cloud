@@ -23,6 +23,8 @@ from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from rest_framework_gis import serializers as geo_serializers
+from rest_framework_gis.fields import GeometrySerializerMethodField
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
@@ -486,6 +488,21 @@ class ExportRunSerializer(serializers.ModelSerializer):
     def get_expiration(self, obj):
         if not obj.deleted:
             return obj.expiration
+
+
+class ExportRunGeoFeatureSerializer(ExportRunSerializer, GeoFeatureModelSerializer):
+    run_geom = GeometrySerializerMethodField()
+    bbox = GeometrySerializerMethodField()
+
+    class Meta(ExportRunSerializer.Meta):
+        geo_field = "run_geom"
+        bbox_geo_field = "bbox"
+
+    def get_run_geom(self, obj):
+        return obj.job.the_geom
+
+    def get_bbox(self, obj):
+        return obj.job.the_geom.extent
 
 
 class RunZipFileSerializer(serializers.ModelSerializer):

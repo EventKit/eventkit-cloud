@@ -2125,23 +2125,25 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     """
     result = result or {}
 
-    run = ExportRun.objects.get(uid=run_uid)
+    run: ExportRun = ExportRun.objects.prefetch_related("data_provider_task_records").get(uid=run_uid)
     run.status = TaskState.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value
-    provider_tasks = run.data_provider_task_records.exclude(slug="run")
-
+    data_provider_task_records = run.data_provider_task_records.all()
     # mark run as incomplete if any tasks fail
-    if any(getattr(TaskState, task.status, None) in TaskState.get_incomplete_states() for task in provider_tasks):
+    if any(
+        getattr(TaskState, task.status, None) in TaskState.get_incomplete_states()
+        for task in data_provider_task_records
+    ):
         run.status = TaskState.INCOMPLETE.value
         notification_level = NotificationLevel.WARNING.value
         verb = NotificationVerb.RUN_FAILED.value
-    if all(getattr(TaskState, task.status, None) == TaskState.CANCELED for task in provider_tasks):
+    if all(getattr(TaskState, task.status, None) == TaskState.CANCELED for task in data_provider_task_records):
         run.status = TaskState.CANCELED.value
         verb = NotificationVerb.RUN_CANCELED.value
         notification_level = NotificationLevel.WARNING.value
-    finished = timezone.now()
-    run.finished_at = finished
+
+    run.finished_at = timezone.now()
     run.save()
 
     # sendnotification to user via django notifications
