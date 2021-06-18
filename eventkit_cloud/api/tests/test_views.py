@@ -12,7 +12,6 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
-from django.test import override_settings
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -147,7 +146,7 @@ class TestJobViewSet(APITestCase):
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.validators.get_area_in_sqkm")
-    def test_make_job_with_export_providers(self, mock_get_area, pickup_mock):
+    def test_make_job_with_export_providers(self, mock_get_area, mock_pickup):
         """tests job creation with export providers"""
         mock_get_area.return_value = 16
         export_providers = DataProvider.objects.all()
@@ -195,7 +194,7 @@ class TestJobViewSet(APITestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
-            pickup_mock.assert_called_once()
+            mock_pickup.assert_called_once()
 
     def test_get_job_detail(self,):
         expected = "/api/jobs/{0}".format(self.job.uid)
@@ -297,7 +296,7 @@ class TestJobViewSet(APITestCase):
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
-    def test_create_zipfile(self, create_run_mock, pickup_mock):
+    def test_create_zipfile(self, create_run_mock, mock_pickup):
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -330,13 +329,13 @@ class TestJobViewSet(APITestCase):
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-            pickup_mock.assert_called_with(
+            mock_pickup.assert_called_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
-    def test_create_job_success(self, create_run_mock, pickup_mock):
+    def test_create_job_success(self, create_run_mock, mock_pickup):
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -398,13 +397,13 @@ class TestJobViewSet(APITestCase):
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-            pickup_mock.assert_called_once_with(
+            mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
-    def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
+    def test_create_job_with_config_success(self, create_run_mock, mock_pickup):
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -450,13 +449,13 @@ class TestJobViewSet(APITestCase):
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-            pickup_mock.assert_called_once_with(
+            mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
-    def test_create_job_with_tags(self, create_run_mock, pickup_mock):
+    def test_create_job_with_tags(self, create_run_mock, mock_pickup):
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -501,7 +500,7 @@ class TestJobViewSet(APITestCase):
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
             expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-            pickup_mock.assert_called_once_with(
+            mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
@@ -707,7 +706,7 @@ class TestBBoxSearch(APITestCase):
 
     @patch("eventkit_cloud.api.views.pick_up_run_task")
     @patch("eventkit_cloud.api.views.create_run")
-    def setUp(self, create_run_mock, pickup_mock):
+    def setUp(self, create_run_mock, mock_pickup):
         create_run_mock.return_value = "some_run_uid"
 
         url = reverse("api:jobs-list")
@@ -750,7 +749,7 @@ class TestBBoxSearch(APITestCase):
             with self.settings(CELERY_SCALE_BY_RUN=False):
                 self.client.post(url, request_data, format="json")
                 expected_user_details = {"username": "demo", "is_superuser": True, "is_staff": False}
-                pickup_mock.assert_called_with(
+                mock_pickup.assert_called_with(
                     run_uid="some_run_uid", user_details=expected_user_details, session_token=None
                 )
                 self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
@@ -1047,9 +1046,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEqual(0, len(result))
 
-    # TODO: This function has been changed a decent amount, might need to improve this test.
-    @override_settings(CELERY_SCALE_BY_RUN=True)
-    @override_settings(CELERY_GROUP_NAME=None)
     @patch("eventkit_cloud.api.views.rerun_data_provider_records")
     @patch("eventkit_cloud.api.views.check_job_permissions")
     def test_rerun_providers(self, mock_check_job_permissions, mock_rerun_records):

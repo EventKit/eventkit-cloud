@@ -33,7 +33,7 @@ class TestUtilTasks(TestCase):
     @patch("eventkit_cloud.tasks.util_tasks.shutil")
     @patch("eventkit_cloud.tasks.util_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.pick_up_run_task")
-    def test_rerun_data_provider_records(self, pickup_mock, os_mock, shutil_mock, create_run_mock):
+    def test_rerun_data_provider_records(self, mock_pickup, os_mock, shutil_mock, create_run_mock):
         expected_slugs = ["osm"]
         new_run_uid, run_zip_file_slug_sets = create_run_mock.return_value = (
             ExportRun.objects.create(job=self.job, user=self.user).uid,
@@ -60,7 +60,7 @@ class TestUtilTasks(TestCase):
                 data_provider_slugs=expected_slugs,
             )
 
-            pickup_mock.assert_called_with(
+            mock_pickup.assert_called_with(
                 run_uid=new_run_uid,
                 user_details=expected_user_details,
                 data_provider_slugs=expected_slugs,

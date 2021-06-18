@@ -30,10 +30,8 @@ from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 
-# Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 
-# Get an instance of a logger
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -64,6 +62,7 @@ from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
 
+# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 

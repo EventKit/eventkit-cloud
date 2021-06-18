@@ -48,7 +48,7 @@ class DockerClient(ScaleClient):
             detach=True,
             mem_limit=memory_in_mb,
             network="eventkit-cloud_default",
-            auto_remove=False,  # TODO: Change this after testing.
+            auto_remove=False,
             entrypoint="/bin/bash -c ",
             volumes=volumes,
             user="root",
