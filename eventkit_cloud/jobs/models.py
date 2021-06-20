@@ -416,7 +416,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if not user:
             return self.max_selection
 
-        # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched. 
+        # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
         if user:
             user_size_rule = list(
                 filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
