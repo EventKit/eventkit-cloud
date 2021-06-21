@@ -139,7 +139,7 @@ def scale_by_runs(max_tasks_memory):
             shutdown_celery_workers.s().apply_async(queue=finished_run.uid, routing_key=finished_run.uid)
 
     for run in runs:
-        logger.error(f"Checking to see if submitted run {run.uid} needs a new worker.")
+        logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
         if max_runs and total_tasks >= max_runs:
             break
@@ -152,7 +152,7 @@ def scale_by_runs(max_tasks_memory):
         running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
         running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
 
-        logger.error(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
+        logger.info(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
         if running_tasks_by_queue_count:
             logger.info(f"Already a consumer for {task_name}")
             continue
