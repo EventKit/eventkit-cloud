@@ -38,6 +38,18 @@ def get_cached_model(model: Type[models.Model], prop: str, value: str) -> Type[m
     return cache.get_or_set(f"{model.__name__}-{prop}-{value}", get_model_by_params(model, **{prop: value}), 360)
 
 
+def get_query_cache_key(*args):
+    from eventkit_cloud.tasks.helpers import normalize_name
+
+    cleaned_args = []
+    for arg in args:
+        if hasattr(arg, "__name__"):
+            cleaned_args += [normalize_name(str(arg.__name__))]
+        else:
+            cleaned_args += [normalize_name(str(args))]
+    return "-".join(cleaned_args)
+
+
 def download_file(url, download_dir=None):
     from eventkit_cloud.tasks.helpers import normalize_name
 
