@@ -1017,13 +1017,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return obj.export_provider_type.type_name
 
     def get_supported_formats(self, obj):
-        formats = list(obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description"))
-        formats += list(
-            ExportFormat.objects.filter(options__providers__contains=obj.slug).values(
-                "uid", "name", "slug", "description"
-            )
-        )
-        return formats
+        fields = ["uid", "name", "slug", "description"]
+        export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
+            options__providers__contains=obj.slug
+        ).values("uid", "name", "slug", "description")
+        return export_formats
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult

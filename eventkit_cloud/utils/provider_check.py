@@ -864,7 +864,7 @@ def perform_provider_check(provider: DataProvider, geojson) -> str:
             layer=provider.layer,
             aoi_geojson=geojson,
             slug=provider.slug,
-            max_area=provider.max_selection,
+            max_area=int(provider.max_selection),
             config=conf,
         )
         response = checker.check()

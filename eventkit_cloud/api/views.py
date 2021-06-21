@@ -73,6 +73,7 @@ from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
     NotificationLevel,
+    get_query_cache_key,
 )
 from eventkit_cloud.core.models import (
     GroupPermission,
@@ -132,7 +133,7 @@ logger = logging.getLogger(__name__)
 # controls how api responses are rendered
 renderer_classes = (BrowsableAPIRenderer, JSONRenderer)
 
-
+DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
 ESTIMATE_CACHE_TIMEOUT = 600
 
 
@@ -861,7 +862,12 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None)).order_by(*self.ordering)
+        return (
+            DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
+            .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
+            .filter(Q(user=self.request.user) | Q(user=None))
+            .order_by(*self.ordering)
+        )
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
@@ -891,9 +897,17 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * slug: optional lookup field
         * return: A list of data providers.
         """
-        providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
-        data = DataProviderSerializer(providers, many=True, context={"request": request}).data
-        data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+
+        cache_key = get_query_cache_key(DataProvider, User, "serialized")
+        data = cache.get(cache_key)
+        if not data:
+            providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
+
+            data = DataProviderSerializer(providers, many=True, context={"request": request}).data
+            data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+
+            cache.set(cache_key, data, timeout=DEFAULT_TIMEOUT)
+
         return Response(data)
 
     def retrieve(self, request, slug=None, *args, **kwargs):
