@@ -945,11 +945,14 @@ def download_data(
 
     response = None
     try:
-        session = get_or_update_session(session=session, cert_info=cert_info, provider_slug=provider_slug)
+        session = get_or_update_session(
+            session=session, cert_info=cert_info, provider_slug=provider_slug, cookie=cookie
+        )
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to get data from: {input_url}")
         if response:
             logger.error(response.text)
         raise Exception("Failed to download data.") from e

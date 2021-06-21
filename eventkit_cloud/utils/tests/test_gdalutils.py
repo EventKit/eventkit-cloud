@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import doctest
 import logging
 import os
 from unittest.mock import Mock, patch, call, MagicMock, ANY
@@ -7,6 +8,7 @@ from uuid import uuid4
 from django.test import TestCase
 from osgeo import gdal, ogr
 
+from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.utils.gdalutils import (
     convert,
     is_envelope,
@@ -25,6 +27,11 @@ from eventkit_cloud.utils.gdalutils import (
 logger = logging.getLogger(__name__)
 
 
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(gdalutils))
+    return tests
+
+
 class TestGdalUtils(TestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
@@ -36,7 +43,6 @@ class TestGdalUtils(TestCase):
     @patch("eventkit_cloud.utils.gdalutils.os.path.isfile")
     @patch("eventkit_cloud.utils.gdalutils.open_dataset")
     def test_get_meta(self, open_dataset_mock, isfile):
-
         dataset_path = "/path/to/dataset"
         isfile.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
@@ -109,7 +115,6 @@ class TestGdalUtils(TestCase):
     @patch("eventkit_cloud.utils.gdalutils.get_meta")
     @patch("eventkit_cloud.utils.gdalutils.os.path.isfile")
     def test_convert(self, isfile, get_meta_mock, is_envelope_mock, get_task_command_mock):
-
         isfile.return_value = True
 
         with self.assertRaises(Exception):
