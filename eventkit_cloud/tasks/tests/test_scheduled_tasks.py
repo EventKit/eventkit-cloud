@@ -2,7 +2,9 @@
 
 import json
 import logging
+import os
 from collections import OrderedDict
+from unittest import mock
 from unittest.mock import patch, call
 
 from django.conf import settings
@@ -10,6 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.template.loader import get_template
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 from notifications.models import Notification
 
@@ -21,10 +24,13 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     send_warning_email,
     check_provider_availability_task,
     clean_up_queues_task,
-    pcf_scale_celery_task,
     list_to_dict,
-    get_celery_pcf_task_details,
+    get_celery_task_details,
     order_celery_tasks,
+    scale_by_tasks,
+    get_celery_tasks_scale_by_task,
+    scale_by_runs,
+    scale_celery_task,
 )
 from eventkit_cloud.utils.provider_check import CheckResults
 
@@ -77,25 +83,99 @@ class TestExpireRunsTask(TestCase):
             self.assertEqual(2, Notification.objects.all().count())
 
 
-class TestPcfScaleCeleryTask(TestCase):
+@override_settings(PCF_SCALING=False)
+class TestScaleCeleryTask(TestCase):
+    def setUp(self,):
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username="test", email="test@test.com", password="test")
+        bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        created_at = timezone.now() - timezone.timedelta(days=7)
+        Job.objects.create(
+            name="TestJob",
+            created_at=created_at,
+            published=False,
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
+
+    @patch("eventkit_cloud.tasks.scheduled_tasks.scale_by_tasks")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.scale_by_runs")
+    def test_scale_celery_task(self, mock_scale_by_runs, mock_scale_by_tasks):
+        with self.settings(CELERY_SCALE_BY_RUN=True):
+            scale_celery_task(16000)
+            mock_scale_by_runs.assert_called_once_with(16000)
+
+        with self.settings(CELERY_SCALE_BY_RUN=False):
+            scale_celery_task(16000)
+            celery_tasks = get_celery_tasks_scale_by_task()
+            mock_scale_by_tasks.assert_called_once_with(celery_tasks, 16000)
+
+    @patch("eventkit_cloud.tasks.scheduled_tasks.pick_up_run_task")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.run_task_command")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
+    def test_scale_by_runs(self, mock_docker_client, mock_pcf_client, mock_run_task_command, mock_pickup):
+
+        # Test that the correct client is used.
+        with mock.patch.dict(os.environ, {"PCF_SCALING": "True"}):
+            scale_by_runs(3000)
+            mock_pcf_client.assert_called_once()
+
+        # Test zero runs.
+        scale_by_runs(3000)
+        mock_docker_client.assert_called_once()
+        mock_run_task_command.assert_not_called()
+
+        job = Job.objects.all()[0]
+        run = ExportRun.objects.create(
+            job=job, user=job.user, expiration=timezone.now() + timezone.timedelta(days=8), status="SUBMITTED"
+        )
+        example_memory_used = 2048
+        mock_docker_client().get_running_tasks_memory.return_value = example_memory_used
+        mock_docker_client().get_running_tasks.return_value = {"resources": [], "pagination": {"total_results": 0}}
+
+        # If running_tasks_memory > max_tasks_memory do not scale.
+        scale_by_runs(2000)
+        mock_run_task_command.assert_not_called()
+
+        # Assert that a task was run.
+        scale_by_runs(9000)
+        mock_pickup.assert_called_once_with(run_uid=run.uid, session_token=None)
+        mock_run_task_command.assert_called_once()
+
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.order_celery_tasks")
-    @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_pcf_task_details")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
-    def test_pcf_scale_celery(
-        self, mock_pcf_client, mock_get_celery_pcf_task_details, mock_order_celery_tasks, mock_get_all_rabbitmq_objects
+    @patch("eventkit_cloud.tasks.scheduled_tasks.DockerClient")
+    def test_scale_by_tasks(
+        self,
+        mock_docker_client,
+        mock_pcf_client,
+        mock_get_celery_task_details,
+        mock_order_celery_tasks,
+        mock_get_all_rabbitmq_objects,
     ):
+
+        # Test that the correct client is used.
+        with mock.patch.dict(os.environ, {"PCF_SCALING": "True"}):
+            scale_by_runs(3000)
+            mock_pcf_client.assert_called_once()
 
         # Run until queues are empty.
         example_memory_used = 2048
         example_disk_used = 3072
-        mock_pcf_client().get_running_tasks_memory.return_value = example_memory_used
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 1}}
+        mock_docker_client().get_running_tasks_memory.return_value = example_memory_used
+        mock_docker_client().get_running_tasks.return_value = {"pagination": {"total_results": 1}}
         example_queues = [{"name": "celery", "messages": 2}]
         empty_queues = [{"name": "celery", "messages": 0}]
         mock_get_all_rabbitmq_objects.side_effect = [example_queues, empty_queues]
         celery_task_details = {"task_counts": {"celery": 1}, "memory": example_memory_used, "disk": example_disk_used}
-        mock_get_celery_pcf_task_details.return_value = celery_task_details
+        mock_get_celery_task_details.return_value = celery_task_details
         ordered_celery_tasks = OrderedDict(
             {
                 "queue1": {
@@ -112,34 +192,35 @@ class TestPcfScaleCeleryTask(TestCase):
             }
         )
         mock_order_celery_tasks.return_value = ordered_celery_tasks
-        pcf_scale_celery_task(8000, locking_task_key="A")
-        mock_pcf_client().run_task.assert_called_once()
-        mock_pcf_client.reset_mock()
+        celery_tasks = get_celery_tasks_scale_by_task()
+        scale_by_tasks(celery_tasks, 8000)
+        mock_docker_client().run_task.assert_called_once()
+        mock_docker_client.reset_mock()
         mock_get_all_rabbitmq_objects.side_effect = None
 
         # Run until memory is exhausted.
         mock_get_all_rabbitmq_objects.return_value = example_queues
         over_memory = 9000
-        mock_pcf_client().get_running_tasks_memory.return_value = over_memory
-        pcf_scale_celery_task(8000, locking_task_key="B")
-        mock_pcf_client().run_task.assert_called_once()
-        mock_pcf_client().reset_mock()
+        mock_docker_client().get_running_tasks_memory.return_value = over_memory
+        scale_by_tasks(celery_tasks, 8000)
+        mock_docker_client().run_task.assert_called_once()
+        mock_docker_client().reset_mock()
 
         # Don't run if not enough memory.
         mock_get_all_rabbitmq_objects.return_value = example_queues
-        mock_get_celery_pcf_task_details.return_value = celery_task_details
-        pcf_scale_celery_task(1000, locking_task_key="C")
-        mock_pcf_client().run_task.assert_not_called()
-        mock_pcf_client().reset_mock()
+        mock_get_celery_task_details.return_value = celery_task_details
+        scale_by_tasks(celery_tasks, 1000)
+        mock_docker_client().run_task.assert_not_called()
+        mock_docker_client().reset_mock()
 
         # # Don't run if task limit is reached.
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 3}}
-        pcf_scale_celery_task(8000, locking_task_key="D")
-        mock_pcf_client().run_task.assert_not_called()
-        mock_pcf_client().reset_mock()
+        mock_docker_client().get_running_tasks.return_value = {"pagination": {"total_results": 3}}
+        scale_by_tasks(celery_tasks, 8000)
+        mock_docker_client().run_task.assert_not_called()
+        mock_docker_client().reset_mock()
 
     @patch("eventkit_cloud.tasks.scheduled_tasks.PcfClient")
-    def test_get_celery_pcf_task_details(self, mock_pcf_client):
+    def test_get_celery_task_details(self, mock_pcf_client):
         # Figure out how to test the two differnt environment variable options
         example_app_name = "example_app_name"
         celery_tasks = ["celery", "group.priority"]
@@ -150,7 +231,7 @@ class TestPcfScaleCeleryTask(TestCase):
         }
         expected_value = {"task_counts": {"celery": 1, "group.priority": 0}, "memory": 2048, "disk": 3072}
 
-        returned_value = get_celery_pcf_task_details(mock_pcf_client, example_app_name, celery_tasks)
+        returned_value = get_celery_task_details(mock_pcf_client, example_app_name, celery_tasks)
         self.assertEquals(expected_value, returned_value)
 
     def test_order_celery_tasks(self):

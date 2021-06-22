@@ -588,9 +588,15 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                 include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
-        license_file = create_license_file(data_provider_task_record)
-        if license_file:
-            include_files += [license_file]
+        license_file = None
+        if include_files:
+            try:
+                license_file = create_license_file(data_provider_task_record)
+            except FileNotFoundError:
+                # This fails if run at beginning of run.
+                pass
+            if license_file:
+                include_files += [license_file]
 
         metadata["include_files"] = include_files
 
@@ -669,9 +675,10 @@ def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force
                     logger.info(f"There are {messages} messages")
 
 
-def get_message_count(queue_name: str) -> int:
+def get_message_count(queue_name: str, message_type: str = "messages") -> int:
     """
     :param queue_name: The queue that you want to check messages for.
+    :param message_type: The type of message you want.  e.g. messages or messages_ready
     :return: An integer count of pending messages.
     """
     broker_api_url = getattr(settings, "BROKER_API_URL")
@@ -680,7 +687,7 @@ def get_message_count(queue_name: str) -> int:
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         if queue.get("name") == queue_name:
             try:
-                return queue.get("messages", 0)
+                return queue.get(message_type, 0)
             except Exception as e:
                 logger.info(e)
 
@@ -945,9 +952,7 @@ def download_data(
 
     response = None
     try:
-        session = get_or_update_session(
-            session=session, cert_info=cert_info, provider_slug=provider_slug, cookie=cookie
-        )
+        session = get_or_update_session(session=session, cert_info=cert_info, cookie=cookie)
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1062,6 +1067,25 @@ def extract_metadata_files(
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
+
+
+def get_celery_queue_group(run_uid=None, worker=None):
+    # IF CELERY_GROUP_NAME is specifically set then that makes most sense to use it.
+    if getattr(settings, "CELERY_GROUP_NAME"):
+        return getattr(settings, "CELERY_GROUP_NAME")
+    if getattr(settings, "CELERY_SCALE_BY_RUN"):
+        if not run_uid:
+            logger.warning("Attempted to get a celery_queue_group for scaling by run without a run uid.")
+        else:
+            # Celery group names have to be strings, make sure we always return the UID as a string.
+            return str(run_uid)
+    # If scaling by run we need to keep tasks for a specific run organized together.
+    if not worker:
+        raise Exception(
+            "Attempted to get a group name without setting CELERY_GROUP_NAME "
+            "using a RUN_UID or passing a worker explicitly."
+        )
+    return worker
 
 
 def get_geometry(bbox, selection=None):

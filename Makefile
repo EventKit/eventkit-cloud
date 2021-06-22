@@ -79,7 +79,7 @@ restart:
 
 # Runs the more commonly used logs.
 logs:
-	docker-compose logs -f celery celery-beat eventkit webpack
+	docker-compose logs -f celery eventkit webpack
 
 # Runs all of the logs for all containers.
 logs-verbose:

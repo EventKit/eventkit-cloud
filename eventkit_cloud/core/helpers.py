@@ -195,6 +195,9 @@ def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None
     if cookie:
         session.cookies.set(**cookie)
 
+    if cookie:
+        session.cookies.set(**cookie)
+
     logger.debug("Using %s for SSL verification.", str(ssl_verify))
     session.verify = ssl_verify
     if headers:
