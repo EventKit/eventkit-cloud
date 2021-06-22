@@ -192,8 +192,6 @@ def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None
             session.mount("https://", adapter)
         except FileNotFoundError:
             logger.error("No cert found at path {}".format(cert_path))
-    if cookie:
-        session.cookies.set(**cookie)
 
     if cookie:
         session.cookies.set(**cookie)
@@ -202,6 +200,7 @@ def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None
     session.verify = ssl_verify
     if headers:
         session.headers.update(headers)
+
     return session
 
 
