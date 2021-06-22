@@ -222,7 +222,6 @@ function EstimateContainer(props: Props) {
             });
             limits.sort((a, b) => b.maxArea - a.maxArea);
             setLimits(limits);
-            checkProviders(props.providers);
         }
     }, [props.providers]);
 
@@ -237,7 +236,6 @@ function EstimateContainer(props: Props) {
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
             props.updateExportInfo({ providerInfo: {} });
-            checkProviders(props.providers);
         }
         const hasArea = allHaveArea(aoiInfo.geojson);
         setHasArea(hasArea);

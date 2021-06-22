@@ -150,7 +150,6 @@ export function DataProvider(props: Props) {
     useEffectOnMount(() => {
         debouncerRef.current = debounce((val) => {
             props.clearEstimate(val);
-            props.checkProvider(val);
         }, 1000);
     });
 
@@ -469,6 +468,7 @@ export function DataProvider(props: Props) {
     const [ displayJustification, setDisplayJustification ] = useState(false);
     function selectCheckbox(e: any) {
         props.onChange(e);
+        props.checkProvider(e);
         setDisplayJustification(true);
     }
 
