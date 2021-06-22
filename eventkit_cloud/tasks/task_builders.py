@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import importlib
 import logging
-import os
 from typing import List
 
 from celery import chain  # required for tests
@@ -10,7 +9,13 @@ from django.db import DatabaseError
 from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
-from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
+from eventkit_cloud.tasks.helpers import (
+    normalize_name,
+    get_metadata,
+    get_supported_projections,
+    get_default_projection,
+    get_celery_queue_group,
+)
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
@@ -92,7 +97,8 @@ class TaskChainBuilder(object):
         """
         Create a celery chain which gets the data & runs export formats
         """
-        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+
+        queue_group = get_celery_queue_group(run_uid=run.uid, worker=worker)
 
         # Record estimates for size and time
         get_estimates_task.apply_async(
@@ -107,7 +113,7 @@ class TaskChainBuilder(object):
 
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
-            logger.error(f"Setting up task for format: {export_format.name} with {export_format.options}")
+            logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
             export_format_key = (
                 "ogcapi-process"
                 if export_format.options.get("proxy")

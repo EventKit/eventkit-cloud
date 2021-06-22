@@ -80,7 +80,6 @@ def logout(request):
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
     response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
-
     return response
 
 

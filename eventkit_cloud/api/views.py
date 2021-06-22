@@ -105,6 +105,7 @@ from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
+from eventkit_cloud.tasks.helpers import get_celery_queue_group
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -516,16 +517,12 @@ class JobViewSet(EventkitViewSet):
 
             running = JobSerializer(job, context={"request": request})
 
-            # Run is passed to celery to start the tasks.
-            pick_up_run_task.apply_async(
-                queue="runs",
-                routing_key="runs",
-                kwargs={
-                    "run_uid": run_uid,
-                    "user_details": user_details,
-                    "session_token": request.session.get("access_token"),
-                },
-            )
+            # It scaling by run we don't put the task on the queue we just run on demand.
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                # Run is passed to celery to start the tasks.
+                pick_up_run_task(
+                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
+                )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -563,10 +560,10 @@ class JobViewSet(EventkitViewSet):
             )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
-            logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.apply_async(
-                queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
-            )
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                pick_up_run_task(
+                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
+                )
             logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
             logger.debug("Returning Run Data.")
@@ -1339,8 +1336,11 @@ class ExportRunViewSet(EventkitViewSet):
             run.status = TaskState.SUBMITTED.value
 
             running = ExportRunSerializer(run, context={"request": request})
+            celery_group_name = get_celery_queue_group(run_uid=run.uid)
             rerun_data_provider_records.apply_async(
-                args=(run.uid, request.user.id, user_details, data_provider_slugs), queue="runs", routing_key="runs"
+                args=(run.uid, request.user.id, user_details, data_provider_slugs),
+                queue=celery_group_name,
+                routing_key=celery_group_name,
             )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
