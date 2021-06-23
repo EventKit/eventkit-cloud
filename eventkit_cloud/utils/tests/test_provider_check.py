@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.test import TransactionTestCase
 
 from eventkit_cloud.utils.provider_check import (
@@ -22,7 +23,7 @@ def get_status(result):
     """
     Given a CheckResult, return its status ID.
     """
-    return result.value[0]["status"]
+    return result.value["status"]
 
 
 class TestProviderCheck(TransactionTestCase):
@@ -45,13 +46,15 @@ class TestProviderCheck(TransactionTestCase):
         """
         # Test: cannot connect to server
         get.side_effect = requests.exceptions.ConnectionError()
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.CONNECTION), result_status)
+        cache.delete(pc.get_cache_key())
 
         # Test: server throws SSL exception
         get.side_effect = requests.exceptions.SSLError()
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.SSL_EXCEPTION), result_status)
+        cache.delete(pc.get_cache_key())
 
         # Test: server returns unauthorized response code
         get.side_effect = None
@@ -60,47 +63,54 @@ class TestProviderCheck(TransactionTestCase):
         response.status_code = 403
         response.ok = False
         get.return_value = response
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.UNAUTHORIZED), result_status)
+        cache.delete(pc.get_cache_key())
 
         # Test: server returns 404 response code
         response.status_code = 404
         get.return_value = response
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.NOT_FOUND), result_status)
+        cache.delete(pc.get_cache_key())
 
         # Test: server does not return recognizable xml
         response.content = invalid_content
         response.status_code = 200
         response.ok = True
         get.return_value = response
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.UNKNOWN_FORMAT), result_status)
+        cache.delete(pc.get_cache_key())
 
         if service_type not in ["wms", "wmts"]:  # TODO: fix layer checks for WMS/WMTS
             # Test: server does not offer the requested layer/coverage
             response.content = empty_content
             get.return_value = response
-            result_status = json.loads(pc.check())["status"]
+            result_status = pc.check()["status"]
             self.assertEqual(get_status(CheckResults.LAYER_NOT_AVAILABLE), result_status)
+            cache.delete(pc.get_cache_key())
 
         if service_type not in ["wms", "wmts"]:  # TODO: fix layer checks for WMS/WMTS
             # Test: requested layer/coverage does not intersect given AOI
             response.content = no_intersect_content
             get.return_value = response
-            result_status = json.loads(pc.check())["status"]
+            result_status = pc.check()["status"]
             self.assertEqual(get_status(CheckResults.NO_INTERSECT), result_status)
+            cache.delete(pc.get_cache_key())
 
         # Test: success
         response.content = valid_content
         get.return_value = response
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.SUCCESS), result_status)
+        cache.delete(pc.get_cache_key())
 
         # Test: no service_url was provided
         pc.service_url = ""
-        result_status = json.loads(pc.check())["status"]
+        result_status = pc.check()["status"]
         self.assertEqual(get_status(CheckResults.NO_URL), result_status)
+        cache.delete(pc.get_cache_key())
 
     @patch("requests.Session.get")
     def test_check_wfs(self, get):

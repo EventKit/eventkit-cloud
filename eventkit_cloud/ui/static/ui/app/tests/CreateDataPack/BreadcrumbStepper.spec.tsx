@@ -108,6 +108,7 @@ describe('BreadcrumbStepper component', () => {
                 }
             },
             visibility: 'PRIVATE',
+            isProviderLoading: false
         },
         history: {
             push: sinon.spy(),
@@ -269,6 +270,7 @@ describe('BreadcrumbStepper component', () => {
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
                 checkProvider={props.checkProvider}
+                isProviderLoading={props.isProviderLoading}
             />
         );
 

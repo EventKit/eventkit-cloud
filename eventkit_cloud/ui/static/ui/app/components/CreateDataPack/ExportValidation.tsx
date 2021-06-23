@@ -70,7 +70,7 @@ interface ValidationProps extends Step2Props {tourRunning: boolean}
 
 export function Step2Validator(props: ValidationProps) {
     const {tourRunning, setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
-    const {aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea} = useJobValidationContext();
+    const {aoiHasArea, isProviderLoading, dataSizeInfo, aoiArea} = useJobValidationContext();
     const {exceedingSize = [], noMaxDataSize = []} = dataSizeInfo || {};
 
     useEffectOnMount(() => {
@@ -87,7 +87,7 @@ export function Step2Validator(props: ValidationProps) {
                 }
                 // The AOI is exceeded, and data size can be used.
                 // Estimates can't be currently loading, and the provider must not be exceeding its data size
-                return !areEstimatesLoading && !arrayHasValue(exceedingSize, provider.slug);
+                return !isProviderLoading && !arrayHasValue(exceedingSize, provider.slug);
             }
             return true;
         });

@@ -37,14 +37,13 @@ function EstimateContainer(props: Props) {
     const [totalSize, setSize] = useState(-1);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
-    const [areEstimatesLoading, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
+    const [isProviderLoading, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
 
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
 
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
-
         if (providerExportOptions) {
             if (isZoomLevelInRange(providerExportOptions.minZoom, provider)) {
                 minZoom = providerExportOptions.minZoom;
@@ -89,6 +88,7 @@ function EstimateContainer(props: Props) {
             if (Object.keys(aoiInfo.geojson).length === 0) {
                 return undefined;
             }
+            setProviderLoading(provider, true)
             const bbox = featureToBbox(aoiInfo.geojson.features[0], WGS84);
             const estimates = await getEstimate(provider, bbox);
             if (estimates) {
@@ -299,7 +299,7 @@ function EstimateContainer(props: Props) {
             aoiArea,
             aoiBboxArea,
             dataSizeInfo,
-            areEstimatesLoading,
+            isProviderLoading,
         }}>
             <BreadcrumbStepper
                 {...props.breadcrumbStepperProps}
@@ -307,7 +307,7 @@ function EstimateContainer(props: Props) {
                 updateEstimate={updateEstimate}
                 sizeEstimate={totalSize}
                 timeEstimate={totalTime}
-                areEstimatesLoading={areEstimatesLoading}
+                isProviderLoading={isProviderLoading}
                 getProviders={getProviders}
             />
         </JobValidationProvider>

@@ -83,8 +83,9 @@ export interface Props {
     updateEstimate: () => void;
     sizeEstimate: number;
     timeEstimate: number;
-    areEstimatesLoading: boolean;
+    isProviderLoading: boolean;
 }
+
 
 export interface State {
     stepIndex: number;
@@ -96,7 +97,7 @@ export interface State {
     estimateExplanationOpen: boolean;
     isLoading: boolean;
     selectedExports: string[];
-    areEstimatesLoading: boolean;
+    isProviderLoading: boolean;
     isBannerOpen: boolean;
 }
 
@@ -137,7 +138,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             estimateExplanationOpen: false,
             isLoading: false,
             selectedExports: [],
-            areEstimatesLoading: false,
+            isProviderLoading: false,
             isBannerOpen: false,
         };
         this.leaveRoute = null;
@@ -261,7 +262,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         mapLayers={this.props.mapLayers}
                         isPermissionsBannerOpen={this.state.isBannerOpen}
-
                     />
                 );
             case 1:
@@ -272,6 +272,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.props.updateEstimate}
                         checkProvider={this.props.checkProvider}
+                        isProviderLoading={this.props.isProviderLoading}
                     />
                 );
             case 2:
@@ -543,7 +544,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                             exportInfo={this.props.exportInfo}
                             sizeEstimate={this.props.sizeEstimate}
                             timeEstimate={this.props.timeEstimate}
-                            areEstimatesLoading={this.props.areEstimatesLoading}
+                            isProviderLoading={this.props.isProviderLoading}
                         />
                     </div>
                 </div>

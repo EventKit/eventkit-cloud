@@ -368,8 +368,8 @@ export class Application extends React.Component<Props, State> {
             user: null
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
-        this.notificationsUnreadCountRefreshInterval = 10000;
-        this.notificationsRefreshInterval = 10000;
+        this.notificationsUnreadCountRefreshInterval = 60000;
+        this.notificationsRefreshInterval = 60000;
         this.notificationsPageSize = 10;
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;

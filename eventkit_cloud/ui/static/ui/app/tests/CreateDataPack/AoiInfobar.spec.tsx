@@ -44,7 +44,7 @@ describe('AoiInfobar component', () => {
                 aoiArea: area,
                 aoiBboxArea: area,
                 dataSizeInfo: {} as any,
-                areEstimatesLoading: false,
+                isProviderLoading: false,
             }}>
                 <AoiInfobar {...props} />
             </JobValidationProvider>);

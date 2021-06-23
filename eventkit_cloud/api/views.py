@@ -13,6 +13,7 @@ from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -133,7 +134,7 @@ logger = logging.getLogger(__name__)
 renderer_classes = (BrowsableAPIRenderer, JSONRenderer)
 
 DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
-ESTIMATE_CACHE_TIMEOUT = 600
+ESTIMATE_CACHE_TIMEOUT = 60 * 60 * 12
 
 
 class EventkitViewSet(viewsets.ModelViewSet):
@@ -885,7 +886,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             geojson = self.request.data.get("geojson", None)
             providers, filtered_provider = attribute_class_filter(self.get_queryset(), self.request.user)
             provider = providers.get(slug=slug)
-            return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
+            return JsonResponse(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist:
             raise NotFound(code="not_found", detail="Could not find the requested provider.")
@@ -2285,13 +2286,11 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-                size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-                time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-                payload += [
-                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
-                ]
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                cache.set(cache_key, (size, time), ESTIMATE_CACHE_TIMEOUT)
+                provider_estimate = cache.get_or_set(
+                    cache_key, lambda: estimator.get_provider_estimates(slug), ESTIMATE_CACHE_TIMEOUT
+                )
+                payload += [provider_estimate]
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)

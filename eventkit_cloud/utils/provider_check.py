@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import base64
 import json
 import logging
 import re
@@ -13,13 +12,18 @@ import requests
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.core.cache import cache
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.core.helpers import get_or_update_session
 from urllib.parse import urljoin
 
+from eventkit_cloud.tasks.helpers import normalize_name
+
 logger = logging.getLogger(__name__)
+
+DEFAULT_CACHE_TIMEOUT = 60 * 30  # 30 minutes
 
 
 class CheckResults(Enum):
@@ -42,102 +46,82 @@ class CheckResults(Enum):
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
 
-    TIMEOUT = (
-        {
-            "status": "ERR",
-            "type": "TIMEOUT",
-            "message": _("Your connection has timed out; the provider may be offline. Refresh to try again."),
-        },
-    )
+    TIMEOUT = {
+        "status": "ERR",
+        "type": "TIMEOUT",
+        "message": _("Your connection has timed out; the provider may be offline. Refresh to try again."),
+    }
 
-    CONNECTION = (
-        {
-            "status": "ERR",
-            "type": "CONNECTION",
-            "message": _("A connection to this data provider could not be established."),
-        },
-    )
+    CONNECTION = {
+        "status": "ERR",
+        "type": "CONNECTION",
+        "message": _("A connection to this data provider could not be established."),
+    }
 
-    UNAUTHORIZED = (
-        {
-            "status": "ERR",
-            "type": "UNAUTHORIZED",
-            "message": _("Authorization is required to connect to this data provider."),
-        },
-    )
+    UNAUTHORIZED = {
+        "status": "ERR",
+        "type": "UNAUTHORIZED",
+        "message": _("Authorization is required to connect to this data provider."),
+    }
 
-    NOT_FOUND = (
-        {
-            "status": "ERR",
-            "type": "NOT_FOUND",
-            "message": _("The data provider was not found on the server (status 404)."),
-        },
-    )
+    NOT_FOUND = {
+        "status": "ERR",
+        "type": "NOT_FOUND",
+        "message": _("The data provider was not found on the server (status 404)."),
+    }
 
-    SSL_EXCEPTION = (
-        {
-            "status": "WARN",
-            "type": "SSL_EXCEPTION",
-            "message": _("Could not connect securely to provider; possibly missing client certificate"),
-        },
-    )
+    SSL_EXCEPTION = {
+        "status": "WARN",
+        "type": "SSL_EXCEPTION",
+        "message": _("Could not connect securely to provider; possibly missing client certificate"),
+    }
 
-    UNAVAILABLE = (
-        {
-            "status": "WARN",
-            "type": "UNAVAILABLE",
-            "message": _("This data provider may be unavailable (status %(status)s)."),
-        },
-    )
+    UNAVAILABLE = {
+        "status": "WARN",
+        "type": "UNAVAILABLE",
+        "message": _("This data provider may be unavailable (status %(status)s)."),
+    }
 
-    UNKNOWN_FORMAT = (
-        {
-            "status": "WARN",
-            "type": "UNKNOWN_FORMAT",
-            "message": _(
-                "This data provider returned metadata in an unexpected format; "
-                "errors may occur when creating the DataPack."
-            ),
-        },
-    )
+    UNKNOWN_FORMAT = {
+        "status": "WARN",
+        "type": "UNKNOWN_FORMAT",
+        "message": _(
+            "This data provider returned metadata in an unexpected format; "
+            "errors may occur when creating the DataPack."
+        ),
+    }
 
-    LAYER_NOT_AVAILABLE = (
-        {
-            "status": "WARN",
-            "type": "LAYER_NOT_AVAILABLE",
-            "message": _("This data provider does not offer the requested layer."),
-        },
-    )
+    LAYER_NOT_AVAILABLE = {
+        "status": "WARN",
+        "type": "LAYER_NOT_AVAILABLE",
+        "message": _("This data provider does not offer the requested layer."),
+    }
 
-    NO_INTERSECT = (
-        {
-            "status": "WARN",
-            "type": "NO_INTERSECT",
-            "message": _("The selected AOI does not intersect the data provider's layer."),
-        },
-    )
+    NO_INTERSECT = {
+        "status": "WARN",
+        "type": "NO_INTERSECT",
+        "message": _("The selected AOI does not intersect the data provider's layer."),
+    }
 
-    NO_URL = (
-        {
-            "status": "WARN",
-            "type": "NO_URL",
-            "message": _("No Service URL was found in the data provider config; " "availability cannot be checked"),
-        },
-    )
+    NO_URL = {
+        "status": "WARN",
+        "type": "NO_URL",
+        "message": _("No Service URL was found in the data provider config; " "availability cannot be checked"),
+    }
 
-    TOO_LARGE = (
-        {
-            "status": "WARN",
-            "type": "SELECTION_TOO_LARGE",
-            "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
-        },
-    )
+    TOO_LARGE = {
+        "status": "WARN",
+        "type": "SELECTION_TOO_LARGE",
+        "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
+    }
 
-    UNKNOWN_ERROR = (
-        {"status": "ERR", "type": "ERROR", "message": _("An error has occurred, please contact an administrator.")},
-    )
+    UNKNOWN_ERROR = {
+        "status": "ERR",
+        "type": "ERROR",
+        "message": _("An error has occurred, please contact an administrator."),
+    }
 
-    SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")},)
+    SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
 class ProviderCheck(object):
@@ -261,7 +245,7 @@ class ProviderCheck(object):
             self.result = CheckResults.UNKNOWN_ERROR
             return None
 
-        return response
+        return response.content.decode()
 
     def validate_response(self, response):
         """
@@ -272,24 +256,43 @@ class ProviderCheck(object):
         """
         return response is not None
 
+    def get_cache_key(self, aoi: GeometryCollection = None):
+        cache_key = f"provider-status-{normalize_name(self.service_url)}"
+        if aoi:
+            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
+        return cache_key
+
     def check(self):
         """
         Main call to check the status of a provider. Returns JSON with a status string and more detailed message.
         """
         self.result = CheckResults.SUCCESS
 
+        status_check_cache_key = self.get_cache_key(aoi=self.aoi)
+        status = cache.get(status_check_cache_key)
+        if status:
+            return status
+
+        # If the area is not valid, don't bother with a size.
         if self.check_area():
-            response = self.get_check_response()
-            if response is not None:
-                self.validate_response(response)
+            response_content = cache.get_or_set(
+                self.get_cache_key(), lambda: self.get_check_response(), timeout=DEFAULT_CACHE_TIMEOUT
+            )
+            if response_content is not None:
+                self.validate_response(response_content)
+                if self.result == CheckResults.SUCCESS:
+                    cache.set(status_check_cache_key, self.result.value, timeout=DEFAULT_CACHE_TIMEOUT)
+                else:
+                    #  If checks fail throw that away so that we will check again on the next request.
+                    cache.delete(status_check_cache_key)
+                    cache.delete(self.get_cache_key())
         else:
             self.result = CheckResults.TOO_LARGE
 
-        # TODO: This should not be dumped to a string here
-        # The front end should NOT receive a string, it should get a valid JSON response.
-        result_json = json.dumps(self.result.value[0]) % self.token_dict
-        logger.debug("Provider check returning result: %s", result_json)
-        return result_json
+        status = self.result.value
+        logger.debug("Provider check returning result: %s", status)
+
+        return status
 
 
 class OverpassProviderCheck(ProviderCheck):
@@ -389,10 +392,10 @@ class OWSProviderCheck(ProviderCheck):
         if self.aoi is not None and not self.aoi.intersects(bbox):
             self.result = CheckResults.NO_INTERSECT
 
-    def validate_response(self, response):
+    def validate_response(self, response_content: str):
 
         try:
-            xml = response.content.decode()
+            xml = response_content
             xmll = xml.lower()
 
             doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
@@ -870,7 +873,7 @@ def perform_provider_check(provider: DataProvider, geojson) -> str:
         response = checker.check()
 
     except Exception as e:
-        response = json.dumps(CheckResults.UNKNOWN_ERROR.value[0])
+        response = json.dumps(CheckResults.UNKNOWN_ERROR.value)
         logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
 
     logger.info(f"Status of provider '{provider.name}': {response}")
