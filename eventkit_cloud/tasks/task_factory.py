@@ -181,8 +181,9 @@ class TaskFactory:
                     run_uid=run_uid,
                     locking_task_key=run_uid,
                     callback_task=create_finalize_run_task_collection(
-                        run_uid,
-                        run_zip_task_chain,
+                        run_uid=run_uid,
+                        run_provider_task_record_uid=run_task_record.uid,
+                        run_zip_task_chain=run_zip_task_chain,
                         run_zip_file_slug_sets=run_zip_file_slug_sets,
                         apply_args=finalize_task_settings,
                     ),
