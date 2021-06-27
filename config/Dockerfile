@@ -1,8 +1,8 @@
 FROM cloudfoundry/cflinuxfs3:0.196.0
 
 
-RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && \
-    mkdir -p /var/lib/eventkit/config && chown eventkit:eventkit /var/lib/eventkit
+RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && groupadd -g 1001 docker && \
+    sudo usermod -a -G docker eventkit && mkdir -p /var/lib/eventkit/config && chown eventkit:eventkit /var/lib/eventkit
 
 USER eventkit
 
@@ -42,6 +42,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_
     rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud
 
 COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud
+
 
 ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/wait-for-postgis.sh"]
 

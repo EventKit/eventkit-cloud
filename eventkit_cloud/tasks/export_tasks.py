@@ -10,7 +10,7 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Union
+from typing import List
 from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -70,6 +70,7 @@ from eventkit_cloud.tasks.helpers import (
     download_concurrently,
     merge_chunks,
     find_in_zip,
+    get_celery_queue_group,
     extract_metadata_files,
     get_geometry,
     update_progress,
@@ -84,6 +85,7 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, rerun_data_provider_records
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
@@ -169,6 +171,25 @@ class ExportTask(EventKitBaseTask):
             task.started_at = timezone.now()
             task.worker = socket.gethostname()
             task.save()
+
+            run = task.export_provider_task.run
+            run_dir = get_run_staging_dir(run.uid)
+
+            if not os.path.exists(run_dir):
+                os.makedirs(run_dir, 0o750)
+
+            run_task_record = run.data_provider_task_records.get(slug="run")
+
+            # Returns the default only if the key does not exist in the dictionary.
+            stage_dir = kwargs.get("stage_dir", get_provider_staging_dir(run_dir, run_task_record.slug))
+
+            # Check for None because the above statement could return None.
+            if stage_dir is None:
+                stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
+            kwargs["stage_dir"] = stage_dir
+
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir, 0o750)
 
             try:
                 task_state_result = args[0]
@@ -921,6 +942,7 @@ def output_selection_geojson_task(
     result = result or {}
 
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
+
     if selection:
         # Test if json.
         json.loads(selection)
@@ -1708,7 +1730,7 @@ def mapproxy_export_task(
         raise e
 
 
-@app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
+@app.task(name="Pickup Run", bind=True, base=UserDetailsBase, acks_late=True)
 def pick_up_run_task(
     self,
     result=None,
@@ -1726,33 +1748,47 @@ def pick_up_run_task(
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
     # This is just to make it easier to trace when user_details haven't been sent
+    worker = socket.gethostname()
+    queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
+
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
-
     run = ExportRun.objects.get(uid=run_uid)
     try:
-        worker = socket.gethostname()
+        logger.debug(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
+        data_provider_task_records = run.data_provider_task_records.filter(~Q(slug="run"))
+        logger.debug(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
+        if not data_provider_task_records:
+            TaskFactory().parse_tasks(
+                worker=worker,
+                run_uid=run_uid,
+                user_details=user_details,
+                data_provider_slugs=data_provider_slugs,
+                run_zip_file_slug_sets=run_zip_file_slug_sets,
+                session_token=session_token,
+                queue_group=queue_group,
+            )
+        else:
+            # Run has already been created, but we got here because
+            # something happened to the last worker and the run didn't finish.
+            logger.info(f"Run {run.uid} was already in progress!")
+            data_provider_slugs = [
+                dptr.slug
+                for dptr in run.data_provider_task_records.filter(~Q(slug="run") | ~Q(status=TaskState.COMPLETED.value))
+            ]
+            logger.info(f"Rerunning data providers {data_provider_slugs}")
+            rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
         run.worker = worker
         run.save()
-        TaskFactory().parse_tasks(
-            worker=worker,
-            run_uid=run_uid,
-            user_details=user_details,
-            data_provider_slugs=data_provider_slugs,
-            run_zip_file_slug_sets=run_zip_file_slug_sets,
-            session_token=session_token,
-        )
     except Exception as e:
         run.status = TaskState.FAILED.value
         run.save()
         logger.error(str(e))
         raise
-    wait_for_run(run_uid=run_uid)
 
 
 def wait_for_run(run_uid: str = None) -> None:
     """
-
     :param run_uid: The uid of the run to wait on.
     :return: None
     """
@@ -2068,6 +2104,10 @@ class FinalizeRunBase(EventKitBaseTask):
             if stage_dir and os.path.isdir(stage_dir):
                 if not os.getenv("KEEP_STAGE", False):
                     shutil.rmtree(stage_dir)
+            if getattr(settings, "CELERY_SCALE_BY_RUN"):
+                queue_name = None if retval is None else retval.get("run_uid")
+                if queue_name:
+                    shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 
@@ -2131,6 +2171,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
 
+    result["run_uid"] = run_uid
     result["stage_dir"] = stage_dir
     return result
 
@@ -2383,13 +2424,13 @@ def get_function(function):
     return function_object
 
 
-def get_creation_options(config: str, driver: str) -> Union[list, None]:
+def get_creation_options(config: str, driver: str):
     """
     Gets a list of options for a specific format or returns None.
     :param config: The configuration for a datasource.
     :param driver: The file format to look for specific creation options.
-    :return: A list of creation options of None
-    """
+    :return: A tuple of None or the first value is list of warp creation options, and
+     the second value is a list of translate create options.     """
     if config:
         conf = yaml.safe_load(config) or dict()
         params = conf.get("formats", {}).get(driver, {})

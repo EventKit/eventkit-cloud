@@ -37,7 +37,7 @@ unit-tests:
   script:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
-    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=80 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
     - docker-compose run --rm --user=root -T webpack npm run coverage
 
 # TODO: Add back after debugging connection issues in pipeline.
