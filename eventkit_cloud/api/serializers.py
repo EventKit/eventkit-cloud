@@ -26,11 +26,12 @@ from rest_framework_gis import serializers as geo_serializers
 from rest_framework_gis.fields import GeometrySerializerMethodField
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
+from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 
-# Get an instance of a logger
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -48,6 +49,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.helpers import get_celery_queue_group
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -59,8 +61,8 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
-from . import validators
 
+# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
@@ -556,7 +558,8 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             ).exclude(slug="run")
             obj.data_provider_task_records.set(data_provider_task_records)
             run_zip_task_chain = generate_zipfile(data_provider_task_record_uids, obj)
-            run_zip_task_chain.apply_async()
+            celery_queue_group = get_celery_queue_group(run_uid=obj.run.uid)
+            run_zip_task_chain.apply_async(queue=celery_queue_group, routing_key=celery_queue_group)
             return obj
         else:
             raise serializers.ValidationError("Duplicate Zip File already exists.")
