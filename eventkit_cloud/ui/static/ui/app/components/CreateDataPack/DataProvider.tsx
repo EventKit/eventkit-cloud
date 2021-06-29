@@ -461,8 +461,10 @@ export function DataProvider(props: Props) {
         if (estimate) {
             secondary =
                 <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
-        } else {
+        } else if (providerInfo.estimates?.status === "PENDING") {
             secondary = <CircularProgress style={{display: 'grid'}} size={11}/>;
+        } else {
+            secondary = <Typography style={{fontSize: "0.7em"}}/>
         }
     }
 

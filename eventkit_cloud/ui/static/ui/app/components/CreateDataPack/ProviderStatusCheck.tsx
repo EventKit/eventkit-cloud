@@ -68,7 +68,7 @@ const source = CancelToken.source();
 
 export function ProviderStatusCheck(props: Props) {
     const {
-        isProviderLoading, providerHasEstimates,
+        providerHasEstimates,
         aoiArea, providerInfo, provider, geojson
     } = props;
     const [anchorElement, setAnchor] = useState(null);
@@ -206,17 +206,17 @@ export function ProviderStatusCheck(props: Props) {
                 }
                 break;
             case STATUS.ESTIMATES_PENDING:
-            case STATUS.PENDING:
-                StatusIcon = CircularProgress;
+                  StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
                 message = makeMessage('');
                 otherProps = {thickness: 2, size: 20, color: 'primary'};
                 break;
+            case STATUS.PENDING:
             default:
-                StatusIcon = null;
+                StatusIcon = AlertWarning;
                 title = 'CHECKING AVAILABILITY';
                 message = makeMessage('');
-                otherProps = {thickness: 2, size: 20, color: 'primary'};
+                otherProps = {visibility: 'hidden'};
                 break;
         }
     }

@@ -41,7 +41,6 @@ function EstimateContainer(props: Props) {
 
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
-
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
         if (providerExportOptions) {
@@ -62,6 +61,7 @@ function EstimateContainer(props: Props) {
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
         setProviderLoading(provider,true);
+        props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "PENDING"
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -70,9 +70,11 @@ function EstimateContainer(props: Props) {
             cancelToken: source.token,
         }).then((response) => {
             setProviderLoading(provider,false);
+            props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "COMPLETE"
             return response.data[0];
         }).catch(() => {
             setProviderLoading(provider,false);
+            props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "COMPLETE"
             return {
                 size: undefined,
                 slug: provider.slug,
@@ -105,6 +107,7 @@ function EstimateContainer(props: Props) {
 
     function getAvailability(provider: Eventkit.Provider, data: any) {
         const csrfmiddlewaretoken = getCookie('csrftoken');
+        props.exportInfo.providerInfo = {...{ provider['slug']: {"availability": {"status" : "PENDING"}}}}
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
@@ -115,6 +118,7 @@ function EstimateContainer(props: Props) {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
             const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
             availabilityData.slug = provider.slug;
+            props.exportInfo.providerInfo[provider.slug]["availability"]["status"] = "COMPLETE"
             return availabilityData;
         }).catch(() => {
             return {
