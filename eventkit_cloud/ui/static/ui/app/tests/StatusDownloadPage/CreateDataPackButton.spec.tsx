@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {CreateDataPackButton, downloadRequest} from "../../components/StatusDownloadPage/CreateDataPackButton";
+import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
 import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
 import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
 import '@testing-library/jest-dom/extend-expect';
@@ -123,16 +123,4 @@ describe('CreateDataPackButton component', () => {
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
     });
 
-    it('should call the setter appropriately', async () => {
-        server.use(
-            rest.get('url/urlpath.zip', (req, res, ctx) => {
-                return res(
-                    ctx.status(500)
-                )
-            })
-        );
-        const setterFunction = jest.fn();
-        await downloadRequest('url/urlpath.zip', setterFunction);
-        expect(setterFunction).toHaveBeenCalledWith(true);
-    });
 });

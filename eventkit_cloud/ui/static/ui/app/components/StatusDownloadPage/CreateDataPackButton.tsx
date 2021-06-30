@@ -12,12 +12,8 @@ import {CircularProgress, IconButton} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
-import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
 import {MatomoClickTracker} from "../MatomoHandler";
-import {renderIf} from "../../utils/renderIf";
-import CustomTableRow from "../common/CustomTableRow";
-import axios from "axios";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -83,25 +79,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
     },
 });
 
-export async function downloadRequest(url: string, displaySetter: (value: boolean) => void) {
-    return await axios({
-        url,
-        headers: {'X-CSRFToken': getCookie('csrftoken')},
-    }).then((_response: any) => {
-        if (!_response) {
-            displaySetter(true);
-            return;
-        }
-        const link = document.createElement('a');
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-    }).catch(_error => {
-        displaySetter(true);
-    });
-}
-
 interface Props {
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; };
@@ -158,8 +135,6 @@ export function CreateDataPackButton(props: Props) {
             },
         });
     };
-
-    const [displayDownloadErrorDialog, setDisplayDownloadErrorDialog] = useState(false);
 
     useEffect(() => {
         // If the list of provider task UID's changes, or the status of the run changes,
@@ -409,7 +384,7 @@ export function CreateDataPackButton(props: Props) {
                 disabled={!buttonEnabled}
                 style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
                 onClick={(buttonEnabled && isZipAvailable() && !dataPackRestricted)
-                    ? (() => downloadRequest(zipAvailableResponse.data[0].url, setDisplayDownloadErrorDialog))
+                    ? (() => window.open(zipAvailableResponse.data[0].url, '_blank'))
                     : buttonAction
                 }
             >
@@ -457,47 +432,6 @@ export function CreateDataPackButton(props: Props) {
             >
                 {getButton()}
             </MatomoClickTracker>
-            {renderIf(() => (
-                <CenteredPopup
-                    onClose={() => setDisplayCreatingMessage(false)}
-                    open={true}
-                >
-                    <div style={{display: 'contents' as 'contents'}}>
-                        <IconButton
-                            className={classes.iconButton}
-                            type="button"
-                            onClick={handlePopoverClose}
-                        >
-                            <CloseIcon/>
-                        </IconButton>
-                        <div style={{marginTop: '5px', fontSize: '20px'}}>
-                            {getCreatingMessage()}
-                        </div>
-                    </div>
-                </CenteredPopup>
-            ), displayCreatingMessage && !displayDownloadErrorDialog)}
-            {renderIf(() => {
-                return (
-                    <CenteredPopup
-                        onClose={() => setDisplayDownloadErrorDialog(false)}
-                        open={true}
-                    >
-                        <div style={{display: 'contents' as 'contents'}}>
-                            <IconButton
-                                className={classes.iconButton}
-                                type="button"
-                                onClick={() => setDisplayDownloadErrorDialog(false)}
-                            >
-                                <CloseIcon/>
-                            </IconButton>
-                            <div style={{marginTop: '5px', fontSize: '20px'}}>
-                                An error occurred when attempting to download this file, please try again or contact an
-                                administrator.
-                            </div>
-                        </div>
-                    </CenteredPopup>
-                );
-            }, displayDownloadErrorDialog)}
             <div className={classes.popoverBlock}>
                 <Popover
                     {...{
