@@ -167,7 +167,6 @@ export interface Props {
     projections: Eventkit.Projection[];
     formats: Eventkit.Format[];
     checkProvider: any;
-    isProviderLoading: boolean;
 }
 
 export interface State {
@@ -873,7 +872,6 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
-                                            isProviderLoading={this.props.isProviderLoading}
                                             checkProvider={() => {
                                                 // // Clear Provider Info since we will be checking.
                                                 // this.props.updateExportInfo({

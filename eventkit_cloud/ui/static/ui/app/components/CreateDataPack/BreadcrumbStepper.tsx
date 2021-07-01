@@ -83,7 +83,7 @@ export interface Props {
     updateEstimate: () => void;
     sizeEstimate: number;
     timeEstimate: number;
-    isProviderLoading: boolean;
+    isCollectingEstimates: boolean;
 }
 
 
@@ -97,7 +97,6 @@ export interface State {
     estimateExplanationOpen: boolean;
     isLoading: boolean;
     selectedExports: string[];
-    isProviderLoading: boolean;
     isBannerOpen: boolean;
 }
 
@@ -138,7 +137,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             estimateExplanationOpen: false,
             isLoading: false,
             selectedExports: [],
-            isProviderLoading: false,
             isBannerOpen: false,
         };
         this.leaveRoute = null;
@@ -272,7 +270,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.props.updateEstimate}
                         checkProvider={this.props.checkProvider}
-                        isProviderLoading={this.props.isProviderLoading}
                     />
                 );
             case 2:
@@ -544,7 +541,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                             exportInfo={this.props.exportInfo}
                             sizeEstimate={this.props.sizeEstimate}
                             timeEstimate={this.props.timeEstimate}
-                            isProviderLoading={this.props.isProviderLoading}
+                            isCollectingEstimates={this.props.isCollectingEstimates}
                         />
                     </div>
                 </div>

@@ -134,7 +134,7 @@ interface Props {
 export function DataProvider(props: Props) {
     const {BASEMAP_URL} = useAppContext();
     const {colors} = props.theme.eventkit;
-    const {classes, provider, providerInfo, isProviderLoading} = props;
+    const {classes, provider, providerInfo} = props;
     const {exportOptions} = props.exportInfo;
 
     const [isOpen, setOpen] = useState(false);
@@ -145,6 +145,7 @@ export function DataProvider(props: Props) {
     const {haveAvailableEstimates = [], noMaxDataSize = []} = dataSizeInfo || {};
     const [overSize, setOverSize] = useState(false);
     const [overArea, setOverArea] = useState(false);
+    const [isProviderLoading, setProviderLoading] = useState(false);
     const debouncerRef = useRef(null);
     const estimateDebouncer = (...args) => debouncerRef.current(...args);
 
@@ -158,6 +159,9 @@ export function DataProvider(props: Props) {
         arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     useEffect(() => {
         setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+        if(haveAvailableEstimates) {
+            setProviderLoading(false);
+        }
     }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
     useEffect(() => {
@@ -461,7 +465,7 @@ export function DataProvider(props: Props) {
         if (estimate) {
             secondary =
                 <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
-        } else if (providerInfo.estimates?.status === "PENDING") {
+        } else if (isProviderLoading) {
             secondary = <CircularProgress style={{display: 'grid'}} size={11}/>;
         } else {
             secondary = <Typography style={{fontSize: "0.7em"}}/>
@@ -472,7 +476,12 @@ export function DataProvider(props: Props) {
 
     function selectCheckbox(e: any) {
         props.onChange(e);
-        props.checkProvider(e);
+        if (e.target.checked && !providerHasEstimates) {
+            props.checkProvider(e);
+            setProviderLoading(true);
+        } else {
+            setProviderLoading(false);
+        }
         setDisplayJustification(true);
     }
 

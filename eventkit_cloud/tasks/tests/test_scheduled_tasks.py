@@ -32,7 +32,7 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_runs,
     scale_celery_task,
 )
-from eventkit_cloud.utils.provider_check import CheckResults
+from eventkit_cloud.utils.provider_check import CheckResult
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +251,7 @@ class TestScaleCeleryTask(TestCase):
 class TestCheckProviderAvailabilityTask(TestCase):
     @patch("eventkit_cloud.utils.provider_check.perform_provider_check")
     def test_check_provider_availability(self, perform_provider_check_mock):
-        perform_provider_check_mock.return_value = json.dumps(CheckResults.SUCCESS.value[0])
+        perform_provider_check_mock.return_value = json.dumps(CheckResult.SUCCESS.value)
         first_provider = DataProvider.objects.create(slug="first_provider", name="first_provider")
         second_provider = DataProvider.objects.create(slug="second_provider", name="second_provider")
         DataProviderStatus.objects.create(related_provider=first_provider)
@@ -261,10 +261,10 @@ class TestCheckProviderAvailabilityTask(TestCase):
         perform_provider_check_mock.assert_has_calls([call(first_provider, None), call(second_provider, None)])
         statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
         self.assertEqual(len(statuses), 2)
-        most_recent_first_provider_status = statuses.order_by("-id")[0]
-        self.assertEqual(most_recent_first_provider_status.status, CheckResults.SUCCESS.value[0]["status"])
-        self.assertEqual(most_recent_first_provider_status.status_type, CheckResults.SUCCESS.value[0]["type"])
-        self.assertEqual(most_recent_first_provider_status.message, CheckResults.SUCCESS.value[0]["message"])
+        most_recent_first_provider_status = statuses.last()
+        self.assertEqual(most_recent_first_provider_status.status, CheckResult.SUCCESS.value["status"])
+        self.assertEqual(most_recent_first_provider_status.status_type, CheckResult.SUCCESS.value["type"])
+        self.assertEqual(most_recent_first_provider_status.message, CheckResult.SUCCESS.value["message"])
 
 
 class TestEmailNotifications(TestCase):

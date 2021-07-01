@@ -37,10 +37,12 @@ function EstimateContainer(props: Props) {
     const [totalSize, setSize] = useState(-1);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
-    const [isProviderLoading, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
+    const [isCollectingEstimates, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
 
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
+        let providerInfo = props.exportInfo.providerInfo[provider.slug] as Eventkit.Store.ProviderInfo;
+
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
         if (providerExportOptions) {
@@ -61,7 +63,8 @@ function EstimateContainer(props: Props) {
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
         setProviderLoading(provider,true);
-        props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "PENDING"
+        providerInfo = {...providerInfo, ...{"estimates": {"status": "PENDING"}}};
+        updateExportInfo(props.exportInfo)
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -70,11 +73,9 @@ function EstimateContainer(props: Props) {
             cancelToken: source.token,
         }).then((response) => {
             setProviderLoading(provider,false);
-            props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "COMPLETE"
             return response.data[0];
         }).catch(() => {
             setProviderLoading(provider,false);
-            props.exportInfo.providerInfo[provider.slug]["estimates"]["status"] = "COMPLETE"
             return {
                 size: undefined,
                 slug: provider.slug,
@@ -107,7 +108,13 @@ function EstimateContainer(props: Props) {
 
     function getAvailability(provider: Eventkit.Provider, data: any) {
         const csrfmiddlewaretoken = getCookie('csrftoken');
-        props.exportInfo.providerInfo = {...{ provider['slug']: {"availability": {"status" : "PENDING"}}}}
+        props.exportInfo.providerInfo[provider.slug] = {...props.exportInfo.providerInfo[provider.slug], ...{
+                slug: provider.slug,
+                status: 'PENDING',
+                type: 'PENDING',
+                message: "Waiting for a response.",
+            }};
+        updateExportInfo(props.exportInfo)
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
@@ -115,10 +122,8 @@ function EstimateContainer(props: Props) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
+            const availabilityData = response.data as Eventkit.Store.Availability;
             availabilityData.slug = provider.slug;
-            props.exportInfo.providerInfo[provider.slug]["availability"]["status"] = "COMPLETE"
             return availabilityData;
         }).catch(() => {
             return {
@@ -155,23 +160,6 @@ function EstimateContainer(props: Props) {
                 } as Eventkit.Store.ProviderInfo,
             }
         })
-    }
-
-    function checkProviders(providers: Eventkit.Provider[]) {
-        Promise.all(providers.filter(provider => provider.display).map((provider) => {
-            return checkProvider(provider);
-        })).then(providerResults => {
-            const providerInfo = { ...props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-            providerResults.map((provider) => {
-                if (provider.data) {
-                    providerInfo[provider.slug] = provider.data;
-                }
-            });
-            props.updateExportInfo({ providerInfo });
-            // Trigger an estimate calculation update in the parent
-            // Does not re-request any data, calculates the total from available results.
-            updateEstimate();
-        });
     }
 
     function updateEstimate() {
@@ -283,7 +271,8 @@ function EstimateContainer(props: Props) {
                     if (!limits.maxDataSize) {
                         return false;
                     }
-                    return haveAvailableEstimates.indexOf(limits.slug) !== -1 && providerEstimates[limits.slug].size.value > limits.maxDataSize;
+                    return haveAvailableEstimates.indexOf(limits.slug) !==
+                        -1 && providerEstimates[limits.slug].size.value > limits.maxDataSize;
                 }).map(limits => limits.slug),
                 ...providerSlugs.filter(slug => haveAvailableEstimates.indexOf(slug) === -1)];
 
@@ -303,7 +292,7 @@ function EstimateContainer(props: Props) {
             aoiArea,
             aoiBboxArea,
             dataSizeInfo,
-            isProviderLoading,
+            isCollectingEstimates
         }}>
             <BreadcrumbStepper
                 {...props.breadcrumbStepperProps}
@@ -311,8 +300,8 @@ function EstimateContainer(props: Props) {
                 updateEstimate={updateEstimate}
                 sizeEstimate={totalSize}
                 timeEstimate={totalTime}
-                isProviderLoading={isProviderLoading}
                 getProviders={getProviders}
+                isCollectingEstimates={isCollectingEstimates}
             />
         </JobValidationProvider>
     )

@@ -12,7 +12,7 @@ export interface Props {
     step: number;
     sizeEstimate: number;
     timeEstimate: number;
-    isProviderLoading: boolean;
+    isCollectingEstimates: boolean;
     exportInfo: Eventkit.Store.ExportInfo;
     width: Breakpoint;
 }
@@ -21,7 +21,7 @@ function EstimateLabel(props: Props) {
     // function that will return nf (not found) when the provided estimate is undefined
     const get = (estimate, nf = 'unknown') => ((estimate) ? estimate.toString() : nf);
     const {
-        step, sizeEstimate, timeEstimate, isProviderLoading, exportInfo,
+        step, sizeEstimate, timeEstimate, isCollectingEstimates, exportInfo,
     } = props;
 
     function areProvidersSelected() {
@@ -80,7 +80,7 @@ function EstimateLabel(props: Props) {
             return 'Select providers to get estimate';
         }
 
-        if (isProviderLoading) {
+        if (isCollectingEstimates) {
             return (
                 <span>
                     Getting calculations...

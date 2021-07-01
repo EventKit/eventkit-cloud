@@ -11,7 +11,7 @@ import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
-import {useAsyncRequest} from "../../utils/hooks/api";
+import {ACTIONS, useAsyncRequest} from "../../utils/hooks/api";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     iconBtn: {
@@ -134,10 +134,9 @@ export function ProviderStatusCheck(props: Props) {
         },
     };
 
-    const avail = props.availability.status ?
-        props.availability :
-        {status: 'PENDING', type: 'PENDING', message: "This data provider's availability is being checked."};
-
+    const avail = (props.isProviderLoading) ?
+        {status: STATUS.PENDING, type: STATUS.PENDING, message: "Waiting for results."}:
+        props.availability;
 
     let StatusIcon;
     let title;
@@ -206,15 +205,15 @@ export function ProviderStatusCheck(props: Props) {
                 }
                 break;
             case STATUS.ESTIMATES_PENDING:
-                  StatusIcon = CircularProgress;
+            case STATUS.PENDING:
+                StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
                 message = makeMessage('');
                 otherProps = {thickness: 2, size: 20, color: 'primary'};
                 break;
-            case STATUS.PENDING:
             default:
                 StatusIcon = AlertWarning;
-                title = 'CHECKING AVAILABILITY';
+                title = 'SELECT A PROVIDER';
                 message = makeMessage('');
                 otherProps = {visibility: 'hidden'};
                 break;

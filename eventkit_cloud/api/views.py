@@ -890,7 +890,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(e)
-            raise APIException("server_error", detail="Internal server error.")
+            raise APIException(code="server_error", detail="Internal server error.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
