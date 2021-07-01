@@ -12,8 +12,10 @@ import {CircularProgress, IconButton} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
+import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
 import {MatomoClickTracker} from "../MatomoHandler";
+import {renderIf} from "../../utils/renderIf";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -432,6 +434,25 @@ export function CreateDataPackButton(props: Props) {
             >
                 {getButton()}
             </MatomoClickTracker>
+            {renderIf(() => (
+                <CenteredPopup
+                    onClose={() => setDisplayCreatingMessage(false)}
+                    open={true}
+                >
+                    <div style={{display: 'contents' as 'contents'}}>
+                        <IconButton
+                            className={classes.iconButton}
+                            type="button"
+                            onClick={handlePopoverClose}
+                        >
+                            <CloseIcon/>
+                        </IconButton>
+                        <div style={{marginTop: '5px', fontSize: '20px'}}>
+                            {getCreatingMessage()}
+                        </div>
+                    </div>
+                </CenteredPopup>
+            ), displayCreatingMessage)}
             <div className={classes.popoverBlock}>
                 <Popover
                     {...{
