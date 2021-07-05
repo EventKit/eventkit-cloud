@@ -41,7 +41,6 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     overArea: boolean;
     aoiArea: number;
     providerInfo: Eventkit.Store.ProviderInfo;
-    providerHasEstimates: boolean;
     isProviderLoading: boolean;
     supportsZoomLevels: boolean;
     baseStyle?: any;
@@ -68,7 +67,6 @@ const source = CancelToken.source();
 
 export function ProviderStatusCheck(props: Props) {
     const {
-        providerHasEstimates,
         aoiArea, providerInfo, provider, geojson
     } = props;
     const [anchorElement, setAnchor] = useState(null);
@@ -151,22 +149,16 @@ export function ProviderStatusCheck(props: Props) {
         message = makeMessage('');
         title = 'CANNOT SELECT';
     } else {
-        // if (isProviderLoading) {
-        //     status = STATUS.ESTIMATES_PENDING;
-        // } else {
-        if (providerHasEstimates) {
-            if (props.overSize) {
-                status = STATUS.OVER_DATA_SIZE;
-            } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
-                status = STATUS.SUCCESS;
-                message = makeMessage('No problems: Export should proceed without issues.', false);
-            }
+        if (props.overSize) {
+            status = STATUS.OVER_DATA_SIZE;
+        } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
+            status = STATUS.SUCCESS;
+            message = makeMessage('No problems: Export should proceed without issues.', false);
         } else {
             if (props.overArea) {
                 status = STATUS.OVER_AREA_SIZE;
             }
         }
-        // }
         switch (status) {
             case STATUS.SUCCESS:
                 style.icon.color = 'rgba(0, 192, 0, 0.87)';

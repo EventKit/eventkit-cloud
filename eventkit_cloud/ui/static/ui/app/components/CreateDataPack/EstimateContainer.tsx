@@ -39,9 +39,15 @@ function EstimateContainer(props: Props) {
     const [aoiHasArea, setHasArea] = useState(false);
     const [isCollectingEstimates, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
 
+     const [dataSizeInfo, setDataSizeInfo] = useState({
+        haveAvailableEstimates: undefined,
+        providerEstimates: undefined,
+        exceedingSize: undefined,
+        noMaxDataSize: undefined,
+    });
+
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
-        let providerInfo = props.exportInfo.providerInfo[provider.slug] as Eventkit.Store.ProviderInfo;
 
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
@@ -60,11 +66,19 @@ function EstimateContainer(props: Props) {
             min_zoom: minZoom,
             max_zoom: maxZoom,
         };
-
         const csrfmiddlewaretoken = getCookie('csrftoken');
-        setProviderLoading(provider,true);
-        providerInfo = {...providerInfo, ...{"estimates": {"status": "PENDING"}}};
-        updateExportInfo(props.exportInfo)
+        setProviderLoading(provider, true);
+
+        const {haveAvailableEstimates} = dataSizeInfo;
+
+        if (haveAvailableEstimates) {
+            const index = haveAvailableEstimates.indexOf(provider.slug);
+            if (index > -1) {
+                haveAvailableEstimates.splice(index, 1);
+            }
+
+            setDataSizeInfo({...haveAvailableEstimates})
+        }
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -91,7 +105,6 @@ function EstimateContainer(props: Props) {
             if (Object.keys(aoiInfo.geojson).length === 0) {
                 return undefined;
             }
-            setProviderLoading(provider, true)
             const bbox = featureToBbox(aoiInfo.geojson.features[0], WGS84);
             const estimates = await getEstimate(provider, bbox);
             if (estimates) {
@@ -108,13 +121,6 @@ function EstimateContainer(props: Props) {
 
     function getAvailability(provider: Eventkit.Provider, data: any) {
         const csrfmiddlewaretoken = getCookie('csrftoken');
-        props.exportInfo.providerInfo[provider.slug] = {...props.exportInfo.providerInfo[provider.slug], ...{
-                slug: provider.slug,
-                status: 'PENDING',
-                type: 'PENDING',
-                message: "Waiting for a response.",
-            }};
-        updateExportInfo(props.exportInfo)
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
@@ -148,6 +154,7 @@ function EstimateContainer(props: Props) {
         if (provider.display === false) {
             return;
         }
+        updateExportInfo({})
         return Promise.all([
             checkAvailability(provider),
             checkEstimate(provider),
@@ -160,6 +167,23 @@ function EstimateContainer(props: Props) {
                 } as Eventkit.Store.ProviderInfo,
             }
         })
+    }
+
+    function checkProviders(providers: Eventkit.Provider[]) {
+        Promise.all(providers.filter(provider => provider.display).map((provider) => {
+            return checkProvider(provider);
+        })).then(providerResults => {
+            const providerInfo = {...props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            providerResults.map((provider) => {
+                if (provider.data) {
+                    providerInfo[provider.slug] = provider.data;
+                }
+            });
+            props.updateExportInfo({providerInfo});
+            // Trigger an estimate calculation update in the parent
+            // Does not re-request any data, calculates the total from available results.
+            updateEstimate();
+        });
     }
 
     function updateEstimate() {
@@ -214,6 +238,7 @@ function EstimateContainer(props: Props) {
             });
             limits.sort((a, b) => b.maxArea - a.maxArea);
             setLimits(limits);
+            checkProviders(props.exportInfo.providers);
         }
     }, [props.providers]);
 
@@ -228,6 +253,7 @@ function EstimateContainer(props: Props) {
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
             props.updateExportInfo({ providerInfo: {} });
+            checkProviders(props.exportInfo.providers);
         }
         const hasArea = allHaveArea(aoiInfo.geojson);
         setHasArea(hasArea);
@@ -240,12 +266,6 @@ function EstimateContainer(props: Props) {
         }
     }, [aoiInfo.geojson, props.providers]);
 
-    const [dataSizeInfo, setDataSizeInfo] = useState({
-        haveAvailableEstimates: undefined,
-        providerEstimates: undefined,
-        exceedingSize: undefined,
-        noMaxDataSize: undefined,
-    });
     const providerEstimates = {};
     const hashes = [];
     Object.entries(props.exportInfo.providerInfo).map(([slug, infoObject]) => {
@@ -260,7 +280,7 @@ function EstimateContainer(props: Props) {
             const haveAvailableEstimates = providerSlugs.filter((slug) => {
                 // Filter out providers that DO NOT have a size estimate
                 const estimate = providerEstimates[slug];
-                return estimate && estimate.size && estimate.size.value;
+                return estimate && estimate.size;
             });
             // Providers without a max data size will fall back to AoI.
             const noMaxDataSize = [...providerLimits.filter(limits => !limits.maxDataSize).map(limits => limits.slug)];
@@ -283,7 +303,7 @@ function EstimateContainer(props: Props) {
                 noMaxDataSize,
             });
         }
-    }, [(SERVE_ESTIMATES) ? DepsHashers.arrayHash(hashes) : undefined]);
+    }, [(SERVE_ESTIMATES) ? DepsHashers.arrayHash(hashes) : undefined, isCollectingEstimates]);
 
     return (
         <JobValidationProvider value={{

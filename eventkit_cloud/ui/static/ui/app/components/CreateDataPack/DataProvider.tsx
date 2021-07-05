@@ -145,7 +145,7 @@ export function DataProvider(props: Props) {
     const {haveAvailableEstimates = [], noMaxDataSize = []} = dataSizeInfo || {};
     const [overSize, setOverSize] = useState(false);
     const [overArea, setOverArea] = useState(false);
-    const [isProviderLoading, setProviderLoading] = useState(false);
+    const [isProviderLoading, setProviderLoading] = useState(props.checked);
     const debouncerRef = useRef(null);
     const estimateDebouncer = (...args) => debouncerRef.current(...args);
 
@@ -156,21 +156,21 @@ export function DataProvider(props: Props) {
     });
 
     const [providerHasEstimates, setHasEstimates] = useState(() =>
-        arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+        arrayHasValue(haveAvailableEstimates, provider.slug));
     useEffect(() => {
-        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
-        if(haveAvailableEstimates) {
+        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug));
+        if(arrayHasValue(haveAvailableEstimates, provider.slug)) {
             setProviderLoading(false);
         }
-    }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
+    }, [isProviderLoading, DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
     useEffect(() => {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
         const {size = {value: -1}} = providerInfo.estimates || {};
-        const {maxArea = -1, maxDataSize = -1} = limits || {};
-        let area = limits.useBbox ? aoiBboxArea : aoiArea;
-        setOverArea(area > maxArea);
-        setOverSize(size.value > maxDataSize);
+        const {maxArea = 0, maxDataSize = 0} = limits || {};
+        const area = limits.useBbox ? aoiBboxArea : aoiArea;
+        setOverArea(maxArea && area > maxArea);
+        setOverSize(!arrayHasValue(noMaxDataSize, provider.slug) && (maxDataSize && size.value > maxDataSize));
     }, [isProviderLoading, aoiArea, aoiBboxArea]);
 
     function getFormatCompatibility(formatSlug: string) {
@@ -476,9 +476,15 @@ export function DataProvider(props: Props) {
 
     function selectCheckbox(e: any) {
         props.onChange(e);
-        if (e.target.checked && !providerHasEstimates) {
-            props.checkProvider(e);
-            setProviderLoading(true);
+        if (e.target.checked) {
+            if (!providerHasEstimates) {
+                if (!props.checked) {
+                    props.checkProvider(e);
+                    setProviderLoading(true);
+                }
+            }else{
+                setProviderLoading(false);
+            }
         } else {
             setProviderLoading(false);
         }
@@ -544,7 +550,6 @@ export function DataProvider(props: Props) {
                         availability={providerInfo.availability}
                         overArea={overArea}
                         overSize={overSize}
-                        providerHasEstimates={providerHasEstimates}
                         isProviderLoading={isProviderLoading}
                         supportsZoomLevels={supportsZoomLevels(props.provider)}
                         provider={provider}
