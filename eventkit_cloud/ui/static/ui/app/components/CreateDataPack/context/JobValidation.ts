@@ -15,7 +15,7 @@ export interface JobValidationContext {
         exceedingSize: string[];
         noMaxDataSize: string[];
     },
-    areEstimatesLoading: boolean,
+    isCollectingEstimates: boolean,
 }
 
 const appContext = createContext<JobValidationContext>({} as JobValidationContext);

@@ -463,6 +463,7 @@ declare namespace Eventkit {
         interface Estimates {
             time?: EstimateData;
             size?: EstimateData;
+            status?: string;
         }
 
         interface Availability {
@@ -490,6 +491,7 @@ declare namespace Eventkit {
             exportOptions: Map<ProviderExportOptions>;
             projections: number[];  // Expecting projection srid
             visibility: Visibility;
+            isProviderLoading: boolean;
         }
 
         interface AoiInfo {

@@ -113,10 +113,10 @@ export function useProviderIdentity(effect: () => void, providers: Eventkit.Prov
 
 export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, ((provider: Eventkit.Provider, isLoading: boolean) => void)] {
     const slugMap = useRef({});
-    const [areProvidersLoading, setAreProvidersLoading] = useState(true);
+    const [areProvidersLoading, setAreProvidersLoading] = useState(false);
     const [flag, setFlag] = useState(false);
     useProviderIdentity(() => {
-        providers.map(provider => slugMap.current[provider.slug] = slugMap.current[provider.slug] || true);
+        providers.map(provider => slugMap.current[provider.slug] = slugMap.current[provider.slug] || false);
     }, providers);
     useEffect(() => {
         setAreProvidersLoading(Object.values(slugMap.current).some(value => value));

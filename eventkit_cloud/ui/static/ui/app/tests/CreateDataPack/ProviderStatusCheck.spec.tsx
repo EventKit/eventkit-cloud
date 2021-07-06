@@ -38,7 +38,7 @@ describe('ProviderStatusCheck component', () => {
         providerInfo: {},
         estimateDataSize: {},
         providerHasEstimates: true,
-        areEstimatesLoading: false,
+        isProviderLoading: false,
         supportsZoomLevels: true,
         theme: {},
         classes: {},

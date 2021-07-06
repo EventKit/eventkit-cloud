@@ -104,6 +104,7 @@ interface Props {
     provider: Eventkit.Provider;
     providerInfo: Eventkit.Store.ProviderInfo;
     checkProvider: (args: any) => void;
+    isProviderLoading: boolean;
     clearEstimate: (provider: Eventkit.Provider) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -131,44 +132,46 @@ interface Props {
 }
 
 export function DataProvider(props: Props) {
-    const { BASEMAP_URL } = useAppContext();
-    const { colors } = props.theme.eventkit;
-    const { classes, provider, providerInfo } = props;
-    const { exportOptions } = props.exportInfo;
+    const {BASEMAP_URL} = useAppContext();
+    const {colors} = props.theme.eventkit;
+    const {classes, provider, providerInfo} = props;
+    const {exportOptions} = props.exportInfo;
 
     const [isOpen, setOpen] = useState(false);
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
-    const { dataSizeInfo, aoiArea, aoiBboxArea, providerLimits } = useJobValidationContext();
-    const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
-    const [ overSize, setOverSize ] = useState(false);
-    const [ overArea, setOverArea ] = useState(false);
+    const {dataSizeInfo, aoiArea, aoiBboxArea, providerLimits} = useJobValidationContext();
+    const {haveAvailableEstimates = [], noMaxDataSize = []} = dataSizeInfo || {};
+    const [overSize, setOverSize] = useState(false);
+    const [overArea, setOverArea] = useState(false);
+    const [isProviderLoading, setProviderLoading] = useState(props.checked);
     const debouncerRef = useRef(null);
     const estimateDebouncer = (...args) => debouncerRef.current(...args);
 
     useEffectOnMount(() => {
         debouncerRef.current = debounce((val) => {
             props.clearEstimate(val);
-            props.checkProvider(val);
         }, 1000);
     });
 
     const [providerHasEstimates, setHasEstimates] = useState(() =>
-        arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+        arrayHasValue(haveAvailableEstimates, provider.slug));
     useEffect(() => {
-        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
-    }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
+        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug));
+        if(arrayHasValue(haveAvailableEstimates, provider.slug)) {
+            setProviderLoading(false);
+        }
+    }, [isProviderLoading, DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
-    const areEstimatesLoading = !providerInfo.estimates;
     useEffect(() => {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
-        const { size={value:-1} } = providerInfo.estimates || {};
-        const { maxArea=-1, maxDataSize=-1 } = limits || {};
-        let area = limits.useBbox ? aoiBboxArea : aoiArea;
-        setOverArea(area > maxArea);
-        setOverSize(size.value > maxDataSize);
-    }, [areEstimatesLoading, aoiArea, aoiBboxArea]);
+        const {size = {value: -1}} = providerInfo.estimates || {};
+        const {maxArea = 0, maxDataSize = 0} = limits || {};
+        const area = limits.useBbox ? aoiBboxArea : aoiArea;
+        setOverArea(maxArea && area > maxArea);
+        setOverSize(!arrayHasValue(noMaxDataSize, provider.slug) && (maxDataSize && size.value > maxDataSize));
+    }, [isProviderLoading, aoiArea, aoiBboxArea]);
 
     function getFormatCompatibility(formatSlug: string) {
         const formatInfo = props.incompatibilityInfo.formats[formatSlug.toLowerCase()];
@@ -186,8 +189,8 @@ export function DataProvider(props: Props) {
 
     function setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
-        const { provider } = props;
-        const providerOptions = { ...props.providerOptions };
+        const {provider} = props;
+        const providerOptions = {...props.providerOptions};
 
         // Check if a value was already set, we will fall back to this if the new values are invalid
         // If no values have been set, or the values are somehow invalid,
@@ -273,7 +276,7 @@ export function DataProvider(props: Props) {
     let currentMaxZoom = provider.level_to;
     let currentMinZoom = provider.level_from;
     if (exportOptions[provider.slug]) {
-        const { maxZoom, minZoom } = exportOptions[provider.slug];
+        const {maxZoom, minZoom} = exportOptions[provider.slug];
         if (maxZoom || maxZoom === 0) {
             currentMaxZoom = maxZoom;
         }
@@ -287,7 +290,7 @@ export function DataProvider(props: Props) {
         metadata: provider.metadata,
         slug: (!!props.provider.preview_url) ? provider.slug : undefined,
     } as MapLayer;
-    const [ renderZoomOut, setRenderZoomOut ] = useState(false);
+    const [renderZoomOut, setRenderZoomOut] = useState(false);
 
     // Show license if one exists.
     const nestedItems = [];
@@ -324,6 +327,7 @@ export function DataProvider(props: Props) {
         ));
     }
     if (supportsZoomLevels(props.provider)) {
+
         nestedItems.push(
             <div
                 className={`qa-DataProvider-ListItem-zoomSelection`}
@@ -348,39 +352,7 @@ export function DataProvider(props: Props) {
                         }
                     </ZoomLevelSlider>
                 </div>
-                <div
-                    className={`qa-DataProvider-ListItem-zoomMap ${props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
-                    key={props.provider.slug + '-mapDiv'}
-                >
-                    <ProviderPreviewMap
-                        style={{ height: '290px' }}
-                        geojson={props.geojson}
-                        zoomLevel={currentMaxZoom}
-                        provider={props.provider}
-                        visible={isOpen}
-                        displayFootprints={displayFootprints}
-                    >
-                        {renderIf(() => (<ZoomOutAtZoomLevel zoomLevel={4}/>), renderZoomOut)}
-                        <ZoomUpdater setZoom={setZoom}/>
-                        <OlMouseWheelZoom enabled={false}/>
-                        <PoiQueryDisplay
-                            style={{
-                                width: 'max-content',
-                                minWidth: '200px',
-                                justifyContent: 'center',
-                            }}
-                            selectedLayer={selectedBasemap}
-                        >
-                            <OlMapClickEvent mapPinStyle={{
-                                image: new Icon({
-                                    src: props.theme.eventkit.images.map_pin,
-                                })
-                            }}/>
-                        </PoiQueryDisplay>
-                    </ProviderPreviewMap>
-                </div>
-            </div>
-        );
+            </div>)
     } else {
         nestedItems.push(
             <ListItem
@@ -390,12 +362,44 @@ export function DataProvider(props: Props) {
                 disableGutters
             >
                 <div>
-                    <em>Zoom not available for this source.</em>
+                    <em>Zoom selection not available for this source.</em>
                 </div>
             </ListItem>
         );
     }
-
+    nestedItems.push(
+        <div
+            className={`qa-DataProvider-ListItem-zoomMap ${props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
+            key={props.provider.slug + '-mapDiv'}
+        >
+            <ProviderPreviewMap
+                style={{height: '290px'}}
+                geojson={props.geojson}
+                zoomLevel={currentMaxZoom}
+                provider={props.provider}
+                visible={isOpen}
+                displayFootprints={displayFootprints}
+            >
+                {renderIf(() => (<ZoomOutAtZoomLevel zoomLevel={4}/>), renderZoomOut)}
+                <ZoomUpdater setZoom={setZoom}/>
+                <OlMouseWheelZoom enabled={false}/>
+                <PoiQueryDisplay
+                    style={{
+                        width: 'max-content',
+                        minWidth: '200px',
+                        justifyContent: 'center',
+                    }}
+                    selectedLayer={selectedBasemap}
+                >
+                    <OlMapClickEvent mapPinStyle={{
+                        image: new Icon({
+                            src: props.theme.eventkit.images.map_pin,
+                        })
+                    }}/>
+                </PoiQueryDisplay>
+            </ProviderPreviewMap>
+        </div>
+    )
     nestedItems.push((
         <ListItem
             className={`qa-DataProvider-ListItem-provServDesc ${classes.sublistItem}`}
@@ -442,7 +446,7 @@ export function DataProvider(props: Props) {
                     <div><em>Cartography only available with GeoPackage.</em></div>
                 </span>
 
-                <div style={{ marginTop: '10px' }}>
+                <div style={{marginTop: '10px'}}>
                     <FormatSelector
                         formats={provider.supported_formats}
                         getFormatCompatibility={getFormatCompatibility}
@@ -460,15 +464,30 @@ export function DataProvider(props: Props) {
         const estimate = formatEstimate(providerInfo.estimates);
         if (estimate) {
             secondary =
-                <Typography style={{ fontSize: "0.7em" }}>{estimate}</Typography>;
+                <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
+        } else if (isProviderLoading) {
+            secondary = <CircularProgress style={{display: 'grid'}} size={11}/>;
         } else {
-            secondary = <CircularProgress style={{ display: 'grid' }} size={11}/>;
+            secondary = <Typography style={{fontSize: "0.7em"}}/>
         }
     }
 
-    const [ displayJustification, setDisplayJustification ] = useState(false);
+    const [displayJustification, setDisplayJustification] = useState(false);
+
     function selectCheckbox(e: any) {
         props.onChange(e);
+        if (e.target.checked) {
+            if (!providerHasEstimates) {
+                if (!props.checked) {
+                    props.checkProvider(e);
+                    setProviderLoading(true);
+                }
+            }else{
+                setProviderLoading(false);
+            }
+        } else {
+            setProviderLoading(false);
+        }
         setDisplayJustification(true);
     }
 
@@ -480,6 +499,7 @@ export function DataProvider(props: Props) {
             open: isOpen,
         }
     }
+
     if (props.getRef) {
         props.getRef(getRef());
     }
@@ -489,14 +509,14 @@ export function DataProvider(props: Props) {
             <ListItem
                 className={`qa-DataProvider-ListItem ${classes.listItem}`}
                 key={provider.uid}
-                style={{ backgroundColor }}
+                style={{backgroundColor}}
                 dense
                 disableGutters
             >
                 <div className={classes.container}>
                     <Checkbox
                         className="qa-DataProvider-CheckBox-provider"
-                        classes={{ root: classes.checkbox, checked: classes.checked }}
+                        classes={{root: classes.checkbox, checked: classes.checked}}
                         name={provider.name}
                         size="medium"
                         checked={props.checked}
@@ -520,18 +540,17 @@ export function DataProvider(props: Props) {
                     ), displayJustification)}
                     <ListItemText
                         disableTypography
-                        classes={{ root: classes.listItemText }}
-                        primary={<Typography style={{ fontSize: "1.0em" }}>{provider.name}</Typography>}
+                        classes={{root: classes.listItemText}}
+                        primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
                         secondary={secondary}
                     />
                     <ProviderStatusCheck
                         id="ProviderStatus"
-                        baseStyle={{ marginRight: '40px' }}
+                        baseStyle={{marginRight: '40px'}}
                         availability={providerInfo.availability}
                         overArea={overArea}
                         overSize={overSize}
-                        providerHasEstimates={providerHasEstimates}
-                        areEstimatesLoading={areEstimatesLoading}
+                        isProviderLoading={isProviderLoading}
                         supportsZoomLevels={supportsZoomLevels(props.provider)}
                         provider={provider}
                         aoiArea={aoiArea}
@@ -558,7 +577,7 @@ export function DataProvider(props: Props) {
                 </div>
             </ListItem>
             <Collapse in={isOpen} key={`${provider.uid}-expanded`}>
-                <List style={{ backgroundColor }}>
+                <List style={{backgroundColor}}>
                     {nestedItems}
                 </List>
             </Collapse>

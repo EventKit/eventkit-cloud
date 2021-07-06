@@ -8,7 +8,6 @@ import ActionZoomIn from '@material-ui/icons/ZoomIn';
 import Line from '@material-ui/icons/Timeline';
 import Extent from '@material-ui/icons/SettingsOverscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
-import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import {AoiInfobar, getIcon} from '../../components/CreateDataPack/AoiInfobar';
 import {JobValidationProvider} from "../../components/CreateDataPack/context/JobValidation";
 import {ProviderLimits} from "../../components/CreateDataPack/EstimateContainer";
@@ -44,7 +43,7 @@ describe('AoiInfobar component', () => {
                 aoiArea: area,
                 aoiBboxArea: area,
                 dataSizeInfo: {} as any,
-                areEstimatesLoading: false,
+                isCollectingEstimates: false,
             }}>
                 <AoiInfobar {...props} />
             </JobValidationProvider>);

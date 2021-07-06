@@ -873,18 +873,6 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
-                                                // Clear Provider Info since we will be checking.
-                                                this.props.updateExportInfo({
-                                                    providerInfo: {
-                                                        ...this.props.exportInfo.providerInfo,
-                                                        [provider.slug]: {
-                                                            estimates: undefined,
-                                                            availability: undefined,
-                                                        },
-                                                    }
-                                                });
-                                                // Ask parent to update the estimate (i.e. display loading icon).
-                                                this.props.onUpdateEstimate();
                                                 // Check the provider for updated info.
                                                 this.props.checkProvider(provider).then(providerInfo => {
                                                     this.props.updateExportInfo({

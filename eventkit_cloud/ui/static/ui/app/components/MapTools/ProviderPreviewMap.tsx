@@ -19,13 +19,13 @@ ProviderPreviewMap.defaultProps = {
 } as Props;
 
 function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
-    const {provider, zoomLevel, geojson} = props;
+    const {provider, zoomLevel, geojson, visible} = props;
     const appContext = useAppContext();
 
-    const selectedBasemap = {
-        mapUrl: (provider.preview_url || appContext.BASEMAP_URL),
-        slug: (!!provider.preview_url) ? provider.slug : undefined,
-    } as MapLayer;
+    const selectedBasemap = ( visible ) ? {
+            mapUrl: (provider.preview_url || appContext.BASEMAP_URL),
+            slug: (!!provider.preview_url) ? provider.slug : undefined,
+        } as MapLayer : {} as MapLayer;
 
     const footprintMapLayer = (!!provider.footprint_url && props.displayFootprints) ? {
         mapUrl: provider.footprint_url,

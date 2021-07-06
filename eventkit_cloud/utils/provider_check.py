@@ -1,28 +1,32 @@
 # -*- coding: utf-8 -*-
-
-
+import base64
 import json
 import logging
 import re
 import xml.etree.ElementTree as ET
 from enum import Enum
 from io import StringIO
-from typing import Type
+from typing import Type, Union, Optional, List
 
 import requests
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.core.cache import cache
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.core.helpers import get_or_update_session
 from urllib.parse import urljoin
 
+from eventkit_cloud.tasks.helpers import normalize_name
+
 logger = logging.getLogger(__name__)
 
+DEFAULT_CACHE_TIMEOUT = 60 * 30  # 30 minutes
 
-class CheckResults(Enum):
+
+class CheckResult(Enum):
     """
     Enum describing possible results of the provider check. Returns are in JSON format, with a status field
     containing an error code, and a message field containing more detailed information. Status may be one of:
@@ -42,102 +46,82 @@ class CheckResults(Enum):
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
 
-    TIMEOUT = (
-        {
-            "status": "ERR",
-            "type": "TIMEOUT",
-            "message": _("Your connection has timed out; the provider may be offline. Refresh to try again."),
-        },
-    )
+    TIMEOUT = {
+        "status": "ERR",
+        "type": "TIMEOUT",
+        "message": _("Your connection has timed out; the provider may be offline. Refresh to try again."),
+    }
 
-    CONNECTION = (
-        {
-            "status": "ERR",
-            "type": "CONNECTION",
-            "message": _("A connection to this data provider could not be established."),
-        },
-    )
+    CONNECTION = {
+        "status": "ERR",
+        "type": "CONNECTION",
+        "message": _("A connection to this data provider could not be established."),
+    }
 
-    UNAUTHORIZED = (
-        {
-            "status": "ERR",
-            "type": "UNAUTHORIZED",
-            "message": _("Authorization is required to connect to this data provider."),
-        },
-    )
+    UNAUTHORIZED = {
+        "status": "ERR",
+        "type": "UNAUTHORIZED",
+        "message": _("Authorization is required to connect to this data provider."),
+    }
 
-    NOT_FOUND = (
-        {
-            "status": "ERR",
-            "type": "NOT_FOUND",
-            "message": _("The data provider was not found on the server (status 404)."),
-        },
-    )
+    NOT_FOUND = {
+        "status": "ERR",
+        "type": "NOT_FOUND",
+        "message": _("The data provider was not found on the server (status 404)."),
+    }
 
-    SSL_EXCEPTION = (
-        {
-            "status": "WARN",
-            "type": "SSL_EXCEPTION",
-            "message": _("Could not connect securely to provider; possibly missing client certificate"),
-        },
-    )
+    SSL_EXCEPTION = {
+        "status": "WARN",
+        "type": "SSL_EXCEPTION",
+        "message": _("Could not connect securely to provider; possibly missing client certificate"),
+    }
 
-    UNAVAILABLE = (
-        {
-            "status": "WARN",
-            "type": "UNAVAILABLE",
-            "message": _("This data provider may be unavailable (status %(status)s)."),
-        },
-    )
+    UNAVAILABLE = {
+        "status": "WARN",
+        "type": "UNAVAILABLE",
+        "message": _("This data provider may be unavailable (status %(status)s)."),
+    }
 
-    UNKNOWN_FORMAT = (
-        {
-            "status": "WARN",
-            "type": "UNKNOWN_FORMAT",
-            "message": _(
-                "This data provider returned metadata in an unexpected format; "
-                "errors may occur when creating the DataPack."
-            ),
-        },
-    )
+    UNKNOWN_FORMAT = {
+        "status": "WARN",
+        "type": "UNKNOWN_FORMAT",
+        "message": _(
+            "This data provider returned metadata in an unexpected format; "
+            "errors may occur when creating the DataPack."
+        ),
+    }
 
-    LAYER_NOT_AVAILABLE = (
-        {
-            "status": "WARN",
-            "type": "LAYER_NOT_AVAILABLE",
-            "message": _("This data provider does not offer the requested layer."),
-        },
-    )
+    LAYER_NOT_AVAILABLE = {
+        "status": "WARN",
+        "type": "LAYER_NOT_AVAILABLE",
+        "message": _("This data provider does not offer the requested layer."),
+    }
 
-    NO_INTERSECT = (
-        {
-            "status": "WARN",
-            "type": "NO_INTERSECT",
-            "message": _("The selected AOI does not intersect the data provider's layer."),
-        },
-    )
+    NO_INTERSECT = {
+        "status": "WARN",
+        "type": "NO_INTERSECT",
+        "message": _("The selected AOI does not intersect the data provider's layer."),
+    }
 
-    NO_URL = (
-        {
-            "status": "WARN",
-            "type": "NO_URL",
-            "message": _("No Service URL was found in the data provider config; " "availability cannot be checked"),
-        },
-    )
+    NO_URL = {
+        "status": "WARN",
+        "type": "NO_URL",
+        "message": _("No Service URL was found in the data provider config; " "availability cannot be checked"),
+    }
 
-    TOO_LARGE = (
-        {
-            "status": "WARN",
-            "type": "SELECTION_TOO_LARGE",
-            "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
-        },
-    )
+    TOO_LARGE = {
+        "status": "WARN",
+        "type": "SELECTION_TOO_LARGE",
+        "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
+    }
 
-    UNKNOWN_ERROR = (
-        {"status": "ERR", "type": "ERROR", "message": _("An error has occurred, please contact an administrator.")},
-    )
+    UNKNOWN_ERROR = {
+        "status": "ERR",
+        "type": "ERROR",
+        "message": _("An error has occurred, please contact an administrator."),
+    }
 
-    SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")},)
+    SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
 class ProviderCheck(object):
@@ -166,7 +150,6 @@ class ProviderCheck(object):
         self.layer = layer
         self.slug = slug
         self.max_area = max_area
-        self.result = CheckResults.SUCCESS
         self.timeout = 10
         self.config = config or dict()
         self.session = get_or_update_session(
@@ -197,7 +180,15 @@ class ProviderCheck(object):
             self.aoi = None
             logger.debug("AOI was not given")
 
-        self.token_dict = {}  # Parameters to include in message field of response
+    @staticmethod
+    def get_status_result(check_result: CheckResult, *args, **kwargs):
+        """Updates the check_result message with parameters.
+        >>> get_status_result({"message": "Status ({status})"}, "200")
+        {"message": "(200)"}
+        """
+        status_result = check_result.value
+        status_result["message"] = status_result["message"].format(**kwargs)
+        return status_result
 
     def check_area(self):
         """
@@ -215,55 +206,49 @@ class ProviderCheck(object):
 
         return area_sq_km < self.max_area
 
-    def get_check_response(self):
+    def get_provider_response(self) -> requests.Response:
         """
         Sends a GET request to provider URL and returns its response if status code is ok
         """
 
         try:
             if not self.service_url:
-                self.result = CheckResults.NO_URL
-                return None
+                raise ProviderCheckError(CheckResult.NO_URL)
 
             response = self.session.get(self.service_url, params=self.query, timeout=self.timeout)
 
-            self.token_dict["status"] = response.status_code
-
             if response.status_code in [401, 403]:
-                self.result = CheckResults.UNAUTHORIZED
-                return None
+                raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
             if response.status_code == 404:
-                self.result = CheckResults.NOT_FOUND
-                return None
+                raise ProviderCheckError(CheckResult.NOT_FOUND)
 
             if not response.ok:
-                self.result = CheckResults.UNAVAILABLE
-                return None
+                raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
+
+            return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.TIMEOUT
-            return None
+            raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
             logger.error("SSL connection failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.SSL_EXCEPTION
-            return None
+            raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except requests.exceptions.ConnectionError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.CONNECTION
-            return None
+            raise ProviderCheckError(CheckResult.CONNECTION)
+
+        except ProviderCheckError as ex:
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            raise
 
         except Exception as ex:
             logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
-        return response
-
-    def validate_response(self, response):
+    def validate_response(self, response) -> bool:
         """
         Given a 200 response, check it for validity (intersection, layer contents, etc).
         Base implementation always returns True if a response was given at all; subclasses may override
@@ -272,24 +257,48 @@ class ProviderCheck(object):
         """
         return response is not None
 
-    def check(self):
+    def get_cache_key(self, aoi: GeometryCollection = None):
+        cache_key = f"provider-status-{normalize_name(self.service_url)}"
+        if aoi:
+            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
+        cache_key = cache_key[:200]
+        return cache_key  # Some caches only support keys <250
+
+    def check(self) -> dict:
         """
         Main call to check the status of a provider. Returns JSON with a status string and more detailed message.
         """
-        self.result = CheckResults.SUCCESS
 
-        if self.check_area():
-            response = self.get_check_response()
-            if response is not None:
-                self.validate_response(response)
-        else:
-            self.result = CheckResults.TOO_LARGE
+        #  If the last check was successful assume checks will be successful for some period of time.
+        status_check_cache_key = self.get_cache_key(aoi=self.aoi)
 
-        # TODO: This should not be dumped to a string here
-        # The front end should NOT receive a string, it should get a valid JSON response.
-        result_json = json.dumps(self.result.value[0]) % self.token_dict
-        logger.debug("Provider check returning result: %s", result_json)
-        return result_json
+        try:
+            status = cache.get(status_check_cache_key)
+            if status:
+                return status
+
+            status = ProviderCheck.get_status_result(CheckResult.SUCCESS)
+
+            # If the area is not valid, don't bother with a size.
+            if not self.check_area():
+                raise ProviderCheckError(CheckResult.TOO_LARGE)
+
+            # This response will rarely change, it will be information about the service.
+            response = cache.get_or_set(
+                self.get_cache_key(), lambda: self.get_provider_response(), timeout=DEFAULT_CACHE_TIMEOUT
+            )
+
+            if not self.validate_response(response):
+                raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
+
+            cache.set(status_check_cache_key, status, timeout=DEFAULT_CACHE_TIMEOUT)
+            return status
+
+        except ProviderCheckError as pce:
+            #  If checks fail throw that away so that we will check again on the next request.
+            cache.delete(status_check_cache_key)
+            cache.delete(self.get_cache_key())
+            return pce.status_result
 
 
 class OverpassProviderCheck(ProviderCheck):
@@ -300,50 +309,49 @@ class OverpassProviderCheck(ProviderCheck):
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
 
-    def get_check_response(self):
+    def get_provider_response(self) -> requests.Response:
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
             if not self.service_url:
-                self.result = CheckResults.NO_URL
-                return
+                raise ProviderCheckError(CheckResult.NO_URL)
 
-            response = self.session.post(url=self.service_url, data="out meta;", timeout=self.timeout)
+            query = "out meta;"
 
-            self.token_dict["status"] = response.status_code
-
-            if response.status_code in [401, 403]:
-                self.result = CheckResults.UNAUTHORIZED
-                return
-
-            if response.status_code == 404:
-                self.result = CheckResults.NOT_FOUND
-                return
+            response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
 
             if not response.ok:
-                self.result = CheckResults.UNAVAILABLE
-                return
+                # Workaround for https://bugs.python.org/issue27777
+                query = {"data": query}
+                response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
+
+            if response.status_code in [401, 403]:
+                raise ProviderCheckError(CheckResult.UNAUTHORIZED)
+
+            if response.status_code == 404:
+                raise ProviderCheckError(CheckResult.NOT_FOUND)
+
+            if not response.ok:
+                raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
+
+            return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.TIMEOUT
-            return
+            raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.SSL_EXCEPTION
-            return
+            raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.CONNECTION
-            return
+            raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
             logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
 class OWSProviderCheck(ProviderCheck):
@@ -387,14 +395,13 @@ class OWSProviderCheck(ProviderCheck):
         bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
         if self.aoi is not None and not self.aoi.intersects(bbox):
-            self.result = CheckResults.NO_INTERSECT
+            raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
-    def validate_response(self, response):
+    def validate_response(self, response: requests.Response) -> bool:
 
         try:
             xml = response.content.decode()
             xmll = xml.lower()
-
             doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
             if doctype is not None:
                 doctype_pos = doctype.end()
@@ -411,16 +418,16 @@ class OWSProviderCheck(ProviderCheck):
             layer_element = self.find_layer(root)
 
             if layer_element is None:
-                return
+                return False
 
             bbox = self.get_bbox(layer_element)
             if bbox is not None:
                 self.check_intersection(bbox)
+            return True
 
         except ET.ParseError as ex:
             logger.error("Provider check failed to parse GetCapabilities XML: {}".format(str(ex)))
-            self.result = CheckResults.UNKNOWN_FORMAT
-            return
+            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
 
 class WCSProviderCheck(OWSProviderCheck):
@@ -432,7 +439,7 @@ class WCSProviderCheck(OWSProviderCheck):
         super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WCS"
 
-    def find_layer(self, root):
+    def find_layer(self, root) -> Union[CheckResult, List[str]]:
         """
         :param root: Name of layer to find
         :return: XML 'Layer' Element, or None if not found
@@ -440,16 +447,14 @@ class WCSProviderCheck(OWSProviderCheck):
 
         content_meta = root.find(".//contentmetadata")
         if content_meta is None:
-            self.result = CheckResults.UNKNOWN_FORMAT
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
         # Get names of available coverages
         coverage_offers = content_meta.findall("coverageofferingbrief")
 
         cover_names = [(c, c.find("name")) for c in coverage_offers]
         if not cover_names:  # No coverages are offered
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         try:
             coverages = self.config.get("service", dict()).get("coverages")
@@ -464,8 +469,7 @@ class WCSProviderCheck(OWSProviderCheck):
             covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
 
         if not covers:  # Requested coverage is not offered
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         return covers
 
@@ -504,7 +508,7 @@ class WCSProviderCheck(OWSProviderCheck):
             if not (self.aoi is not None and not self.aoi.intersects(bbox)):
                 return
 
-        self.result = CheckResults.NO_INTERSECT
+        raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
 
 class WFSProviderCheck(OWSProviderCheck):
@@ -523,8 +527,7 @@ class WFSProviderCheck(OWSProviderCheck):
         """
         feature_type_list = root.find(".//featuretypelist")
         if feature_type_list is None:
-            self.result = CheckResults.UNKNOWN_FORMAT
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
         feature_types = feature_type_list.findall("featuretype")
 
@@ -534,18 +537,17 @@ class WFSProviderCheck(OWSProviderCheck):
         features = [feature for feature, name in feature_names if name is not None and self.layer == name.text]
 
         if not features:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         feature = features[0]
         return feature
 
-    def get_bbox(self, element):
+    def get_bbox(self, element) -> Optional[List[float]]:
 
         bbox_element = element.find("latlongboundingbox")
 
         if bbox_element is None:
-            return None
+            return
 
         bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
         return bbox
@@ -570,8 +572,7 @@ class WMSProviderCheck(OWSProviderCheck):
         """
         capability = root.find(".//capability")
         if capability is None:
-            self.result = CheckResults.UNKNOWN_FORMAT
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
         # Flatten nested layers to single list
         layers = capability.findall("layer")
@@ -587,8 +588,7 @@ class WMSProviderCheck(OWSProviderCheck):
         requested_layer = self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         layer = layer[0]
         return layer
@@ -606,8 +606,6 @@ class WMSProviderCheck(OWSProviderCheck):
             bbox = [float(bbox_element.findtext(point)) for point in points]
             return bbox
 
-        return None
-
     def get_layer_name(self):
 
         try:
@@ -619,12 +617,10 @@ class WMSProviderCheck(OWSProviderCheck):
             )
         except AttributeError:
             logger.error("Unable to get layer name from provider configuration.")
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
         if layer_name is None:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         layer_name = str(layer_name).lower()
         return layer_name
@@ -646,8 +642,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         """
         contents = root.find(".//contents")
         if contents is None:
-            self.result = CheckResults.UNKNOWN_FORMAT
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
         # Flatten nested layers to single list
         layers = contents.findall("layer")
@@ -662,18 +657,17 @@ class WMTSProviderCheck(OWSProviderCheck):
         requested_layer = self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         layer = layer[0]
         return layer
 
-    def get_bbox(self, element):
+    def get_bbox(self, element) -> Optional[List[float]]:
 
         bbox_element = element.find("wgs84boundingbox")
 
         if bbox_element is None:
-            return None
+            return
 
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]
@@ -692,12 +686,10 @@ class WMTSProviderCheck(OWSProviderCheck):
             )
         except AttributeError:
             logger.error("Unable to get layer name from provider configuration.")
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
         if layer_name is None:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
-            return None
+            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
         layer_name = layer_name.lower()
         return layer_name
@@ -717,50 +709,42 @@ class FileProviderCheck(ProviderCheck):
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
 
-    def get_check_response(self):
+    def get_provider_response(self) -> requests.Response:
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
             if not self.service_url:
-                self.result = CheckResults.NO_URL
-                return
+                raise ProviderCheckError(CheckResult.NO_URL)
 
             response = self.session.head(url=self.service_url, timeout=self.timeout)
 
-            self.token_dict["status"] = response.status_code
-
             if response.status_code in [401, 403]:
-                self.result = CheckResults.UNAUTHORIZED
-                return
+                raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
             if response.status_code == 404:
-                self.result = CheckResults.NOT_FOUND
-                return
+                raise ProviderCheckError(CheckResult.NOT_FOUND)
 
             if not response.ok:
-                self.result = CheckResults.UNAVAILABLE
-                return
+                raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
+
+            return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.TIMEOUT
-            return
+            raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.SSL_EXCEPTION
-            return
+            raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.CONNECTION
-            return
+            raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
             logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
 class OGCProviderCheck(ProviderCheck):
@@ -771,53 +755,44 @@ class OGCProviderCheck(ProviderCheck):
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
 
-    def get_check_response(self):
+    def get_provider_response(self):
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
             if not self.service_url:
-                self.result = CheckResults.NO_URL
-                return
+                raise ProviderCheckError(CheckResult.NO_URL)
 
             service_url = self.service_url.rstrip("/\\")
             processes_endpoint = urljoin(service_url, "processes/")
 
             response = self.session.get(url=processes_endpoint, timeout=self.timeout)
-
-            self.token_dict["status"] = response.status_code
-
             if response.status_code in [401, 403]:
-                self.result = CheckResults.UNAUTHORIZED
-                return
+                raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
             if response.status_code == 404:
-                self.result = CheckResults.NOT_FOUND
-                return
+                raise ProviderCheckError(CheckResult.NOT_FOUND)
 
             if not response.ok:
-                self.result = CheckResults.UNAVAILABLE
-                return
+                raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
+
+            return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.TIMEOUT
-            return
+            raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.SSL_EXCEPTION
-            return
+            raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.CONNECTION
-            return
+            raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
             logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
-            self.result = CheckResults.UNKNOWN_ERROR
-            return None
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
 PROVIDER_CHECK_MAP = {
@@ -849,7 +824,7 @@ def get_provider_checker(type_slug) -> Type[ProviderCheck]:
         return ProviderCheck
 
 
-def perform_provider_check(provider: DataProvider, geojson) -> str:
+def perform_provider_check(provider: DataProvider, geojson: dict) -> str:
     try:
         provider_type = str(provider.export_provider_type)
 
@@ -870,9 +845,18 @@ def perform_provider_check(provider: DataProvider, geojson) -> str:
         response = checker.check()
 
     except Exception as e:
-        response = json.dumps(CheckResults.UNKNOWN_ERROR.value[0])
-        logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
-
-    logger.info(f"Status of provider '{provider.name}': {response}")
+        logger.error(e)
+        response = ProviderCheck.get_status_result(CheckResult.UNKNOWN_ERROR)
+        if provider:
+            logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
+            logger.info(f"Status of provider '{provider.name}': {response}")
 
     return response
+
+
+class ProviderCheckError(Exception):
+    def __init__(self, check_result: CheckResult = None, *args, **kwargs):
+        if check_result:
+            self.status_result = ProviderCheck.get_status_result(check_result=check_result, **kwargs)
+            self.message = self.status_result["message"]
+        super().__init__(*args, **kwargs)
