@@ -33,7 +33,7 @@ describe('AlertCallout component', () => {
                 aoiArea: area,
                 aoiBboxArea: area,
                 dataSizeInfo: {} as any,
-                areEstimatesLoading: false,
+                isCollectingEstimates: false,
             }}>
                 <BufferDialog {...props} />
             </JobValidationProvider>);

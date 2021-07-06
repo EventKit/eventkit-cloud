@@ -132,9 +132,11 @@ export class StatusDownload extends React.Component<Props, State> {
         }
         if (this.props.expirationState.updated && !prevProps.expirationState.updated) {
             this.props.getDatacartDetails(this.props.match.params.jobuid);
+            this.timer && this.startTimer();
         }
         if (this.props.permissionState.updated && !prevProps.permissionState.updated) {
             this.props.getDatacartDetails(this.props.match.params.jobuid);
+            this.timer && this.startTimer();
         }
         if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
@@ -169,9 +171,8 @@ export class StatusDownload extends React.Component<Props, State> {
                 });
 
                 if (clearTimer) {
-                    window.clearInterval(this.timer);
-                    this.timer = null;
-                    window.clearTimeout(this.timeout);
+                    this.clearTimer();
+                    this.clearTimeout();
                     this.timeout = window.setTimeout(() => {
                         this.props.getDatacartDetails(this.props.match.params.jobuid);
                     }, 270000);
@@ -189,10 +190,8 @@ export class StatusDownload extends React.Component<Props, State> {
 
     componentWillUnmount() {
         this.props.clearDataCartDetails();
-        window.clearInterval(this.timer);
-        this.timer = null;
-        window.clearTimeout(this.timeout);
-        this.timeout = null;
+        this.clearTimer();
+        this.clearTimeout();
     }
 
     private async onMount() {
@@ -242,8 +241,18 @@ export class StatusDownload extends React.Component<Props, State> {
         this.setState({isRunning: true});
     }
 
-    private startTimer() {
+    private clearTimer() {
         window.clearInterval(this.timer);
+        this.timer = null
+    }
+
+    private clearTimeout() {
+        window.clearTimeout(this.timeout);
+        this.timeout = null;
+    }
+
+    private startTimer() {
+        this.clearTimer()
         this.timer = window.setInterval(() => {
             this.props.getDatacartDetails(this.props.match.params.jobuid);
         }, 5000);

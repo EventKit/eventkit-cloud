@@ -20,36 +20,30 @@ export interface Props {
     style?: any;
 }
 
-export interface State {
-    selectedBaseMap: MapLayer;
-}
-
-export class MapView extends React.Component<Props, State> {
+export class MapView extends React.Component<Props> {
 
     private mapDiv: string;
     private minZoom: number;
     private maxZoom: number;
     private style: any;
+    selectedBaseMap: MapLayer;
 
     constructor(props: Props) {
-        let selectedBaseMap = props.selectedBaseMap;
-        if (typeof selectedBaseMap === 'string' || selectedBaseMap instanceof String) {
-            selectedBaseMap = { mapUrl: props.selectedBaseMap } as MapLayer;
-        }
         super(props);
-        this.state = {
-            selectedBaseMap,
-        };
         this.minZoom = this.props.minZoom || 0;
         this.maxZoom = this.props.maxZoom || 20;
         this.mapDiv = this.props.id || "ProviderMap";
         this.style = this.props.style
+        this.selectedBaseMap = (typeof props.selectedBaseMap === 'string' || props.selectedBaseMap instanceof String) ?
+            {mapUrl: props.selectedBaseMap} as MapLayer : props.selectedBaseMap;
     }
 
     render() {
+        const layer = (this.selectedBaseMap) ? <OlRasterTileLayer mapLayer={this.selectedBaseMap} copyright={this.props.copyright}
+                                       zIndex={0}/> : <div/>
         return (
             <OlMapComponent
-                style={{ ...this.style, height: '100%', width: '100%' }}
+                style={{...this.style, height: '100%', width: '100%'}}
                 divId={this.mapDiv}
                 minZoom={this.props.minZoom}
                 maxZoom={this.props.maxZoom}
@@ -61,8 +55,9 @@ export class MapView extends React.Component<Props, State> {
                     </OlFeatureLayer>
                 )}
                 <OlMouseWheelZoom enabled={false}/>
-                <OlRasterTileLayer mapLayer={this.state.selectedBaseMap} copyright={this.props.copyright} zIndex={0}/>
+                { layer }
             </OlMapComponent>
         );
     }
+
 }
