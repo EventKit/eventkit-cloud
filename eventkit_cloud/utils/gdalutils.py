@@ -6,6 +6,8 @@ import multiprocessing
 import os
 import time
 from functools import wraps
+from itertools import repeat
+from statistics import mean
 from tempfile import NamedTemporaryFile
 from typing import List, Tuple
 
@@ -745,6 +747,23 @@ def get_distance(point_a, point_b):
     line = get_line([point_a, point_b])
     reproject_geometry(line, 4326, 3857)
     return line.Length()
+
+
+def get_scale_in_meters(pixel_size: Tuple[float, float]) -> float:
+    """
+    Takes pixel size and returns a single scale value in meters.
+    :param pixel_size: A tuple of two floats representing the x/y pixel values.
+    :return: Distance in meters of pixel size averaged.
+    >>> get_scale_in_meters((0.00028, 0.00028))
+    31
+    >>> get_scale_in_meters((0.000833, 0.000833))
+    93
+    >>> get_scale_in_meters((0.00833, 0.00833))
+    927
+    """
+    pixel = list(map(get_distance, repeat([0, 0]), list(zip(repeat(0), pixel_size))))
+
+    return round(mean(pixel))
 
 
 def reproject_geometry(geometry, from_srs, to_srs):

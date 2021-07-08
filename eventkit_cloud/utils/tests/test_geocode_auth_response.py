@@ -64,7 +64,7 @@ class TestGeoCodeAuthResponse(TestCase):
         example_url = "test_headers"
         example_payload = {"test": "payload"}
         example_cookies = "test_cookies"
-        example_headers = "test_headers"
+        example_headers = {"header_key": "header_value"}
 
         mock_get_session_cookies.return_value = example_cookies
         mock_get_auth_headers.return_value = example_headers

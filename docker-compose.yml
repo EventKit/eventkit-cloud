@@ -123,6 +123,7 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - TILE_CACHE_DIR
       - SECRET_KEY
+      - EVENTKIT_CERT_PASS
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   memcached:

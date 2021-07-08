@@ -57,5 +57,5 @@ class TestCoreHelpers(TestCase):
         session = get_or_update_session(headers=expected_headers, cert_info=cert_info, slug="abc")
         self.assertEqual(session.auth, (expected_user, expected_pass))
         self.assertEqual(len(session.adapters), 2)
-        self.assertEqual(session.headers, expected_headers)
+        self.assertTrue(expected_headers.items() <= dict(session.headers).items())
         self.assertEqual(session.verify, 10)

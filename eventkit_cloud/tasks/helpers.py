@@ -957,6 +957,7 @@ def download_data(
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to get data from: {input_url}")
         if response:
             logger.error(response.text)
         raise Exception("Failed to download data.") from e
