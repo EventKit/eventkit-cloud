@@ -2,7 +2,6 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import Warning from '@material-ui/icons/Warning';
-import Button from '@material-ui/core/Button';
 import NavigationArrowBack from '@material-ui/icons/ArrowBack';
 import NavigationArrowForward from '@material-ui/icons/ArrowForward';
 import NavigationCheck from '@material-ui/icons/Check';
@@ -108,6 +107,7 @@ describe('BreadcrumbStepper component', () => {
                 }
             },
             visibility: 'PRIVATE',
+            isProviderLoading: false
         },
         history: {
             push: sinon.spy(),

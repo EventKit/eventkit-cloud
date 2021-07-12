@@ -10,7 +10,7 @@ import yaml
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry, get_chunked_bbox
+from eventkit_cloud.utils import gdalutils
 
 logger = logging.getLogger(__name__)
 
@@ -161,11 +161,13 @@ class WCSConverter(object):
 
         scale = float(service.get("scale"))
         params["service"] = "WCS"
-        width, height = get_dimensions(self.bbox, scale)
-        tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
+        width, height = gdalutils.get_dimensions(self.bbox, scale)
+        tile_bboxes = gdalutils.get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
-        session = get_or_update_session(cert_info=self.config.get("cert_info"), slug=self.slug)
+        session = get_or_update_session(
+            cert_info=self.config.get("cert_info"), slug=self.slug, headers=self.config.get("headers")
+        )
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
@@ -181,7 +183,7 @@ class WCSConverter(object):
                     # resolution but makes the requests slow down.
                     # If it is set in the config, use that value, otherwise compute approximate res based on scale
                     if self.config.get("tile_size", None) is None:
-                        tile_x, tile_y = get_dimensions(_tile_bbox, scale)
+                        tile_x, tile_y = gdalutils.get_dimensions(_tile_bbox, scale)
                         params["width"] = tile_x
                         params["height"] = tile_y
                     else:
@@ -189,7 +191,9 @@ class WCSConverter(object):
                         params["height"] = self.config.get("tile_size")
 
                     params["bbox"] = ",".join(map(str, _tile_bbox))
+
                     req = session.get(self.service_url, params=params, stream=True)
+
                     try:
                         size = int(req.headers.get("content-length"))
                     except (ValueError, TypeError):
@@ -212,13 +216,19 @@ class WCSConverter(object):
                 logger.error(e)
                 raise Exception("There was an error writing the file to disk.")
         if len(geotiffs) > 1:
-            self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
+            self.out = gdalutils.merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
         else:
             shutil.copy(geotiffs[0], self.out)
+
         if not os.path.isfile(self.out):
             raise Exception("Nothing was returned from the WCS service.")
+        if not gdalutils.get_meta(self.out).get("is_raster"):
+            with open(self.out, "r") as output_file:
+                logger.error("Content of failed WCS request")
+                logger.error(output_file.read())
+            raise Exception("The service failed to return a proper response")
 
-    @retry
+    @gdalutils.retry
     def convert(self,):
         """
         Download WCS data and convert to geopackage

@@ -206,9 +206,9 @@ export class FormatSelector extends React.Component<Props, {}> {
         if (formats) {
             return (
                 <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
-                    {formats.map((format) => (
+                    {formats.map((format, ix) => (
                         <div
-                            key={format.slug}
+                            key={ix}
                             className={`qa-FormatSelector-ListItem`}
                         >
                             {this.getCheckBox(format)}

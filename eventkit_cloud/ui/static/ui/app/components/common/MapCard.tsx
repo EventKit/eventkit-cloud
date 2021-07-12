@@ -21,6 +21,7 @@ export interface Props {
 
 export interface State {
     open: boolean;
+
 }
 
 export class MapCard extends React.Component<Props, State> {
@@ -28,7 +29,6 @@ export class MapCard extends React.Component<Props, State> {
     readonly mapDiv: string;
     readonly minZoom: number;
     readonly maxZoom: number;
-
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -47,8 +47,9 @@ export class MapCard extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
-
+        const selectedBasemap = ( this.state.open ) ? {
+            mapUrl: (this.props?.provider?.preview_url || this.context.config.BASEMAP_URL),
+        } as MapLayer : {} as MapLayer;
         const styles = {
             mapContainer: {
                 position: 'relative' as 'relative',
