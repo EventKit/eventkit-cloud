@@ -1522,7 +1522,7 @@ class TestExportTasks(ExportTaskBase):
         data_provider_task_record_uids = ["0d08ddf6-35c1-464f-b271-75f6911c3f78"]
         mock_get_metadata.return_value = metadata
         run_zip_file = RunZipFile.objects.create(run=self.run)
-        expected_zip = f"{metadata['name']}-{run_zip_file.uid}.zip"
+        expected_zip = f"{metadata['name']}.zip"
         mock_zip_files.return_value = expected_zip
 
         returned_zip = create_zip_task.run(
