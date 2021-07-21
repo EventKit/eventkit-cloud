@@ -1,9 +1,10 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue} from '../../utils/generic';
+import {getSqKmString} from '../../utils/generic';
 import {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -18,19 +19,13 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
-import {joyride} from '../../joyride.config';
-import {getSqKmString} from '../../utils/generic';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
-import {useDebouncedState, useEffectOnMount} from "../../utils/hooks/hooks";
-import {useEffect} from "react";
-import {useJobValidationContext} from "./context/JobValidation";
+import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
-import {useState} from "react";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {Step2Validator} from "./ExportValidation";
-import {renderIf} from "../../utils/renderIf";
 import {useAppContext} from "../ApplicationContext";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -206,127 +201,112 @@ const dummyProvider = {
     } as Eventkit.Format],
 } as Eventkit.Provider;
 
-export class ExportInfo extends React.Component<Props, State> {
-    static contextTypes = {
-        config: PropTypes.object,
-    };
+export function ExportInfo(props: Props) {
+    const appContext = useAppContext();
+    const {colors} = props.theme.eventkit;
+    const {classes} = props;
 
-    private helpers: StoreHelpers;
-    joyride;
-    dataProvider;
-    private bounceBack: boolean;
-    // joyride: React.RefObject<Joyride>;
-    // dataProvider: React.RefObject<typeof DataProvider>;
-    private CancelToken = axios.CancelToken;
-    private source = this.CancelToken.source();
-
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            steps: [],
-            isRunning: false,
-            // we make a local copy of providers for editing
-            providers: props.providers,
-            refreshPopover: null,
-            projectionCompatibilityOpen: false,
-            displaySrid: null,
-            selectedFormats: [],
-            incompatibilityInfo: {
-                formats: {},
-                projections: {},
-            } as IncompatibilityInfo,
-            providerDrawerIsOpen: false,
-            stepIndex: 0,
-            displayDummy: false,
-        };
-
-        this.onNameChange = this.onNameChange.bind(this);
-        this.onDescriptionChange = this.onDescriptionChange.bind(this);
-        this.onProjectChange = this.onProjectChange.bind(this);
-        this.callback = this.callback.bind(this);
-        this.onChangeCheck = this.onChangeCheck.bind(this);
-        this.onSelectAll = this.onSelectAll.bind(this);
-        this.onSelectProjection = this.onSelectProjection.bind(this);
-        this.onRefresh = this.onRefresh.bind(this);
-        this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
-        this.handlePopoverClose = this.handlePopoverClose.bind(this);
-        this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
-        this.handleProjectionCompatibilityClose = this.handleProjectionCompatibilityClose.bind(this);
-        this.checkCompatibility = this.checkCompatibility.bind(this);
-        this.checkSelectedFormats = this.checkSelectedFormats.bind(this);
-        this.projectionHasErrors = this.projectionHasErrors.bind(this);
-        this.getProjectionDialog = this.getProjectionDialog.bind(this);
-        this.clearEstimate = this.clearEstimate.bind(this);
-        this.deselect = this.deselect.bind(this);
-        this.checkShareAll = this.checkShareAll.bind(this);
-        this.dataProvider = React.createRef();
-        this.joyride = React.createRef();
-        // this.dataProvider = React.createRef<typeof DataProvider>();
-        // this.joyride = React.createRef<Joyride>();
+    // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+    let projections = [...props.projections];
+    const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+    if (indexOf4326 >= 1) {
+        projections = [projections.splice(indexOf4326, 1)[0], ...projections];
     }
 
-    componentDidMount() {
+    let helpers: StoreHelpers;
+    let joyride = useRef();
+    const dataProvider = useRef();
+    const CancelToken = axios.CancelToken;
+    const source = CancelToken.source();
+
+    const [steps, setSteps] = useState([]);
+    const [isRunning, setIsRunning] = useState(false);
+    // we make a local copy of providers for editing
+    const [providers, setProviders] = useState(props.providers);
+    const [refreshPopover, setRefreshPopover] = useState(null);
+    const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(null);
+    const [displaySrid, setDisplaySrid] = useState(null);
+    const [selectedFormats, setSelectedFormats] = useState([]);
+    const [incompatibilityInfo, setIncompatibilityInfo] = useState({
+        formats: {},
+        projections: {},
+    } as IncompatibilityInfo);
+    const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
+    const [stepIndex, setStepIndex] = useState(0);
+    const [displayDummy, setDisplayDummy] = useState(false);
+
+    // Component Mounted
+    useEffect(() => {
         // calculate the area of the AOI
-        const areaStr = getSqKmString(this.props.geojson);
+        const areaStr = getSqKmString(props.geojson);
 
         const updatedInfo = {
             areaStr,
             visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
         } as Eventkit.Store.ExportInfo;
 
+        // @ts-ignore
         const steps = joyride.ExportInfo as any[];
-        this.joyrideAddSteps(steps);
+        joyrideAddSteps(steps);
 
-        if (this.props.projections.find((projection) => projection.srid === 4326)) {
-            if (this.props.exportInfo.projections && this.props.exportInfo.projections.length === 0) {
+        if (props.projections.find((projection) => projection.srid === 4326)) {
+            if (props.exportInfo.projections && props.exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
             }
         }
-        this.props.updateExportInfo(updatedInfo);
-    }
+        props.updateExportInfo(updatedInfo);
+    }, [])
 
-    componentWillUnmount(): void {
-        this.source.cancel('Exiting Page.');
-    }
-
-    componentDidUpdate(prevProps: Props, prevState: State) {
-        // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-        const {exportInfo} = this.props;
-        let nextState = {};
-
-        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-            this.joyride?.current?.reset(true);
-            this.setState({isRunning: true});
+    // Component Unmounted
+    useEffect(() => {
+        // return a function to execute at unmount
+        return () => {
+            source.cancel('Exiting Page.');
         }
+    }, [])
 
-        if (this.props.providers.length !== prevProps.providers.length) {
-            this.setState({providers: this.props.providers});
-        } else {
-            const providerSlugs = this.props.providers.map(provider => provider.slug);
-            const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
-            if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
-                this.setState({providers: this.props.providers});
-            }
+    useEffect(() => {
+        if (!isRunning) {
+            // @ts-ignore
+            joyride?.current?.reset(true);
+            setIsRunning(true);
         }
+    }, [props.walkthroughClicked]);
 
-        const selectedProjections = [...exportInfo.projections];
-        const prevSelectedProjections = [...prevProps.exportInfo.projections];
-        if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
-            nextState = {
-                ...nextState,
-                ...this.checkCompatibility()
-            };
-        }
-        nextState = {
-            ...nextState,
-            ...this.checkSelectedFormats(prevState)
-        };
-        if (Object.keys(nextState).length > 0) {
-            this.setState({...nextState});
-        }
-    }
+    useEffect(() => {
+        setProviders(props.providers);
+    }, [props.providers]);
 
-    static elementsEqual(array1, array2) {
+    // TODO: This is what's left of the componentDidUpdate, figure out where to put it.
+    // useEffect(() => {
+    //     const {exportInfo} = props;
+    //     let nextState = {};
+    //
+    //     const providerSlugs = props.providers.map(provider => provider.slug);
+    //     const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
+    //     if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
+    //         setProviders(props.providers);
+    //     }
+    //
+    //     const selectedProjections = [...exportInfo.projections];
+    //     const prevSelectedProjections = [...prevProps.exportInfo.projections];
+    //     if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
+    //         nextState = {
+    //             ...nextState,
+    //             ...checkCompatibility()
+    //         };
+    //     }
+    //     nextState = {
+    //         ...nextState,
+    //         ...checkSelectedFormats(prevState)
+    //     };
+    //     if (Object.keys(nextState).length > 0) {
+    //         setState({...nextState});
+    //     }
+    //
+    // }) // notice, no second argument
+
+    const elementsEqual = (array1, array2) => {
         // To compare two arrays for equality, we check length for an early exit,
         // otherwise we sort them then compare element by element.
         if (array1.length !== array2.length) {
@@ -345,9 +325,9 @@ export class ExportInfo extends React.Component<Props, State> {
         return valuesEqual;
     }
 
-    private checkCompatibility() {
-        const {formats} = this.props;
-        const selectedProjections = this.props.exportInfo.projections;
+    const checkCompatibility = () => {
+        const {formats} = props;
+        const selectedProjections = props.exportInfo.projections;
 
         const formatMap = {};
         const projectionMap = {};
@@ -369,30 +349,30 @@ export class ExportInfo extends React.Component<Props, State> {
 
         return {
             incompatibilityInfo: {
-                ...this.state.incompatibilityInfo,
+                ...incompatibilityInfo,
                 formats: formatMap,
                 projections: projectionMap,
             }
         };
     }
 
-    private checkShareAll() {
-        if (this.props.exportInfo.visibility === 'PRIVATE') {
-            this.props.updateExportInfo({
+    const checkShareAll = () => {
+        if (props.exportInfo.visibility === 'PRIVATE') {
+            props.updateExportInfo({
                 visibility: 'PUBLIC'
             });
             return;
         }
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             visibility: 'PRIVATE'
         });
     }
 
-    private checkSelectedFormats(prevState: State) {
+    const checkSelectedFormats = (prevState: State) => {
         // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
-        // this.props.providers is the list of available providers.
-        const exportOptions = this.props.exportInfo.exportOptions;
-        const providers = [...this.props.exportInfo.providers];
+        // props.providers is the list of available providers.
+        const exportOptions = props.exportInfo.exportOptions;
+        const providers = [...props.exportInfo.providers];
         const getFormats = (formatArray) => {
             providers.forEach((provider) => {
                 const providerOptions = exportOptions[provider.slug];
@@ -407,58 +387,57 @@ export class ExportInfo extends React.Component<Props, State> {
         };
         const selectedFormats = [] as string[];
         getFormats(selectedFormats);
-        if (!ExportInfo.elementsEqual(selectedFormats, prevState.selectedFormats)) {
-            return {selectedFormats};
-        }
+        // TODO: Comment back in and fix.
+        // if (!elementsEqual(selectedFormats, prevState.prevselectedFormats)) {
+        //     return {selectedFormats};
+        // }
     }
 
-    private handleProjectionCompatibilityOpen(projection: Eventkit.Projection) {
-        this.setState({
-            // selectedFormats,
-            displaySrid: projection.srid,
-            projectionCompatibilityOpen: true,
-        });
+    const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
+        setDisplaySrid(projection.srid);
+        setProjectionCompatibilityOpen(true);
     }
 
-    private handleProjectionCompatibilityClose() {
-        this.setState({projectionCompatibilityOpen: false});
+    const handleProjectionCompatibilityClose = () => {
+        setProjectionCompatibilityOpen(false);
     }
 
-    private handleDataProviderExpand() {
-        this.dataProvider.current.handleExpand();
+    const handleDataProviderExpand = () => {
+        // @ts-ignore
+        dataProvider.current.handleExpand();
     }
 
-    private onNameChange(value) {
+    const onNameChange = (value) => {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             exportName: value,
         });
     }
 
-    private onDescriptionChange(value) {
+    const onDescriptionChange = (value) => {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             datapackDescription: value,
         });
     }
 
-    private onProjectChange(value) {
+    const onProjectChange = (value) => {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             projectName: value,
         });
     }
 
-    private onChangeCheck(e: React.ChangeEvent<HTMLInputElement>) {
+    const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
-        const providers = [...this.props.exportInfo.providers];
-        const propsProviders = this.props.providers;
+        const providers = [...props.exportInfo.providers];
+        const propsProviders = props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
@@ -479,15 +458,15 @@ export class ExportInfo extends React.Component<Props, State> {
             }
         }
         // update the state with the new array of options
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             providers,
         });
 
     }
 
-    private deselect(provider: Eventkit.Provider) {
-        const providers = [...this.props.exportInfo.providers];
-        const propsProviders = this.props.providers;
+    const deselect = (provider: Eventkit.Provider) => {
+        const providers = [...props.exportInfo.providers];
+        const propsProviders = props.providers;
         let index;
         index = providers.map(x => x.name).indexOf(provider.name);
         for (const _provider of propsProviders) {
@@ -497,28 +476,28 @@ export class ExportInfo extends React.Component<Props, State> {
         }
 
         // update the state with the new array of options
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             providers,
         });
     }
 
-    private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
+    const onSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
         let providers = [];
         if (e.target.checked) {
             // set providers to the list of ALL providers
-            providers = [...this.props.providers.filter(provider => provider.display)];
+            providers = [...props.providers.filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             providers,
         });
     }
 
-    private onSelectProjection(event) {
+    const onSelectProjection = (event) => {
         // Selecting projections for the DataPack, here srid is spatial reference ID
-        const selectedSrids = [...this.props.exportInfo.projections] || [];
+        const selectedSrids = [...props.exportInfo.projections] || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -537,18 +516,18 @@ export class ExportInfo extends React.Component<Props, State> {
             }
         }
         // update the state with the new array of options
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             projections: selectedSrids,
         });
     }
 
-    private onRefresh() {
+    const onRefresh = () => {
         // make a copy of providers and set availability to empty json
-        this.props.providers.forEach(provider => this.props.checkProvider(provider));
+        props.providers.forEach(provider => props.checkProvider(provider));
     }
 
-    private clearEstimate(provider: Eventkit.Provider) {
-        const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+    const clearEstimate = (provider: Eventkit.Provider) => {
+        const providerInfo = {...props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
         const updatedProviderInfo = {...providerInfo};
 
         const providerInfoData = updatedProviderInfo[provider.slug];
@@ -561,76 +540,82 @@ export class ExportInfo extends React.Component<Props, State> {
             estimates: undefined,
         };
 
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             providerInfo: updatedProviderInfo
         });
     }
 
-    private handlePopoverOpen(e: React.MouseEvent<any>) {
-        this.setState({refreshPopover: e.currentTarget});
+    const handlePopoverOpen = (e: React.MouseEvent<any>) => {
+        setRefreshPopover(e.currentTarget);
     }
 
-    private handlePopoverClose() {
-        this.setState({refreshPopover: null});
+
+    const handlePopoverClose = () => {
+        setRefreshPopover(null);
     }
 
-    private joyrideAddSteps(steps: Step[]) {
-        const newSteps = steps;
-        if (!newSteps.length) {
-            return;
-        }
+    const joyrideAddSteps = (steps: Step[]) => {
 
-        this.setState((currentState) => {
-            const nextState = {...currentState};
-            nextState.steps = nextState.steps.concat(newSteps);
-            return nextState;
-        });
+        // const newSteps = steps;
+        // if (!newSteps.length) {
+        //     return;
+        // }
+
+        // setState((currentState) => {
+        //     const nextState = {...currentState};
+        //     nextsteps = nextsteps.concat(newSteps);
+        //     return nextState;
+        // });
     }
 
-    private openDrawer() {
-        const isOpen: boolean = this.dataProvider.current.open;
-        if (this.state.providerDrawerIsOpen == null) {
-            this.setState({providerDrawerIsOpen: isOpen});
+    const openDrawer = () => {
+        // @ts-ignore
+        const isOpen: boolean = dataProvider.current.open;
+        if (providerDrawerIsOpen == null) {
+            setProviderDrawerIsOpen(isOpen);
         }
         if (!isOpen) {
-            this.handleDataProviderExpand();
+            handleDataProviderExpand();
         }
     }
 
-    private resetDrawer() {
-        if (this.dataProvider.current.open !== this.state.providerDrawerIsOpen) {
-            this.handleDataProviderExpand();
+    const resetDrawer = () => {
+        // @ts-ignore
+        if (dataProvider.current.open !== providerDrawerIsOpen) {
+            handleDataProviderExpand();
         }
-        this.setState({providerDrawerIsOpen: null});
+        setProviderDrawerIsOpen(null);
     }
 
-    private callback(data: any) {
+    const callback = (data: any) => {
+        console.log("DATA IN CALLBACK IS: ", data)
         const {
             action,
             type,
             step,
         } = data;
 
-        this.props.setNextDisabled();
+        props.setNextDisabled();
 
         if (action === 'start') {
-            this.setState({displayDummy: true});
+            setDisplayDummy(true);
         }
 
         if (action === 'close' || action === 'skip' || type === 'tour:end') {
-            this.resetDrawer();
-            this.setState({isRunning: false, displayDummy: false});
-            this.props.onWalkthroughReset();
+            resetDrawer();
+            setIsRunning(false);
+            setDisplayDummy(false);
+            props.onWalkthroughReset();
             this?.helpers.reset(true);
             window.location.hash = '';
         } else {
             if (data.index === 9 && data.type === 'tooltip') {
-                this.props.setNextEnabled();
+                props.setNextEnabled();
             }
 
             if ((step.target === '.qa-DataProvider-qa-expandTarget' && type === 'step:before') ||
                 (step.target === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
-                this.openDrawer();
+                openDrawer();
             }
         }
         if (step && step.scrollToId) {
@@ -638,34 +623,34 @@ export class ExportInfo extends React.Component<Props, State> {
         }
     }
 
-    private getProviders() {
+    const getProviders = () => {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
-        let providers = this.state.providers.filter(provider => (!provider.hidden && provider.display));
-        providers = [...new Map(providers.map(x => [x.slug, x])).values()];
-        if (this.state.displayDummy) {
-            providers.unshift(dummyProvider as Eventkit.Provider);
+        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
+        currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
+        if (displayDummy) {
+            currentProviders.unshift(dummyProvider as Eventkit.Provider);
         }
-        return providers;
+        return currentProviders;
     }
 
-    private projectionHasErrors(srid: number) {
-        const projectionInfo = this.state.incompatibilityInfo.projections[srid];
+    const projectionHasErrors = (srid: number) => {
+        const projectionInfo = incompatibilityInfo.projections[srid];
         if (!!projectionInfo) {
-            return projectionInfo.formats.some(format => this.state.selectedFormats.indexOf(format.slug) >= 0);
+            return projectionInfo.formats.some(format => selectedFormats.indexOf(format.slug) >= 0);
         }
         return false;
     }
 
-    private getProjectionDialog() {
-        const incompatibilityInfo = this.state.incompatibilityInfo.projections[this.state.displaySrid];
-        const formats = incompatibilityInfo.formats.filter(format => {
-            return this.state.selectedFormats.indexOf(format.slug) >= 0;
+    const getProjectionDialog = () => {
+        const projectionInfo = incompatibilityInfo.projections[displaySrid];
+        const formats = projectionInfo.formats.filter(format => {
+            return selectedFormats.indexOf(format.slug) >= 0;
         });
         return (<BaseDialog
-            show={this.state.projectionCompatibilityOpen}
-            title={`Format and Projection Conflict - EPSG:${this.state.displaySrid}`}
-            onClose={this.handleProjectionCompatibilityClose}
+            show={projectionCompatibilityOpen}
+            title={`Format and Projection Conflict - EPSG:${displaySrid}`}
+            onClose={handleProjectionCompatibilityClose}
         >
             <div
                 style={{paddingBottom: '10px', wordWrap: 'break-word'}}
@@ -683,66 +668,54 @@ export class ExportInfo extends React.Component<Props, State> {
         </BaseDialog>);
     }
 
-    render() {
-        const {colors} = this.props.theme.eventkit;
-        const {classes} = this.props;
-        const {projectionCompatibilityOpen, steps, isRunning} = this.state;
-
-        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
-        let projections = [...this.props.projections];
-        const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
-        if (indexOf4326 >= 1) {
-            projections = [projections.splice(indexOf4326, 1)[0], ...projections];
-        }
-
-        return (
-            <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
-                {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
-                <Step2Validator
-                    tourRunning={this.state.isRunning}
-                    {...this.props}
-                />
-                <EventkitJoyride
-                    name="Create Page Step 2"
-                    callback={this.callback}
-                    getRef={(_ref) => this.joyride = _ref}
-                    steps={steps}
-                    getHelpers={(helpers: any) => {
-                        this.helpers = helpers
-                    }}
-                    continuous
-                    showSkipButton
-                    showProgress
-                    locale={{
-                        back: (<span>Back</span>) as any,
-                        close: (<span>Close</span>) as any,
-                        last: (<span>Done</span>) as any,
-                        next: (<span>Next</span>) as any,
-                        skip: (<span>Skip</span>) as any,
-                    }}
-                    run={isRunning}
-                />
-                <CustomScrollbar>
-                    <form id="form" className={`qa-ExportInfo-form ${classes.form}`}>
-                        <Paper
-                            id="paper"
-                            className={`qa-ExportInfo-Paper ${classes.paper}`}
-                            elevation={2}
-                        >
-                            <div className="qa-ExportInfo-general-info" id="GeneralInfo">
-                                <div
-                                    id="mainHeading"
-                                    className={`qa-ExportInfo-mainHeading ${classes.heading}`}
-                                >
-                                    Enter General Information
-                                </div>
+    return (
+        <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
+            {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
+            <Step2Validator
+                tourRunning={isRunning}
+                {...props}
+            />
+            {/*<EventkitJoyride*/}
+            {/*    name="Create Page Step 2"*/}
+            {/*    callback={callback}*/}
+            {/*    getRef={(_ref) => joyride = _ref}*/}
+            {/*    steps={steps}*/}
+            {/*    getHelpers={(helpers: any) => {*/}
+            {/*        helpers = helpers*/}
+            {/*    }}*/}
+            {/*    continuous*/}
+            {/*    showSkipButton*/}
+            {/*    showProgress*/}
+            {/*    locale={{*/}
+            {/*        back: (<span>Back</span>) as any,*/}
+            {/*        close: (<span>Close</span>) as any,*/}
+            {/*        last: (<span>Done</span>) as any,*/}
+            {/*        next: (<span>Next</span>) as any,*/}
+            {/*        skip: (<span>Skip</span>) as any,*/}
+            {/*    }}*/}
+            {/*    run={isRunning}*/}
+            {/*/>*/}
+            <CustomScrollbar>
+                <form id="form" className={`qa-ExportInfo-form ${classes.form}`}>
+                    <Paper
+                        id="paper"
+                        className={`qa-ExportInfo-Paper ${classes.paper}`}
+                        elevation={2}
+                    >
+                        <div className="qa-ExportInfo-general-info" id="GeneralInfo">
+                            <div
+                                id="mainHeading"
+                                className={`qa-ExportInfo-mainHeading ${classes.heading}`}
+                            >
+                                Enter General Information
+                            </div>
                                 <div style={{marginBottom: '30px'}}>
                                     <DebouncedTextField
                                         className={`qa-ExportInfo-input-name ${classes.textField}`}
                                         id="Name"
                                         name="exportName"
-                                        setValue={this.onNameChange}
-                                        defaultValue={this.props.exportInfo.exportName}
+                                        setValue={onNameChange}
+                                        defaultValue={props.exportInfo.exportName}
                                         placeholder="Datapack Name"
                                         InputProps={{className: classes.input}}
                                         fullWidth
@@ -752,8 +725,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                         className={`qa-ExportInfo-input-description ${classes.textField}`}
                                         id="Description"
                                         name="datapackDescription"
-                                        setValue={this.onDescriptionChange}
-                                        defaultValue={this.props.exportInfo.datapackDescription}
+                                        setValue={onDescriptionChange}
+                                        defaultValue={props.exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
                                         inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
@@ -766,8 +739,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                         className={`qa-ExportInfo-input-project ${classes.textField}`}
                                         id="Project"
                                         name="projectName"
-                                        setValue={this.onProjectChange}
-                                        defaultValue={this.props.exportInfo.projectName}
+                                        setValue={onProjectChange}
+                                        defaultValue={props.exportInfo.projectName}
                                         placeholder="Project Name"
                                         InputProps={{className: classes.input}}
                                         fullWidth
@@ -794,9 +767,9 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <Checkbox
                                     classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="SelectAll"
-                                    checked={this.props.exportInfo.providers.length === this.props.providers.filter(
+                                    checked={props.exportInfo.providers.length === props.providers.filter(
                                         provider => provider.display).length}
-                                    onChange={this.onSelectAll}
+                                    onChange={onSelectAll}
                                     style={{width: '24px', height: '24px'}}
                                 />
                                 <span
@@ -823,9 +796,9 @@ export class ExportInfo extends React.Component<Props, State> {
                                         <span>AVAILABILITY</span>
                                         <NavigationRefresh
                                             className={classes.refreshIcon}
-                                            onMouseEnter={this.handlePopoverOpen}
-                                            onMouseLeave={this.handlePopoverClose}
-                                            onClick={this.onRefresh}
+                                            onMouseEnter={handlePopoverOpen}
+                                            onMouseLeave={handlePopoverClose}
+                                            onClick={onRefresh}
                                             color="primary"
                                         />
                                         <Popover
@@ -833,9 +806,9 @@ export class ExportInfo extends React.Component<Props, State> {
                                             PaperProps={{
                                                 style: {padding: '16px'},
                                             }}
-                                            open={Boolean(this.state.refreshPopover)}
-                                            anchorEl={this.state.refreshPopover}
-                                            onClose={this.handlePopoverClose}
+                                            open={Boolean(refreshPopover)}
+                                            anchorEl={refreshPopover}
+                                            onClose={handlePopoverClose}
                                             anchorOrigin={{
                                                 vertical: 'top',
                                                 horizontal: 'center',
@@ -861,38 +834,38 @@ export class ExportInfo extends React.Component<Props, State> {
                                     className="qa-ExportInfo-List"
                                     style={{width: '100%', fontSize: '16px'}}
                                 >
-                                    {this.getProviders().map((provider, ix) => (
+                                    {getProviders().map((provider, ix) => (
                                         <DataProvider
                                             key={provider.slug + "-DataProviderList"}
-                                            geojson={this.props.geojson}
+                                            geojson={props.geojson}
                                             provider={provider}
-                                            onChange={this.onChangeCheck}
-                                            deselect={this.deselect}
-                                            checked={this.props.exportInfo.providers.map(x => x.name)
+                                            onChange={onChangeCheck}
+                                            deselect={deselect}
+                                            checked={props.exportInfo.providers.map(x => x.name)
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
-                                            renderEstimate={this.context.config.SERVE_ESTIMATES}
+                                            renderEstimate={appContext.SERVE_ESTIMATES}
                                             checkProvider={() => {
                                                 // Check the provider for updated info.
-                                                this.props.checkProvider(provider).then(providerInfo => {
-                                                    this.props.updateExportInfo({
+                                                props.checkProvider(provider).then(providerInfo => {
+                                                    props.updateExportInfo({
                                                         providerInfo: {
-                                                            ...this.props.exportInfo.providerInfo,
+                                                            ...props.exportInfo.providerInfo,
                                                             [provider.slug]: providerInfo.data,
                                                         }
                                                     });
                                                     // Trigger an estimate calculation update in the parent
                                                     // Does not re-request any data, calculates the total from available results.
-                                                    this.props.onUpdateEstimate();
+                                                    props.onUpdateEstimate();
                                                 });
                                             }}
-                                            incompatibilityInfo={this.state.incompatibilityInfo}
-                                            clearEstimate={this.clearEstimate}
+                                            incompatibilityInfo={incompatibilityInfo}
+                                            clearEstimate={clearEstimate}
                                             // Get reference to handle logic for joyride.
                                             {...(() => {
                                                 const refProps = {} as any;
                                                 if (ix === 0) {
-                                                    refProps.getRef = (ref: any) => this.dataProvider.current = ref;
+                                                    refProps.getRef = (ref: any) => dataProvider.current = ref;
                                                 }
                                                 return refProps;
                                             })()}
@@ -928,18 +901,18 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 className="qa-ExportInfo-CheckBox-projection"
                                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                                 name={`${projection.srid}`}
-                                                checked={this.props.exportInfo.projections.indexOf(projection.srid) !== -1}
+                                                checked={props.exportInfo.projections.indexOf(projection.srid) !== -1}
                                                 style={{width: '24px', height: '24px'}}
-                                                onChange={this.onSelectProjection}
+                                                onChange={onSelectProjection}
                                             />
                                             <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                                 EPSG:{projection.srid} - {projection.name}
                                             </span>
-                                            {this.projectionHasErrors(projection.srid) &&
+                                            {projectionHasErrors(projection.srid) &&
                                             <AlertWarning
                                                 className={`qa-Projection-Warning-Icon`}
                                                 onClick={() => {
-                                                    this.handleProjectionCompatibilityOpen(projection);
+                                                    handleProjectionCompatibilityOpen(projection);
                                                 }}
                                                 style={{
                                                     cursor: 'pointer', verticalAlign: 'middle',
@@ -951,7 +924,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                         </div>
                                     ))}
                                     {projectionCompatibilityOpen &&
-                                    this.getProjectionDialog()
+                                    getProjectionDialog()
                                     }
                                 </div>
                             </div>
@@ -966,8 +939,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <Checkbox
                                     classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="ShareAll"
-                                    checked={this.props.exportInfo.visibility === 'PUBLIC'}
-                                    onChange={this.checkShareAll}
+                                    checked={props.exportInfo.visibility === 'PUBLIC'}
+                                    onChange={checkShareAll}
                                     style={{width: '24px', height: '24px'}}
                                 />
                                 <span
@@ -988,16 +961,16 @@ export class ExportInfo extends React.Component<Props, State> {
                                     title="Area"
                                     containerStyle={{fontSize: '16px'}}
                                 >
-                                    {this.props.exportInfo.areaStr}
+                                    {props.exportInfo.areaStr}
                                 </CustomTableRow>
                                 <div style={{padding: '15px 0px 20px'}}>
-                                    <MapCard geojson={this.props.geojson}>
+                                    <MapCard geojson={props.geojson}>
                                         <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
                                         <span
                                             role="button"
                                             tabIndex={0}
-                                            onClick={this.props.handlePrev}
-                                            onKeyPress={this.props.handlePrev}
+                                            onClick={props.handlePrev}
+                                            onKeyPress={props.handlePrev}
                                             className={classes.editAoi}
                                         >
                                             Edit
@@ -1010,7 +983,7 @@ export class ExportInfo extends React.Component<Props, State> {
                 </CustomScrollbar>
             </div>
         );
-    }
+
 }
 
 function mapStateToProps(state) {
