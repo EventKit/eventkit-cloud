@@ -5,7 +5,7 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import {connect} from 'react-redux';
 import axios from 'axios';
 import {getSqKmString} from '../../utils/generic';
-import {Step, StoreHelpers} from 'react-joyride';
+import {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -23,7 +23,7 @@ import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
 import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
-import {Link} from "@material-ui/core";
+import {Link, TextField} from "@material-ui/core";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
@@ -213,16 +213,15 @@ export function ExportInfo(props: Props) {
         projections = [projections.splice(indexOf4326, 1)[0], ...projections];
     }
 
-    let helpers: StoreHelpers;
-    let joyride = useRef();
+    // let helpers: StoreHelpers;
+    var joyride;
     const dataProvider = useRef();
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
-    // we make a local copy of providers for editing
-    const [providers, setProviders] = useState(props.providers);
+
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(null);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -248,6 +247,7 @@ export function ExportInfo(props: Props) {
         // @ts-ignore
         const steps = joyride.ExportInfo as any[];
         joyrideAddSteps(steps);
+        console.log("STEPS: ", steps)
 
         if (props.projections.find((projection) => projection.srid === 4326)) {
             if (props.exportInfo.projections && props.exportInfo.projections.length === 0) {
@@ -265,27 +265,24 @@ export function ExportInfo(props: Props) {
         }
     }, [])
 
-    useEffect(() => {
-        if (!isRunning) {
-            // @ts-ignore
-            joyride?.current?.reset(true);
-            setIsRunning(true);
-        }
-    }, [props.walkthroughClicked]);
-
-    useEffect(() => {
-        setProviders(props.providers);
-    }, [props.providers]);
-
-    // TODO: This is what's left of the componentDidUpdate, figure out where to put it.
-    // useEffect(() => {
-    //     const {exportInfo} = props;
+    // componentDidUpdate(prevProps: Props, prevState: State) {
+    //     // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
+    //     const {exportInfo} = this.props;
     //     let nextState = {};
     //
-    //     const providerSlugs = props.providers.map(provider => provider.slug);
-    //     const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
-    //     if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
-    //         setProviders(props.providers);
+    //     if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
+    //         this.joyride?.current?.reset(true);
+    //         this.setState({isRunning: true});
+    //     }
+    //
+    //     if (this.props.providers.length !== prevProps.providers.length) {
+    //         this.setState({providers: this.props.providers});
+    //     } else {
+    //         const providerSlugs = this.props.providers.map(provider => provider.slug);
+    //         const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
+    //         if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
+    //             this.setState({providers: this.props.providers});
+    //         }
     //     }
     //
     //     const selectedProjections = [...exportInfo.projections];
@@ -293,18 +290,17 @@ export function ExportInfo(props: Props) {
     //     if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
     //         nextState = {
     //             ...nextState,
-    //             ...checkCompatibility()
+    //             ...this.checkCompatibility()
     //         };
     //     }
     //     nextState = {
     //         ...nextState,
-    //         ...checkSelectedFormats(prevState)
+    //         ...this.checkSelectedFormats(prevState)
     //     };
     //     if (Object.keys(nextState).length > 0) {
-    //         setState({...nextState});
+    //         this.setState({...nextState});
     //     }
-    //
-    // }) // notice, no second argument
+    // }
 
     const elementsEqual = (array1, array2) => {
         // To compare two arrays for equality, we check length for an early exit,
@@ -387,10 +383,9 @@ export function ExportInfo(props: Props) {
         };
         const selectedFormats = [] as string[];
         getFormats(selectedFormats);
-        // TODO: Comment back in and fix.
-        // if (!elementsEqual(selectedFormats, prevState.prevselectedFormats)) {
-        //     return {selectedFormats};
-        // }
+        if (!elementsEqual(selectedFormats, prevState.selectedFormats)) {
+            return {selectedFormats};
+        }
     }
 
     const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
@@ -554,16 +549,20 @@ export function ExportInfo(props: Props) {
         setRefreshPopover(null);
     }
 
-    const joyrideAddSteps = (steps: Step[]) => {
+    const joyrideAddSteps = (newSteps: Step[]) => {
 
-        // const newSteps = steps;
+        console.log("NEWSTEPS AT BEGINNING:", newSteps)
+
         // if (!newSteps.length) {
         //     return;
         // }
 
-        // setState((currentState) => {
+        return setSteps(steps.concat(newSteps));
+
+        //
+        // this.setState((currentState) => {
         //     const nextState = {...currentState};
-        //     nextsteps = nextsteps.concat(newSteps);
+        //     nextState.steps = nextState.steps.concat(newSteps);
         //     return nextState;
         // });
     }
@@ -626,7 +625,7 @@ export function ExportInfo(props: Props) {
     const getProviders = () => {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
-        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
+        let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
         if (displayDummy) {
             currentProviders.unshift(dummyProvider as Eventkit.Provider);
@@ -675,26 +674,26 @@ export function ExportInfo(props: Props) {
                 tourRunning={isRunning}
                 {...props}
             />
-            {/*<EventkitJoyride*/}
-            {/*    name="Create Page Step 2"*/}
-            {/*    callback={callback}*/}
-            {/*    getRef={(_ref) => joyride = _ref}*/}
-            {/*    steps={steps}*/}
-            {/*    getHelpers={(helpers: any) => {*/}
-            {/*        helpers = helpers*/}
-            {/*    }}*/}
-            {/*    continuous*/}
-            {/*    showSkipButton*/}
-            {/*    showProgress*/}
-            {/*    locale={{*/}
-            {/*        back: (<span>Back</span>) as any,*/}
-            {/*        close: (<span>Close</span>) as any,*/}
-            {/*        last: (<span>Done</span>) as any,*/}
-            {/*        next: (<span>Next</span>) as any,*/}
-            {/*        skip: (<span>Skip</span>) as any,*/}
-            {/*    }}*/}
-            {/*    run={isRunning}*/}
-            {/*/>*/}
+            <EventkitJoyride
+                name="Create Page Step 2"
+                callback={callback}
+                getRef={(_ref) => joyride = _ref}
+                steps={steps}
+                getHelpers={(helpers: any) => {
+                    helpers = helpers
+                }}
+                continuous
+                showSkipButton
+                showProgress
+                locale={{
+                    back: (<span>Back</span>) as any,
+                    close: (<span>Close</span>) as any,
+                    last: (<span>Done</span>) as any,
+                    next: (<span>Next</span>) as any,
+                    skip: (<span>Skip</span>) as any,
+                }}
+                run={isRunning}
+            />
             <CustomScrollbar>
                 <form id="form" className={`qa-ExportInfo-form ${classes.form}`}>
                     <Paper
@@ -829,49 +828,61 @@ export function ExportInfo(props: Props) {
                                         </Popover>
                                     </div>
                                 </div>
-                                <List
-                                    id="ProviderList"
-                                    className="qa-ExportInfo-List"
-                                    style={{width: '100%', fontSize: '16px'}}
-                                >
-                                    {getProviders().map((provider, ix) => (
-                                        <DataProvider
-                                            key={provider.slug + "-DataProviderList"}
-                                            geojson={props.geojson}
-                                            provider={provider}
-                                            onChange={onChangeCheck}
-                                            deselect={deselect}
-                                            checked={props.exportInfo.providers.map(x => x.name)
-                                                .indexOf(provider.name) !== -1}
-                                            alt={ix % 2 === 0}
-                                            renderEstimate={appContext.SERVE_ESTIMATES}
-                                            checkProvider={() => {
-                                                // Check the provider for updated info.
-                                                props.checkProvider(provider).then(providerInfo => {
-                                                    props.updateExportInfo({
-                                                        providerInfo: {
-                                                            ...props.exportInfo.providerInfo,
-                                                            [provider.slug]: providerInfo.data,
-                                                        }
+                                <div>
+                                    Search
+                                    <TextField
+                                        id="searchByName"
+                                        name="searchByName"
+                                        autoComplete="off"
+                                        fullWidth
+                                        className={classes.textField}
+                                        // value={textFieldControlledValue}
+                                        // onChange={(e) => setTextFieldControlledValue(e.target.value)}
+                                    />
+                                    <List
+                                        id="ProviderList"
+                                        className="qa-ExportInfo-List"
+                                        style={{width: '100%', fontSize: '16px'}}
+                                    >
+                                        {getProviders().map((provider, ix) => (
+                                            <DataProvider
+                                                key={provider.slug + "-DataProviderList"}
+                                                geojson={props.geojson}
+                                                provider={provider}
+                                                onChange={onChangeCheck}
+                                                deselect={deselect}
+                                                checked={props.exportInfo.providers.map(x => x.name)
+                                                    .indexOf(provider.name) !== -1}
+                                                alt={ix % 2 === 0}
+                                                renderEstimate={appContext.SERVE_ESTIMATES}
+                                                checkProvider={() => {
+                                                    // Check the provider for updated info.
+                                                    props.checkProvider(provider).then(providerInfo => {
+                                                        props.updateExportInfo({
+                                                            providerInfo: {
+                                                                ...props.exportInfo.providerInfo,
+                                                                [provider.slug]: providerInfo.data,
+                                                            }
+                                                        });
+                                                        // Trigger an estimate calculation update in the parent
+                                                        // Does not re-request any data, calculates the total from available results.
+                                                        props.onUpdateEstimate();
                                                     });
-                                                    // Trigger an estimate calculation update in the parent
-                                                    // Does not re-request any data, calculates the total from available results.
-                                                    props.onUpdateEstimate();
-                                                });
-                                            }}
-                                            incompatibilityInfo={incompatibilityInfo}
-                                            clearEstimate={clearEstimate}
-                                            // Get reference to handle logic for joyride.
-                                            {...(() => {
-                                                const refProps = {} as any;
-                                                if (ix === 0) {
-                                                    refProps.getRef = (ref: any) => dataProvider.current = ref;
-                                                }
-                                                return refProps;
-                                            })()}
-                                        />
-                                    ))}
-                                </List>
+                                                }}
+                                                incompatibilityInfo={incompatibilityInfo}
+                                                clearEstimate={clearEstimate}
+                                                // Get reference to handle logic for joyride.
+                                                {...(() => {
+                                                    const refProps = {} as any;
+                                                    if (ix === 0) {
+                                                        refProps.getRef = (ref: any) => dataProvider.current = ref;
+                                                    }
+                                                    return refProps;
+                                                })()}
+                                            />
+                                        ))}
+                                    </List>
+                                </div>
                                 <div className={classes.stickyRow}>
                                     <div className={classes.stickyRowItems}
                                          style={{paddingLeft: '5px', paddingTop: '15px'}}>
@@ -1025,6 +1036,7 @@ function AddDataSource() {
     );
 }
 
+// TODO: Remove this function and debounce inline.
 // Wrapper around the CustomTextField component that debounces the redux store call.
 // This was done to avoid refactoring the entire component to hooks all at once.
 // At a later point this could be removed and done in place.
