@@ -1,4 +1,3 @@
-import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import {useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
@@ -202,9 +201,31 @@ const dummyProvider = {
 } as Eventkit.Provider;
 
 export function ExportInfo(props: Props) {
+    const [steps, setSteps] = useState([]);
+    const [isRunning, setIsRunning] = useState(false);
+    const [providers, setProviders] = useState(props.providers);
+    const [refreshPopover, setRefreshPopover] = useState(null);
+    const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
+    const [displaySrid, setDisplaySrid] = useState(null);
+    const [selectedFormats, setSelectedFormats] = useState([]);
+    const [incompatibilityInfo, setIncompatibilityInfo] = useState(({
+        formats: {},
+        projections: {}
+    } as IncompatibilityInfo));
+    const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
+    const [stepIndex, setStepIndex] = useState(0);
+    const [displayDummy, setDisplayDummy] = useState(false);
+
     const appContext = useAppContext();
     const {colors} = props.theme.eventkit;
     const {classes} = props;
+
+    const helpers = useRef();
+    let joyride; // = useRef();
+    const dataProvider = useRef();
+    const bounceBack = useRef();
+    const CancelToken = axios.CancelToken;
+    const source = CancelToken.source();
 
     // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
     let projections = [...props.projections];
@@ -213,57 +234,29 @@ export function ExportInfo(props: Props) {
         projections = [projections.splice(indexOf4326, 1)[0], ...projections];
     }
 
-    // let helpers: StoreHelpers;
-    var joyride;
-    const dataProvider = useRef();
-    const CancelToken = axios.CancelToken;
-    const source = CancelToken.source();
-
-    const [steps, setSteps] = useState([]);
-    const [isRunning, setIsRunning] = useState(false);
-
-    const [refreshPopover, setRefreshPopover] = useState(null);
-    const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(null);
-    const [displaySrid, setDisplaySrid] = useState(null);
-    const [selectedFormats, setSelectedFormats] = useState([]);
-    const [incompatibilityInfo, setIncompatibilityInfo] = useState({
-        formats: {},
-        projections: {},
-    } as IncompatibilityInfo);
-    const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
-    const [stepIndex, setStepIndex] = useState(0);
-    const [displayDummy, setDisplayDummy] = useState(false);
-
-    // Component Mounted
+    // Component mount and unmount
     useEffect(() => {
         // calculate the area of the AOI
         const areaStr = getSqKmString(props.geojson);
-
-        const updatedInfo = {
+        const updatedInfo = ({
             areaStr,
-            visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
-        } as Eventkit.Store.ExportInfo;
-
-        // @ts-ignore
-        const steps = joyride.ExportInfo as any[];
+            visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE'
+        } as Eventkit.Store.ExportInfo);
+        const steps = (joyride.ExportInfo as any[]);
         joyrideAddSteps(steps);
-        console.log("STEPS: ", steps)
 
-        if (props.projections.find((projection) => projection.srid === 4326)) {
+        if (props.projections.find(projection => projection.srid === 4326)) {
             if (props.exportInfo.projections && props.exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
             }
         }
-        props.updateExportInfo(updatedInfo);
-    }, [])
 
-    // Component Unmounted
-    useEffect(() => {
-        // return a function to execute at unmount
+        props.updateExportInfo(updatedInfo);
         return () => {
             source.cancel('Exiting Page.');
-        }
-    }, [])
+        };
+    }, []);
+
 
     // componentDidUpdate(prevProps: Props, prevState: State) {
     //     // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
