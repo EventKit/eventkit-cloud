@@ -22,10 +22,20 @@ import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
 import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
-import {Link, TextField} from "@material-ui/core";
+import {
+    FormControl,
+    FormControlLabel,
+    FormGroup,
+    FormLabel,
+    Link,
+    Radio,
+    RadioGroup,
+    TextField
+} from "@material-ui/core";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
+import {renderIf} from "../../utils/renderIf";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -56,6 +66,33 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         marginBottom: '30px',
         width: '100%',
         maxWidth: '700px',
+    },
+    searchFilterContainer: {
+        alignItems: 'stretch',
+        padding: '20px',
+        marginBottom: '20px'
+    },
+    searchLabel: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        verticalAlign: 'top',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+        float: 'left',
+    },
+    filterLabel: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        verticalAlign: 'top',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+        float: 'right',
+    },
+    filterContainer: {
+        display: 'block',
+        flexWrap: 'wrap',
+        width: '100%',
+        zIndex: 1,
     },
     heading: {
         fontSize: '18px',
@@ -119,6 +156,13 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         '&$checked': {
             color: theme.eventkit.colors.success,
         },
+    },
+    radio: {
+        width: '24px',
+        height: '24px',
+        marginRight: '15px',
+        flex: '0 0 auto',
+        color: theme.eventkit.colors.primary,
     },
     checked: {},
     stickyRow: {
@@ -204,6 +248,12 @@ export function ExportInfo(props: Props) {
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providers, setProviders] = useState(props.providers);
+    const [providerSearch, setProviderSearch] = useState("");
+    const [showProviderSearch, setShowProviderSearch] = useState(false);
+    const [showProviderFilter, setShowProviderFilter] = useState(false);
+    const [providerFilterList, setProviderFilterList] = useState([]);
+    const [providerSortOption, setProviderSortOption] = useState("");
+    const [providerFilterChecked, setProviderFilterChecked] = useState({});
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -252,6 +302,10 @@ export function ExportInfo(props: Props) {
         }
 
         props.updateExportInfo(updatedInfo);
+
+        // TODO: Create the providerFilterChecked object with default values of false.
+        // props.providers.map()
+
         return () => {
             source.cancel('Exiting Page.');
         };
@@ -294,6 +348,54 @@ export function ExportInfo(props: Props) {
     //         this.setState({...nextState});
     //     }
     // }
+
+    // TODO: Just make this an object instead of a function?
+    const buildFilters = () => {
+        return [
+            {
+                name: "Type",
+                filterType: "type",
+                options: [
+                    {
+                        name: "Raster",
+                        filterType: "type",
+                        slug: "raster"
+                    },
+                    {
+                        name: "Vector",
+                        filterType: "type",
+                        slug: "vector"
+                    },
+                    {
+                        name: "Elevation",
+                        filterType: "type",
+                        slug: "elevation"
+                    }
+                ]
+            }
+        ]
+    };
+
+    const buildSortOptions = () => {
+        return [
+            {
+                "name": "Alphabetical A-Z",
+                "slug": "alphabetical-a-z"
+            },
+            {
+                "name": "Alphabetical Z-A",
+                "slug": "alphabetical-z-a"
+            },
+            {
+                "name": "Newest First",
+                "slug": "newest-first",
+            },
+            {
+                "name": "Oldest First",
+                "slug": "oldest-first"
+            }
+        ]
+    }
 
     const elementsEqual = (array1, array2) => {
         // To compare two arrays for equality, we check length for an early exit,
@@ -618,12 +720,70 @@ export function ExportInfo(props: Props) {
     const getProviders = () => {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
+        // TODO: Filter based on the providerFilterList state array.
+        console.log("PROVIDERS", props.providers);
         let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
+        currentProviders = currentProviders.filter(provider => {
+            return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
+        });
+        let filteredSelections = []
+        if (providerFilterList.length > 0) {
+            console.log("PROVIDER FILTER LIST", providerFilterList)
+            providerFilterList.forEach(filter => {
+                if (filter.filterType == "type") {
+                    filteredSelections = currentProviders.filter(provider => {
+                        return provider.data_type == filter.slug
+                    });
+                }
+            });
+            currentProviders = filteredSelections;
+        }
+
+        // TODO: Add onto the filtering here with additional filters from design.
         currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
         if (displayDummy) {
             currentProviders.unshift(dummyProvider as Eventkit.Provider);
         }
+        if (providerSortOption) {
+            switch (providerSortOption) {
+                case "alphabetical-a-z":
+                    currentProviders = sortAtoZ(currentProviders);
+                    break;
+                case "alphabetical-z-a":
+                    currentProviders = sortZtoA(currentProviders);
+                    break;
+                case "newest-first":
+                    currentProviders = sortNewestFirst(currentProviders);
+                    break;
+                case "oldest-first":
+                    currentProviders = sortOldestFirst(currentProviders);
+            }
+        }
         return currentProviders;
+    }
+
+    const sortAtoZ = (providers) => {
+        providers.sort((a, b) => (a.name - b.name));
+        console.log("SORTED PROVIDERS: ", providers)
+        return providers;
+    }
+
+    const sortZtoA = (providers) => {
+        providers.sort((a, b) => (a.name - b.name)).reverse();
+        console.log("SORTED PROVIDERS: ", providers)
+        return providers;
+    }
+
+    const sortNewestFirst = (providers) => {
+        providers.sort((a, b) => (a.created_at - b.created_at)).reverse();
+        console.log("SORT NEWEST FIRST", providers);
+        return providers;
+    }
+
+    const sortOldestFirst = (providers) => {
+        providers.sort((a, b) => (a.created_at - b.created_at));
+        console.log("SORT OLDEST FIRST");
+        return providers;
     }
 
     const projectionHasErrors = (srid: number) => {
@@ -660,6 +820,26 @@ export function ExportInfo(props: Props) {
         </BaseDialog>);
     }
 
+    function onFilterCheckboxChanged(filter) {
+        console.log("Checkbox value: ", filter)
+        if (providerFilterList.some(item => item.slug == filter.slug)) {
+            setProviderFilterList(providerFilterList.filter(item => item.slug !== filter.slug));
+        } else {
+            setProviderFilterList([...providerFilterList, filter]);
+        }
+        console.log("CURRENT FILTERS: ", providerFilterList);
+    }
+
+    function onSortRadioChanged(sort) {
+        setProviderSortOption(sort)
+        console.log("SORT OPTION IS ", sort)
+    }
+
+    function clearAllFilterSort() {
+        setProviderFilterList([]);
+        setProviderSortOption("")
+    }
+
     return (
         <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
             {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
@@ -667,6 +847,7 @@ export function ExportInfo(props: Props) {
                 tourRunning={isRunning}
                 {...props}
             />
+
             <EventkitJoyride
                 name="Create Page Step 2"
                 callback={callback}
@@ -700,6 +881,7 @@ export function ExportInfo(props: Props) {
                                 className={`qa-ExportInfo-mainHeading ${classes.heading}`}
                             >
                                 Enter General Information
+                                {providerFilterList.map(filter => filter.name)}
                             </div>
                                 <div style={{marginBottom: '30px'}}>
                                     <DebouncedTextField
@@ -755,177 +937,257 @@ export function ExportInfo(props: Props) {
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
-                            <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
-                                <Checkbox
-                                    classes={{root: classes.checkbox, checked: classes.checked}}
-                                    name="SelectAll"
-                                    checked={props.exportInfo.providers.length === props.providers.filter(
-                                        provider => provider.display).length}
-                                    onChange={onSelectAll}
-                                    style={{width: '24px', height: '24px'}}
-                                />
-                                <span
-                                    style={{
-                                        padding: '0px 15px', display: 'flex',
-                                        flexWrap: 'wrap', fontSize: '16px',
-                                    }}
-                                >
-                                    Select All
-                                </span>
-                            </div>
-                            <div className={classes.sectionBottom}>
-                                <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
-                                    <div
-                                        className="qa-ExportInfo-ListHeaderItem"
-                                        style={{flex: '1 1 auto'}}
-                                    >
-                                        DATA PROVIDERS
-                                    </div>
-                                    <div
-                                        className="qa-ExportInfo-ListHeaderItem"
-                                        style={{display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
-                                    >
-                                        <span>AVAILABILITY</span>
-                                        <NavigationRefresh
-                                            className={classes.refreshIcon}
-                                            onMouseEnter={handlePopoverOpen}
-                                            onMouseLeave={handlePopoverClose}
-                                            onClick={onRefresh}
-                                            color="primary"
-                                        />
-                                        <Popover
-                                            style={{pointerEvents: 'none'}}
-                                            PaperProps={{
-                                                style: {padding: '16px'},
-                                            }}
-                                            open={Boolean(refreshPopover)}
-                                            anchorEl={refreshPopover}
-                                            onClose={handlePopoverClose}
-                                            anchorOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'center',
-                                            }}
-                                            transformOrigin={{
-                                                vertical: 'bottom',
-                                                horizontal: 'center',
-                                            }}
-                                        >
-                                            <div style={{maxWidth: 400}}>
-                                                <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
-                                                    RUN AVAILABILITY CHECK AGAIN
-                                                </Typography>
-                                                <div>You may try to resolve errors by running the availability check
-                                                    again.
-                                                </div>
-                                            </div>
-                                        </Popover>
-                                    </div>
-                                </div>
+
+                        <div className={classes.searchFilterContainer}>
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => setShowProviderSearch(!showProviderSearch)}
+                                        onKeyPress={() => setShowProviderSearch(!showProviderSearch)}
+                                        className={classes.searchLabel}
+                                    > Search
+                                    </span>
+                            {renderIf(() => (
                                 <div>
-                                    Search
                                     <TextField
                                         id="searchByName"
                                         name="searchByName"
                                         autoComplete="off"
                                         fullWidth
                                         className={classes.textField}
-                                        // value={textFieldControlledValue}
-                                        // onChange={(e) => setTextFieldControlledValue(e.target.value)}
+                                        onChange={e => setProviderSearch(e.target.value)}
                                     />
-                                    <List
-                                        id="ProviderList"
-                                        className="qa-ExportInfo-List"
-                                        style={{width: '100%', fontSize: '16px'}}
-                                    >
-                                        {getProviders().map((provider, ix) => (
-                                            <DataProvider
-                                                key={provider.slug + "-DataProviderList"}
-                                                geojson={props.geojson}
-                                                provider={provider}
-                                                onChange={onChangeCheck}
-                                                deselect={deselect}
-                                                checked={props.exportInfo.providers.map(x => x.name)
-                                                    .indexOf(provider.name) !== -1}
-                                                alt={ix % 2 === 0}
-                                                renderEstimate={appContext.SERVE_ESTIMATES}
-                                                checkProvider={() => {
-                                                    // Check the provider for updated info.
-                                                    props.checkProvider(provider).then(providerInfo => {
-                                                        props.updateExportInfo({
-                                                            providerInfo: {
-                                                                ...props.exportInfo.providerInfo,
-                                                                [provider.slug]: providerInfo.data,
-                                                            }
-                                                        });
-                                                        // Trigger an estimate calculation update in the parent
-                                                        // Does not re-request any data, calculates the total from available results.
-                                                        props.onUpdateEstimate();
-                                                    });
-                                                }}
-                                                incompatibilityInfo={incompatibilityInfo}
-                                                clearEstimate={clearEstimate}
-                                                // Get reference to handle logic for joyride.
-                                                {...(() => {
-                                                    const refProps = {} as any;
-                                                    if (ix === 0) {
-                                                        refProps.getRef = (ref: any) => dataProvider.current = ref;
-                                                    }
-                                                    return refProps;
-                                                })()}
-                                            />
-                                        ))}
-                                    </List>
                                 </div>
-                                <div className={classes.stickyRow}>
-                                    <div className={classes.stickyRowItems}
-                                         style={{paddingLeft: '5px', paddingTop: '15px'}}>
-                                        <AddDataSource/>
-                                    </div>
+
+                            ), showProviderSearch)}
+                            <span
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => setShowProviderFilter(!showProviderFilter)}
+                                onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
+                                className={classes.filterLabel}
+                            >Sort / Filter</span>
+                            {renderIf(() => (
+                                <div
+                                    className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}
+                                    style={{display: 'block', marginTop: '8px'}}>
+                                    {buildFilters().map((filterType) => (
+                                        <div>
+                                            <FormGroup>
+                                                <FormLabel component="legend">{filterType.name}</FormLabel>
+                                                {filterType.options.map((filter) =>
+                                                    <div>
+                                                        <FormControlLabel
+                                                            control={<Checkbox
+                                                                className="qa-ExportInfo-CheckBox-filter"
+                                                                classes={{
+                                                                    root: classes.checkbox,
+                                                                    checked: classes.checked
+                                                                }}
+                                                                onChange={() => onFilterCheckboxChanged(filter)}
+                                                            />}
+                                                            label={filter.name}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </FormGroup>
+                                        </div>
+                                    ))}
+                                    <FormControl component="fieldset">
+                                        <FormLabel component="legend">Sort By</FormLabel>
+                                        <RadioGroup>
+                                            {buildSortOptions().map((sortOption) => (
+                                                <div>
+                                                    <div>
+
+                                                        <FormControlLabel
+                                                            className="qa-ExportInfo-Radio-sort"
+                                                            value={sortOption.slug}
+                                                            control={<Radio
+                                                                classes={{
+                                                                    root: classes.radio,
+                                                                }}
+                                                            />}
+                                                            label={sortOption.name}
+                                                            onChange={() => onSortRadioChanged(sortOption.slug)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </RadioGroup>
+                                        <span
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => clearAllFilterSort()}
+                                            onKeyPress={() => clearAllFilterSort()}
+                                            className={classes.filterLabel}
+                                        >Clear All</span>
+                                    </FormControl>
                                 </div>
-                            </div>
-                            <div
-                                id="projectionHeader"
-                                className={`qa-ExportInfo-projectionHeader ${classes.heading}`}
+                            ), showProviderFilter)}
+                        </div>
+
+                        <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
+                            <Checkbox
+                                classes={{root: classes.checkbox, checked: classes.checked}}
+                                name="SelectAll"
+                                checked={props.exportInfo.providers.length === props.providers.filter(
+                                    provider => provider.display).length}
+                                onChange={onSelectAll}
+                                style={{width: '24px', height: '24px'}}
+                            />
+                            <span
+                                style={{
+                                    padding: '0px 15px', display: 'flex',
+                                    flexWrap: 'wrap', fontSize: '16px',
+                                }}
                             >
-                                Select Projection
+                                            Select All
+                                            </span>
+                        </div>
+                        <div className={classes.sectionBottom}>
+                            <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
+                                <div
+                                    className="qa-ExportInfo-ListHeaderItem"
+                                    style={{flex: '1 1 auto'}}
+                                >
+                                    DATA PROVIDERS
+                                </div>
+                                <div
+                                    className="qa-ExportInfo-ListHeaderItem"
+                                    style={{display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
+                                >
+                                    <span>AVAILABILITY</span>
+                                    <NavigationRefresh
+                                        className={classes.refreshIcon}
+                                        onMouseEnter={handlePopoverOpen}
+                                        onMouseLeave={handlePopoverClose}
+                                        onClick={onRefresh}
+                                        color="primary"
+                                    />
+                                    <Popover
+                                        style={{pointerEvents: 'none'}}
+                                        PaperProps={{
+                                            style: {padding: '16px'},
+                                        }}
+                                        open={Boolean(refreshPopover)}
+                                        anchorEl={refreshPopover}
+                                        onClose={handlePopoverClose}
+                                        anchorOrigin={{
+                                            vertical: 'top',
+                                            horizontal: 'center',
+                                        }}
+                                        transformOrigin={{
+                                            vertical: 'bottom',
+                                            horizontal: 'center',
+                                        }}
+                                    >
+                                        <div style={{maxWidth: 400}}>
+                                            <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
+                                                RUN AVAILABILITY CHECK AGAIN
+                                            </Typography>
+                                            <div>You may try to resolve errors by running the availability check
+                                                again.
+                                            </div>
+                                        </div>
+                                    </Popover>
+                                </div>
                             </div>
-                            <div className={classes.sectionBottom}>
-                                <div id="Projections"
-                                     className={`qa-ExportInfo-projections ${classes.projections}`}>
-                                    {projections.map((projection, ix) => (
-                                        <div
-                                            key={projection.srid}
-                                            style={{
-                                                display: 'flex',
-                                                padding: '16px 10px',
-                                                backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white
+                            <div>
+                                <List
+                                    id="ProviderList"
+                                    className="qa-ExportInfo-List"
+                                    style={{width: '100%', fontSize: '16px'}}
+                                >
+                                    {getProviders().map((provider, ix) => (
+                                        <DataProvider
+                                            key={provider.slug + "-DataProviderList"}
+                                            geojson={props.geojson}
+                                            provider={provider}
+                                            onChange={onChangeCheck}
+                                            deselect={deselect}
+                                            checked={props.exportInfo.providers.map(x => x.name)
+                                                .indexOf(provider.name) !== -1}
+                                            alt={ix % 2 === 0}
+                                            renderEstimate={appContext.SERVE_ESTIMATES}
+                                            checkProvider={() => {
+                                                // Check the provider for updated info.
+                                                props.checkProvider(provider).then(providerInfo => {
+                                                    props.updateExportInfo({
+                                                        providerInfo: {
+                                                            ...props.exportInfo.providerInfo,
+                                                            [provider.slug]: providerInfo.data,
+                                                        }
+                                                    });
+                                                    // Trigger an estimate calculation update in the parent
+                                                    // Does not re-request any data, calculates the total from available results.
+                                                    props.onUpdateEstimate();
+                                                });
                                             }}
-                                        >
-                                            <Checkbox
-                                                className="qa-ExportInfo-CheckBox-projection"
-                                                classes={{root: classes.checkbox, checked: classes.checked}}
-                                                name={`${projection.srid}`}
-                                                checked={props.exportInfo.projections.indexOf(projection.srid) !== -1}
-                                                style={{width: '24px', height: '24px'}}
-                                                onChange={onSelectProjection}
-                                            />
-                                            <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
+                                            incompatibilityInfo={incompatibilityInfo}
+                                            clearEstimate={clearEstimate}
+                                            // Get reference to handle logic for joyride.
+                                            {...(() => {
+                                                const refProps = {} as any;
+                                                if (ix === 0) {
+                                                    refProps.getRef = (ref: any) => dataProvider.current = ref;
+                                                }
+                                                return refProps;
+                                            })()}
+                                        />
+                                    )) || "No Providers Found"}
+                                </List>
+                            </div>
+                            <div className={classes.stickyRow}>
+                                <div className={classes.stickyRowItems}
+                                     style={{paddingLeft: '5px', paddingTop: '15px'}}>
+                                    <AddDataSource/>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            id="projectionHeader"
+                            className={`qa-ExportInfo-projectionHeader ${classes.heading}`}
+                        >
+                            Select Projection
+                        </div>
+                        <div className={classes.sectionBottom}>
+                            <div id="Projections"
+                                 className={`qa-ExportInfo-projections ${classes.projections}`}>
+                                {projections.map((projection, ix) => (
+                                    <div
+                                        key={projection.srid}
+                                        style={{
+                                            display: 'flex',
+                                            padding: '16px 10px',
+                                            backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white
+                                        }}
+                                    >
+                                        <Checkbox
+                                            className="qa-ExportInfo-CheckBox-projection"
+                                            classes={{root: classes.checkbox, checked: classes.checked}}
+                                            name={`${projection.srid}`}
+                                            checked={props.exportInfo.projections.indexOf(projection.srid) !== -1}
+                                            style={{width: '24px', height: '24px'}}
+                                            onChange={onSelectProjection}
+                                        />
+                                        <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                                 EPSG:{projection.srid} - {projection.name}
                                             </span>
-                                            {projectionHasErrors(projection.srid) &&
-                                            <AlertWarning
-                                                className={`qa-Projection-Warning-Icon`}
-                                                onClick={() => {
-                                                    handleProjectionCompatibilityOpen(projection);
-                                                }}
-                                                style={{
-                                                    cursor: 'pointer', verticalAlign: 'middle',
-                                                    marginLeft: '5px', height: '18px', width: '18px',
-                                                    color: 'rgba(255, 162, 0, 0.87)'
-                                                }}
-                                            />
-                                            }
-                                        </div>
+                                        {projectionHasErrors(projection.srid) &&
+                                        <AlertWarning
+                                            className={`qa-Projection-Warning-Icon`}
+                                            onClick={() => {
+                                                handleProjectionCompatibilityOpen(projection);
+                                            }}
+                                            style={{
+                                                cursor: 'pointer', verticalAlign: 'middle',
+                                                marginLeft: '5px', height: '18px', width: '18px',
+                                                color: 'rgba(255, 162, 0, 0.87)'
+                                            }}
+                                        />
+                                        }
+                                    </div>
                                     ))}
                                     {projectionCompatibilityOpen &&
                                     getProjectionDialog()
