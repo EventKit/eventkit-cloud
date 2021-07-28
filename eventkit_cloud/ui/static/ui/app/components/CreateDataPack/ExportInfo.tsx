@@ -27,6 +27,7 @@ import {
     FormControlLabel,
     FormGroup,
     FormLabel,
+    Grid,
     Link,
     Radio,
     RadioGroup,
@@ -36,6 +37,7 @@ import EventkitJoyride from "../common/JoyrideWrapper";
 import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
+import Button from "@material-ui/core/Button";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -72,6 +74,9 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         padding: '20px',
         marginBottom: '20px'
     },
+    searchBarContainer: {
+        display: 'inline'
+    },
     searchLabel: {
         fontSize: '15px',
         fontWeight: 'normal',
@@ -93,6 +98,10 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flexWrap: 'wrap',
         width: '100%',
         zIndex: 1,
+        border: '1px solid black',
+        backgroundColor: '#F9F9F9',
+        marginTop: '20px',
+        padding: '20px',
     },
     heading: {
         fontSize: '18px',
@@ -148,7 +157,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         color: theme.eventkit.colors.primary,
     },
     checkbox: {
-        width: '24px',
         height: '24px',
         marginRight: '15px',
         flex: '0 0 auto',
@@ -157,12 +165,21 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             color: theme.eventkit.colors.success,
         },
     },
+    checkboxLabel: {
+        fontSize: '14px',
+    },
     radio: {
-        width: '24px',
+        fontSize: '1em',
         height: '24px',
         marginRight: '15px',
         flex: '0 0 auto',
         color: theme.eventkit.colors.primary,
+        '&$checked': {
+            color: theme.eventkit.colors.success,
+        },
+    },
+    radioLabel: {
+        fontSize: '14px',
     },
     checked: {},
     stickyRow: {
@@ -172,6 +189,16 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     stickyRowItems: {
         flexGrow: 1,
     },
+    clearAllButton: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+        // float: 'left',
+    },
+    containerGrid: {
+        marginTop: '10px'
+    }
 });
 
 // Use this to keep track of incompatibilities in the user selected DataPack options
@@ -253,7 +280,7 @@ export function ExportInfo(props: Props) {
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
-    const [providerFilterChecked, setProviderFilterChecked] = useState({});
+    const [filterOptionsCheckedStatus, setFilterOptionsCheckedStatus] = useState({})
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -304,7 +331,9 @@ export function ExportInfo(props: Props) {
         props.updateExportInfo(updatedInfo);
 
         // TODO: Create the providerFilterChecked object with default values of false.
-        // props.providers.map()
+        let checkedStatus = {}
+        filterOptions.map(filterOption => (filterOption.options.map(filter => (checkedStatus[filter.slug] = false))));
+        setFilterOptionsCheckedStatus(checkedStatus)
 
         return () => {
             source.cancel('Exiting Page.');
@@ -349,53 +378,55 @@ export function ExportInfo(props: Props) {
     //     }
     // }
 
-    // TODO: Just make this an object instead of a function?
-    const buildFilters = () => {
-        return [
-            {
-                name: "Type",
-                filterType: "type",
-                options: [
-                    {
-                        name: "Raster",
-                        filterType: "type",
-                        slug: "raster"
-                    },
-                    {
-                        name: "Vector",
-                        filterType: "type",
-                        slug: "vector"
-                    },
-                    {
-                        name: "Elevation",
-                        filterType: "type",
-                        slug: "elevation"
-                    }
-                ]
-            }
-        ]
-    };
+    const [filterOptions, setFilterOptions] = useState([
+        {
+            name: "Type",
+            filterType: "type",
+            options: [
+                {
+                    name: "Raster",
+                    filterType: "type",
+                    slug: "raster",
+                    isChecked: false
+                },
+                {
+                    name: "Vector",
+                    filterType: "type",
+                    slug: "vector",
+                    isChecked: false
+                },
+                {
+                    name: "Elevation",
+                    filterType: "type",
+                    slug: "elevation",
+                    isChecked: false
+                }
+            ]
+        }
+    ])
 
-    const buildSortOptions = () => {
-        return [
-            {
-                "name": "Alphabetical A-Z",
-                "slug": "alphabetical-a-z"
-            },
-            {
-                "name": "Alphabetical Z-A",
-                "slug": "alphabetical-z-a"
-            },
-            {
-                "name": "Newest First",
-                "slug": "newest-first",
-            },
-            {
-                "name": "Oldest First",
-                "slug": "oldest-first"
-            }
-        ]
-    }
+    const [sortOptions, setSortOptions] = useState([
+        {
+            name: "Alphabetical A-Z",
+            slug: "alphabetical-a-z",
+            isChecked: false
+        },
+        {
+            name: "Alphabetical Z-A",
+            slug: "alphabetical-z-a",
+            isChecked: false
+        },
+        {
+            name: "Newest First",
+            slug: "newest-first",
+            isChecked: false
+        },
+        {
+            name: "Oldest First",
+            slug: "oldest-first",
+            isChecked: false
+        }
+    ])
 
     const elementsEqual = (array1, array2) => {
         // To compare two arrays for equality, we check length for an early exit,
@@ -721,6 +752,7 @@ export function ExportInfo(props: Props) {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
         // TODO: Filter based on the providerFilterList state array.
+        console.log("FILTER OPTIONS: ", filterOptions)
         console.log("PROVIDERS", props.providers);
         let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = currentProviders.filter(provider => {
@@ -820,24 +852,57 @@ export function ExportInfo(props: Props) {
         </BaseDialog>);
     }
 
-    function onFilterCheckboxChanged(filter) {
-        console.log("Checkbox value: ", filter)
+    // TODO: Simplify this.  Seems like there's too many lines for what should be fairly simple.
+    const onFilterCheckboxChanged = (filter) => {
         if (providerFilterList.some(item => item.slug == filter.slug)) {
+            let newFilterOptions = [...filterOptions]
+            let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
+            let optionIndex = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug)
+            newFilterOptions[0].options[optionIndex].isChecked = false;
+            setFilterOptions(newFilterOptions)
             setProviderFilterList(providerFilterList.filter(item => item.slug !== filter.slug));
+
         } else {
+            let newFilterOptions = [...filterOptions]
+            let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
+            let index = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug);
+            newFilterOptions[0].options[index].isChecked = true;
+            setFilterOptions(newFilterOptions)
             setProviderFilterList([...providerFilterList, filter]);
         }
-        console.log("CURRENT FILTERS: ", providerFilterList);
     }
 
-    function onSortRadioChanged(sort) {
+    const onSortRadioChanged = (sort) => {
+        let newSortOptions = [...sortOptions]
+        newSortOptions.map(item => {
+            item.isChecked = item.slug == sort;
+        });
+        setSortOptions(newSortOptions)
+
         setProviderSortOption(sort)
-        console.log("SORT OPTION IS ", sort)
     }
 
-    function clearAllFilterSort() {
+    const clearFilterOptions = () => {
+        let newFilterOptions = [...filterOptions];
+        newFilterOptions.map(filterType => filterType.options.map(filter => filter.isChecked = false));
+        setFilterOptions(newFilterOptions);
+    }
+
+    const clearSortOptions = () => {
+        let newSortOptions = [...sortOptions];
+        newSortOptions.map(sortOption => sortOption.isChecked = false);
+    }
+
+    const clearAllFilterSort = () => {
         setProviderFilterList([]);
-        setProviderSortOption("")
+        setProviderSortOption("");
+        clearFilterOptions();
+        clearSortOptions();
+    }
+
+    const clearAndCloseSortFilter = () => {
+        clearAllFilterSort()
+        setShowProviderFilter(!showProviderFilter)
     }
 
     return (
@@ -939,6 +1004,7 @@ export function ExportInfo(props: Props) {
                             </div>
 
                         <div className={classes.searchFilterContainer}>
+                            <div className={classes.searchBarContainer}>
                                     <span
                                         role="button"
                                         tabIndex={0}
@@ -947,56 +1013,63 @@ export function ExportInfo(props: Props) {
                                         className={classes.searchLabel}
                                     > Search
                                     </span>
-                            {renderIf(() => (
-                                <div>
-                                    <TextField
-                                        id="searchByName"
-                                        name="searchByName"
-                                        autoComplete="off"
-                                        fullWidth
-                                        className={classes.textField}
-                                        onChange={e => setProviderSearch(e.target.value)}
-                                    />
-                                </div>
+                                {renderIf(() => (
+                                    <div>
+                                        <TextField
+                                            id="searchByName"
+                                            name="searchByName"
+                                            autoComplete="off"
+                                            fullWidth
+                                            className={classes.textField}
+                                            onChange={e => setProviderSearch(e.target.value)}
+                                        />
+                                    </div>
 
-                            ), showProviderSearch)}
-                            <span
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => setShowProviderFilter(!showProviderFilter)}
-                                onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
-                                className={classes.filterLabel}
-                            >Sort / Filter</span>
+                                ), showProviderSearch)}
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setShowProviderFilter(!showProviderFilter)}
+                                    onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
+                                    className={classes.filterLabel}
+                                >Sort / Filter</span>
+                            </div>
+                            {/*TODO: Add chip styling */}
+                            {/*{renderIf(() => (providerFilterList.map((filter => filter.name))), providerFilterList.length && !showProviderFilter)}*/}
                             {renderIf(() => (
-                                <div
-                                    className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}
-                                    style={{display: 'block', marginTop: '8px'}}>
-                                    {buildFilters().map((filterType) => (
-                                        <div>
-                                            <FormGroup>
-                                                <FormLabel component="legend">{filterType.name}</FormLabel>
-                                                {filterType.options.map((filter) =>
-                                                    <div>
-                                                        <FormControlLabel
-                                                            control={<Checkbox
-                                                                className="qa-ExportInfo-CheckBox-filter"
-                                                                classes={{
-                                                                    root: classes.checkbox,
-                                                                    checked: classes.checked
-                                                                }}
-                                                                onChange={() => onFilterCheckboxChanged(filter)}
-                                                            />}
-                                                            label={filter.name}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </FormGroup>
-                                        </div>
+                                <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
+                                    <FormLabel component="legend" style={{fontSize: "18px"}}>Filter By</FormLabel>
+                                    {filterOptions.map((filterType) => (
+                                        renderIf(() => (
+                                            <div>
+                                                <FormGroup>
+                                                    <FormLabel component="legend"
+                                                               style={{fontSize: "16px"}}>{filterType.name}</FormLabel>
+                                                    {filterType.options.map((filter) =>
+                                                        <div>
+                                                            <FormControlLabel
+                                                                control={<Checkbox
+                                                                    className="qa-ExportInfo-CheckBox-filter"
+                                                                    classes={{
+                                                                        root: classes.checkbox,
+                                                                        checked: classes.checked
+                                                                    }}
+                                                                    checked={filter.isChecked}
+                                                                    onChange={() => onFilterCheckboxChanged(filter)}
+                                                                />}
+                                                                label={<Typography
+                                                                    className={classes.checkboxLabel}>{filter.name}</Typography>}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </FormGroup>
+                                            </div>
+                                        ), 'options' in filterType)
                                     ))}
                                     <FormControl component="fieldset">
-                                        <FormLabel component="legend">Sort By</FormLabel>
+                                        <FormLabel component="legend" style={{fontSize: "18px"}}>Sort By</FormLabel>
                                         <RadioGroup>
-                                            {buildSortOptions().map((sortOption) => (
+                                            {sortOptions.map((sortOption) => (
                                                 <div>
                                                     <div>
 
@@ -1006,25 +1079,64 @@ export function ExportInfo(props: Props) {
                                                             control={<Radio
                                                                 classes={{
                                                                     root: classes.radio,
+                                                                    checked: classes.checked
                                                                 }}
                                                             />}
-                                                            label={sortOption.name}
+                                                            label={<Typography
+                                                                className={classes.radioLabel}>{sortOption.name}</Typography>}
+                                                            checked={sortOption.isChecked}
                                                             onChange={() => onSortRadioChanged(sortOption.slug)}
                                                         />
                                                     </div>
                                                 </div>
                                             ))}
                                         </RadioGroup>
-                                        <span
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => clearAllFilterSort()}
-                                            onKeyPress={() => clearAllFilterSort()}
-                                            className={classes.filterLabel}
-                                        >Clear All</span>
                                     </FormControl>
+                                    <Grid container spacing={2} className={classes.containerGrid}>
+                                        <Grid item xs={4} md={8}>
+                                                <span
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => clearAllFilterSort()}
+                                                    onKeyPress={() => clearAllFilterSort()}
+                                                    className={classes.clearAllButton}
+                                                >Clear All</span>
+                                        </Grid>
+                                        <Grid item xs={4} md={2}>
+                                            <Button
+                                                className="qa-ExportInfo-Button-apply"
+                                                style={{
+                                                    minWidth: 'none',
+                                                    borderRadius: '0px',
+                                                    textTransform: 'none',
+                                                    display: 'inline'
+                                                }}
+                                                color="primary"
+                                                variant="contained"
+                                                onClick={() => setShowProviderFilter(!showProviderFilter)}
+                                            >
+                                                Apply
+                                            </Button>
+                                        </Grid>
+                                        <Grid item xs={4} md={2}>
+                                            <Button
+                                                className="qa-ExportInfo-Button-apply"
+                                                style={{
+                                                    minWidth: 'none',
+                                                    borderRadius: '0px',
+                                                    textTransform: 'none',
+                                                    color: "#BABABA",
+                                                    display: 'inline'
+                                                }}
+                                                variant="contained"
+                                                onClick={() => clearAndCloseSortFilter()}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
                                 </div>
-                            ), showProviderFilter)}
+                            ), filterOptions && showProviderFilter)}
                         </div>
 
                         <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
