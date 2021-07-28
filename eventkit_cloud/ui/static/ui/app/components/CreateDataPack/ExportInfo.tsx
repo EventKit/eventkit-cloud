@@ -93,6 +93,21 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         color: theme.eventkit.colors.primary,
         float: 'right',
     },
+    filterLabelDropdown: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+        float: 'right',
+        backgroundColor: '#F9F9F9',
+        border: '1px solid black',
+        borderBottom: 'none',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        padding: '0.3em 0.75em',
+        borderTopLeftRadius: '4px',
+        borderTopRightRadius: '4px',
+    },
     filterContainer: {
         display: 'block',
         flexWrap: 'wrap',
@@ -100,8 +115,10 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         zIndex: 1,
         border: '1px solid black',
         backgroundColor: '#F9F9F9',
-        marginTop: '20px',
+        marginTop: '30px',
         padding: '20px',
+        borderRadius: '4px',
+        borderTopRightRadius: '0'
     },
     heading: {
         fontSize: '18px',
@@ -1031,7 +1048,7 @@ export function ExportInfo(props: Props) {
                                     tabIndex={0}
                                     onClick={() => setShowProviderFilter(!showProviderFilter)}
                                     onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
-                                    className={classes.filterLabel}
+                                    className={showProviderFilter ? classes.filterLabelDropdown : classes.filterLabel}
                                 >Sort / Filter</span>
                             </div>
                             {/*TODO: Add chip styling */}
