@@ -27,7 +27,7 @@ import {
     FormControlLabel,
     FormGroup,
     FormLabel,
-    Grid,
+    Grid, InputAdornment,
     Link,
     Radio,
     RadioGroup,
@@ -38,6 +38,7 @@ import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
+import { unionBy } from 'lodash';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -215,6 +216,17 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     containerGrid: {
         marginTop: '10px'
+    },
+    formControlLabelContainer: {
+        padding: '5px',
+        paddingLeft: '10px'
+    },
+    searchFieldClear: {
+        cursor: 'pointer',
+        padding: '1em',
+        '& .MuiTypography-colorTextSecondary': {
+            color: theme.eventkit.colors.primary
+        }
     }
 });
 
@@ -297,7 +309,6 @@ export function ExportInfo(props: Props) {
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
-    const [filterOptionsCheckedStatus, setFilterOptionsCheckedStatus] = useState({})
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -346,11 +357,6 @@ export function ExportInfo(props: Props) {
         }
 
         props.updateExportInfo(updatedInfo);
-
-        // TODO: Create the providerFilterChecked object with default values of false.
-        let checkedStatus = {}
-        filterOptions.map(filterOption => (filterOption.options.map(filter => (checkedStatus[filter.slug] = false))));
-        setFilterOptionsCheckedStatus(checkedStatus)
 
         return () => {
             source.cancel('Exiting Page.');
@@ -768,16 +774,12 @@ export function ExportInfo(props: Props) {
     const getProviders = () => {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
-        // TODO: Filter based on the providerFilterList state array.
-        console.log("FILTER OPTIONS: ", filterOptions)
-        console.log("PROVIDERS", props.providers);
         let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = currentProviders.filter(provider => {
             return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
         });
         let filteredSelections = []
         if (providerFilterList.length > 0) {
-            console.log("PROVIDER FILTER LIST", providerFilterList)
             providerFilterList.forEach(filter => {
                 if (filter.filterType == "type") {
                     filteredSelections = currentProviders.filter(provider => {
@@ -788,7 +790,9 @@ export function ExportInfo(props: Props) {
             currentProviders = filteredSelections;
         }
 
-        // TODO: Add onto the filtering here with additional filters from design.
+        // Merge the filtered results and currently selected providers for display.
+        currentProviders = unionBy(props.exportInfo.providers, currentProviders, 'id');
+
         currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
         if (displayDummy) {
             currentProviders.unshift(dummyProvider as Eventkit.Provider);
@@ -813,25 +817,21 @@ export function ExportInfo(props: Props) {
 
     const sortAtoZ = (providers) => {
         providers.sort((a, b) => (a.name - b.name));
-        console.log("SORTED PROVIDERS: ", providers)
         return providers;
     }
 
     const sortZtoA = (providers) => {
         providers.sort((a, b) => (a.name - b.name)).reverse();
-        console.log("SORTED PROVIDERS: ", providers)
         return providers;
     }
 
     const sortNewestFirst = (providers) => {
         providers.sort((a, b) => (a.created_at - b.created_at)).reverse();
-        console.log("SORT NEWEST FIRST", providers);
         return providers;
     }
 
     const sortOldestFirst = (providers) => {
         providers.sort((a, b) => (a.created_at - b.created_at));
-        console.log("SORT OLDEST FIRST");
         return providers;
     }
 
@@ -1039,6 +1039,10 @@ export function ExportInfo(props: Props) {
                                             fullWidth
                                             className={classes.textField}
                                             onChange={e => setProviderSearch(e.target.value)}
+                                            value={providerSearch}
+                                            InputProps={{
+                                                endAdornment: renderIf(() => (<InputAdornment className={classes.searchFieldClear} position="end" onClick={() => setProviderSearch("")}>Clear</InputAdornment>), providerSearch.length > 0),
+                                            }}
                                         />
                                     </div>
 
@@ -1055,13 +1059,17 @@ export function ExportInfo(props: Props) {
                             {/*{renderIf(() => (providerFilterList.map((filter => filter.name))), providerFilterList.length && !showProviderFilter)}*/}
                             {renderIf(() => (
                                 <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
-                                    <FormLabel component="legend" style={{fontSize: "18px"}}>Filter By</FormLabel>
+                                    <FormLabel component="legend" style={{fontSize: '18px', fontWeight: 'bold'}}>Filter
+                                        By</FormLabel>
                                     {filterOptions.map((filterType) => (
                                         renderIf(() => (
                                             <div>
-                                                <FormGroup>
+                                                <FormGroup className={classes.formControlLabelContainer}>
                                                     <FormLabel component="legend"
-                                                               style={{fontSize: "16px"}}>{filterType.name}</FormLabel>
+                                                               style={{
+                                                                   fontSize: "16px",
+                                                                   fontWeight: 'bold'
+                                                               }}>{filterType.name}</FormLabel>
                                                     {filterType.options.map((filter) =>
                                                         <div>
                                                             <FormControlLabel
@@ -1083,32 +1091,38 @@ export function ExportInfo(props: Props) {
                                             </div>
                                         ), 'options' in filterType)
                                     ))}
-                                    <FormControl component="fieldset">
-                                        <FormLabel component="legend" style={{fontSize: "18px"}}>Sort By</FormLabel>
-                                        <RadioGroup>
-                                            {sortOptions.map((sortOption) => (
-                                                <div>
-                                                    <div>
 
-                                                        <FormControlLabel
-                                                            className="qa-ExportInfo-Radio-sort"
-                                                            value={sortOption.slug}
-                                                            control={<Radio
-                                                                classes={{
-                                                                    root: classes.radio,
-                                                                    checked: classes.checked
-                                                                }}
-                                                            />}
-                                                            label={<Typography
-                                                                className={classes.radioLabel}>{sortOption.name}</Typography>}
-                                                            checked={sortOption.isChecked}
-                                                            onChange={() => onSortRadioChanged(sortOption.slug)}
-                                                        />
+                                    <FormControl component="fieldset">
+                                        <FormLabel component="legend"
+                                                   style={{fontSize: "18px", fontWeight: 'bold'}}>Sort
+                                            By</FormLabel>
+                                        <FormGroup className={classes.formControlLabelContainer}>
+                                            <RadioGroup>
+                                                {sortOptions.map((sortOption) => (
+                                                    <div>
+                                                        <div>
+                                                            <FormControlLabel
+                                                                className={classes.formControlLabel}
+                                                                value={sortOption.slug}
+                                                                control={<Radio
+                                                                    classes={{
+                                                                        root: classes.radio,
+                                                                        checked: classes.checked
+                                                                    }}
+                                                                />}
+                                                                label={<Typography
+                                                                    className={classes.radioLabel}>{sortOption.name}</Typography>}
+                                                                checked={sortOption.isChecked}
+                                                                onChange={() => onSortRadioChanged(sortOption.slug)}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
+                                                ))}
+                                            </RadioGroup>
+                                        </FormGroup>
                                     </FormControl>
+
+
                                     <Grid container spacing={2} className={classes.containerGrid}>
                                         <Grid item xs={4} md={8}>
                                                 <span
