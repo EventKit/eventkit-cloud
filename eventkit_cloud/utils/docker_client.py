@@ -1,4 +1,5 @@
 import shlex
+import uuid
 
 import requests
 import os
@@ -41,6 +42,7 @@ class DockerClient(ScaleClient):
         # Don't pass in the HOSTNAME of the main celery node.
         environment = dict(os.environ)
         environment.pop("HOSTNAME")
+        container_number = str(uuid.uuid4().int)[:8]
         self.client.containers.run(
             image=app_name,
             command=shlex.quote(command),
@@ -48,11 +50,18 @@ class DockerClient(ScaleClient):
             detach=True,
             mem_limit=memory_in_mb,
             network="eventkit-cloud_default",
-            auto_remove=False,
+            auto_remove=True,
             entrypoint="/bin/bash -c ",
             volumes=volumes,
-            user="root",
-            labels={"task_type": "celery_task", "task_name": name},
+            user="eventkit",
+            links={"celery": "celery"},
+            name=f"/eventkit-cloud_celery_{container_number}",
+            labels={"task_type": "celery_task", "task_name": name,
+                    # Some items to make this work better for development
+                    "com.docker.compose.container-number": container_number,
+                    "com.docker.compose.project": "eventkit-cloud",
+                    "com.docker.compose.service": "celery",
+                    "com.docker.compose.oneoff": "False"}
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
