@@ -229,10 +229,7 @@ def get_style_files():
     :return: A list of all of the static files used for styles (e.g. icons)
     """
     style_dir = os.path.join(os.path.dirname(__file__), "static", "tasks", "styles")
-    files = get_file_paths(style_dir)
-    arcgis_dir = os.path.join(os.path.dirname(__file__), "arcgis")
-    files = get_file_paths(arcgis_dir, files)
-    return files
+    return get_file_paths(style_dir)
 
 
 def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
@@ -277,6 +274,75 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     with open(style_file, "wb") as open_file:
         open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
     return style_file
+
+
+def get_arcgis_templates(metadata: dict) -> dict:
+    """
+    Gets the arcgis template file and if possible uses provided metadata to update the file.
+    :param metadata: A dict of metadata provided by get_metadata.
+    :return: A dict with the absolute path to the file and a relative path to desired location in the datapack.
+    """
+    cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
+    files = {}
+
+    with cd(os.path.join(os.path.dirname(__file__), "arcgis")):
+        for dirpath, _, arcgis_template_files in os.walk("./"):
+            # paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
+            stage_dir = os.path.join(
+                settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]), Directory.ARCGIS.value
+            )
+            if not os.path.isdir(stage_dir):
+                os.mkdir(stage_dir)
+            for arcgis_template_file in arcgis_template_files:
+                basename = os.path.basename(arcgis_template_file)
+                template_file = os.path.join(stage_dir, basename)
+                if os.path.splitext(basename)[-1] in [".lyrx"]:
+                    with open(arcgis_template_file, "rb") as open_file:
+                        template = json.load(open_file)
+                    update_arcgis_json_extents(template, metadata["bbox"])
+                    with open(template_file, "w") as open_file:
+                        json.dump(template, open_file)
+                    files[template_file] = os.path.join(
+                        dirpath, Directory.ARCGIS.value, Directory.TEMPLATES.value, arcgis_template_file
+                    )
+                else:
+                    if basename in ["create_mxd.py", "ReadMe.txt"]:
+                        files[os.path.abspath(os.path.join(dirpath, arcgis_template_file))] = os.path.join(
+                            Directory.ARCGIS.value, "{0}".format(basename)
+                        )
+                    # This bit is needed because its easier to test and reference the file with a standard extension.
+                    elif basename in ["create_aprx.py"]:
+                        files[os.path.abspath(os.path.join(dirpath, arcgis_template_file))] = os.path.join(
+                            Directory.ARCGIS.value, "{0}.pyt".format(os.path.splitext(basename)[0])
+                        )
+                    else:
+                        # Put the support files in the correct directory.
+                        files[os.path.abspath(os.path.join(dirpath, arcgis_template_file))] = os.path.join(
+                            Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
+                        )
+
+    arcgis_metadata_file = os.path.join(Directory.ARCGIS.value, "metadata.json")
+    arcgis_metadata = get_arcgis_metadata(metadata)
+    with open(arcgis_metadata_file, "w") as open_md_file:
+        json.dump(arcgis_metadata, open_md_file)
+    files[os.path.abspath(arcgis_metadata_file)] = os.path.join(arcgis_metadata_file)
+
+    return files
+
+
+def update_arcgis_json_extents(document, bbox):
+    extent = {
+        "xmin": bbox[0],
+        "ymin": bbox[1],
+        "xmax": bbox[2],
+        "ymax": bbox[3],
+        "spatialReference": {"wkid": 4326, "latestWkid": 4326},
+    }
+    layer_definitions = document["layerDefinitions"]
+    for layer_definition in layer_definitions:
+        if layer_definition.get("featureTable"):
+            layer_definition["featureTable"]["dataConnection"]["extent"] = extent
+    return document
 
 
 def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_FORMATS):

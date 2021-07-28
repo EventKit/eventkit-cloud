@@ -10,4 +10,8 @@ C:\python27\arcmap10.5\python.exe C:\user\Downloads\datapack\arcgis\create_mxd.p
 The script uses templates and .lyr files stored in the "template" folder of the EventKit datapack and leverages the ArcMap libraries already installed on the computer.
 The script will create an .mxd for the ArcMap version installed on the machine (ArcMap versions 10.4 - 10.8.1 should work).
 
+ESRI ArcPro Support
+
+To create an aprx file using ArcPro, open arcpro and select add toolbox and add the create_aprx.pyt toolbox (if not seen try pressing F5, to refresh the files).  Then open the script and fill out the parameters.
+
 Note, Geopackage (.gpkg) support varies by ArcMap version, with limited functionality for raster geopackage files in versions before ArcMap 10.5.1.

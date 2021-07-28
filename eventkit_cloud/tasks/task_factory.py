@@ -210,7 +210,8 @@ class TaskFactory:
                     ).set(**finalize_task_settings)
 
                     # add zip if required
-                    if provider_task.provider.zip:
+                    # skip zip if there is only one source in the data pack (they would be redundant files).
+                    if provider_task.provider.zip and len(job.data_provider_tasks.all()) > 1:
                         zip_export_provider_sig = get_zip_task_chain(
                             data_provider_task_record_uid=provider_task_record_uid,
                             data_provider_task_record_uids=[provider_task_record_uid],

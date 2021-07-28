@@ -1457,13 +1457,12 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
-    @patch("eventkit_cloud.tasks.export_tasks.get_arcgis_metadata")
+    @patch("eventkit_cloud.tasks.export_tasks.get_arcgis_templates")
     @patch("eventkit_cloud.tasks.export_tasks.get_metadata")
     @patch("eventkit_cloud.tasks.export_tasks.zip_files")
     @patch("eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document")
     @patch("eventkit_cloud.tasks.export_tasks.get_style_files")
     @patch("eventkit_cloud.tasks.export_tasks.json")
-    @patch("builtins.open")
     @patch("eventkit_cloud.tasks.export_tasks.generate_qgs_style")
     @patch("os.path.join", side_effect=lambda *args: args[-1])
     @patch("eventkit_cloud.tasks.export_tasks.DataProviderTaskRecord")
@@ -1472,15 +1471,16 @@ class TestExportTasks(ExportTaskBase):
         mock_DataProviderTaskRecord,
         join,
         mock_generate_qgs_style,
-        mock_open,
         mock_json,
         mock_get_style_files,
         mock_get_human_readable_metadata_document,
         mock_zip_files,
         mock_get_metadata,
-        mock_get_arcgis_metadata,
+        mock_get_arcgis_templates,
     ):
-        mock_get_style_files.return_value = style_files = ["/styles.png"]
+        mock_get_style_files.return_value = style_files = {"/styles.png": "icons/styles.png"}
+        mock_get_arcgis_templates.return_value = arcgis_files = {"/arcgis/create_aprx.py": "arcgis/create_aprx.pyt"}
+        style_files.update(arcgis_files)
         mock_get_human_readable_metadata_document.return_value = human_metadata_doc = "/human_metadata.txt"
         mock_generate_qgs_style.return_value = qgis_file = "/style.qgs"
 
@@ -1524,12 +1524,10 @@ class TestExportTasks(ExportTaskBase):
         run_zip_file = RunZipFile.objects.create(run=self.run)
         expected_zip = f"{metadata['name']}.zip"
         mock_zip_files.return_value = expected_zip
-
         returned_zip = create_zip_task.run(
             data_provider_task_record_uids=data_provider_task_record_uids, run_zip_file_uid=run_zip_file.uid
         )
         mock_generate_qgs_style.assert_called_once_with(metadata)
-        mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(
             include_files=list(set(metadata["include_files"])),
             run_zip_file_uid=run_zip_file.uid,
@@ -1537,8 +1535,6 @@ class TestExportTasks(ExportTaskBase):
             static_files=style_files,
             metadata=metadata,
         )
-        mock_json.dump.assert_called_once()
-        mock_get_arcgis_metadata.assert_called_once_with(metadata)
         self.assertEqual(returned_zip, {"result": expected_zip})
 
     def test_zip_file_task_invalid_params(self):
