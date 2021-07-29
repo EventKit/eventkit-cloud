@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import {connect} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {getSqKmString} from '../../utils/generic';
 import {Step} from 'react-joyride';
@@ -23,11 +23,13 @@ import AlertWarning from '@material-ui/icons/Warning';
 import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
+    Chip,
     FormControl,
     FormControlLabel,
     FormGroup,
     FormLabel,
-    Grid, InputAdornment,
+    Grid,
+    InputAdornment,
     Link,
     Radio,
     RadioGroup,
@@ -38,7 +40,7 @@ import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
-import { unionBy } from 'lodash';
+import {unionBy} from 'lodash';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -227,6 +229,28 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         '& .MuiTypography-colorTextSecondary': {
             color: theme.eventkit.colors.primary
         }
+    },
+    filterChip: {
+        height: '26px',
+        fontSize: '14px',
+        border: '1px solid rgba(0, 0, 0, 0.5)',
+        backgroundColor: theme.eventkit.colors.white,
+        marginRight: '3px',
+    },
+    filterLabelDropdownChip: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+        float: 'right',
+        backgroundColor: '#F9F9F9',
+        border: '1px solid black',
+        borderBottom: 'none',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        padding: '0.3em 0.75em',
+        borderTopLeftRadius: '4px',
+        borderTopRightRadius: '4px',
     }
 });
 
@@ -245,21 +269,12 @@ export interface IncompatibilityInfo {
 }
 
 export interface Props {
-    geojson: GeoJSON.FeatureCollection;
-    exportInfo: Eventkit.Store.ExportInfo;
-    providers: Eventkit.Provider[];
-    nextEnabled: boolean;
     handlePrev: () => void;
-    updateExportInfo: (args: any) => void;
-    setNextDisabled: () => void;
-    setNextEnabled: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
-    projections: Eventkit.Projection[];
-    formats: Eventkit.Format[];
     checkProvider: any;
 }
 
@@ -303,7 +318,6 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
-    const [providers, setProviders] = useState(props.providers);
     const [providerSearch, setProviderSearch] = useState("");
     const [showProviderSearch, setShowProviderSearch] = useState(false);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
@@ -321,6 +335,32 @@ export function ExportInfo(props: Props) {
     const [stepIndex, setStepIndex] = useState(0);
     const [displayDummy, setDisplayDummy] = useState(false);
 
+    // What is type for whole redux store?  There is a Store name space but elements aren't compiled.
+    const geojson = useSelector((store: any) => store.aoiInfo.geojson)
+    const exportInfo = useSelector((store: any) => store.exportInfo)
+    const providers = useSelector((store: any) => store.providers)
+    const nextEnabled = useSelector((store: any) => store.stepperNextEnabled)
+    const projections = useSelector((store: any) => [...store.projections])
+    const formats = useSelector((store: any) => [...store.formats])
+
+    useEffect(() => {updateSelectedFormats()},[formats]);
+
+    const dispatch = useDispatch()
+    // Call this anytime we need to update providers, instead of setProviders.
+    const updateExportInfoCallback = useCallback(
+        (updatedExportInfo) => dispatch(updateExportInfo(updatedExportInfo)),
+        []
+    )
+    const setNextDisabled = useCallback(
+        () => dispatch(stepperNextDisabled()),
+        []
+    )
+
+    const setNextEnabled = useCallback(
+        () => dispatch(stepperNextEnabled()),
+        []
+    )
+
     const appContext = useAppContext();
     const {colors} = props.theme.eventkit;
     const {classes} = props;
@@ -332,17 +372,16 @@ export function ExportInfo(props: Props) {
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
-    // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
-    let projections = [...props.projections];
-    const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
-    if (indexOf4326 >= 1) {
-        projections = [projections.splice(indexOf4326, 1)[0], ...projections];
-    }
+    // // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+    // const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+    // if (indexOf4326 >= 1) {
+    //     projections = [projections.splice(indexOf4326, 1)[0], ...projections];
+    // }
 
     // Component mount and unmount
     useEffect(() => {
         // calculate the area of the AOI
-        const areaStr = getSqKmString(props.geojson);
+        const areaStr = getSqKmString(geojson);
         const updatedInfo = ({
             areaStr,
             visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE'
@@ -350,13 +389,13 @@ export function ExportInfo(props: Props) {
         const steps = (joyride.ExportInfo as any[]);
         joyrideAddSteps(steps);
 
-        if (props.projections.find(projection => projection.srid === 4326)) {
-            if (props.exportInfo.projections && props.exportInfo.projections.length === 0) {
+        if (projections.find(projection => projection.srid === 4326)) {
+            if (exportInfo.projections && exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
             }
         }
 
-        props.updateExportInfo(updatedInfo);
+        updateExportInfoCallback(updatedInfo);
 
         return () => {
             source.cancel('Exiting Page.');
@@ -471,8 +510,7 @@ export function ExportInfo(props: Props) {
     }
 
     const checkCompatibility = () => {
-        const {formats} = props;
-        const selectedProjections = props.exportInfo.projections;
+        const selectedProjections = exportInfo.projections;
 
         const formatMap = {};
         const projectionMap = {};
@@ -502,39 +540,36 @@ export function ExportInfo(props: Props) {
     }
 
     const checkShareAll = () => {
-        if (props.exportInfo.visibility === 'PRIVATE') {
-            props.updateExportInfo({
+        if (exportInfo.visibility === 'PRIVATE') {
+            updateExportInfoCallback({
                 visibility: 'PUBLIC'
             });
             return;
         }
-        props.updateExportInfo({
+        updateExportInfoCallback({
             visibility: 'PRIVATE'
         });
     }
 
-    const checkSelectedFormats = (prevState: State) => {
+    const updateSelectedFormats = () => {
         // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
         // props.providers is the list of available providers.
-        const exportOptions = props.exportInfo.exportOptions;
-        const providers = [...props.exportInfo.providers];
-        const getFormats = (formatArray) => {
-            providers.forEach((provider) => {
-                const providerOptions = exportOptions[provider.slug];
-                if (providerOptions && !!providerOptions.formats) {
-                    providerOptions.formats.forEach(formatSlug => {
-                        if (formatArray.indexOf(formatSlug) < 0) {
-                            formatArray.push(formatSlug);
-                        }
-                    });
-                }
-            });
-        };
+        const exportOptions = exportInfo.exportOptions;
+        const selectedProviders = [...exportInfo.providers];
+
         const selectedFormats = [] as string[];
-        getFormats(selectedFormats);
-        if (!elementsEqual(selectedFormats, prevState.selectedFormats)) {
-            return {selectedFormats};
-        }
+        selectedProviders.forEach((provider) => {
+            const providerOptions = exportOptions[provider.slug];
+            if (providerOptions && !!providerOptions.formats) {
+                providerOptions.formats.forEach(formatSlug => {
+                    if (selectedFormats.indexOf(formatSlug) < 0) {
+                        selectedFormats.push(formatSlug);
+                    }
+                });
+            }
+        });
+        // TODO: This is causing an infinite loop, figure out why.
+        // updateExportInfoCallback({selectedFormats});
     }
 
     const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
@@ -555,7 +590,7 @@ export function ExportInfo(props: Props) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        props.updateExportInfo({
+        updateExportInfoCallback({
             exportName: value,
         });
     }
@@ -564,7 +599,7 @@ export function ExportInfo(props: Props) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        props.updateExportInfo({
+        updateExportInfoCallback({
             datapackDescription: value,
         });
     }
@@ -573,75 +608,75 @@ export function ExportInfo(props: Props) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
-        props.updateExportInfo({
+        updateExportInfoCallback({
             projectName: value,
         });
     }
 
     const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
-        const providers = [...props.exportInfo.providers];
-        const propsProviders = props.providers;
+        const selectedProviders = [...exportInfo.providers];
+        // const propsProviders = props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
             // add the provider to the array
-            for (const provider of propsProviders) {
+            for (const provider of providers) {
                 if (provider.name === e.target.name) {
-                    providers.push(provider);
+                    selectedProviders.push(provider);
                     break;
                 }
             }
         } else {
             // or remove the value from the unchecked checkbox from the array
-            index = providers.map(x => x.name).indexOf(e.target.name);
-            for (const provider of propsProviders) {
+            index = selectedProviders.map(x => x.name).indexOf(e.target.name);
+            for (const provider of providers) {
                 if (provider.name === e.target.name) {
-                    providers.splice(index, 1);
+                    selectedProviders.splice(index, 1);
                 }
             }
         }
         // update the state with the new array of options
-        props.updateExportInfo({
-            providers,
+        updateExportInfoCallback({
+            providers: selectedProviders,
         });
 
     }
 
     const deselect = (provider: Eventkit.Provider) => {
-        const providers = [...props.exportInfo.providers];
-        const propsProviders = props.providers;
+        const selectedProviders = [...exportInfo.providers];
+        // const propsProviders = props.providers;
         let index;
-        index = providers.map(x => x.name).indexOf(provider.name);
-        for (const _provider of propsProviders) {
+        index = selectedProviders.map(x => x.name).indexOf(provider.name);
+        for (const _provider of providers) {
             if (provider.name === provider.name) {
-                providers.splice(index, 1);
+                selectedProviders.splice(index, 1);
             }
         }
 
         // update the state with the new array of options
-        props.updateExportInfo({
-            providers,
+        updateExportInfoCallback({
+            providers: selectedProviders,
         });
     }
 
     const onSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
-        let providers = [];
+        let selectedProviders = [];
         if (e.target.checked) {
             // set providers to the list of ALL providers
-            providers = [...props.providers.filter(provider => provider.display)];
+            selectedProviders = [...providers.filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
-        props.updateExportInfo({
-            providers,
+        updateExportInfoCallback({
+            providers: selectedProviders,
         });
     }
 
     const onSelectProjection = (event) => {
         // Selecting projections for the DataPack, here srid is spatial reference ID
-        const selectedSrids = [...props.exportInfo.projections] || [];
+        const selectedSrids = [...exportInfo.projections] || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -660,18 +695,18 @@ export function ExportInfo(props: Props) {
             }
         }
         // update the state with the new array of options
-        props.updateExportInfo({
+        updateExportInfoCallback({
             projections: selectedSrids,
         });
     }
 
     const onRefresh = () => {
         // make a copy of providers and set availability to empty json
-        props.providers.forEach(provider => props.checkProvider(provider));
+        providers.forEach(provider => props.checkProvider(provider));
     }
 
     const clearEstimate = (provider: Eventkit.Provider) => {
-        const providerInfo = {...props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+        const providerInfo = {...exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
         const updatedProviderInfo = {...providerInfo};
 
         const providerInfoData = updatedProviderInfo[provider.slug];
@@ -684,7 +719,7 @@ export function ExportInfo(props: Props) {
             estimates: undefined,
         };
 
-        props.updateExportInfo({
+        updateExportInfoCallback({
             providerInfo: updatedProviderInfo
         });
     }
@@ -743,7 +778,7 @@ export function ExportInfo(props: Props) {
             step,
         } = data;
 
-        props.setNextDisabled();
+        setNextDisabled();
 
         if (action === 'start') {
             setDisplayDummy(true);
@@ -758,7 +793,7 @@ export function ExportInfo(props: Props) {
             window.location.hash = '';
         } else {
             if (data.index === 9 && data.type === 'tooltip') {
-                props.setNextEnabled();
+                setNextEnabled();
             }
 
             if ((step.target === '.qa-DataProvider-qa-expandTarget' && type === 'step:before') ||
@@ -774,7 +809,7 @@ export function ExportInfo(props: Props) {
     const getProviders = () => {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
-        let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
+        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = currentProviders.filter(provider => {
             return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
         });
@@ -791,7 +826,7 @@ export function ExportInfo(props: Props) {
         }
 
         // Merge the filtered results and currently selected providers for display.
-        currentProviders = unionBy(props.exportInfo.providers, currentProviders, 'id');
+        currentProviders = unionBy(exportInfo.providers, currentProviders, 'id');
 
         currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
         if (displayDummy) {
@@ -813,6 +848,10 @@ export function ExportInfo(props: Props) {
             }
         }
         return currentProviders;
+    }
+
+    const removeFilter = (filter) => {
+        console.log("REMOVING FILTER", filter)
     }
 
     const sortAtoZ = (providers) => {
@@ -971,7 +1010,7 @@ export function ExportInfo(props: Props) {
                                         id="Name"
                                         name="exportName"
                                         setValue={onNameChange}
-                                        defaultValue={props.exportInfo.exportName}
+                                        defaultValue={exportInfo.exportName}
                                         placeholder="Datapack Name"
                                         InputProps={{className: classes.input}}
                                         fullWidth
@@ -982,7 +1021,7 @@ export function ExportInfo(props: Props) {
                                         id="Description"
                                         name="datapackDescription"
                                         setValue={onDescriptionChange}
-                                        defaultValue={props.exportInfo.datapackDescription}
+                                        defaultValue={exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
                                         inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
@@ -996,7 +1035,7 @@ export function ExportInfo(props: Props) {
                                         id="Project"
                                         name="projectName"
                                         setValue={onProjectChange}
-                                        defaultValue={props.exportInfo.projectName}
+                                        defaultValue={exportInfo.projectName}
                                         placeholder="Project Name"
                                         InputProps={{className: classes.input}}
                                         fullWidth
@@ -1056,7 +1095,14 @@ export function ExportInfo(props: Props) {
                                 >Sort / Filter</span>
                             </div>
                             {/*TODO: Add chip styling */}
-                            {/*{renderIf(() => (providerFilterList.map((filter => filter.name))), providerFilterList.length && !showProviderFilter)}*/}
+                            {renderIf(() => (
+                                providerFilterList.map((filter => (
+                                    <Chip
+                                        className={classes.filterChip}
+                                        label={filter.name}
+                                        onDelete={() => removeFilter(filter)}
+                                    />
+                                )))), providerFilterList.length && !showProviderFilter)}
                             {renderIf(() => (
                                 <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
                                     <FormLabel component="legend" style={{fontSize: '18px', fontWeight: 'bold'}}>Filter
@@ -1174,7 +1220,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={props.exportInfo.providers.length === props.providers.filter(
+                                checked={exportInfo.providers.length === providers.filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
@@ -1245,20 +1291,20 @@ export function ExportInfo(props: Props) {
                                     {getProviders().map((provider, ix) => (
                                         <DataProvider
                                             key={provider.slug + "-DataProviderList"}
-                                            geojson={props.geojson}
+                                            geojson={geojson}
                                             provider={provider}
                                             onChange={onChangeCheck}
                                             deselect={deselect}
-                                            checked={props.exportInfo.providers.map(x => x.name)
+                                            checked={exportInfo.providers.map(x => x.name)
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
                                             renderEstimate={appContext.SERVE_ESTIMATES}
                                             checkProvider={() => {
                                                 // Check the provider for updated info.
                                                 props.checkProvider(provider).then(providerInfo => {
-                                                    props.updateExportInfo({
+                                                    updateExportInfoCallback({
                                                         providerInfo: {
-                                                            ...props.exportInfo.providerInfo,
+                                                            ...exportInfo.providerInfo,
                                                             [provider.slug]: providerInfo.data,
                                                         }
                                                     });
@@ -1310,7 +1356,7 @@ export function ExportInfo(props: Props) {
                                             className="qa-ExportInfo-CheckBox-projection"
                                             classes={{root: classes.checkbox, checked: classes.checked}}
                                             name={`${projection.srid}`}
-                                            checked={props.exportInfo.projections.indexOf(projection.srid) !== -1}
+                                            checked={exportInfo.projections.indexOf(projection.srid) !== -1}
                                             style={{width: '24px', height: '24px'}}
                                             onChange={onSelectProjection}
                                         />
@@ -1348,7 +1394,7 @@ export function ExportInfo(props: Props) {
                                 <Checkbox
                                     classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="ShareAll"
-                                    checked={props.exportInfo.visibility === 'PUBLIC'}
+                                    checked={exportInfo.visibility === 'PUBLIC'}
                                     onChange={checkShareAll}
                                     style={{width: '24px', height: '24px'}}
                                 />
@@ -1370,10 +1416,10 @@ export function ExportInfo(props: Props) {
                                     title="Area"
                                     containerStyle={{fontSize: '16px'}}
                                 >
-                                    {props.exportInfo.areaStr}
+                                    {exportInfo.areaStr}
                                 </CustomTableRow>
                                 <div style={{padding: '15px 0px 20px'}}>
-                                    <MapCard geojson={props.geojson}>
+                                    <MapCard geojson={geojson}>
                                         <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
                                         <span
                                             role="button"
@@ -1387,37 +1433,12 @@ export function ExportInfo(props: Props) {
                                     </MapCard>
                                 </div>
                             </div>
-                        </Paper>
+                        </Paper>p
                     </form>
                 </CustomScrollbar>
             </div>
         );
 
-}
-
-function mapStateToProps(state) {
-    return {
-        geojson: state.aoiInfo.geojson,
-        exportInfo: state.exportInfo,
-        providers: state.providers,
-        nextEnabled: state.stepperNextEnabled,
-        projections: [...state.projections],
-        formats: [...state.formats],
-    };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        updateExportInfo: (exportInfo) => {
-            dispatch(updateExportInfo(exportInfo));
-        },
-        setNextDisabled: () => {
-            dispatch(stepperNextDisabled());
-        },
-        setNextEnabled: () => {
-            dispatch(stepperNextEnabled());
-        },
-    };
 }
 
 function AddDataSource() {
@@ -1453,7 +1474,4 @@ function DebouncedTextField(props: any) {
     )
 }
 
-export default withTheme(withStyles(jss)(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ExportInfo)));
+export default withTheme(withStyles(jss)(ExportInfo));
