@@ -1,6 +1,7 @@
 import logging
 import pickle
 import traceback
+from typing import List
 
 from django.contrib import admin
 
@@ -89,9 +90,22 @@ class ExportTaskRecordAdmin(admin.ModelAdmin):
         return False
 
 
+def soft_delete_runs(modeladmin, request, queryset: List[ExportRun]):
+    for run in queryset:
+        run.soft_delete()
+
+
 class ExportRunAdmin(admin.ModelAdmin):
     readonly_fields = ("delete_user", "user", "status", "started_at", "finished_at")
-    list_display = ["uid", "status", "user", "notified", "expiration", "deleted"]
+    list_display = ["uid", "get_name", "status", "user", "notified", "expiration", "deleted"]
+
+    actions = [soft_delete_runs]
+
+    def get_name(self, obj):
+        return obj.job.name
+
+    get_name.short_description = "Job Name"
+    get_name.admin_order_field = "job__name"
 
     def has_add_permission(self, request, obj=None):
         return False

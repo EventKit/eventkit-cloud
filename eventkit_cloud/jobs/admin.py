@@ -200,21 +200,31 @@ class DataProviderForm(forms.ModelForm):
         return config
 
 
+def make_display(modeladmin, request, queryset):
+    queryset.update(display=True)
+
+
+def make_hidden(modeladmin, request, queryset):
+    queryset.update(display=False)
+
+
 class DataProviderAdmin(admin.ModelAdmin):
     """
     Admin model for editing export providers in the admin interface.
     """
 
     form = DataProviderForm
-    list_display = [
+    list_display = ["name", "slug", "label", "export_provider_type", "attribute_class", "license", "display"]
+    search_fields = [
         "name",
         "slug",
-        "label",
-        "export_provider_type",
-        "attribute_class",
-        "license",
+        "data_type",
         "display",
+        "attribute_class__name",
+        "export_provider_type__type_name",
+        "license__name",
     ]
+    actions = [make_display, make_hidden]
 
     def save_model(self, request, obj, *args):
         super().save_model(request, obj, *args)
