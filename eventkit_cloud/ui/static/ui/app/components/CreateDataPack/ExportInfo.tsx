@@ -41,6 +41,7 @@ import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
 import {unionBy} from 'lodash';
+import {joyride} from '../../joyride.config';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -332,7 +333,6 @@ export function ExportInfo(props: Props) {
         projections: {}
     } as IncompatibilityInfo));
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
-    const [stepIndex, setStepIndex] = useState(0);
     const [displayDummy, setDisplayDummy] = useState(false);
 
     // What is type for whole redux store?  There is a Store name space but elements aren't compiled.
@@ -344,6 +344,7 @@ export function ExportInfo(props: Props) {
     const formats = useSelector((store: any) => [...store.formats])
 
     useEffect(() => {updateSelectedFormats()},[formats]);
+    useEffect(() => {checkCompatibility()}, [projections]);
 
     const dispatch = useDispatch()
     // Call this anytime we need to update providers, instead of setProviders.
@@ -366,7 +367,7 @@ export function ExportInfo(props: Props) {
     const {classes} = props;
 
     const helpers = useRef();
-    let joyride; // = useRef();
+    let joyrideRef = useRef(joyride);
     const dataProvider = useRef();
     const bounceBack = useRef();
     const CancelToken = axios.CancelToken;
@@ -388,7 +389,6 @@ export function ExportInfo(props: Props) {
         } as Eventkit.Store.ExportInfo);
         const steps = (joyride.ExportInfo as any[]);
         joyrideAddSteps(steps);
-
         if (projections.find(projection => projection.srid === 4326)) {
             if (exportInfo.projections && exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
@@ -402,43 +402,12 @@ export function ExportInfo(props: Props) {
         };
     }, []);
 
-
-    // componentDidUpdate(prevProps: Props, prevState: State) {
-    //     // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-    //     const {exportInfo} = this.props;
-    //     let nextState = {};
-    //
-    //     if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-    //         this.joyride?.current?.reset(true);
-    //         this.setState({isRunning: true});
-    //     }
-    //
-    //     if (this.props.providers.length !== prevProps.providers.length) {
-    //         this.setState({providers: this.props.providers});
-    //     } else {
-    //         const providerSlugs = this.props.providers.map(provider => provider.slug);
-    //         const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
-    //         if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
-    //             this.setState({providers: this.props.providers});
-    //         }
-    //     }
-    //
-    //     const selectedProjections = [...exportInfo.projections];
-    //     const prevSelectedProjections = [...prevProps.exportInfo.projections];
-    //     if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
-    //         nextState = {
-    //             ...nextState,
-    //             ...this.checkCompatibility()
-    //         };
-    //     }
-    //     nextState = {
-    //         ...nextState,
-    //         ...this.checkSelectedFormats(prevState)
-    //     };
-    //     if (Object.keys(nextState).length > 0) {
-    //         this.setState({...nextState});
-    //     }
-    // }
+    useEffect(() => {
+       if (props.walkthroughClicked && !isRunning) {
+            joyrideRef?.current?.reset(true);
+            setIsRunning(true);
+       }
+    }, [props.walkthroughClicked]);
 
     const [filterOptions, setFilterOptions] = useState([
         {
@@ -972,7 +941,7 @@ export function ExportInfo(props: Props) {
             <EventkitJoyride
                 name="Create Page Step 2"
                 callback={callback}
-                getRef={(_ref) => joyride = _ref}
+                getRef={(_ref) => joyrideRef = _ref}
                 steps={steps}
                 getHelpers={(helpers: any) => {
                     helpers = helpers
