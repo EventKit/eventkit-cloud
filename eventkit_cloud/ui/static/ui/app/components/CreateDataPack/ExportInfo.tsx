@@ -239,19 +239,12 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         marginRight: '3px',
     },
     filterLabelDropdownChip: {
-        fontSize: '15px',
-        fontWeight: 'normal',
-        cursor: 'pointer',
-        color: theme.eventkit.colors.primary,
-        float: 'right',
         backgroundColor: '#F9F9F9',
         border: '1px solid black',
-        borderBottom: 'none',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
         padding: '0.3em 0.75em',
-        borderTopLeftRadius: '4px',
-        borderTopRightRadius: '4px',
+        borderRadius: '4px',
+        borderTopRightRadius: '0',
+        marginTop: '30px',
     }
 });
 
@@ -343,8 +336,12 @@ export function ExportInfo(props: Props) {
     const projections = useSelector((store: any) => [...store.projections])
     const formats = useSelector((store: any) => [...store.formats])
 
-    useEffect(() => {updateSelectedFormats()},[formats]);
-    useEffect(() => {checkCompatibility()}, [projections]);
+    useEffect(() => {
+        updateSelectedFormats()
+    }, [formats]);
+    useEffect(() => {
+        checkCompatibility()
+    }, [projections]);
 
     const dispatch = useDispatch()
     // Call this anytime we need to update providers, instead of setProviders.
@@ -403,10 +400,10 @@ export function ExportInfo(props: Props) {
     }, []);
 
     useEffect(() => {
-       if (props.walkthroughClicked && !isRunning) {
+        if (props.walkthroughClicked && !isRunning) {
             joyrideRef?.current?.reset(true);
             setIsRunning(true);
-       }
+        }
     }, [props.walkthroughClicked]);
 
     const [filterOptions, setFilterOptions] = useState([
@@ -973,60 +970,60 @@ export function ExportInfo(props: Props) {
                                 Enter General Information
                                 {providerFilterList.map(filter => filter.name)}
                             </div>
-                                <div style={{marginBottom: '30px'}}>
-                                    <DebouncedTextField
-                                        className={`qa-ExportInfo-input-name ${classes.textField}`}
-                                        id="Name"
-                                        name="exportName"
-                                        setValue={onNameChange}
-                                        defaultValue={exportInfo.exportName}
-                                        placeholder="Datapack Name"
-                                        InputProps={{className: classes.input}}
-                                        fullWidth
-                                        maxLength={100}
-                                    />
-                                    <DebouncedTextField
-                                        className={`qa-ExportInfo-input-description ${classes.textField}`}
-                                        id="Description"
-                                        name="datapackDescription"
-                                        setValue={onDescriptionChange}
-                                        defaultValue={exportInfo.datapackDescription}
-                                        placeholder="Description"
-                                        multiline
-                                        inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
-                                        fullWidth
-                                        maxLength={250}
-                                        // eslint-disable-next-line react/jsx-no-duplicate-props
-                                        InputProps={{className: classes.input, style: {lineHeight: '21px'}}}
-                                    />
-                                    <DebouncedTextField
-                                        className={`qa-ExportInfo-input-project ${classes.textField}`}
-                                        id="Project"
-                                        name="projectName"
-                                        setValue={onProjectChange}
-                                        defaultValue={exportInfo.projectName}
-                                        placeholder="Project Name"
-                                        InputProps={{className: classes.input}}
-                                        fullWidth
-                                        maxLength={100}
-                                    />
-                                </div>
+                            <div style={{marginBottom: '30px'}}>
+                                <DebouncedTextField
+                                    className={`qa-ExportInfo-input-name ${classes.textField}`}
+                                    id="Name"
+                                    name="exportName"
+                                    setValue={onNameChange}
+                                    defaultValue={exportInfo.exportName}
+                                    placeholder="Datapack Name"
+                                    InputProps={{className: classes.input}}
+                                    fullWidth
+                                    maxLength={100}
+                                />
+                                <DebouncedTextField
+                                    className={`qa-ExportInfo-input-description ${classes.textField}`}
+                                    id="Description"
+                                    name="datapackDescription"
+                                    setValue={onDescriptionChange}
+                                    defaultValue={exportInfo.datapackDescription}
+                                    placeholder="Description"
+                                    multiline
+                                    inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
+                                    fullWidth
+                                    maxLength={250}
+                                    // eslint-disable-next-line react/jsx-no-duplicate-props
+                                    InputProps={{className: classes.input, style: {lineHeight: '21px'}}}
+                                />
+                                <DebouncedTextField
+                                    className={`qa-ExportInfo-input-project ${classes.textField}`}
+                                    id="Project"
+                                    name="projectName"
+                                    setValue={onProjectChange}
+                                    defaultValue={exportInfo.projectName}
+                                    placeholder="Project Name"
+                                    InputProps={{className: classes.input}}
+                                    fullWidth
+                                    maxLength={100}
+                                />
                             </div>
-                            <div className={classes.heading}>
-                                <div
-                                    id="layersHeader"
-                                    className="qa-ExportInfo-layersHeader"
-                                    style={{marginRight: '5px'}}
-                                >
-                                    Select Data Sources
-                                </div>
-                                <div
-                                    id="layersSubheader"
-                                    style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}
-                                >
-                                    (You must choose <strong>at least one</strong>)
-                                </div>
+                        </div>
+                        <div className={classes.heading}>
+                            <div
+                                id="layersHeader"
+                                className="qa-ExportInfo-layersHeader"
+                                style={{marginRight: '5px'}}
+                            >
+                                Select Data Sources
                             </div>
+                            <div
+                                id="layersSubheader"
+                                style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}
+                            >
+                                (You must choose <strong>at least one</strong>)
+                            </div>
+                        </div>
 
                         <div className={classes.searchFilterContainer}>
                             <div className={classes.searchBarContainer}>
@@ -1049,7 +1046,9 @@ export function ExportInfo(props: Props) {
                                             onChange={e => setProviderSearch(e.target.value)}
                                             value={providerSearch}
                                             InputProps={{
-                                                endAdornment: renderIf(() => (<InputAdornment className={classes.searchFieldClear} position="end" onClick={() => setProviderSearch("")}>Clear</InputAdornment>), providerSearch.length > 0),
+                                                endAdornment: renderIf(() => (
+                                                    <InputAdornment className={classes.searchFieldClear} position="end"
+                                                                    onClick={() => setProviderSearch("")}>Clear</InputAdornment>), providerSearch.length > 0),
                                             }}
                                         />
                                     </div>
@@ -1060,18 +1059,21 @@ export function ExportInfo(props: Props) {
                                     tabIndex={0}
                                     onClick={() => setShowProviderFilter(!showProviderFilter)}
                                     onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
-                                    className={showProviderFilter ? classes.filterLabelDropdown : classes.filterLabel}
+                                    className={showProviderFilter || providerFilterList.length ? classes.filterLabelDropdown : classes.filterLabel}
                                 >Sort / Filter</span>
                             </div>
                             {/*TODO: Add chip styling */}
                             {renderIf(() => (
-                                providerFilterList.map((filter => (
-                                    <Chip
-                                        className={classes.filterChip}
-                                        label={filter.name}
-                                        onDelete={() => removeFilter(filter)}
-                                    />
-                                )))), providerFilterList.length && !showProviderFilter)}
+                                <div className={classes.filterLabelDropdownChip}>
+                                    {providerFilterList.map((filter => (
+                                        <Chip
+                                            className={classes.filterChip}
+                                            label={filter.name}
+                                            onDelete={() => removeFilter(filter)}
+                                        />
+                                    )))}
+                                </div>
+                            ), providerFilterList.length && !showProviderFilter)}
                             {renderIf(() => (
                                 <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
                                     <FormLabel component="legend" style={{fontSize: '18px', fontWeight: 'bold'}}>Filter
@@ -1346,67 +1348,67 @@ export function ExportInfo(props: Props) {
                                         />
                                         }
                                     </div>
-                                    ))}
-                                    {projectionCompatibilityOpen &&
-                                    getProjectionDialog()
-                                    }
-                                </div>
+                                ))}
+                                {projectionCompatibilityOpen &&
+                                getProjectionDialog()
+                                }
                             </div>
+                        </div>
 
-                            <div id="ShareAll" className={`qa-ExportInfo-ShareHeader ${classes.heading}`}>
-                                Share this DataPack
-                            </div>
-                            <div
-                                id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}
-                                style={{padding: '0px 10px 10px 8px'}}
+                        <div id="ShareAll" className={`qa-ExportInfo-ShareHeader ${classes.heading}`}>
+                            Share this DataPack
+                        </div>
+                        <div
+                            id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}
+                            style={{padding: '0px 10px 10px 8px'}}
+                        >
+                            <Checkbox
+                                classes={{root: classes.checkbox, checked: classes.checked}}
+                                name="ShareAll"
+                                checked={exportInfo.visibility === 'PUBLIC'}
+                                onChange={checkShareAll}
+                                style={{width: '24px', height: '24px'}}
+                            />
+                            <span
+                                style={{
+                                    padding: '0px 15px', display: 'flex',
+                                    flexWrap: 'wrap', fontSize: '16px',
+                                }}
                             >
-                                <Checkbox
-                                    classes={{root: classes.checkbox, checked: classes.checked}}
-                                    name="ShareAll"
-                                    checked={exportInfo.visibility === 'PUBLIC'}
-                                    onChange={checkShareAll}
-                                    style={{width: '24px', height: '24px'}}
-                                />
-                                <span
-                                    style={{
-                                        padding: '0px 15px', display: 'flex',
-                                        flexWrap: 'wrap', fontSize: '16px',
-                                    }}
-                                >
                                     Share with all EventKit users
                                 </span>
-                            </div>
-                            <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
-                                Area of Interest (AOI)
-                            </div>
-                            <div className={classes.sectionBottom}>
-                                <CustomTableRow
-                                    className="qa-ExportInfo-area"
-                                    title="Area"
-                                    containerStyle={{fontSize: '16px'}}
-                                >
-                                    {exportInfo.areaStr}
-                                </CustomTableRow>
-                                <div style={{padding: '15px 0px 20px'}}>
-                                    <MapCard geojson={geojson}>
-                                        <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
-                                        <span
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={props.handlePrev}
-                                            onKeyPress={props.handlePrev}
-                                            className={classes.editAoi}
-                                        >
+                        </div>
+                        <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
+                            Area of Interest (AOI)
+                        </div>
+                        <div className={classes.sectionBottom}>
+                            <CustomTableRow
+                                className="qa-ExportInfo-area"
+                                title="Area"
+                                containerStyle={{fontSize: '16px'}}
+                            >
+                                {exportInfo.areaStr}
+                            </CustomTableRow>
+                            <div style={{padding: '15px 0px 20px'}}>
+                                <MapCard geojson={geojson}>
+                                    <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={props.handlePrev}
+                                        onKeyPress={props.handlePrev}
+                                        className={classes.editAoi}
+                                    >
                                             Edit
                                         </span>
-                                    </MapCard>
-                                </div>
+                                </MapCard>
                             </div>
-                        </Paper>p
-                    </form>
-                </CustomScrollbar>
-            </div>
-        );
+                        </div>
+                    </Paper>p
+                </form>
+            </CustomScrollbar>
+        </div>
+    );
 
 }
 
