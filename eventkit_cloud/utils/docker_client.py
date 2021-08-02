@@ -56,12 +56,15 @@ class DockerClient(ScaleClient):
             user="eventkit",
             links={"celery": "celery"},
             name=f"/eventkit-cloud_celery_{container_number}",
-            labels={"task_type": "celery_task", "task_name": name,
-                    # Some items to make this work better for development
-                    "com.docker.compose.container-number": container_number,
-                    "com.docker.compose.project": "eventkit-cloud",
-                    "com.docker.compose.service": "celery",
-                    "com.docker.compose.oneoff": "False"}
+            labels={
+                "task_type": "celery_task",
+                "task_name": name,
+                # Some items to make this work better for development
+                "com.docker.compose.container-number": container_number,
+                "com.docker.compose.project": "eventkit-cloud",
+                "com.docker.compose.service": "celery",
+                "com.docker.compose.oneoff": "False",
+            },
         )
 
     def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
