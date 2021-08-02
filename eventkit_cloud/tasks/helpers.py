@@ -284,13 +284,12 @@ def get_arcgis_templates(metadata: dict) -> dict:
     """
     cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
     files = {}
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]), Directory.ARCGIS.value)
+    if not os.path.dirname(stage_dir):
+        os.makedirs(stage_dir)
 
     with cd(os.path.join(os.path.dirname(__file__), "arcgis")):
         for dirpath, _, arcgis_template_files in os.walk("./"):
-            # paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
-            stage_dir = os.path.join(
-                settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]), Directory.ARCGIS.value
-            )
             if not os.path.isdir(stage_dir):
                 os.mkdir(stage_dir)
             for arcgis_template_file in arcgis_template_files:
@@ -321,8 +320,9 @@ def get_arcgis_templates(metadata: dict) -> dict:
                             Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
                         )
 
-    arcgis_metadata_file = os.path.join(Directory.ARCGIS.value, "metadata.json")
+    arcgis_metadata_file = os.path.join(stage_dir, "metadata.json")
     arcgis_metadata = get_arcgis_metadata(metadata)
+
     with open(arcgis_metadata_file, "w") as open_md_file:
         json.dump(arcgis_metadata, open_md_file)
     files[os.path.abspath(arcgis_metadata_file)] = os.path.join(arcgis_metadata_file)
