@@ -87,7 +87,7 @@ class TestExportTaskFactory(TestCase):
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
         finalize_task.s.assert_called()
-        self.assertEqual(3, create_task.call_count)
+        self.assertEqual(2, create_task.call_count)
 
         # Test that run is prevented and deleted if the user has not agreed to the licenses.
         mock_invalid_licenses.return_value = ["invalid-licenses"]
