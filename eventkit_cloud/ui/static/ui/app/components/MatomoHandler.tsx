@@ -20,7 +20,8 @@ function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: str
         return;
     }
     // Add a trailing slash if not present
-    const matomoJsUrl = !matomoUrl.endsWith('/') ? matomoUrl + '/' : matomoUrl + 'matomo.js';
+    const url = matomoUrl.replace(/\/?$/, '/');
+    const matomoJsUrl =  url + 'matomo.js';
     try {
         // Validate the URL.
         new URL(matomoJsUrl);
@@ -51,7 +52,7 @@ function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: str
         _paq.push(['setUserId', userInfo.username])
         _paq.push(['enableLinkTracking']);
 
-        _paq.push(['setTrackerUrl', matomoJsUrl]);
+        _paq.push(['setTrackerUrl', url + 'matomo.php']);
         _paq.push(['setSiteId', siteId]);
     }
     if ((window as any)._url !== window.location.href) {
