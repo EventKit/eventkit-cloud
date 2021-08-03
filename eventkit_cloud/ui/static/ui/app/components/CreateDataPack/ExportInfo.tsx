@@ -776,68 +776,74 @@ export function ExportInfo(props: Props) {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
-        currentProviders = currentProviders.filter(provider => {
-            return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
-        });
-        let filteredSelections = []
-        if (providerFilterList.length > 0) {
-            providerFilterList.forEach(filter => {
-                if (filter.filterType == "type") {
-                    filteredSelections = currentProviders.filter(provider => {
-                        return provider.data_type == filter.slug
-                    });
-                }
-            });
-            currentProviders = filteredSelections;
-        }
+        currentProviders = filterProviders(currentProviders);
 
         // Merge the filtered results and currently selected providers for display.
         currentProviders = unionBy(exportInfo.providers, currentProviders, 'id');
 
-        currentProviders = [...new Map(currentProviders.map(x => [x.slug, x])).values()];
-        if (displayDummy) {
-            currentProviders.unshift(dummyProvider as Eventkit.Provider);
-        }
-        if (providerSortOption) {
-            switch (providerSortOption) {
-                case "alphabetical-a-z":
-                    currentProviders = sortAtoZ(currentProviders);
-                    break;
-                case "alphabetical-z-a":
-                    currentProviders = sortZtoA(currentProviders);
-                    break;
-                case "newest-first":
-                    currentProviders = sortNewestFirst(currentProviders);
-                    break;
-                case "oldest-first":
-                    currentProviders = sortOldestFirst(currentProviders);
-            }
-        }
+        currentProviders = sortProviders(currentProviders);
+
         return currentProviders;
     }
+
+    const filterProviders = (currentProviders) => {
+        currentProviders = currentProviders.filter(provider => {
+            return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
+        });
+        let filteredProviders = []
+        if (providerFilterList.length > 0) {
+            providerFilterList.forEach(filter => {
+                if (filter.filterType == "type") {
+                    filteredProviders = filteredProviders.concat(currentProviders.filter(provider => {
+                        return provider.data_type == filter.slug
+                    }));
+                }
+            });
+            currentProviders = filteredProviders;
+        }
+        return currentProviders;
+    };
+
+    const sortProviders = (currentProviders) => {
+        let sortedProviders: Eventkit.Provider[];
+        switch (providerSortOption) {
+            case "alphabetical-a-z":
+                sortedProviders = sortProvidersAtoZ(currentProviders);
+                break;
+            case "alphabetical-z-a":
+                sortedProviders = sortProvidersZtoA(currentProviders);
+                break;
+            case "newest-first":
+                sortedProviders = sortProvidersNewestFirst(currentProviders);
+                break;
+            case "oldest-first":
+                sortedProviders = sortProvidersOldestFirst(currentProviders);
+                break;
+            default:
+                sortedProviders = sortProvidersAtoZ(currentProviders);
+                break;
+        }
+        return sortedProviders;
+    };
 
     const removeFilter = (filter) => {
         console.log("REMOVING FILTER", filter)
     }
 
-    const sortAtoZ = (providers) => {
-        providers.sort((a, b) => (a.name - b.name));
-        return providers;
+    const sortProvidersAtoZ = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    const sortZtoA = (providers) => {
-        providers.sort((a, b) => (a.name - b.name)).reverse();
-        return providers;
+    const sortProvidersZtoA = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
     }
 
-    const sortNewestFirst = (providers) => {
-        providers.sort((a, b) => (a.created_at - b.created_at)).reverse();
-        return providers;
+    const sortProvidersNewestFirst = (currentProviders) => {
+        return currentProviders.sort((a, b) => (a.created_at.localeCompare(b.created_at))).reverse();
     }
 
-    const sortOldestFirst = (providers) => {
-        providers.sort((a, b) => (a.created_at - b.created_at));
-        return providers;
+    const sortProvidersOldestFirst = (currentProviders) => {
+        return currentProviders.sort((a, b) => (a.created_at.localeCompare(b.created_at)));
     }
 
     const projectionHasErrors = (srid: number) => {
