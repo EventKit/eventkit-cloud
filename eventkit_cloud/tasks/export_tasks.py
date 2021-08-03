@@ -48,7 +48,6 @@ from eventkit_cloud.tasks.helpers import (
     add_export_run_files_to_zip,
     check_cached_task_failures,
     generate_qgs_style,
-    get_arcgis_metadata,
     get_archive_data_path,
     get_data_package_manifest,
     get_download_filename,
@@ -74,6 +73,7 @@ from eventkit_cloud.tasks.helpers import (
     extract_metadata_files,
     get_geometry,
     update_progress,
+    get_arcgis_templates,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -248,11 +248,8 @@ class ExportTask(EventKitBaseTask):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            if provider_slug == "run":
-                event = normalize_name(task.export_provider_task.run.job.event)
-                download_filename = get_download_filename(name, ext, additional_descriptors=[event, "eventkit"])
-            else:
-                download_filename = get_download_filename(name, ext)
+            event = normalize_name(task.export_provider_task.run.job.event)
+            download_filename = get_download_filename(name, ext, additional_descriptors=[event, "eventkit"])
 
             # construct the download url
             skip_copy = task.name == "OverpassQuery"
@@ -1861,11 +1858,7 @@ def create_zip_task(
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
-        arcgis_metadata_file = os.path.join(arcgis_dir, "metadata.json")
-        arcgis_metadata = get_arcgis_metadata(metadata)
-        with open(arcgis_metadata_file, "w") as open_md_file:
-            json.dump(arcgis_metadata, open_md_file)
-        include_files += [arcgis_metadata_file]
+
         # No need to add QGIS file if there aren't any files to be zipped.
         include_files += [generate_qgs_style(metadata)]
         include_files += [get_human_readable_metadata_document(metadata)]
@@ -1886,14 +1879,15 @@ def create_zip_task(
         include_files = list(set(include_files))
 
         zip_file_name = f"{metadata['name']}.zip"
-
+        style_files = get_style_files()
+        style_files.update(get_arcgis_templates(metadata))
         result["result"] = zip_files(
             include_files=include_files,
             run_zip_file_uid=run_zip_file_uid,
             file_path=os.path.join(
                 get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name
             ),
-            static_files=get_style_files(),
+            static_files=style_files,
             metadata=metadata,
         )
     else:
@@ -1974,23 +1968,10 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
             for absolute_file_path, relative_file_path in static_files.items():
                 if "__pycache__" in absolute_file_path:
                     continue
-                filename = relative_file_path
-                # Support files should go in the correct directory.  It might make sense to break these files up
-                # by directory and then just put each directory in the correct location so that we don't have to
-                # list all support files in the future.
-                basename = os.path.basename(absolute_file_path)
-                if basename == "__init__.py":
+                if os.path.basename(absolute_file_path) == "__init__.py":
                     continue
-                elif os.path.basename(os.path.dirname(absolute_file_path)) == Directory.ARCGIS.value:
-                    if basename in ["create_mxd.py", "create_aprx.py", "ReadMe.txt"]:
-                        filename = os.path.join(Directory.ARCGIS.value, "{0}".format(basename))
-                    else:
-                        # Put the support files in the correct directory.
-                        filename = os.path.join(
-                            Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
-                        )
-                manifest_ignore_files.append(filename)
-                zipfile.write(absolute_file_path, arcname=filename)
+                manifest_ignore_files.append(relative_file_path)
+                zipfile.write(absolute_file_path, arcname=relative_file_path)
         for filepath in files:
             # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
             # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)

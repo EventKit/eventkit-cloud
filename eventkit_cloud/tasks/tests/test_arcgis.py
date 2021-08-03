@@ -250,13 +250,14 @@ class TestCreateAPRX(TestCase):
             "eventkit_cloud.tasks.arcgis.create_aprx.update_aprx_from_metadata"
         ) as mock_update_from_metadata:
             test_aprx = "test.aprx"
+            datapack_path = "/example/datapack"
             aprx_contents = "Test data."
             test_metadata = {"metadata_keys": "metadata_values"}
             verify = True
             mock_get_aprx_template.return_value = test_aprx
             mock_open().__enter__().read.return_value = aprx_contents
-            returned_aprx_contents = create_aprx(aprx=test_aprx, metadata=test_metadata, verify=verify)
-            mock_update_from_metadata.assert_called_once_with(test_aprx, test_metadata, verify=verify)
+            returned_aprx_contents = create_aprx(datapack_path, aprx=test_aprx, metadata=test_metadata, verify=verify)
+            mock_update_from_metadata.assert_called_once_with(test_aprx, test_metadata, datapack_path, verify=verify)
             self.assertEqual(aprx_contents, returned_aprx_contents)
             mock_shutil.copy.assert_called_once_with(ANY, test_aprx)
 
@@ -264,15 +265,16 @@ class TestCreateAPRX(TestCase):
         from eventkit_cloud.tasks.arcgis.create_aprx import get_aprx_template
 
         expected_file = "/arcgis/templates/template-2-7.aprx"
+        example_datapack_path = "/test/datapack"
         with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os:
 
             mock_os.path.isfile.return_value = True
             mock_os.path.abspath.return_value = expected_file
-            self.assertEqual(expected_file, get_aprx_template())
+            self.assertEqual(expected_file, get_aprx_template(example_datapack_path))
 
             with self.assertRaises(Exception):
                 mock_os.path.isfile.return_value = False
-                get_aprx_template()
+                get_aprx_template(example_datapack_path)
 
     def test_create_aprx_process(self):
         from eventkit_cloud.tasks.arcgis.create_aprx import create_aprx_process
@@ -282,12 +284,15 @@ class TestCreateAPRX(TestCase):
         ) as mock_pool:
             example_aprx = "value"
             example_metadata = {"some": "data"}
+            example_datapack_path = "/test/datapack"
             result = Mock()
             result.get().return_value = example_aprx
             mock_pool.apply_async().return_value = Mock()
-            create_aprx_process(aprx=example_aprx, metadata=example_metadata, verify=True)
+            create_aprx_process(example_datapack_path, aprx=example_aprx, metadata=example_metadata, verify=True)
             mock_pool.return_value.apply_async.called_once_with(
-                ANY, kwds={"aprx": example_aprx, "metadata": example_metadata, "verify": True}
+                ANY,
+                args=(example_datapack_path,),
+                kwds={"aprx": example_aprx, "metadata": example_metadata, "verify": True},
             )
 
     def test_version(self):
@@ -298,7 +303,7 @@ class TestCreateAPRX(TestCase):
         self.assertEqual(CURRENT_VERSION, test_version)
 
     def test_update_aprx_from_metadata(self):
-        test_version = "2.6"
+        test_version = "2.3"
         self.arcpy.GetInstallInfo.return_value.get.return_value = test_version
         from eventkit_cloud.tasks.arcgis.create_aprx import update_aprx_from_metadata
 
@@ -310,7 +315,7 @@ class TestCreateAPRX(TestCase):
         self.arcpy.mp.ArcGISProject.return_value = mock_aprx
 
         expected_data_sources = ["list of sources"]
-        example_metadata = {"has_vector": True, "data_sources": expected_data_sources}
+        example_metadata = {"name": "example_name", "has_vector": True, "data_sources": expected_data_sources}
         verify = True
 
         with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os, patch(
@@ -330,13 +335,15 @@ class TestCreateAPRX(TestCase):
             mock_add_layer_to_map.return_value = mock_group_layer
             mock_data_sources = Mock()
             mock_get_data_source_by_type.return_value = mock_data_sources
-            update_aprx_from_metadata(file_name=example_file_name, metadata=example_metadata, verify=verify)
+            update_aprx_from_metadata(
+                file_name=example_file_name, metadata=example_metadata, datapack_path=expected_full_path, verify=verify
+            )
             self.arcpy.mp.ArcGISProject.assert_called_once_with(expected_full_path)
             mock_os.path.abspath.assert_called_once_with(example_file_name)
             mock_add_layer_to_map.assert_called_once_with("Vector", mock_layer_file, mock_mapx)
             mock_get_data_source_by_type.assert_called_once_with("vector", expected_data_sources)
             mock_add_layers_to_group.assert_called_once_with(
-                mock_data_sources, mock_group_layer, mock_mapx, verify=verify
+                mock_data_sources, mock_group_layer, mock_mapx, expected_full_path, verify=verify
             )
 
     def test_get_data_source_by_type(self):
@@ -466,7 +473,9 @@ class TestCreateAPRX(TestCase):
 
             example_layer_file = "vector"
             mock_get_layer_file.return_value = example_layer_file
-            add_layers_to_group(example_source, example_layer_file, example_mapx, verify, example_version)
+            add_layers_to_group(
+                example_source, example_layer_file, example_mapx, file_path, verify=verify, version=example_version
+            )
             mock_add_layer_to_map.assert_called_with(
                 "OSM_4326_gpkg", example_layer_file, example_mapx, group_layer=example_layer_file
             )
@@ -491,7 +500,7 @@ class TestCreateAPRX(TestCase):
 
             example_layer_file = "raster"
             mock_get_layer_file.return_value = example_layer_file
-            add_layers_to_group(example_source, example_layer_file, example_mapx, verify, example_version)
+            add_layers_to_group(example_source, example_layer_file, example_mapx, file_path, verify, example_version)
 
             mock_add_layer_to_map.assert_called_with(
                 "Imagery_4326_gpkg", example_layer_file, example_mapx, group_layer=example_layer_file
