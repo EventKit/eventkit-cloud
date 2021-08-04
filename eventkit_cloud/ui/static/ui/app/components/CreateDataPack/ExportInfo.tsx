@@ -443,16 +443,6 @@ export function ExportInfo(props: Props) {
             name: "Alphabetical Z-A",
             slug: "alphabetical-z-a",
             isChecked: false
-        },
-        {
-            name: "Newest First",
-            slug: "newest-first",
-            isChecked: false
-        },
-        {
-            name: "Oldest First",
-            slug: "oldest-first",
-            isChecked: false
         }
     ])
 
@@ -773,8 +763,6 @@ export function ExportInfo(props: Props) {
     }
 
     const getProviders = () => {
-        // During rapid state updates, it is possible that duplicate providers get added to the list.
-        // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = filterProviders(currentProviders);
 
@@ -813,12 +801,6 @@ export function ExportInfo(props: Props) {
             case "alphabetical-z-a":
                 sortedProviders = sortProvidersZtoA(currentProviders);
                 break;
-            case "newest-first":
-                sortedProviders = sortProvidersNewestFirst(currentProviders);
-                break;
-            case "oldest-first":
-                sortedProviders = sortProvidersOldestFirst(currentProviders);
-                break;
             default:
                 sortedProviders = sortProvidersAtoZ(currentProviders);
                 break;
@@ -826,24 +808,12 @@ export function ExportInfo(props: Props) {
         return sortedProviders;
     };
 
-    const removeFilter = (filter) => {
-        console.log("REMOVING FILTER", filter)
-    }
-
     const sortProvidersAtoZ = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     const sortProvidersZtoA = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
-    }
-
-    const sortProvidersNewestFirst = (currentProviders) => {
-        return currentProviders.sort((a, b) => (a.created_at.localeCompare(b.created_at))).reverse();
-    }
-
-    const sortProvidersOldestFirst = (currentProviders) => {
-        return currentProviders.sort((a, b) => (a.created_at.localeCompare(b.created_at)));
     }
 
     const projectionHasErrors = (srid: number) => {
@@ -880,23 +850,11 @@ export function ExportInfo(props: Props) {
         </BaseDialog>);
     }
 
-    // TODO: Simplify this.  Seems like there's too many lines for what should be fairly simple.
     const onFilterCheckboxChanged = (filter) => {
         if (providerFilterList.some(item => item.slug == filter.slug)) {
-            let newFilterOptions = [...filterOptions]
-            let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
-            let optionIndex = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug)
-            newFilterOptions[0].options[optionIndex].isChecked = false;
-            setFilterOptions(newFilterOptions)
-            setProviderFilterList(providerFilterList.filter(item => item.slug !== filter.slug));
-
+            removeProviderFilter(filter);
         } else {
-            let newFilterOptions = [...filterOptions]
-            let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
-            let index = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug);
-            newFilterOptions[0].options[index].isChecked = true;
-            setFilterOptions(newFilterOptions)
-            setProviderFilterList([...providerFilterList, filter]);
+            addProviderFilter(filter);
         }
     }
 
@@ -909,6 +867,26 @@ export function ExportInfo(props: Props) {
 
         setProviderSortOption(sort)
     }
+
+    const addProviderFilter = (filter) => {
+        let newFilterOptions = [...filterOptions]
+        let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
+        let index = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug);
+
+        newFilterOptions[0].options[index].isChecked = true;
+        setFilterOptions(newFilterOptions)
+        setProviderFilterList([...providerFilterList, filter]);
+    };
+
+    const removeProviderFilter = (filter) => {
+        let newFilterOptions = [...filterOptions]
+        let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
+        let optionIndex = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug)
+
+        newFilterOptions[0].options[optionIndex].isChecked = false;
+        setFilterOptions(newFilterOptions)
+        setProviderFilterList(providerFilterList.filter(item => item.slug !== filter.slug));
+    };
 
     const clearFilterOptions = () => {
         let newFilterOptions = [...filterOptions];
@@ -974,7 +952,6 @@ export function ExportInfo(props: Props) {
                                 className={`qa-ExportInfo-mainHeading ${classes.heading}`}
                             >
                                 Enter General Information
-                                {providerFilterList.map(filter => filter.name)}
                             </div>
                             <div style={{marginBottom: '30px'}}>
                                 <DebouncedTextField
@@ -1075,7 +1052,7 @@ export function ExportInfo(props: Props) {
                                         <Chip
                                             className={classes.filterChip}
                                             label={filter.name}
-                                            onDelete={() => removeFilter(filter)}
+                                            onDelete={() => removeProviderFilter(filter)}
                                         />
                                     )))}
                                 </div>
