@@ -2287,9 +2287,14 @@ class EstimatorView(views.APIView):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                provider_estimate = cache.get_or_set(
+                size, time = cache.get_or_set(
                     cache_key, lambda: estimator.get_provider_estimates(slug), ESTIMATE_CACHE_TIMEOUT
                 )
+                provider_estimate = {
+                    "slug": slug,
+                    "size": {"value": size, "unit": "MB"},
+                    "time": {"value": time, "unit": "seconds"},
+                }
                 payload += [provider_estimate]
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
