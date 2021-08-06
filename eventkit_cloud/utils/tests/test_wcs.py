@@ -2,11 +2,11 @@
 import logging
 import os
 from string import Template
+from unittest.mock import Mock, patch, ANY
 from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase
-from unittest.mock import Mock, patch, ANY
 
 from eventkit_cloud.utils.wcs import WCSConverter
 
@@ -21,7 +21,7 @@ class TestWCSConverter(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch("eventkit_cloud.utils.wcs.retry")
+    @patch("eventkit_cloud.utils.wcs.gdalutils.retry")
     @patch("eventkit_cloud.utils.wcs.auth_requests.get_cred")
     @patch("eventkit_cloud.utils.wcs.os.write")
     @patch("eventkit_cloud.utils.wcs.os.path.exists")
@@ -94,9 +94,8 @@ class TestWCSConverter(TransactionTestCase):
         with self.assertRaises(Exception):
             wcs_conv.convert()
 
-    @patch("eventkit_cloud.utils.wcs.retry")
     @patch("eventkit_cloud.utils.wcs.os.path.exists")
-    def test_convert_geopackage(self, exists, mock_retry):
+    def test_convert_geopackage(self, exists):
         geotiff = "/path/to/geopackage.gpkg"
         bbox = [-45, -45, 45, 45]
         layer = "awesomeLayer"
@@ -140,3 +139,8 @@ class TestWCSConverter(TransactionTestCase):
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
             wcs_conv.convert()
+
+        self.task_process.return_value = Mock(exitcode=1)
+        with patch("requests.Session.get", return_value=None):
+            with self.assertRaises(Exception):
+                wcs_conv.convert()

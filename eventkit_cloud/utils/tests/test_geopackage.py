@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+import doctest
 import logging
 import os
+from unittest.mock import Mock, patch, call
 from uuid import uuid4
 
 from django.test import TransactionTestCase
-from unittest.mock import Mock, patch, call
 
+from eventkit_cloud.utils import geopackage
 from eventkit_cloud.utils.geopackage import (
     add_geojson_to_geopackage,
     get_table_count,
@@ -26,16 +28,17 @@ from eventkit_cloud.utils.geopackage import (
     add_file_metadata,
 )
 
-
 logger = logging.getLogger(__name__)
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(geopackage))
+    return tests
 
 
 class TestGeopackage(TransactionTestCase):
     def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.task_process_patcher = patch("eventkit_cloud.utils.geopackage.TaskProcess")
-        self.task_process = self.task_process_patcher.start()
-        self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
     @patch("eventkit_cloud.utils.geopackage.sqlite3")

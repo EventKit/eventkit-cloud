@@ -1,15 +1,13 @@
 import logging
-import eventkit_cloud.utils.stats.generator as ek_stats
+from enum import Enum
 
 from django.core.exceptions import ObjectDoesNotExist
-
 from mapproxy import grid as mapproxy_grid
 from mapproxy import srs as mapproxy_srs
 
+import eventkit_cloud.utils.stats.generator as ek_stats
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
-
-from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +107,11 @@ class AoiEstimator(object):
             return self._get_time_estimate(provider)
         # This ideally should never be reached, it can only be reached when calling this directly.
         raise ValueError(f"""Unable to compute '{estimate_type}' estimate.""")
+
+    def get_provider_estimates(self, slug):
+        size = self.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
+        time = self.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
+        return {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
 
     def _get_size_estimate(self, provider):
         """Get size estimate for this provider by checking the provider type."""

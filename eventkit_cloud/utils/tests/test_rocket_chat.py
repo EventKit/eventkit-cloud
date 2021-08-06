@@ -1,7 +1,9 @@
-from django.test import TestCase
-from eventkit_cloud.utils.rocket_chat import RocketChat
 import json
+
 import requests_mock
+from django.test import TestCase
+
+from eventkit_cloud.utils.rocket_chat import RocketChat
 
 
 class TestRocketChatClient(TestCase):

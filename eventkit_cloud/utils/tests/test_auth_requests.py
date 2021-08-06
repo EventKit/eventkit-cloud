@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import http.client
 import logging
-import urllib
 import os
+import urllib
 from unittest.mock import patch, MagicMock, ANY, mock_open
 
 import requests
-from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
-
 from django.test import TransactionTestCase
+from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
 
 from eventkit_cloud.utils import auth_requests
 
@@ -41,21 +40,6 @@ class TestAuthResult(TransactionTestCase):
 
         req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.get")
-    def test_get(self, get_patch):
-        self.do_tests(auth_requests.get, get_patch)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.head")
-    def test_head(self, get_patch):
-        self.do_tests(auth_requests.head, get_patch)
-
-    @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.requests_pkcs12.post")
-    def test_post(self, post_patch):
-        self.do_tests(auth_requests.post, post_patch)
 
     @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
     @patch("eventkit_cloud.utils.auth_requests.create_ssl_context")

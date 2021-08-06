@@ -371,8 +371,7 @@ LOGGING = {
 ssl_verification_settings = os.getenv("SSL_VERIFICATION", "true")
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
-    if not os.getenv("REQUESTS_CA_BUNDLE"):
-        os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
+    os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
     SSL_VERIFICATION = is_true(ssl_verification_settings)
 
@@ -393,3 +392,5 @@ REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIME
 
 OSM_MAX_TMPFILE_SIZE = os.getenv("OSM_MAX_TMPFILE_SIZE", "100")
 OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
+
+DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.9.0")

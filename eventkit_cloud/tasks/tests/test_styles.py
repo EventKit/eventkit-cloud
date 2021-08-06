@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import datetime
 import os
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase
-from unittest.mock import patch
 
 from eventkit_cloud.tasks.helpers import generate_qgs_style
 

@@ -1,8 +1,11 @@
 import logging
+import os
+from unittest.mock import patch
+
 import requests
 from django.conf import settings
 from django.test import TestCase, override_settings
-from unittest.mock import patch
+
 from eventkit_cloud.utils.geocoding.geocode_auth import (
     get_auth_headers,
     CACHE_COOKIE_KEY,
@@ -54,20 +57,26 @@ class TestGeoCodeAuth(TestCase):
         self.assertEquals(example_cookies, get_session_cookies())
         mock_cache.get.assert_called_once_with(CACHE_COOKIE_KEY)
 
+    @patch.dict(
+        os.environ, {"GEOCODING_AUTH_CERT_PATH": "/path/to/fake/file", "GEOCODING_AUTH_CERT_PASS_VAR": "123456"}
+    )
     @patch("eventkit_cloud.utils.geocoding.geocode_auth.cache")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth.auth_requests")
-    def test_authenticate(self, mock_auth_requests, mock_cache):
+    @patch("requests.Session.get")
+    @patch("requests.Response")
+    def test_authenticate(self, mock_response, mock_session_get, mock_cache):
         with self.settings(GEOCODING_AUTH_URL="http://test.test"):
             example_token = "test_token"
             example_response = {"token": example_token}
-            mock_auth_requests.get().json.return_value = example_response
+            mock_response.json.return_value = example_response
+            mock_session_get.return_value = mock_response
             self.assertEquals(example_token, authenticate())
             mock_cache.set.assert_called_once_with(CACHE_TOKEN_KEY, example_token, CACHE_TOKEN_TIMEOUT)
             mock_cache.reset_mock()
 
         with self.settings(GEOCODING_AUTH_URL="http://test.test"):
             example_response = {}
-            mock_auth_requests.get().json.return_value = example_response
+            mock_response.json.return_value = example_response
+            mock_session_get.return_value = mock_response
             self.assertIsNone(authenticate())
             mock_cache.set.assert_called_once_with(CACHE_TOKEN_KEY, settings.GEOCODING_AUTH_URL, CACHE_TOKEN_TIMEOUT)
             mock_cache.reset_mock()
@@ -76,6 +85,7 @@ class TestGeoCodeAuth(TestCase):
             self.assertIsNone(authenticate())
 
         with self.settings(GEOCODING_AUTH_URL="http://test.test"):
-            mock_auth_requests.get().json.side_effect = requests.exceptions.RequestException()
+            mock_response.json.side_effect = requests.exceptions.RequestException()
+            mock_session_get.return_value = mock_response
             self.assertIsNone(authenticate())
             mock_cache.delete.assert_called_once_with(CACHE_TOKEN_KEY)

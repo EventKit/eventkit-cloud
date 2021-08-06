@@ -11,7 +11,7 @@ import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
-import {useAsyncRequest} from "../../utils/hooks/api";
+import {ACTIONS, useAsyncRequest} from "../../utils/hooks/api";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     iconBtn: {
@@ -41,8 +41,7 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     overArea: boolean;
     aoiArea: number;
     providerInfo: Eventkit.Store.ProviderInfo;
-    providerHasEstimates: boolean;
-    areEstimatesLoading: boolean;
+    isProviderLoading: boolean;
     supportsZoomLevels: boolean;
     baseStyle?: any;
     iconStyle?: any;
@@ -68,7 +67,6 @@ const source = CancelToken.source();
 
 export function ProviderStatusCheck(props: Props) {
     const {
-        areEstimatesLoading, providerHasEstimates,
         aoiArea, providerInfo, provider, geojson
     } = props;
     const [anchorElement, setAnchor] = useState(null);
@@ -134,10 +132,9 @@ export function ProviderStatusCheck(props: Props) {
         },
     };
 
-    const avail = props.availability.status ?
-        props.availability :
-        {status: 'PENDING', type: 'PENDING', message: "This data provider's availability is being checked."};
-
+    const avail = (props.isProviderLoading) ?
+        {status: STATUS.PENDING, type: STATUS.PENDING, message: "Waiting for results."}:
+        props.availability;
 
     let StatusIcon;
     let title;
@@ -152,20 +149,14 @@ export function ProviderStatusCheck(props: Props) {
         message = makeMessage('');
         title = 'CANNOT SELECT';
     } else {
-        if (areEstimatesLoading) {
-            status = STATUS.ESTIMATES_PENDING;
+        if (props.overSize) {
+            status = STATUS.OVER_DATA_SIZE;
+        } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
+            status = STATUS.SUCCESS;
+            message = makeMessage('No problems: Export should proceed without issues.', false);
         } else {
-            if (providerHasEstimates) {
-                if (props.overSize) {
-                    status = STATUS.OVER_DATA_SIZE;
-                } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
-                    status = STATUS.SUCCESS;
-                    message = makeMessage('No problems: Export should proceed without issues.', false);
-                }
-            } else {
-                if (props.overArea) {
-                    status = STATUS.OVER_AREA_SIZE;
-                }
+            if (props.overArea) {
+                status = STATUS.OVER_AREA_SIZE;
             }
         }
         switch (status) {
@@ -193,7 +184,7 @@ export function ProviderStatusCheck(props: Props) {
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;
                 title = 'AOI TOO LARGE';
-                message = makeMessage('The selected AOI larger than the maximum allowed size for this provider.', false);
+                message = makeMessage('The selected AOI is larger than the maximum allowed size for this provider.', false);
                 break;
             case STATUS.OVER_DATA_SIZE:
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
@@ -207,11 +198,16 @@ export function ProviderStatusCheck(props: Props) {
                 break;
             case STATUS.ESTIMATES_PENDING:
             case STATUS.PENDING:
-            default:
                 StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
                 message = makeMessage('');
                 otherProps = {thickness: 2, size: 20, color: 'primary'};
+                break;
+            default:
+                StatusIcon = AlertWarning;
+                title = 'SELECT A PROVIDER';
+                message = makeMessage('');
+                otherProps = {visibility: 'hidden'};
                 break;
         }
     }

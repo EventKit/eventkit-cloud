@@ -4,13 +4,13 @@ import json
 import logging
 import os
 import uuid
+from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.files import File
 from django.test import TestCase
 from django.utils import timezone
-from unittest.mock import MagicMock, Mock, patch
 
 from eventkit_cloud.jobs.admin import get_example_from_file
 from eventkit_cloud.jobs.models import (

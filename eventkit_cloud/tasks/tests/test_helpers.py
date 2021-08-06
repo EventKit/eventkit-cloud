@@ -2,12 +2,15 @@
 
 import json
 import logging
-import requests_mock
 import signal
+import requests_mock
+import requests
 
-from django.test import TestCase
 from django.conf import settings
+from django.test import TestCase
 from django.utils import timezone
+
+from eventkit_cloud.tasks.enumerations import TaskState
 from unittest.mock import patch, call, Mock, MagicMock
 import os
 from eventkit_cloud.tasks.helpers import (
@@ -24,10 +27,8 @@ from eventkit_cloud.tasks.helpers import (
     delete_rabbit_objects,
     get_download_filename,
     get_data_package_manifest,
+    update_progress,
 )
-
-from eventkit_cloud.tasks.enumerations import TaskState
-
 from eventkit_cloud.tasks.helpers import progressive_kill
 
 logger = logging.getLogger(__name__)
@@ -80,18 +81,18 @@ class TestHelpers(TestCase):
         get_last_update(test_url, test_type)
         mock_get_osm_last_update.assert_called_once_with(test_url, cert_info=None)
 
-    @patch("eventkit_cloud.tasks.helpers.auth_requests")
-    def test_get_osm_last_update(self, mock_auth_requests):
+    @patch.object(requests.Session, "get")
+    def test_get_osm_last_update(self, mock_get):
         test_url = "https://test/interpreter"
         expected_url = "https://test/timestamp"
         expected_time = "2017-12-29T13:09:59Z"
 
-        mock_auth_requests.get.return_value.content.decode.return_value = expected_time
+        mock_get.return_value.content.decode.return_value = expected_time
         returned_time = get_osm_last_update(test_url)
-        mock_auth_requests.get.assert_called_once_with(expected_url, cert_info=None)
+        mock_get.assert_called_once_with(expected_url)
         self.assertEqual(expected_time, returned_time)
 
-        mock_auth_requests.get.side_effect = Exception("FAIL")
+        mock_get.side_effect = Exception("FAIL")
         returned_time = get_osm_last_update(test_url)
         self.assertIsNone(returned_time)
 
@@ -105,7 +106,7 @@ class TestHelpers(TestCase):
         returned_value = get_metadata_url(test_url, "arcgis-raster")
         self.assertEqual(test_url, returned_value)
 
-    @patch("eventkit_cloud.tasks.helpers.get_cached_model")
+    @patch("eventkit_cloud.core.helpers.get_cached_model")
     def test_get_download_filename(self, mock_get_cached_model):
         name = "test_datapack"
         ext = ".gpkg"
@@ -397,3 +398,17 @@ class TestHelpers(TestCase):
         expected_output_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(example_uid), "manifest.xml")
         mock_open.assert_called_once_with(expected_output_file, "w")
         mock_open().__enter__().write.assert_called_once_with(expected_xml)
+
+    @patch("eventkit_cloud.tasks.helpers.set_cache_value")
+    @patch("django.db.connection.close")
+    def test_update_progress(self, mock_close, mock_set_cache_value):
+        uid = "1234"
+        estimated = timezone.now()
+        update_progress(uid, progress=50, estimated_finish=estimated)
+        mock_close.assert_called_once()
+        mock_set_cache_value.assert_has_calls(
+            [
+                call(uid=uid, attribute="progress", model_name="ExportTaskRecord", value=50),
+                call(uid=uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated),
+            ]
+        )

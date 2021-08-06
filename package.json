@@ -11,7 +11,7 @@
     "axios": "0.21.1",
     "connected-react-router": "6.8.0",
     "jsts": "2.3.0",
-    "lodash": "4.17.19",
+    "lodash": "4.17.21",
     "moment": "2.27.0",
     "normalizr": "3.6.0",
     "numeral": "2.0.6",

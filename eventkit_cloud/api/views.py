@@ -2,9 +2,9 @@
 
 """Provides classes for handling API requests."""
 import logging
-from audit_logging.models import AuditEvent
-
 from datetime import datetime, timedelta
+
+from audit_logging.models import AuditEvent
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -13,6 +13,7 @@ from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,7 +22,7 @@ from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
+from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
@@ -35,7 +36,7 @@ from eventkit_cloud.api.filters import (
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
-from eventkit_cloud.api.renderers import HOTExportApiRenderer, PlainTextRenderer
+from eventkit_cloud.api.renderers import GeojsonRenderer, PlainTextRenderer
 from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
     DataProviderRequestSerializer,
@@ -62,10 +63,16 @@ from eventkit_cloud.api.serializers import (
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
     UserJobActivitySerializer,
+    ExportRunGeoFeatureSerializer,
 )
-from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.api.utils import get_run_zip_file
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.core.helpers import (
+    sendnotification,
+    NotificationVerb,
+    NotificationLevel,
+    get_query_cache_key,
+)
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
@@ -93,6 +100,7 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
+from eventkit_cloud.tasks.helpers import get_celery_queue_group
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -109,7 +117,7 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.gdalutils import get_area
+from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
@@ -118,12 +126,17 @@ from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
-renderer_classes = (JSONRenderer, HOTExportApiRenderer)
+renderer_classes = (BrowsableAPIRenderer, JSONRenderer)
 
-ESTIMATE_CACHE_TIMEOUT = 600
+DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
+ESTIMATE_CACHE_TIMEOUT = 60 * 60 * 12
 
 
-class JobViewSet(viewsets.ModelViewSet):
+class EventkitViewSet(viewsets.ModelViewSet):
+    renderer_classes = renderer_classes
+
+
+class JobViewSet(EventkitViewSet):
     """
     Main endpoint for export creation and management. Provides endpoints
     for creating, listing and deleting export jobs.
@@ -170,7 +183,7 @@ class JobViewSet(viewsets.ModelViewSet):
     )
 
     def dispatch(self, request, *args, **kwargs):
-        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
+        return EventkitViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -404,6 +417,11 @@ class JobViewSet(viewsets.ModelViewSet):
                                 max_selection = provider.get_max_selection_size(self.request.user)
                                 max_data_size = provider.get_max_data_size(self.request.user)
 
+                                if provider.get_use_bbox():
+                                    area = get_bbox_area_in_sqkm(job.the_geom)
+                                else:
+                                    area = get_area_in_sqkm(job.the_geom)
+
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
                                 if size and max_data_size is not None:
@@ -423,7 +441,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                             }
                                         ]
 
-                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                if max_selection and 0 < float(max_selection) < area:
                                     status_code = status.HTTP_400_BAD_REQUEST
                                     error_data["errors"] += [
                                         {
@@ -494,16 +512,12 @@ class JobViewSet(viewsets.ModelViewSet):
 
             running = JobSerializer(job, context={"request": request})
 
-            # Run is passed to celery to start the tasks.
-            pick_up_run_task.apply_async(
-                queue="runs",
-                routing_key="runs",
-                kwargs={
-                    "run_uid": run_uid,
-                    "user_details": user_details,
-                    "session_token": request.session.get("access_token"),
-                },
-            )
+            # It scaling by run we don't put the task on the queue we just run on demand.
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                # Run is passed to celery to start the tasks.
+                pick_up_run_task(
+                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
+                )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -541,12 +555,12 @@ class JobViewSet(viewsets.ModelViewSet):
             )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
-            logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.apply_async(
-                queue="runs",
-                routing_key="runs",
-                kwargs={"run_uid": run_uid, "user_details": user_details},
-            )
+            if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
+                pick_up_run_task(
+                    run_uid=run_uid,
+                    user_details=user_details,
+                    session_token=request.session.get("access_token"),
+                )
             logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
             logger.debug("Returning Run Data.")
@@ -849,7 +863,12 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None)).order_by(*self.ordering)
+        return (
+            DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
+            .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
+            .filter(Q(user=self.request.user) | Q(user=None))
+            .order_by(*self.ordering)
+        )
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
@@ -864,14 +883,14 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             geojson = self.request.data.get("geojson", None)
             providers, filtered_provider = attribute_class_filter(self.get_queryset(), self.request.user)
             provider = providers.get(slug=slug)
-            return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
+            return JsonResponse(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist:
             raise NotFound(code="not_found", detail="Could not find the requested provider.")
 
         except Exception as e:
             logger.error(e)
-            raise APIException("server_error", detail="Internal server error.")
+            raise APIException(code="server_error", detail="Internal server error.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -879,9 +898,17 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * slug: optional lookup field
         * return: A list of data providers.
         """
-        providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
-        data = DataProviderSerializer(providers, many=True, context={"request": request}).data
-        data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+
+        cache_key = get_query_cache_key(DataProvider, User, "serialized")
+        data = cache.get(cache_key)
+        if not data:
+            providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
+
+            data = DataProviderSerializer(providers, many=True, context={"request": request}).data
+            data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+
+            cache.set(cache_key, data, timeout=DEFAULT_TIMEOUT)
+
         return Response(data)
 
     def retrieve(self, request, slug=None, *args, **kwargs):
@@ -946,7 +973,7 @@ class RegionalPolicyViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "uid"
 
 
-class RegionalJustificationViewSet(viewsets.ModelViewSet):
+class RegionalJustificationViewSet(EventkitViewSet):
     serializer_class = RegionalJustificationSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "uid"
@@ -959,7 +986,7 @@ class RegionalJustificationViewSet(viewsets.ModelViewSet):
             return RegionalJustification.objects.filter(user=self.request.user)
 
 
-class ExportRunViewSet(viewsets.ModelViewSet):
+class ExportRunViewSet(EventkitViewSet):
     """
     **retrieve:**
 
@@ -1009,9 +1036,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     To filter by geojson send the geojson geometry in the body of a POST request under the key `geojson`.
     """
 
-    serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = LinkHeaderPagination
+    renderer_classes += (GeojsonRenderer,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_class = ExportRunFilter
     lookup_field = "uid"
@@ -1034,6 +1061,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         "job__featured",
     )
     ordering = ("-started_at",)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if (
+            self.request.query_params.get("format", "").lower() == "geojson"
+            or self.request.headers.get("content-type") == "application/geo+json"
+        ):
+            return ExportRunGeoFeatureSerializer
+        return ExportRunSerializer
 
     def get_queryset(self):
         jobs = JobPermission.userjobs(self.request.user, "READ")
@@ -1309,15 +1344,18 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             run.status = TaskState.SUBMITTED.value
 
             running = ExportRunSerializer(run, context={"request": request})
+            celery_group_name = get_celery_queue_group(run_uid=run.uid)
             rerun_data_provider_records.apply_async(
-                args=(run.uid, request.user.id, user_details, data_provider_slugs), queue="runs", routing_key="runs"
+                args=(run.uid, request.user.id, user_details, data_provider_slugs),
+                queue=celery_group_name,
+                routing_key=celery_group_name,
             )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
 
 
-class RunZipFileViewSet(viewsets.ModelViewSet):
+class RunZipFileViewSet(EventkitViewSet):
     serializer_class = RunZipFileSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "uid"
@@ -1408,7 +1446,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
-class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
+class DataProviderTaskRecordViewSet(EventkitViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
@@ -1740,7 +1778,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
         return Response({}, content_type="application/json", status=status.HTTP_200_OK)
 
 
-class GroupViewSet(viewsets.ModelViewSet):
+class GroupViewSet(EventkitViewSet):
     """
     Api components for viewing, creating, and editing groups
 
@@ -2086,7 +2124,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(EventkitViewSet):
     """
     Api components for viewing and working with notifications
     """
@@ -2210,7 +2248,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({"success": True}, status=status.HTTP_200_OK)
 
 
-class DataProviderRequestViewSet(viewsets.ModelViewSet):
+class DataProviderRequestViewSet(EventkitViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     serializer_class = DataProviderRequestSerializer
     lookup_field = "uid"
@@ -2230,7 +2268,7 @@ class DataProviderRequestViewSet(viewsets.ModelViewSet):
         return DataProviderRequest.objects.filter(user=user)
 
 
-class SizeIncreaseRequestViewSet(viewsets.ModelViewSet):
+class SizeIncreaseRequestViewSet(EventkitViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     serializer_class = SizeIncreaseRequestSerializer
     lookup_field = "uid"
@@ -2276,13 +2314,11 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-                size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-                time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-                payload += [
-                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
-                ]
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                cache.set(cache_key, (size, time), ESTIMATE_CACHE_TIMEOUT)
+                provider_estimate = cache.get_or_set(
+                    cache_key, lambda: estimator.get_provider_estimates(slug), ESTIMATE_CACHE_TIMEOUT
+                )
+                payload += [provider_estimate]
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)

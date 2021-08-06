@@ -3,15 +3,16 @@
 
 import itertools
 import logging
-import os
 
 from celery import chain
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.jobs.models import Job, JobPermission, JobPermissionLevel
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
     finalize_export_provider_task,
     TaskPriority,
@@ -29,7 +30,11 @@ from eventkit_cloud.tasks.export_tasks import (
     ogcapi_process_export_task,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir
+from eventkit_cloud.tasks.helpers import (
+    get_run_staging_dir,
+    get_provider_staging_dir,
+    get_celery_queue_group,
+)
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
 from django.contrib.auth import get_user_model
@@ -58,6 +63,9 @@ class TaskFactory:
             "vector-file": vector_file_export_task,
             "raster-file": raster_file_export_task,
             "ogcapi-process": ogcapi_process_export_task,
+            "ogcapi-process-raster": ogcapi_process_export_task,
+            "ogcapi-process-elevation": ogcapi_process_export_task,
+            "ogcapi-process-vector": ogcapi_process_export_task,
         }
 
     def parse_tasks(
@@ -68,6 +76,7 @@ class TaskFactory:
         data_provider_slugs=None,
         run_zip_file_slug_sets=None,
         session_token=None,
+        queue_group=None,
     ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
@@ -109,137 +118,117 @@ class TaskFactory:
         if user_details is None:
             user_details = {"username": "TaskFactory-parse_tasks"}
 
-        if run_uid:
-            run = ExportRun.objects.get(uid=run_uid)
-            job = run.job
-            run_dir = get_run_staging_dir(run.uid)
+        if not run_uid:
+            raise Exception("Cannot parse_tasks without a run uid.")
 
-            if not os.path.exists(run_dir):
-                os.makedirs(run_dir, 0o750)
+        run = ExportRun.objects.get(uid=run_uid)
+        job = run.job
+        run_dir = get_run_staging_dir(run.uid)
 
-            queue_group = os.getenv("CELERY_GROUP_NAME", worker)
-            wait_for_providers_settings = {
-                "queue": f"{queue_group}.priority",
-                "routing_key": f"{queue_group}.priority",
-                "priority": TaskPriority.FINALIZE_PROVIDER.value,
-            }
+        wait_for_providers_settings = {
+            "queue": f"{queue_group}.priority",
+            "routing_key": f"{queue_group}.priority",
+            "priority": TaskPriority.FINALIZE_PROVIDER.value,
+        }
 
-            finalize_task_settings = {
-                "interval": 4,
-                "max_retries": 10,
-                "queue": f"{queue_group}.priority",
-                "routing_key": f"{queue_group}.priority",
-                "priority": TaskPriority.FINALIZE_RUN.value,
-            }
+        finalize_task_settings = {
+            "interval": 4,
+            "max_retries": 10,
+            "queue": f"{queue_group}.priority",
+            "routing_key": f"{queue_group}.priority",
+            "priority": TaskPriority.FINALIZE_RUN.value,
+        }
 
-            finalized_provider_task_chain_list = []
-            # Create a task record which can hold tasks for the run (datapack)
-            run_task_record = DataProviderTaskRecord.objects.create(
-                run=run,
-                name="run",
-                slug="run",
-                status=TaskState.PENDING.value,
-                display=False,
-            )
-            stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
-            if not os.path.exists(stage_dir):
-                os.makedirs(stage_dir, 0o750)
+        finalized_provider_task_chain_list = []
+        # Create a task record which can hold tasks for the run (datapack)
+        run_task_record = DataProviderTaskRecord.objects.create(
+            run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
+        )
 
-            run_zip_task_chain = get_zip_task_chain(
-                data_provider_task_record_uid=run_task_record.uid,
-                stage_dir=get_run_staging_dir(run_uid),
-                worker=worker,
-            )
-            for provider_task in job.data_provider_tasks.all():
-                # Skip any providers that weren't selected to be re-run.
-                if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
-                    continue
+        run_zip_task_chain = get_zip_task_chain(data_provider_task_record_uid=run_task_record.uid, worker=worker,)
+        for provider_task in job.data_provider_tasks.all():
+            # Skip any providers that weren't selected to be re-run.
+            if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
+                continue
 
-                if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
-                    # Each task builder has a primary task which pulls the source data, grab that task here...
-                    type_name = provider_task.provider.export_provider_type.type_name
+            if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
+                # Each task builder has a primary task which pulls the source data, grab that task here...
+                type_name = provider_task.provider.export_provider_type.type_name
 
-                    primary_export_task = self.type_task_map.get(type_name)
+                primary_export_task = self.type_task_map.get(type_name)
 
-                    stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
-                    if not os.path.exists(stage_dir):
-                        os.makedirs(stage_dir, 0o750)
+                stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
+                args = {
+                    "primary_export_task": primary_export_task,
+                    "user": job.user,
+                    "provider_task_uid": provider_task.uid,
+                    "stage_dir": stage_dir,
+                    "run": run,
+                    "service_type": provider_task.provider.export_provider_type.type_name,
+                    "worker": worker,
+                    "user_details": user_details,
+                    "session_token": session_token,
+                }
 
-                    args = {
-                        "primary_export_task": primary_export_task,
-                        "user": job.user,
-                        "provider_task_uid": provider_task.uid,
-                        "run": run,
-                        "stage_dir": stage_dir,
-                        "service_type": provider_task.provider.export_provider_type.type_name,
-                        "worker": worker,
-                        "user_details": user_details,
-                        "session_token": session_token,
-                    }
+                (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
 
-                    (
-                        provider_task_record_uid,
-                        provider_subtask_chain,
-                    ) = TaskChainBuilder().build_tasks(**args)
-
-                    wait_for_providers_signature = wait_for_providers_task.s(
+                wait_for_providers_signature = wait_for_providers_task.s(
+                    run_uid=run_uid,
+                    locking_task_key=run_uid,
+                    callback_task=create_finalize_run_task_collection(
                         run_uid=run_uid,
-                        locking_task_key=run_uid,
-                        callback_task=create_finalize_run_task_collection(
-                            run_uid,
-                            run_dir,
-                            run_zip_task_chain,
-                            run_zip_file_slug_sets=run_zip_file_slug_sets,
-                            apply_args=finalize_task_settings,
-                        ),
+                        run_provider_task_record_uid=run_task_record.uid,
+                        run_zip_task_chain=run_zip_task_chain,
+                        run_zip_file_slug_sets=run_zip_file_slug_sets,
                         apply_args=finalize_task_settings,
-                    ).set(**wait_for_providers_settings)
+                    ),
+                    apply_args=finalize_task_settings,
+                ).set(**wait_for_providers_settings)
 
-                    if provider_subtask_chain:
-                        # The finalize_export_provider_task will check all of the export tasks
-                        # for this provider and save the export provider's status.
+                if provider_subtask_chain:
+                    # The finalize_export_provider_task will check all of the export tasks
+                    # for this provider and save the export provider's status.
 
-                        selection_task = create_task(
+                    selection_task = create_task(
+                        data_provider_task_record_uid=provider_task_record_uid,
+                        worker=worker,
+                        task=output_selection_geojson_task,
+                        selection=job.the_geom.geojson,
+                        user_details=user_details,
+                    )
+
+                    # create signature to close out the provider tasks
+                    finalize_export_provider_signature = finalize_export_provider_task.s(
+                        data_provider_task_uid=provider_task_record_uid,
+                        status=TaskState.COMPLETED.value,
+                        locking_task_key=run_uid,
+                    ).set(**finalize_task_settings)
+
+                    # add zip if required
+                    # skip zip if there is only one source in the data pack (they would be redundant files).
+                    if provider_task.provider.zip and len(job.data_provider_tasks.all()) > 1:
+                        zip_export_provider_sig = get_zip_task_chain(
                             data_provider_task_record_uid=provider_task_record_uid,
-                            stage_dir=stage_dir,
+                            data_provider_task_record_uids=[provider_task_record_uid],
                             worker=worker,
-                            task=output_selection_geojson_task,
-                            selection=job.the_geom.geojson,
-                            user_details=user_details,
                         )
+                        provider_subtask_chain = chain(provider_subtask_chain, zip_export_provider_sig)
 
-                        # create signature to close out the provider tasks
-                        finalize_export_provider_signature = finalize_export_provider_task.s(
-                            data_provider_task_uid=provider_task_record_uid,
-                            status=TaskState.COMPLETED.value,
-                            locking_task_key=run_uid,
-                        ).set(**finalize_task_settings)
-
-                        # add zip if required
-                        if provider_task.provider.zip:
-                            zip_export_provider_sig = get_zip_task_chain(
-                                data_provider_task_record_uid=provider_task_record_uid,
-                                data_provider_task_record_uids=[provider_task_record_uid],
-                                stage_dir=stage_dir,
-                                worker=worker,
-                            )
-                            provider_subtask_chain = chain(provider_subtask_chain, zip_export_provider_sig)
-
-                        finalized_provider_task_chain_list.append(
-                            chain(
-                                selection_task,
-                                provider_subtask_chain,
-                                finalize_export_provider_signature,
-                                wait_for_providers_signature,
-                            )
+                    finalized_provider_task_chain_list.append(
+                        chain(
+                            selection_task,
+                            provider_subtask_chain,
+                            finalize_export_provider_signature,
+                            wait_for_providers_signature,
                         )
+                    )
 
-            # we kick off all of the sub-tasks at once down here rather than one at a time in the for loop above so
-            # that if an error occurs earlier on in the method, all of the tasks will fail rather than an undefined
-            # number of them. this simplifies error handling, because we don't have to deduce which tasks were
-            # successfully kicked off and which ones failed.
-            for item in finalized_provider_task_chain_list:
-                item.apply_async(**finalize_task_settings)
+        # we kick off all of the sub-tasks at once down here rather than one at a time in the for loop above so
+        # that if an error occurs earlier on in the method, all of the tasks will fail rather than an undefined
+        # number of them. this simplifies error handling, because we don't have to deduce which tasks were
+        # successfully kicked off and which ones failed.
+        for item in finalized_provider_task_chain_list:
+            item.apply_async(**finalize_task_settings)
 
 
 @transaction.atomic
@@ -335,7 +324,6 @@ def create_task(
     data_provider_task_record_uid=None,
     data_provider_task_record_uids=None,
     run_zip_file_uid=None,
-    stage_dir=None,
     worker=None,
     selection=None,
     task=None,
@@ -345,7 +333,6 @@ def create_task(
     """
     Create a new task to export the bounds for an DataProviderTaskRecord
     :param data_provider_task_uid: A uid for the dataprovidertaskrecord.
-    :param stage_dir: The directory to store temporary files.
     :param worker: The hostname of the machine processing the task.
     :param selection: A geojson dict for the area being processed.
     :param task: The celery task to link to this task record.
@@ -369,12 +356,12 @@ def create_task(
         worker=worker,
         display=getattr(task, "display", False),
     )
-    queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+    run_uid = export_provider_task.run.uid
+    queue_group = get_celery_queue_group(run_uid=run_uid)
     return task.s(
-        run_uid=export_provider_task.run.uid,
+        run_uid=run_uid,
         task_uid=export_task.uid,
         selection=selection,
-        stage_dir=stage_dir,
         provider_slug=export_provider_task_slug,
         data_provider_task_record_uid=data_provider_task_record_uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
@@ -387,18 +374,13 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None,
-    data_provider_task_record_uids=None,
-    run_zip_file_uid=None,
-    worker=None,
-    stage_dir=None,
+    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None,
 ):
     return chain(
         create_task(
             data_provider_task_record_uid=data_provider_task_record_uid,
             data_provider_task_record_uids=data_provider_task_record_uids,
             run_zip_file_uid=run_zip_file_uid,
-            stage_dir=stage_dir,
             worker=worker,
             task=create_zip_task,
         )
@@ -439,7 +421,11 @@ class InvalidLicense(Error):
 
 
 def create_finalize_run_task_collection(
-    run_uid=None, run_dir=None, run_zip_task_chain=None, run_zip_file_slug_sets=None, apply_args=None
+    run_uid=None,
+    run_provider_task_record_uid=None,
+    run_zip_task_chain=None,
+    run_zip_file_slug_sets=None,
+    apply_args=None,
 ):
     """Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
     have finished, and a finalize_run_task signature for use as an errback.
@@ -449,7 +435,7 @@ def create_finalize_run_task_collection(
     apply_args = apply_args or dict()
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
-    finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
+    finalize_signature = finalize_run_task.si(run_uid=run_uid).set(**apply_args)
     all_task_sigs_list = [run_zip_task_chain]
 
     if run_zip_file_slug_sets:
@@ -458,6 +444,10 @@ def create_finalize_run_task_collection(
             if zipfile_chain:
                 all_task_sigs_list.append(zipfile_chain)
 
+    finalize_export_provider_signature = finalize_export_provider_task.s(
+        data_provider_task_uid=run_provider_task_record_uid, status=TaskState.COMPLETED.value, locking_task_key=run_uid,
+    )
+    all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)
     all_task_sigs = itertools.chain(all_task_sigs_list)
     finalize_chain = chain(*all_task_sigs)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import datetime
 import json
 import os
@@ -9,16 +10,22 @@ from typing import Union
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.contrib.sessions.models import Session
 from django.core.mail import EmailMultiAlternatives
+from django.core.management import call_command
 from django.template.loader import get_template
 from django.utils import timezone
-from django.core.management import call_command
 
+from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
+from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
+from eventkit_cloud.utils.docker_client import DockerClient
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
@@ -83,13 +90,84 @@ def expire_runs_task():
             run.save()
 
 
-@app.task(name="PCF Scale Celery", base=LockingTask)
-def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = "pcf_scale_celery"):  # NOQA
+@app.task(name="Scale Celery", base=LockingTask)
+def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
     """
-    Built specifically for PCF deployments.
+    Built specifically for Docker or PCF deployments.
     Scales up celery instances when necessary.
     """
 
+    # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
+    if getattr(settings, "CELERY_SCALE_BY_RUN"):
+        scale_by_runs(max_tasks_memory)
+    else:
+        celery_tasks = get_celery_tasks_scale_by_task()
+        scale_by_tasks(celery_tasks, max_tasks_memory)
+
+
+def scale_by_runs(max_tasks_memory):
+    if os.getenv("CELERY_TASK_APP"):
+        app_name = os.getenv("CELERY_TASK_APP")
+    else:
+        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+
+    if os.getenv("PCF_SCALING"):
+        client = PcfClient()
+        client.login()
+    else:
+        client = DockerClient()
+        app_name = settings.DOCKER_IMAGE_NAME
+
+    celery_task_details = get_celery_task_details(client, app_name)
+    running_tasks_memory = int(celery_task_details["memory"])
+    celery_tasks = get_celery_tasks_scale_by_run()
+    # Get run in progress
+    runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
+    total_tasks = 0
+    running_tasks = client.get_running_tasks(app_name)
+
+    if running_tasks:
+        total_tasks = running_tasks["pagination"].get("total_results", 0)
+        running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
+        finished_runs = ExportRun.objects.filter(uid__in=running_task_names, status=TaskState.get_finished_states())
+
+        for finished_run in finished_runs:
+            shutdown_celery_workers.s().apply_async(queue=finished_run.uid, routing_key=finished_run.uid)
+
+    for run in runs:
+        logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
+        max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
+        if max_runs and total_tasks >= max_runs:
+            break
+        if running_tasks_memory + celery_tasks["memory"] >= max_tasks_memory:
+            logger.info("Not enough available memory to scale another run.")
+            break
+        task_name = run.uid
+        task = copy.deepcopy(celery_tasks)
+        task["command"] = task["command"].format(celery_group_name=task_name)
+        running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
+        running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
+
+        logger.info(f"Currently {running_tasks_by_queue_count} tasks running for {task_name}.")
+        if running_tasks_by_queue_count:
+            logger.info(f"Already a consumer for {task_name}")
+            continue
+        logger.info(f"Running pick up run for {task_name}")
+        user_session = UserSession.objects.filter(user=run.user).last()
+        session_token = None
+        if user_session:
+            session = Session.objects.get(session_key=user_session.session_id)
+            session_token = session.get_decoded().get("session_token")
+        pick_up_run_task(run_uid=run.uid, session_token=session_token)
+        logger.info("Spinning up a worker to complete those tasks...")
+        logger.info(
+            f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}"
+        )
+        run_task_command(client, app_name, str(task_name), task)
+        total_tasks += 1
+
+
+def scale_by_tasks(celery_tasks, max_tasks_memory):
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
     else:
@@ -98,14 +176,15 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
-    client = PcfClient()
-    client.login()
+    if os.getenv("PCF_SCALING"):
+        client = PcfClient()
+        client.login()
+    else:
+        client = DockerClient()
+        app_name = settings.DOCKER_IMAGE_NAME
 
-    # TODO: Too complex, clean up.
-    # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
-    celery_tasks = get_celery_tasks()
+    celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
 
-    celery_pcf_task_details = get_celery_pcf_task_details(client, app_name, celery_tasks)
     logger.info(f"Running Tasks Memory used: {celery_pcf_task_details['memory']} MB")
 
     celery_tasks = order_celery_tasks(celery_tasks, celery_pcf_task_details["task_counts"])
@@ -120,7 +199,12 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
         queues = list_to_dict(queues, "name")
         # If no tasks were run, give up... otherwise try to run another task.
         has_run_task = False
+        running_tasks = client.get_running_tasks(app_name)
         if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
+            for running_task in running_tasks.get("resources"):
+                running_task_name = running_task.get("name")
+                logger.info(f"No messages left in the queue, shutting down {running_task_name}.")
+                shutdown_celery_workers.s().apply_async(queue=running_task_name, routing_key=running_task_name)
             break
         for celery_task_name, celery_task in celery_tasks.items():
             queue = queues.get(celery_task_name)
@@ -141,12 +225,11 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
                         continue
                 if running_tasks_memory + celery_tasks[queue_name]["memory"] <= max_tasks_memory:
                     run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
-                    has_run_task = True
             elif running_tasks_by_queue_count and not pending_messages:
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
                 )
-                pcf_shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
+                shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(
@@ -158,10 +241,10 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
             break
 
 
-def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
+def get_celery_task_details(client, app_name: str, celery_tasks: Union[dict, list] = None):
     """
     Gets information about currently running tasks.
-    :param client: PcfClient
+    :param client:
     :param app_name: The name of the celery app running the tasks.
     :param celery_tasks: A dictionary with information about the celery tasks.
     :return: A dict of information with task counts and resource usage.
@@ -170,7 +253,7 @@ def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: 
     running_tasks = client.get_running_tasks(app_name)
     total_memory = 0
     total_disk = 0
-    task_counts = dict.fromkeys(celery_tasks, 0)
+    task_counts = dict.fromkeys(celery_tasks, 0) if celery_tasks else {}
     for running_task in running_tasks["resources"]:
         total_memory += running_task["memory_in_mb"]
         total_disk += running_task["disk_in_mb"]
@@ -303,19 +386,42 @@ def get_celery_health_check_command(node_type: str):
     )
     health_check_command = (
         f" & sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
-        f"echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+        "echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
     )
 
     return health_check_command
 
 
-def get_celery_tasks():
+def get_celery_tasks_scale_by_run():
+    default_command = (
+        "echo '************STARTING NEW WORKER****************' && hostname && env & "
+        "CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 "
+        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
+        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "& CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL "
+        "-n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} "
+        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
+    )
+
+    celery_tasks = {
+        "command": default_command,
+        # NOQA
+        "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
+        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
+    }
+
+    celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
+
+    return celery_tasks
+
+
+def get_celery_tasks_scale_by_task():
     """
     Sets up a dict with settings for running about running PCF tasks for celery.
     Adding or modifying queues can be done here.
     :return:
     """
-    celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
+    celery_group_name = getattr(settings, "CELERY_GROUP_NAME", socket.gethostname())
 
     priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
 

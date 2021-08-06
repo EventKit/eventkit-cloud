@@ -107,7 +107,7 @@ class TestAuth(TestCase):
         self.assertEqual(example_access_token, returned_token)
 
         # Test connection issues
-        with patch("eventkit_cloud.auth.auth.requests.post") as mock_post:
+        with patch("requests.Session.post") as mock_post:
             mock_post.side_effect = requests.ConnectionError()
             with self.assertRaises(OAuthServerUnreachable):
                 request_access_token(OAuthServerUnreachable)
@@ -197,7 +197,7 @@ class TestAuth(TestCase):
 
         # Test connection issues
         self.mock_requests.get(settings.OAUTH_PROFILE_URL, text=json.dumps(user_data), status_code=200)
-        with patch("eventkit_cloud.auth.auth.requests.get") as mock_post:
-            mock_post.side_effect = requests.ConnectionError()
+        with patch("requests.Session.get") as mock_get:
+            mock_get.side_effect = requests.ConnectionError()
             with self.assertRaises(OAuthServerUnreachable):
                 fetch_user_from_token(OAuthServerUnreachable)

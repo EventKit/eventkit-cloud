@@ -1,7 +1,8 @@
 import logging
-
 from unittest.mock import patch, Mock, MagicMock
+
 from django.test import TestCase
+
 from eventkit_cloud.utils.image_snapshot import (
     get_tile,
     get_wmts_snapshot_image,

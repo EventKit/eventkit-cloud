@@ -1,8 +1,8 @@
 import logging
 import os
 
-import osgeo
 import gdal
+import osgeo
 
 logger = logging.getLogger(__name__)
 

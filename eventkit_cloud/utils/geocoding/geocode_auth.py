@@ -4,7 +4,7 @@ import os
 import requests
 from django.conf import settings
 from django.core.cache import cache
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,8 @@ def authenticate():
         url = getattr(settings, "GEOCODING_AUTH_URL")
         if url:
             logger.info("Receiving new authentication token for geocoder.")
-            auth_response = auth_requests.get(
-                getattr(settings, "GEOCODING_AUTH_URL"),
-                verify=getattr(settings, "SSL_VERIFICATION", True),
-                cert_info=get_geocode_cert_info(),
-            ).json()
+            session = get_or_update_session(cert_info=get_geocode_cert_info())
+            auth_response = session.get(getattr(settings, "GEOCODING_AUTH_URL")).json()
 
             token = auth_response.get("token")
             # if not token set the token key as something so we know not to check this everytime.

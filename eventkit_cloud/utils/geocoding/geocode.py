@@ -2,10 +2,10 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
-from eventkit_cloud.utils import auth_requests
+
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.utils.geocoding.geocode_auth import get_geocode_cert_info
 from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
-
 
 logger = logging.getLogger(__name__)
 
@@ -298,9 +298,8 @@ class Pelias(GeocodeAdapter):
                 break
 
         if search_id:
-            response = auth_requests.get(
-                update_url, params={"ids": search_id}, cert_info=get_geocode_cert_info()
-            ).json()
+            session = get_or_update_session(cert_info=get_geocode_cert_info())
+            response = session.get(update_url, params={"ids": search_id}).json()
             features = response.get("features", [])
             if len(features):
                 feature = features[0]

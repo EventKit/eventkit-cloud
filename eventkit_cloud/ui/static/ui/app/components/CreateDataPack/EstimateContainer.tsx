@@ -14,6 +14,7 @@ export interface ProviderLimits {
     slug: string;
     maxDataSize: number;
     maxArea: number;
+    useBbox: boolean;
 }
 
 export interface Props {
@@ -36,14 +37,20 @@ function EstimateContainer(props: Props) {
     const [totalSize, setSize] = useState(-1);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
-    const [areEstimatesLoading, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
+    const [isCollectingEstimates, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
+
+     const [dataSizeInfo, setDataSizeInfo] = useState({
+        haveAvailableEstimates: undefined,
+        providerEstimates: undefined,
+        exceedingSize: undefined,
+        noMaxDataSize: undefined,
+    });
 
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
 
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
-
         if (providerExportOptions) {
             if (isZoomLevelInRange(providerExportOptions.minZoom, provider)) {
                 minZoom = providerExportOptions.minZoom;
@@ -59,9 +66,19 @@ function EstimateContainer(props: Props) {
             min_zoom: minZoom,
             max_zoom: maxZoom,
         };
-
         const csrfmiddlewaretoken = getCookie('csrftoken');
-        setProviderLoading(provider,true);
+        setProviderLoading(provider, true);
+
+        const {haveAvailableEstimates} = dataSizeInfo;
+
+        if (haveAvailableEstimates) {
+            const index = haveAvailableEstimates.indexOf(provider.slug);
+            if (index > -1) {
+                haveAvailableEstimates.splice(index, 1);
+            }
+
+            setDataSizeInfo({...haveAvailableEstimates})
+        }
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -111,8 +128,7 @@ function EstimateContainer(props: Props) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
+            const availabilityData = response.data as Eventkit.Store.Availability;
             availabilityData.slug = provider.slug;
             return availabilityData;
         }).catch(() => {
@@ -138,6 +154,7 @@ function EstimateContainer(props: Props) {
         if (provider.display === false) {
             return;
         }
+        updateExportInfo({})
         return Promise.all([
             checkAvailability(provider),
             checkEstimate(provider),
@@ -156,13 +173,13 @@ function EstimateContainer(props: Props) {
         Promise.all(providers.filter(provider => provider.display).map((provider) => {
             return checkProvider(provider);
         })).then(providerResults => {
-            const providerInfo = { ...props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            const providerInfo = {...props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
             providerResults.map((provider) => {
                 if (provider.data) {
                     providerInfo[provider.slug] = provider.data;
                 }
             });
-            props.updateExportInfo({ providerInfo });
+            props.updateExportInfo({providerInfo});
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             updateEstimate();
@@ -216,11 +233,12 @@ function EstimateContainer(props: Props) {
                     slug: provider.slug,
                     maxDataSize: getValue(provider.max_data_size),
                     maxArea: getValue(provider.max_selection),
+                    useBbox: provider.use_bbox,
                 } as ProviderLimits)
             });
             limits.sort((a, b) => b.maxArea - a.maxArea);
             setLimits(limits);
-            checkProviders(props.providers);
+            checkProviders(props.exportInfo.providers);
         }
     }, [props.providers]);
 
@@ -231,26 +249,23 @@ function EstimateContainer(props: Props) {
     }, props.exportInfo.providers, [props.exportInfo.providerInfo]);
 
     const [ aoiArea, setArea ] = useState(0);
+    const [ aoiBboxArea, setBboxArea ] = useState(0);
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
             props.updateExportInfo({ providerInfo: {} });
-            checkProviders(props.providers);
+            checkProviders(props.exportInfo.providers);
         }
         const hasArea = allHaveArea(aoiInfo.geojson);
         setHasArea(hasArea);
         if (hasArea) {
             setArea(getSqKm(props.aoiInfo.geojson));
+            setBboxArea(getSqKm(props.aoiInfo.geojson, true));
         } else {
             setArea(0);
+            setBboxArea(0);
         }
     }, [aoiInfo.geojson, props.providers]);
 
-    const [dataSizeInfo, setDataSizeInfo] = useState({
-        haveAvailableEstimates: undefined,
-        providerEstimates: undefined,
-        exceedingSize: undefined,
-        noMaxDataSize: undefined,
-    });
     const providerEstimates = {};
     const hashes = [];
     Object.entries(props.exportInfo.providerInfo).map(([slug, infoObject]) => {
@@ -265,7 +280,7 @@ function EstimateContainer(props: Props) {
             const haveAvailableEstimates = providerSlugs.filter((slug) => {
                 // Filter out providers that DO NOT have a size estimate
                 const estimate = providerEstimates[slug];
-                return estimate && estimate.size && estimate.size.value;
+                return estimate && estimate.size;
             });
             // Providers without a max data size will fall back to AoI.
             const noMaxDataSize = [...providerLimits.filter(limits => !limits.maxDataSize).map(limits => limits.slug)];
@@ -276,7 +291,8 @@ function EstimateContainer(props: Props) {
                     if (!limits.maxDataSize) {
                         return false;
                     }
-                    return haveAvailableEstimates.indexOf(limits.slug) !== -1 && providerEstimates[limits.slug].size.value > limits.maxDataSize;
+                    return haveAvailableEstimates.indexOf(limits.slug) !==
+                        -1 && providerEstimates[limits.slug].size.value > limits.maxDataSize;
                 }).map(limits => limits.slug),
                 ...providerSlugs.filter(slug => haveAvailableEstimates.indexOf(slug) === -1)];
 
@@ -287,15 +303,16 @@ function EstimateContainer(props: Props) {
                 noMaxDataSize,
             });
         }
-    }, [(SERVE_ESTIMATES) ? DepsHashers.arrayHash(hashes) : undefined]);
+    }, [(SERVE_ESTIMATES) ? DepsHashers.arrayHash(hashes) : undefined, isCollectingEstimates]);
 
     return (
         <JobValidationProvider value={{
             providerLimits,
             aoiHasArea,
             aoiArea,
+            aoiBboxArea,
             dataSizeInfo,
-            areEstimatesLoading,
+            isCollectingEstimates
         }}>
             <BreadcrumbStepper
                 {...props.breadcrumbStepperProps}
@@ -303,8 +320,8 @@ function EstimateContainer(props: Props) {
                 updateEstimate={updateEstimate}
                 sizeEstimate={totalSize}
                 timeEstimate={totalTime}
-                areEstimatesLoading={areEstimatesLoading}
                 getProviders={getProviders}
+                isCollectingEstimates={isCollectingEstimates}
             />
         </JobValidationProvider>
     )

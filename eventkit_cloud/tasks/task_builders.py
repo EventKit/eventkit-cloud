@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 import importlib
 import logging
-import os
+from typing import List
 
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
-from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
+from eventkit_cloud.tasks.helpers import (
+    normalize_name,
+    get_metadata,
+    get_supported_projections,
+    get_default_projection,
+    get_celery_queue_group,
+)
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
@@ -27,6 +33,7 @@ export_task_registry = {
     "mbtiles": "eventkit_cloud.tasks.export_tasks.mbtiles_export_task",
     "gpx": "eventkit_cloud.tasks.export_tasks.gpx_export_task",
     "pbf": "eventkit_cloud.tasks.export_tasks.pbf_export_task",
+    "ogcapi-process": "eventkit_cloud.tasks.export_tasks.ogc_result_task",
 }
 
 
@@ -70,31 +77,19 @@ class TaskChainBuilder(object):
 
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
-        data_provider_task = DataProviderTask.objects.select_related("provider").get(uid=provider_task_uid)
+        data_provider_task = (
+            DataProviderTask.objects.select_related("provider")
+            .prefetch_related("formats__supported_projections")
+            .get(uid=provider_task_uid)
+        )
         data_provider = data_provider_task.provider
         job = run.job
 
         job_name = normalize_name(job.name)
         # get the formats to export
-        formats = [provider_task_format.slug for provider_task_format in data_provider_task.formats.all()]
-        export_tasks = {}
+        formats: List[ExportFormat] = list(data_provider_task.formats.all())
 
-        # If WCS we will want geotiff...
-        if "wcs" in primary_export_task.name.lower():
-            formats += ["gtiff"]
-
-        # build a list of celery tasks based on the export formats...
-        for file_format in formats:
-            try:
-                export_tasks[file_format] = {"obj": create_format_task(file_format), "task_uid": None}
-            except KeyError as e:
-                logger.debug("KeyError: export_tasks[{}] - {}".format(file_format, e))
-            except ImportError as e:
-                msg = "Error importing export task: {0}".format(e)
-                logger.debug(msg)
-
-        # run the tasks
-        data_provider_task_record = DataProviderTaskRecord.objects.create(
+        data_provider_task_record: DataProviderTaskRecord = DataProviderTaskRecord.objects.create(
             run=run,
             name=data_provider.name,
             provider=data_provider,
@@ -106,7 +101,8 @@ class TaskChainBuilder(object):
         """
         Create a celery chain which gets the data & runs export formats
         """
-        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+
+        queue_group = get_celery_queue_group(run_uid=run.uid, worker=worker)
 
         # Record estimates for size and time
         get_estimates_task.apply_async(
@@ -119,18 +115,29 @@ class TaskChainBuilder(object):
             },
         )
 
-        for file_format, task in export_tasks.items():
-            task_name = task.get("obj").name
-            default_projection = get_default_projection(get_supported_projections(file_format), projections)
+        export_tasks = {}  # {export_format : (etr_uid, export_task)}
+        for export_format in formats:
+            logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
+            export_format_key = (
+                "ogcapi-process"
+                if export_format.options.get("proxy")
+                and (data_provider.slug in export_format.options.get("providers", []))
+                else export_format.slug
+            )
+            export_task = create_format_task(export_format_key)
+            default_projection = get_default_projection(get_supported_projections(export_format), projections)
+            task_name = export_format.name
             if default_projection:
-                task_name = f"{task.get('obj').name} - EPSG:{default_projection}"
-            export_task = create_export_task_record(
+                task_name = f"{task_name} - EPSG:{default_projection}"
+            export_task_record = create_export_task_record(
                 task_name=task_name,
                 export_provider_task=data_provider_task_record,
                 worker=worker,
-                display=getattr(task.get("obj"), "display", False),
+                display=getattr(export_task, "display", False),
             )
-            export_tasks[file_format]["task_uid"] = export_task.uid
+            export_tasks[export_format] = (export_task_record, export_task)
+
+        bbox = run.job.extents
 
         """
         Create a celery chain which gets the data & runs export formats
@@ -148,22 +155,30 @@ class TaskChainBuilder(object):
                     ).set(queue=queue_group, routing_key=queue_group)
                 )
 
-            for current_format, task in export_tasks.items():
+            for current_format, (export_task_record, export_task) in export_tasks.items():
                 supported_projections = get_supported_projections(current_format)
                 default_projection = get_default_projection(supported_projections, selected_projections=projections)
 
                 subtasks.append(
-                    task.get("obj")
-                    .s(
+                    export_task.s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
                         job_name=job_name,
-                        task_uid=task.get("task_uid"),
+                        task_uid=export_task_record.uid,
                         user_details=user_details,
-                        locking_task_key=data_provider_task_record.uid,
+                        locking_task_key=export_task_record.uid,
                         config=data_provider.config,
-                    )
-                    .set(queue=queue_group, routing_key=queue_group)
+                        service_url=data_provider.url,
+                        export_format_slug=current_format.slug,
+                        bbox=bbox,
+                        session_token=session_token,
+                        provider_slug=data_provider.slug,
+                        export_provider_task_record_uid=data_provider_task_record.uid,
+                        worker=worker,
+                        selection=job.the_geom.geojson,
+                        layer=data_provider.layer,
+                        service_type=service_type,
+                    ).set(queue=queue_group, routing_key=queue_group)
                 )
 
                 for projection in list(set(supported_projections) & set(projections)):
@@ -172,12 +187,12 @@ class TaskChainBuilder(object):
                     if projection == default_projection:
                         continue
 
-                    task_name = f"{task.get('obj').name} - EPSG:{projection}"
+                    task_name = f"{export_task.name} - EPSG:{projection}"
                     projection_task = create_export_task_record(
                         task_name=task_name,
                         export_provider_task=data_provider_task_record,
                         worker=worker,
-                        display=getattr(task.get("obj"), "display", True),
+                        display=getattr(export_task, "display", True),
                     )
                     subtasks.append(
                         reprojection_task.s(
@@ -195,8 +210,6 @@ class TaskChainBuilder(object):
             format_tasks = chain(subtasks)
         else:
             format_tasks = None
-
-        bbox = run.job.extents
 
         primary_export_task_record = create_export_task_record(
             task_name=primary_export_task.name,

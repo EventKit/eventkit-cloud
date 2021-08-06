@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 from django.test import TestCase, override_settings
-from unittest.mock import Mock, patch
 
 logger = logging.getLogger(__name__)
 

@@ -10,3 +10,4 @@ pytest-django==4.3.0
 requests-mock==1.9.2
 mkdocs==1.1.2
 black==21.5b1
+docker==5.0.0

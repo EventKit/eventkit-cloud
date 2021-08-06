@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import logging
-import requests
-from datetime import timedelta, datetime
-import statistics
 import json
+import logging
 import re
+import statistics
+from datetime import timedelta, datetime
 from time import sleep
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 class EventKitClient(object):
     def __init__(self, url, username=None, password=None, certificate=None, verify=True):
-        self.base_url = url
+        self.base_url = url.rstrip("/")
         self.login_url = self.base_url + "/api/login/"
         self.cert_url = self.base_url + "/oauth"
         self.create_export_url = self.base_url + "/create"
@@ -23,6 +24,7 @@ class EventKitClient(object):
         self.runs_url = self.base_url + "/api/runs"
         self.providers_url = self.base_url + "/api/providers"
         self.provider_tasks_url = self.base_url + "/api/provider_tasks"
+        self.download_url = self.base_url + "/download"
 
         self.client = requests.session()
         self.client.verify = verify
@@ -47,7 +49,7 @@ class EventKitClient(object):
             )
         else:
             raise Exception("Unable to login without a certificate or username/password.")
-        response = self.client.get(self.runs_url)
+        response = self.client.get(self.providers_url)
         if response.status_code in [401, 403]:
             raise Exception("Invalid Credentials were provided to EventKitClient")
         self.client.get(self.base_url)
@@ -158,9 +160,20 @@ class EventKitClient(object):
             logger.error(url)
         return response.json()
 
+    def download_file(self, result_uid, file_path=None):
+        response = self.client.get(self.download_url, params={"uid": result_uid}, stream=True)
+        if response.ok:
+            with open(file_path, "wb") as open_file:
+                for chunk in response:
+                    open_file.write(chunk)
+            return file_path
+        else:
+            logger.error(f"Failed to download {result_uid}, STATUS_CODE: {response.status_code}")
+            logger.error(response.content)
+            response.raise_for_status()
+
     def get_averages(self, runs):
         """
-
         :param runs: Runs is a list of runs provided by get_runs:
         :return: A dict with average time per provider per kilometer
            {

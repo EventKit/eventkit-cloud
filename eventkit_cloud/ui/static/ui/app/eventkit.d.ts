@@ -160,6 +160,7 @@ declare namespace Eventkit {
         layer: string;
         max_data_size: string;
         max_selection: string;
+        use_bbox: boolean;
         level_from: number;
         level_to: number;
         zip: boolean;
@@ -462,6 +463,7 @@ declare namespace Eventkit {
         interface Estimates {
             time?: EstimateData;
             size?: EstimateData;
+            status?: string;
         }
 
         interface Availability {
@@ -489,6 +491,7 @@ declare namespace Eventkit {
             exportOptions: Map<ProviderExportOptions>;
             projections: number[];  // Expecting projection srid
             visibility: Visibility;
+            isProviderLoading: boolean;
         }
 
         interface AoiInfo {

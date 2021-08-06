@@ -8,13 +8,14 @@ export interface JobValidationContext {
     providerLimits: ProviderLimits[];
     aoiHasArea: boolean;
     aoiArea: number;
+    aoiBboxArea: number;
     dataSizeInfo: {
         haveAvailableEstimates: string[];
         providerEstimates: Eventkit.Map<Eventkit.Store.Estimates>;
         exceedingSize: string[];
         noMaxDataSize: string[];
     },
-    areEstimatesLoading: boolean,
+    isCollectingEstimates: boolean,
 }
 
 const appContext = createContext<JobValidationContext>({} as JobValidationContext);

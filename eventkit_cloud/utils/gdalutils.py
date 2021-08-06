@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from typing import List, Tuple
-
 import math
 import multiprocessing
 import os
 import time
-from tempfile import NamedTemporaryFile
 from functools import wraps
+from itertools import repeat
+from statistics import mean
+from tempfile import NamedTemporaryFile
+from typing import List, Tuple
 
+from django.conf import settings
 from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
 
-
-from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
+from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,8 @@ def retry(f):
 
 
 def progress_callback(pct, msg, user_data):
+    from eventkit_cloud.tasks.helpers import update_progress
+
     update_progress(
         user_data.get("task_uid"),
         progress=round(pct * 100),
@@ -634,6 +636,7 @@ def convert_vector(
             logger.info(f"calling gdal.VectorTranslate('{output_file}', '{_input_file}', {stringify_params(options)})")
             gdal.VectorTranslate(output_file, _input_file, **options)
     else:
+        logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
         gdal.VectorTranslate(output_file, input_file, **options)
 
     if distinct_field:
@@ -751,6 +754,23 @@ def get_distance(point_a, point_b):
     line = get_line([point_a, point_b])
     reproject_geometry(line, 4326, 3857)
     return line.Length()
+
+
+def get_scale_in_meters(pixel_size: Tuple[float, float]) -> float:
+    """
+    Takes pixel size and returns a single scale value in meters.
+    :param pixel_size: A tuple of two floats representing the x/y pixel values.
+    :return: Distance in meters of pixel size averaged.
+    >>> get_scale_in_meters((0.00028, 0.00028))
+    31
+    >>> get_scale_in_meters((0.000833, 0.000833))
+    93
+    >>> get_scale_in_meters((0.00833, 0.00833))
+    927
+    """
+    pixel = list(map(get_distance, repeat([0, 0]), list(zip(repeat(0), pixel_size))))
+
+    return round(mean(pixel))
 
 
 def reproject_geometry(geometry, from_srs, to_srs):

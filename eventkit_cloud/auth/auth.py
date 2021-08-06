@@ -1,9 +1,10 @@
-import dateutil.parser
 import json
 import logging
+from datetime import datetime, timedelta
+
+import dateutil.parser
 import pytz
 import requests
-from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import logout as auth_logout
@@ -11,6 +12,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 
 from eventkit_cloud.auth.models import OAuth
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.ui.helpers import set_session_user_last_active_at
 
 logger = logging.getLogger(__name__)
@@ -60,10 +62,8 @@ def fetch_user_from_token(access_token):
 
     logger.debug('Sending request: access_token="{0}"'.format(access_token))
     try:
-        response = requests.get(
-            "{0}".format(settings.OAUTH_PROFILE_URL),
-            headers={"Authorization": "Bearer {0}".format(access_token)},
-        )
+        session = get_or_update_session(headers={"Authorization": "Bearer {0}".format(access_token)})
+        response = session.get(settings.OAUTH_PROFILE_URL)
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
     except requests.ConnectionError as err:
@@ -208,7 +208,8 @@ def request_access_token(auth_code):
 
     logger.debug('Requesting: code="{0}"'.format(auth_code))
     try:
-        response = requests.post(
+        session = get_or_update_session()
+        response = session.post(
             settings.OAUTH_TOKEN_URL,
             auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
             data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI},

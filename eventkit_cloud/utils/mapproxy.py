@@ -73,7 +73,7 @@ class CustomLogger(ProgressLog):
         self.interval = 1
 
     def log_step(self, progress):
-        from eventkit_cloud.tasks.task_process import update_progress
+        from eventkit_cloud.tasks.helpers import update_progress
 
         self.eta.update(progress.progress)  # This may also get called by update_progress but because update_progress
         # is rate-limited; we also do it here to get more data points for making

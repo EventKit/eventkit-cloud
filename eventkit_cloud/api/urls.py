@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """API url configuration."""
 
+import notifications.urls
 from django.conf import settings
 from django.urls import include, re_path
-
 from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 
@@ -30,9 +30,6 @@ from eventkit_cloud.api.views import (
     UserJobActivityViewSet,
     api_docs_view,
 )
-
-import notifications.urls
-
 
 app_name = "api"
 
