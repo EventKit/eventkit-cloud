@@ -329,12 +329,11 @@ export function ExportInfo(props: Props) {
     const [displayDummy, setDisplayDummy] = useState(false);
 
     // What is type for whole redux store?  There is a Store name space but elements aren't compiled.
-    const geojson = useSelector((store: any) => store.aoiInfo.geojson)
-    const exportInfo = useSelector((store: any) => store.exportInfo)
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers)
-    const nextEnabled = useSelector((store: any) => store.stepperNextEnabled)
-    let projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections])
-    const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats])
+    const geojson = useSelector((store: any) => store.aoiInfo.geojson);
+    const exportInfo = useSelector((store: any) => store.exportInfo);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
+    let projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
+    const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
 
     useEffect(() => {
         updateSelectedFormats()
@@ -343,30 +342,28 @@ export function ExportInfo(props: Props) {
         checkCompatibility()
     }, [projections]);
 
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
     // Call this anytime we need to update providers, instead of setProviders.
     const updateExportInfoCallback = useCallback(
         (updatedExportInfo) => dispatch(updateExportInfo(updatedExportInfo)),
         []
-    )
+    );
     const setNextDisabled = useCallback(
         () => dispatch(stepperNextDisabled()),
         []
-    )
+    );
 
     const setNextEnabled = useCallback(
         () => dispatch(stepperNextEnabled()),
         []
-    )
+    );
 
     const appContext = useAppContext();
     const {colors} = props.theme.eventkit;
     const {classes} = props;
 
-    const helpers = useRef();
     let joyrideRef = useRef(joyride);
-    const dataProvider = useRef();
-    const bounceBack = useRef();
+    const dataProvider = useRef(null);
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
@@ -387,11 +384,12 @@ export function ExportInfo(props: Props) {
         // if (indexOf4326 >= 1) {
         //     projections = [projections.splice(indexOf4326, 1)[0], ...projections];
         // }
-        // if (projections.find(projection => projection.srid === 4326)) {
-        //     if (exportInfo.projections && exportInfo.projections.length === 0) {
-        //         updatedInfo.projections = [4326];
-        //     }
-        // }
+
+        if (projections.find(projection => projection.srid === 4326)) {
+            if (exportInfo.projections && exportInfo.projections.length === 0) {
+                updatedInfo.projections = [4326];
+            }
+        }
 
         updateExportInfoCallback(updatedInfo);
 
@@ -432,7 +430,7 @@ export function ExportInfo(props: Props) {
                 }
             ]
         }
-    ])
+    ]);
 
     const [sortOptions, setSortOptions] = useState([
         {
@@ -445,7 +443,7 @@ export function ExportInfo(props: Props) {
             slug: "alphabetical-z-a",
             isChecked: false
         }
-    ])
+    ]);
 
     const checkCompatibility = () => {
         const selectedProjections = exportInfo.projections;
@@ -475,7 +473,7 @@ export function ExportInfo(props: Props) {
                 projections: projectionMap,
             }
         };
-    }
+    };
 
     const checkShareAll = () => {
         if (exportInfo.visibility === 'PRIVATE') {
@@ -487,7 +485,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             visibility: 'PRIVATE'
         });
-    }
+    };
 
     const updateSelectedFormats = () => {
         // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
@@ -508,21 +506,20 @@ export function ExportInfo(props: Props) {
         });
         // TODO: This is causing an infinite loop, figure out why.
         // updateExportInfoCallback({selectedFormats});
-    }
+    };
 
     const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
         setDisplaySrid(projection.srid);
         setProjectionCompatibilityOpen(true);
-    }
+    };
 
     const handleProjectionCompatibilityClose = () => {
         setProjectionCompatibilityOpen(false);
-    }
+    };
 
     const handleDataProviderExpand = () => {
-        // @ts-ignore
         dataProvider.current.handleExpand();
-    }
+    };
 
     const onNameChange = (value) => {
         // It feels a little weird to write every single change to redux
@@ -531,7 +528,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             exportName: value,
         });
-    }
+    };
 
     const onDescriptionChange = (value) => {
         // It feels a little weird to write every single change to redux
@@ -540,7 +537,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             datapackDescription: value,
         });
-    }
+    };
 
     const onProjectChange = (value) => {
         // It feels a little weird to write every single change to redux
@@ -549,7 +546,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             projectName: value,
         });
-    }
+    };
 
     const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
@@ -579,7 +576,7 @@ export function ExportInfo(props: Props) {
             providers: selectedProviders,
         });
 
-    }
+    };
 
     const deselect = (provider: Eventkit.Provider) => {
         const selectedProviders = [...exportInfo.providers];
@@ -596,7 +593,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             providers: selectedProviders,
         });
-    }
+    };
 
     const onSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
@@ -610,7 +607,7 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             providers: selectedProviders,
         });
-    }
+    };
 
     const onSelectProjection = (event) => {
         // Selecting projections for the DataPack, here srid is spatial reference ID
@@ -636,12 +633,12 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             projections: selectedSrids,
         });
-    }
+    };
 
     const onRefresh = () => {
         // make a copy of providers and set availability to empty json
         providers.forEach(provider => props.checkProvider(provider));
-    }
+    };
 
     const clearEstimate = (provider: Eventkit.Provider) => {
         const providerInfo = {...exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
@@ -660,23 +657,22 @@ export function ExportInfo(props: Props) {
         updateExportInfoCallback({
             providerInfo: updatedProviderInfo
         });
-    }
+    };
 
     const handlePopoverOpen = (e: React.MouseEvent<any>) => {
         setRefreshPopover(e.currentTarget);
-    }
+    };
 
 
     const handlePopoverClose = () => {
         setRefreshPopover(null);
-    }
+    };
 
     const joyrideAddSteps = (newSteps: Step[]) => {
         return setSteps(steps.concat(newSteps));
-    }
+    };
 
     const openDrawer = () => {
-        // @ts-ignore
         const isOpen: boolean = dataProvider.current.open;
         if (providerDrawerIsOpen == null) {
             setProviderDrawerIsOpen(isOpen);
@@ -684,15 +680,14 @@ export function ExportInfo(props: Props) {
         if (!isOpen) {
             handleDataProviderExpand();
         }
-    }
+    };
 
     const resetDrawer = () => {
-        // @ts-ignore
         if (dataProvider.current.open !== providerDrawerIsOpen) {
             handleDataProviderExpand();
         }
         setProviderDrawerIsOpen(null);
-    }
+    };
 
     const callback = (data: any) => {
         const {
@@ -727,7 +722,7 @@ export function ExportInfo(props: Props) {
         if (step && step.scrollToId) {
             window.location.hash = step.scrollToId;
         }
-    }
+    };
 
     const getProviders = () => {
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
@@ -739,13 +734,13 @@ export function ExportInfo(props: Props) {
         currentProviders = sortProviders(currentProviders);
 
         return currentProviders;
-    }
+    };
 
     const filterProviders = (currentProviders) => {
         currentProviders = currentProviders.filter(provider => {
             return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
         });
-        let filteredProviders = []
+        let filteredProviders = [];
         if (providerFilterList.length > 0) {
             providerFilterList.forEach(filter => {
                 if (filter.filterType == "type") {
@@ -777,11 +772,11 @@ export function ExportInfo(props: Props) {
 
     const sortProvidersAtoZ = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name));
-    }
+    };
 
     const sortProvidersZtoA = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
-    }
+    };
 
     const projectionHasErrors = (srid: number) => {
         const projectionInfo = incompatibilityInfo.projections[srid];
@@ -789,7 +784,7 @@ export function ExportInfo(props: Props) {
             return projectionInfo.formats.some(format => selectedFormats.indexOf(format.slug) >= 0);
         }
         return false;
-    }
+    };
 
     const getProjectionDialog = () => {
         const projectionInfo = incompatibilityInfo.projections[displaySrid];
@@ -815,7 +810,7 @@ export function ExportInfo(props: Props) {
                 </div>
             </div>
         </BaseDialog>);
-    }
+    };
 
     const onFilterCheckboxChanged = (filter) => {
         if (providerFilterList.some(item => item.slug == filter.slug)) {
@@ -823,35 +818,35 @@ export function ExportInfo(props: Props) {
         } else {
             addProviderFilter(filter);
         }
-    }
+    };
 
     const onSortRadioChanged = (sort) => {
-        let newSortOptions = [...sortOptions]
+        let newSortOptions = [...sortOptions];
         newSortOptions.map(item => {
             item.isChecked = item.slug == sort;
         });
-        setSortOptions(newSortOptions)
+        setSortOptions(newSortOptions);
 
         setProviderSortOption(sort)
-    }
+    };
 
     const addProviderFilter = (filter) => {
-        let newFilterOptions = [...filterOptions]
+        let newFilterOptions = [...filterOptions];
         let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
         let index = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug);
 
         newFilterOptions[0].options[index].isChecked = true;
-        setFilterOptions(newFilterOptions)
+        setFilterOptions(newFilterOptions);
         setProviderFilterList([...providerFilterList, filter]);
     };
 
     const removeProviderFilter = (filter) => {
-        let newFilterOptions = [...filterOptions]
+        let newFilterOptions = [...filterOptions];
         let typeIndex = newFilterOptions.map(item => item.filterType).indexOf(filter.filterType);
-        let optionIndex = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug)
+        let optionIndex = newFilterOptions[typeIndex].options.map(item => item.slug).indexOf(filter.slug);
 
         newFilterOptions[0].options[optionIndex].isChecked = false;
-        setFilterOptions(newFilterOptions)
+        setFilterOptions(newFilterOptions);
         setProviderFilterList(providerFilterList.filter(item => item.slug !== filter.slug));
     };
 
@@ -859,24 +854,24 @@ export function ExportInfo(props: Props) {
         let newFilterOptions = [...filterOptions];
         newFilterOptions.map(filterType => filterType.options.map(filter => filter.isChecked = false));
         setFilterOptions(newFilterOptions);
-    }
+    };
 
     const clearSortOptions = () => {
         let newSortOptions = [...sortOptions];
         newSortOptions.map(sortOption => sortOption.isChecked = false);
-    }
+    };
 
     const clearAllFilterSort = () => {
         setProviderFilterList([]);
         setProviderSortOption("");
         clearFilterOptions();
         clearSortOptions();
-    }
+    };
 
     const clearAndCloseSortFilter = () => {
-        clearAllFilterSort()
+        clearAllFilterSort();
         setShowProviderFilter(!showProviderFilter)
-    }
+    };
 
     return (
         <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>

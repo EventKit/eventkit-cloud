@@ -225,7 +225,7 @@ describe('ExportInfo component', () => {
             ...render(<Provider store={store}>{component}</Provider>),
             store,
         }
-    }
+    };
 
     it('should render without error', () => {
         const props = getProps();
@@ -234,7 +234,7 @@ describe('ExportInfo component', () => {
 
     it('should render a form', () => {
         const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         expect(component.getByText('Enter General Information')).toBeInTheDocument();
         // TODO: These are failing because they are child components.  Fix?
@@ -242,36 +242,38 @@ describe('ExportInfo component', () => {
         // expect(component.getByPlaceholderText('Description')).toBeInTheDocument();
         // expect(component.getByPlaceholderText('Project Name')).toBeInTheDocument();
         expect(component.getByText('Select Data Sources')).toBeInTheDocument();
+        expect(component.getByText('Request New Data Source')).toBeInTheDocument();
         expect(component.getByText('Select Projection')).toBeInTheDocument();
         expect(component.getByText('Share this DataPack')).toBeInTheDocument();
         expect(component.getByText('Area of Interest (AOI)')).toBeInTheDocument();
+        expect(component.getByText('Selected Area of Interest')).toBeInTheDocument();
     });
 
     it('should have a search button', () => {
         const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         expect(component.getByText('Search')).toBeInTheDocument();
     });
 
     it('should have a sort / filter button', () => {
         const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         expect(component.getByText('Sort / Filter')).toBeInTheDocument();
     });
 
     it('should have a list of providers sorted A-Z by default', () => {
-        let props = {...getProps()}
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
-        const providers = component.getAllByTestId("DataProvider")
+        let props = {...getProps()};
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const providers = component.getAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
     it('should have filtering options hidden by default', () => {
-        let props = {...getProps()}
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        let props = {...getProps()};
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         expect(component.queryByText('Filter By')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
@@ -283,8 +285,8 @@ describe('ExportInfo component', () => {
     });
 
     it('should provide filtering options when sort / filter is clicked', () => {
-        let props = {...getProps()}
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        let props = {...getProps()};
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
@@ -298,16 +300,16 @@ describe('ExportInfo component', () => {
     });
 
     it('should have a list of projections', () => {
-        let props = {...getProps()}
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        let props = {...getProps()};
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
         const projections = component.getAllByText(/EPSG/);
-        console.log("PROJECTIONS: ", projections)
+        console.log("PROJECTIONS: ", projections);
         expect(projections.length).toBe(2);
     });
 
     it('should have a list of providers sorted Z-A after filter selected', () => {
-        let props = {...getProps()}
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        let props = {...getProps()};
+        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
