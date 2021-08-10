@@ -33,7 +33,7 @@ class OgcApiProcess:
         if not valid_token:
             raise Exception("Invalid access token.")
         self.session = get_or_update_session(headers={"Authorization": f"Bearer: {session_token}"})
-        ssl_verify = getattr(settings, "SSL_VERIFICATION", True),
+        ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         self.session.verify = ssl_verify
 
     def create_job(self, geometry, file_format=None):

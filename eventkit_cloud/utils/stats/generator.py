@@ -252,11 +252,7 @@ def collect_samples_for_export_task_record(export_task_record: ExportTaskRecord,
         affected_tile_stats = []
 
     collect_samples(
-        export_task_record,
-        affected_tile_stats + [task_stats],
-        ["duration", "area", "size"],
-        accessors,
-        area,
+        export_task_record, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area
     )
 
     sz = accessors["size"](export_task_record, area)

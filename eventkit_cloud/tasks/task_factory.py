@@ -274,13 +274,7 @@ def create_run(job_uid, user=None, clone=False):
                     run_count -= 1
 
             sendnotification(
-                run,
-                run.user,
-                NotificationVerb.RUN_STARTED.value,
-                None,
-                None,
-                NotificationLevel.INFO.value,
-                "",
+                run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, ""
             )
             run_uid = run.uid
             logger.debug("Saved run with id: {0}".format(str(run_uid)))

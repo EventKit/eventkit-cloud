@@ -274,12 +274,7 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     }
 
     with open(style_file, "wb") as open_file:
-        open_file.write(
-            render_to_string(
-                "styles/Style.qgs",
-                context=context,
-            ).encode()
-        )
+        open_file.write(render_to_string("styles/Style.qgs", context=context).encode())
     return style_file
 
 

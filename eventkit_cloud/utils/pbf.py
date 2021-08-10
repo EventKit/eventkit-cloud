@@ -50,11 +50,7 @@ class OSMToPBF(object):
             print("Running: %s" % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(
-            convert_cmd,
-            shell=True,
-            executable="/bin/bash",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            convert_cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if task_process.exitcode != 0:
             logger.error("{0}".format(task_process.stderr))

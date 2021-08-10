@@ -42,8 +42,7 @@ class PcfClient(ScaleClient):
 
     def get_info(self):
         return self.session.get(
-            "{0}/v2/info".format(self.api_url.rstrip("/")),
-            headers={"Accept": "application/json"},
+            "{0}/v2/info".format(self.api_url.rstrip("/")), headers={"Accept": "application/json"}
         ).json()
 
     def get_token(self):
@@ -155,11 +154,7 @@ class PcfClient(ScaleClient):
 
     def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
         app_name = (
-            os.getenv(
-                "PCF_APP",
-                json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),
-            )
-            or app_name
+            os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")) or app_name
         )
         if not app_name:
             raise Exception("An application name was not provided to run_task.")
@@ -195,11 +190,7 @@ class PcfClient(ScaleClient):
         :return: A list of the running task names.
         """
         app_name = (
-            os.getenv(
-                "PCF_APP",
-                json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),
-            )
-            or app_name
+            os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")) or app_name
         )
         if not app_name:
             raise Exception("An application name was not provided to get_running_tasks.")

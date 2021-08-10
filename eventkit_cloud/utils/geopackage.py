@@ -342,8 +342,7 @@ class Geopackage(object):
         cur.execute("select load_extension('mod_spatialite')")
         cur.execute("CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)")
         cur.execute(
-            "INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));",
-            (self.aoi_geom.wkb,),
+            "INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,)
         )
 
         update_progress(self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta)
@@ -407,11 +406,7 @@ class Geopackage(object):
             results_list = []
             for theme in self.feature_selection.themes:
                 results_list.append(
-                    Artifact(
-                        [os.path.join(self.stage_dir, slugify(theme)) + ".gpkg"],
-                        Geopackage.name,
-                        theme=theme,
-                    )
+                    Artifact([os.path.join(self.stage_dir, slugify(theme)) + ".gpkg"], Geopackage.name, theme=theme)
                 )
             return results_list
         else:
@@ -484,8 +479,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         )
 
     geojson_file = os.path.join(
-        os.path.dirname(gpkg),
-        "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]),
+        os.path.dirname(gpkg), "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])
     )
 
     from audit_logging.file_logging import logging_open
@@ -752,14 +746,12 @@ def create_table_from_existing(gpkg, old_table, new_table):
     with sqlite3.connect(gpkg) as conn:
         logger.debug(
             "CREATE TABLE {0} ({1});".format(
-                new_table,
-                ",".join(["{0} {1}".format(column[0], column[1]) for column in columns]),
+                new_table, ",".join(["{0} {1}".format(column[0], column[1]) for column in columns])
             )
         )
         conn.execute(
             "CREATE TABLE {0} ({1});".format(
-                new_table,
-                ",".join(["{0} {1}".format(column[0], column[1]) for column in columns]),
+                new_table, ",".join(["{0} {1}".format(column[0], column[1]) for column in columns])
             )
         )
 

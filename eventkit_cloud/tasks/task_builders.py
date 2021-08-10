@@ -90,11 +90,7 @@ class TaskChainBuilder(object):
         formats: List[ExportFormat] = list(data_provider_task.formats.all())
 
         data_provider_task_record: DataProviderTaskRecord = DataProviderTaskRecord.objects.create(
-            run=run,
-            name=data_provider.name,
-            provider=data_provider,
-            status=TaskState.PENDING.value,
-            display=True,
+            run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True
         )
         projections = get_metadata([data_provider_task_record.uid])["projections"]
 
@@ -257,9 +253,7 @@ class TaskChainBuilder(object):
         else:
             tasks = primary_export_task_signature
 
-        tasks = chain(
-            tasks,
-        )
+        tasks = chain(tasks)
 
         return data_provider_task_record.uid, tasks
 
@@ -277,11 +271,7 @@ def create_format_task(task_format):
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
         export_task = ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task,
-            status=TaskState.PENDING.value,
-            name=task_name,
-            worker=worker,
-            display=display,
+            export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=task_name, worker=worker, display=display
         )
         logger.debug("Saved task: {0}".format(task_name))
     except DatabaseError as e:

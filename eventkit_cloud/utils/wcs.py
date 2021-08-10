@@ -131,19 +131,12 @@ class WCSConverter(object):
 
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(
-            convert_cmd,
-            shell=True,
-            executable="/bin/sh",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            convert_cmd, shell=True, executable="/bin/sh", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if task_process.exitcode != 0:
             logger.error("%s", task_process.stderr)
             raise Exception(
-                "WCS translation failed with code %s: \n%s\n%s",
-                task_process.exitcode,
-                convert_cmd,
-                wcs_xml_string,
+                "WCS translation failed with code %s: \n%s\n%s", task_process.exitcode, convert_cmd, wcs_xml_string
             )
         if self.debug:
             logger.debug("gdal_translate returned: %s", task_process.exitcode)
