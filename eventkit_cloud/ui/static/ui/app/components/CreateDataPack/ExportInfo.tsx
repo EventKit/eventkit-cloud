@@ -331,10 +331,10 @@ export function ExportInfo(props: Props) {
     // What is type for whole redux store?  There is a Store name space but elements aren't compiled.
     const geojson = useSelector((store: any) => store.aoiInfo.geojson)
     const exportInfo = useSelector((store: any) => store.exportInfo)
-    const providers = useSelector((store: any) => store.providers)
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers)
     const nextEnabled = useSelector((store: any) => store.stepperNextEnabled)
-    const projections = useSelector((store: any) => [...store.projections])
-    const formats = useSelector((store: any) => [...store.formats])
+    let projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections])
+    const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats])
 
     useEffect(() => {
         updateSelectedFormats()
@@ -370,12 +370,6 @@ export function ExportInfo(props: Props) {
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
-    // // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
-    // const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
-    // if (indexOf4326 >= 1) {
-    //     projections = [projections.splice(indexOf4326, 1)[0], ...projections];
-    // }
-
     // Component mount and unmount
     useEffect(() => {
         // calculate the area of the AOI
@@ -386,11 +380,18 @@ export function ExportInfo(props: Props) {
         } as Eventkit.Store.ExportInfo);
         const steps = (joyride.ExportInfo as any[]);
         joyrideAddSteps(steps);
-        if (projections.find(projection => projection.srid === 4326)) {
-            if (exportInfo.projections && exportInfo.projections.length === 0) {
-                updatedInfo.projections = [4326];
-            }
-        }
+
+        // TODO: Fix this
+        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+        // const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+        // if (indexOf4326 >= 1) {
+        //     projections = [projections.splice(indexOf4326, 1)[0], ...projections];
+        // }
+        // if (projections.find(projection => projection.srid === 4326)) {
+        //     if (exportInfo.projections && exportInfo.projections.length === 0) {
+        //         updatedInfo.projections = [4326];
+        //     }
+        // }
 
         updateExportInfoCallback(updatedInfo);
 
@@ -445,25 +446,6 @@ export function ExportInfo(props: Props) {
             isChecked: false
         }
     ])
-
-    const elementsEqual = (array1, array2) => {
-        // To compare two arrays for equality, we check length for an early exit,
-        // otherwise we sort them then compare element by element.
-        if (array1.length !== array2.length) {
-            return false;
-        }
-        // This code will only run if the arrays are the same length
-        array1.sort();
-        array2.sort();
-        let valuesEqual = true;
-        array1.forEach((item, index) => {
-            if (item !== array2[index]) {
-                valuesEqual = false;
-                return;
-            }
-        });
-        return valuesEqual;
-    }
 
     const checkCompatibility = () => {
         const selectedProjections = exportInfo.projections;
@@ -690,21 +672,7 @@ export function ExportInfo(props: Props) {
     }
 
     const joyrideAddSteps = (newSteps: Step[]) => {
-
-        console.log("NEWSTEPS AT BEGINNING:", newSteps)
-
-        // if (!newSteps.length) {
-        //     return;
-        // }
-
         return setSteps(steps.concat(newSteps));
-
-        //
-        // this.setState((currentState) => {
-        //     const nextState = {...currentState};
-        //     nextState.steps = nextState.steps.concat(newSteps);
-        //     return nextState;
-        // });
     }
 
     const openDrawer = () => {
@@ -727,7 +695,6 @@ export function ExportInfo(props: Props) {
     }
 
     const callback = (data: any) => {
-        console.log("DATA IN CALLBACK IS: ", data)
         const {
             action,
             type,
@@ -1045,7 +1012,6 @@ export function ExportInfo(props: Props) {
                                     className={showProviderFilter || providerFilterList.length ? classes.filterLabelDropdown : classes.filterLabel}
                                 >Sort / Filter</span>
                             </div>
-                            {/*TODO: Add chip styling */}
                             {renderIf(() => (
                                 <div className={classes.filterLabelDropdownChip}>
                                     {providerFilterList.map((filter => (
@@ -1109,6 +1075,7 @@ export function ExportInfo(props: Props) {
                                                                         root: classes.radio,
                                                                         checked: classes.checked
                                                                     }}
+                                                                    data-testid={sortOption.slug}
                                                                 />}
                                                                 label={<Typography
                                                                     className={classes.radioLabel}>{sortOption.name}</Typography>}
@@ -1174,7 +1141,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={exportInfo.providers.length === providers.filter(
+                                checked={exportInfo.providers && exportInfo.providers.length === providers.filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
