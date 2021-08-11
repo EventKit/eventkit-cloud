@@ -310,6 +310,12 @@ const dummyProvider = {
 } as Eventkit.Provider;
 
 export function ExportInfo(props: Props) {
+    const geojson = useSelector((store: any) => store.aoiInfo.geojson);
+    const exportInfo = useSelector((store: any) => store.exportInfo);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
+    const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
+    const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
+
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
@@ -321,6 +327,7 @@ export function ExportInfo(props: Props) {
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
     const [selectedFormats, setSelectedFormats] = useState([]);
+    const [orderedProjections, setOrderedProjections] = useState(projections);
     const [incompatibilityInfo, setIncompatibilityInfo] = useState(({
         formats: {},
         projections: {}
@@ -328,16 +335,10 @@ export function ExportInfo(props: Props) {
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
     const [displayDummy, setDisplayDummy] = useState(false);
 
-    // What is type for whole redux store?  There is a Store name space but elements aren't compiled.
-    const geojson = useSelector((store: any) => store.aoiInfo.geojson);
-    const exportInfo = useSelector((store: any) => store.exportInfo);
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
-    let projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
-    const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
 
     useEffect(() => {
         updateSelectedFormats()
-    }, [formats]);
+    }, [selectedFormats]);
     useEffect(() => {
         checkCompatibility()
     }, [projections]);
@@ -378,17 +379,15 @@ export function ExportInfo(props: Props) {
         const steps = (joyride.ExportInfo as any[]);
         joyrideAddSteps(steps);
 
-        // TODO: Fix this
-        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
-        // const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
-        // if (indexOf4326 >= 1) {
-        //     projections = [projections.splice(indexOf4326, 1)[0], ...projections];
-        // }
-
         if (projections.find(projection => projection.srid === 4326)) {
             if (exportInfo.projections && exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
             }
+        }
+        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+        const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+        if (indexOf4326 >= 1) {
+            setOrderedProjections([projections.splice(indexOf4326, 1)[0], ...projections]);
         }
 
         updateExportInfoCallback(updatedInfo);
@@ -504,8 +503,7 @@ export function ExportInfo(props: Props) {
                 });
             }
         });
-        // TODO: This is causing an infinite loop, figure out why.
-        // updateExportInfoCallback({selectedFormats});
+        updateExportInfoCallback({selectedFormats});
     };
 
     const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
@@ -1259,7 +1257,7 @@ export function ExportInfo(props: Props) {
                         <div className={classes.sectionBottom}>
                             <div id="Projections"
                                  className={`qa-ExportInfo-projections ${classes.projections}`}>
-                                {projections.map((projection, ix) => (
+                                {orderedProjections.map((projection, ix) => (
                                     <div
                                         key={projection.srid}
                                         style={{
