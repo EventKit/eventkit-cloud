@@ -17,8 +17,12 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def get_file_paths(directory, paths=None):
-    paths = paths or dict()
+def get_file_paths(directory):
+    """
+    Gets file paths with absolute file paths for copying the files and a relative file path for
+    where the file should be located in the datapack relative to the directory.
+    """
+    paths = {}
     with cd(directory):
         for dirpath, _, filenames in os.walk("./"):
             for f in filenames:
