@@ -337,11 +337,11 @@ export function ExportInfo(props: Props) {
 
 
     useEffect(() => {
-        updateSelectedFormats()
+        updateSelectedFormats();
     }, [selectedFormats]);
     useEffect(() => {
-        checkCompatibility()
-    }, [projections]);
+        setIncompatibilityInfo(checkCompatibility());
+    }, [exportInfo.projections]);
 
     const dispatch = useDispatch();
     // Call this anytime we need to update providers, instead of setProviders.
@@ -464,14 +464,7 @@ export function ExportInfo(props: Props) {
                 }
             });
         });
-
-        return {
-            incompatibilityInfo: {
-                ...incompatibilityInfo,
-                formats: formatMap,
-                projections: projectionMap,
-            }
-        };
+        return {...incompatibilityInfo, formats: formatMap, projections: projectionMap};
     };
 
     const checkShareAll = () => {
@@ -503,7 +496,8 @@ export function ExportInfo(props: Props) {
                 });
             }
         });
-        updateExportInfoCallback({selectedFormats});
+        console.log("SELECTED FORMATS: ", selectedFormats);
+        updateExportInfoCallback({formats: selectedFormats});
     };
 
     const handleProjectionCompatibilityOpen = (projection: Eventkit.Projection) => {
