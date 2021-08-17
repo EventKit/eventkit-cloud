@@ -83,8 +83,8 @@ const projections = [
         description: null,
     },
     {
-        srid: 1,
-        name: 'EPSG:1',
+        srid: 3857,
+        name: 'EPSG:3857',
         description: null,
     }
 ];
@@ -227,20 +227,19 @@ describe('ExportInfo component', () => {
         }
     };
 
-    it('should render without error', () => {
+    const renderComponent = () => {
         const props = getProps();
-        renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()})
+        return renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+    };
+
+    it('should render without error', () => {
+        renderComponent();
     });
 
     it('should render a form', () => {
-        const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         expect(component.getByText('Enter General Information')).toBeInTheDocument();
-        // TODO: These are failing because they are child components.  Fix?
-        // expect(component.getByPlaceholderText('Datapack Name')).toBeInTheDocument();
-        // expect(component.getByPlaceholderText('Description')).toBeInTheDocument();
-        // expect(component.getByPlaceholderText('Project Name')).toBeInTheDocument();
         expect(component.getByText('Select Data Sources')).toBeInTheDocument();
         expect(component.getByText('Request New Data Source')).toBeInTheDocument();
         expect(component.getByText('Select Projection')).toBeInTheDocument();
@@ -250,30 +249,27 @@ describe('ExportInfo component', () => {
     });
 
     it('should have a search button', () => {
-        const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         expect(component.getByText('Search')).toBeInTheDocument();
     });
 
     it('should have a sort / filter button', () => {
-        const props = getProps();
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         expect(component.getByText('Sort / Filter')).toBeInTheDocument();
     });
 
     it('should have a list of providers sorted A-Z by default', () => {
-        let props = {...getProps()};
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
+
         const providers = component.getAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
     it('should have filtering options hidden by default', () => {
-        let props = {...getProps()};
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         expect(component.queryByText('Filter By')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
@@ -282,11 +278,13 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Sort By')).toBeNull();
         expect(component.queryByText('Alphabetical A-Z')).toBeNull();
         expect(component.queryByText('Alphabetical Z-A')).toBeNull();
+        expect(component.queryByText('Clear All')).toBeNull();
+        expect(component.queryByText('Apply')).toBeNull();
+        expect(component.queryByText('Cancel')).toBeNull();
     });
 
     it('should provide filtering options when sort / filter is clicked', () => {
-        let props = {...getProps()};
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
@@ -297,19 +295,20 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Sort By')).toBeInTheDocument();
         expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
         expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
+        expect(component.queryByText('Clear All')).toBeInTheDocument();
+        expect(component.queryByText('Apply')).toBeInTheDocument();
+        expect(component.queryByText('Cancel')).toBeInTheDocument();
     });
 
     it('should have a list of projections', () => {
-        let props = {...getProps()};
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
+
         const projections = component.getAllByText(/EPSG/);
-        console.log("PROJECTIONS: ", projections);
         expect(projections.length).toBe(2);
     });
 
     it('should have a list of providers sorted Z-A after filter selected', () => {
-        let props = {...getProps()};
-        const component = renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+        const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
@@ -317,6 +316,68 @@ describe('ExportInfo component', () => {
         fireEvent.click(radioButton);
         const providers = component.getAllByTestId('DataProvider');
         expect(providers[0]).toHaveTextContent('USGS');
+    });
+
+    it('should display the correct checked value of a projection checkbox', () => {
+        const component = renderComponent();
+
+        const projectionCheckbox = component.getByRole('checkbox', {name: /EPSG:3857/});
+        fireEvent.click(projectionCheckbox);
+        expect(projectionCheckbox).toBeChecked();
+        fireEvent.click(projectionCheckbox);
+        expect(projectionCheckbox).not.toBeChecked();
+    });
+
+    it('should remove a filter when the user clicks the x on the filter chip', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const rasterFilter = component.getByText('Raster');
+
+        // Select the raster filter and close the dialog so that the filter chips show up.
+        fireEvent.click(rasterFilter);
+        fireEvent.click(sortFilter);
+
+        expect(component.queryByText("Raster")).toBeInTheDocument();
+
+        const rasterFilterChip = component.container.querySelector('.MuiChip-deleteIcon');
+        fireEvent.click(rasterFilterChip);
+
+        expect(component.queryByText("Raster")).toBeNull();
+    });
+
+    it('should close the filter section when you click apply', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        expect(component.queryByText('Filter By')).toBeInTheDocument();
+
+        const applyFilterButton = component.queryByText('Apply');
+        fireEvent.click(applyFilterButton);
+
+        expect(component.queryByText('Filter By')).toBeNull();
+    });
+
+    it('should close the filter section and clear filters when you click cancel', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        expect(component.queryByText('Filter By')).toBeInTheDocument();
+
+        const rasterFilter = component.getByText('Raster');
+        fireEvent.click(rasterFilter);
+        let providers = component.getAllByTestId('DataProvider');
+        expect(providers.length).toBe(1);
+
+        const applyFilterButton = component.queryByText('Cancel');
+        fireEvent.click(applyFilterButton);
+
+        expect(component.queryByText('Filter By')).toBeNull();
+        providers = component.getAllByTestId('DataProvider');
+        expect(providers.length).toBe(3);
     });
 
 });

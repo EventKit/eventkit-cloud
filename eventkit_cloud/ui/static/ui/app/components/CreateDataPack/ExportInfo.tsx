@@ -1260,17 +1260,18 @@ export function ExportInfo(props: Props) {
                                             backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white
                                         }}
                                     >
-                                        <Checkbox
-                                            className="qa-ExportInfo-CheckBox-projection"
-                                            classes={{root: classes.checkbox, checked: classes.checked}}
-                                            name={`${projection.srid}`}
-                                            checked={exportInfo.projections.indexOf(projection.srid) !== -1}
-                                            style={{width: '24px', height: '24px'}}
-                                            onChange={onSelectProjection}
+                                        <FormControlLabel
+                                            control={<Checkbox
+                                                className="qa-ExportInfo-CheckBox-projection"
+                                                classes={{root: classes.checkbox, checked: classes.checked}}
+                                                name={`${projection.srid}`}
+                                                checked={exportInfo.projections.indexOf(projection.srid) !== -1}
+                                                style={{width: '24px', height: '24px'}}
+                                                onChange={onSelectProjection}
+                                                data-testid={'projection-checkbox-' + ix}
+                                            />}
+                                            label={<Typography style={{fontSize: '15px'}}>EPSG:{projection.srid} - {projection.name}</Typography>}
                                         />
-                                        <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
-                                                EPSG:{projection.srid} - {projection.name}
-                                            </span>
                                         {projectionHasErrors(projection.srid) &&
                                         <AlertWarning
                                             className={`qa-Projection-Warning-Icon`}
