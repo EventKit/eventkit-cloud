@@ -40,11 +40,9 @@ from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProviderTask, DataProvider, ExportFormat, load_provider_config, clean_config
 from eventkit_cloud.tasks import set_cache_value
-from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.enumerations import TaskState, Directory, PREVIEW_TAIL
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
-    Directory,
-    PREVIEW_TAIL,
     add_export_run_files_to_zip,
     check_cached_task_failures,
     generate_qgs_style,
@@ -54,12 +52,9 @@ from eventkit_cloud.tasks.helpers import (
     get_export_filepath,
     get_human_readable_metadata_document,
     get_metadata,
-    get_provider_download_dir,
     get_export_task_record,
     get_provider_staging_dir,
     get_provider_staging_preview,
-    get_run_download_dir,
-    get_run_download_url,
     get_run_staging_dir,
     get_style_files,
     normalize_name,
@@ -74,6 +69,8 @@ from eventkit_cloud.tasks.helpers import (
     get_geometry,
     update_progress,
     get_arcgis_templates,
+    make_file_downloadable,
+    make_dirs,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -85,8 +82,8 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, rerun_data_provider_records
-from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
+from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
@@ -97,49 +94,6 @@ BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
-
-
-# http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
-# https://github.com/celery/celery/issues/3270
-
-
-def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None):
-    """ Construct the filesystem location and url needed to download the file at filepath.
-        Copy filepath to the filesystem location required for download.
-        @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
-        @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
-            generally can be ignored
-        @return A url to reach filepath.
-    """
-
-    if provider_slug:
-        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
-        run_download_dir = get_provider_download_dir(run_uid, provider_slug)
-    else:
-        staging_dir = get_run_staging_dir(run_uid)
-        run_download_dir = get_run_download_dir(run_uid)
-
-    run_download_url = get_run_download_url(run_uid, provider_slug)
-    filename = os.path.basename(filepath)
-    if download_filename is None:
-        download_filename = filename
-
-    if getattr(settings, "USE_S3", False):
-        source_path = os.path.join(staging_dir, filename)
-        if provider_slug:
-            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
-        else:
-            download_filepath = os.path.join(run_uid, download_filename)
-        download_url = s3.upload_to_s3(source_path, download_filepath)
-    else:
-        make_dirs(run_download_dir)
-
-        download_url = os.path.join(run_download_url, download_filename)
-
-        download_filepath = os.path.join(run_download_dir, download_filename)
-        if not skip_copy:
-            shutil.copy(filepath, download_filepath)
-    return download_url
 
 
 # ExportTaskRecord abstract base class and subclasses.
@@ -168,7 +122,6 @@ class ExportTask(EventKitBaseTask):
 
             check_cached_task_failures(task.name, task_uid)
 
-            task.started_at = timezone.now()
             task.worker = socket.gethostname()
             task.save()
 
@@ -192,13 +145,19 @@ class ExportTask(EventKitBaseTask):
                 os.makedirs(stage_dir, 0o750)
 
             try:
-                task_state_result = args[0]
-            except IndexError:
+                task_state_result = args[0].get("status")
+            except (IndexError, TypeError):
                 task_state_result = None
-            self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            if TaskState.CANCELED.value not in [task.status, task.export_provider_task.status]:
+            self.update_task_state(task_uid=task_uid, task_status=task_state_result)
+
+            if TaskState.CANCELED.value not in [
+                task.status,
+                task.export_provider_task.status,
+                task.export_provider_task.run.status,
+            ]:
                 try:
+                    self.update_task_state(task_uid=task_uid)
                     retval = super(ExportTask, self).__call__(*args, **kwargs)
                 except SoftTimeLimitExceeded as e:
                     logger.error(e)
@@ -227,7 +186,6 @@ class ExportTask(EventKitBaseTask):
                 logger.error("Failed to add metadata.")
 
             # update the task
-            finished = timezone.now()
             if TaskState.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info("Task reported on success but was previously canceled ", format(task_uid))
                 username = None
@@ -235,7 +193,6 @@ class ExportTask(EventKitBaseTask):
                     username = task.cancel_user.username
                 raise CancelException(task_name=task.export_provider_task.name, user_name=username)
 
-            task.finished_at = finished
             task.progress = 100
             task.pid = -1
             # get the output
@@ -331,7 +288,6 @@ class ExportTask(EventKitBaseTask):
         Can use the celery uid for diagnostics.
         """
         result = result or {}
-        started = timezone.now()
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -348,11 +304,15 @@ class ExportTask(EventKitBaseTask):
                 raise CancelException(task_name=task.export_provider_task.name)
             # The parent ID is actually the process running in celery.
             task.pid = os.getppid()
-            task.status = task_status
-            task.export_provider_task.status = TaskState.RUNNING.value
-            task.started_at = started
+            if task_status:
+                task.status = task_status
+                if TaskState[task_status] == TaskState.RUNNING:
+                    task.export_provider_task.status = TaskState.RUNNING.value
+                    task.export_provider_task.run.status = TaskState.RUNNING.value
+            # Need to manually call to trigger method overrides.
             task.save()
             task.export_provider_task.save()
+            task.export_provider_task.run.save()
             logger.debug("Updated task: {0} with uid: {1}".format(task.name, task.uid))
         except DatabaseError as e:
             logger.error("Updating task {0} state throws: {1}".format(task_uid, e))
@@ -1733,7 +1693,6 @@ def pick_up_run_task(
     result=None,
     run_uid=None,
     user_details=None,
-    data_provider_slugs=None,
     run_zip_file_slug_sets=None,
     session_token=None,
     *args,
@@ -1744,37 +1703,29 @@ def pick_up_run_task(
     """
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
-    # This is just to make it easier to trace when user_details haven't been sent
     worker = socket.gethostname()
     queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
 
     if user_details is None:
+        # This is just to make it easier to trace when user_details haven't been sent
         user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
+    started_providers = run.data_provider_task_records.exclude(status=TaskState.PENDING.value)
     try:
-        logger.debug(f"Worker for {run.uid} is {worker} using queue_group {queue_group}")
-        data_provider_task_records = run.data_provider_task_records.filter(~Q(slug="run"))
-        logger.debug(f"Current tasks for run: {[dptr.name for dptr in data_provider_task_records]}")
-        if not data_provider_task_records:
-            TaskFactory().parse_tasks(
-                worker=worker,
-                run_uid=run_uid,
-                user_details=user_details,
-                data_provider_slugs=data_provider_slugs,
-                run_zip_file_slug_sets=run_zip_file_slug_sets,
-                session_token=session_token,
-                queue_group=queue_group,
-            )
-        else:
-            # Run has already been created, but we got here because
-            # something happened to the last worker and the run didn't finish.
-            logger.info(f"Run {run.uid} was already in progress!")
-            data_provider_slugs = [
-                dptr.slug
-                for dptr in run.data_provider_task_records.filter(~Q(slug="run") | ~Q(status=TaskState.COMPLETED.value))
-            ]
-            logger.info(f"Rerunning data providers {data_provider_slugs}")
-            rerun_data_provider_records(run_uid, run.user.id, user_details, data_provider_slugs)
+        # If a data source is retried we will need to download the data. For the to work the calling process needs to be
+        # on same disk as the process running the rest of the
+        # job (i.e. the run worker needs to be calling pick_up_run_task)
+        if TaskState[run.status] == TaskState.SUBMITTED and started_providers:
+            run.download_data()
+
+        TaskFactory().parse_tasks(
+            worker=worker,
+            run_uid=run_uid,
+            user_details=user_details,
+            run_zip_file_slug_sets=run_zip_file_slug_sets,
+            session_token=session_token,
+            queue_group=queue_group,
+        )
         run.worker = worker
         run.save()
     except Exception as e:
@@ -1931,7 +1882,6 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
                 data_provider_task_record.status = TaskState.INCOMPLETE.value
             else:
                 data_provider_task_record.status = TaskState.COMPLETED.value
-        data_provider_task_record.finished_at = timezone.now()
         data_provider_task_record.save()
 
     return result
@@ -2045,8 +1995,6 @@ class FinalizeRunBase(EventKitBaseTask):
             run.status = TaskState.CANCELED.value
             notification_level = NotificationLevel.WARNING.value
             verb = NotificationVerb.RUN_CANCELED.value
-        finished = timezone.now()
-        run.finished_at = finished
         run.save()
 
         # sendnotification to user via django notifications
@@ -2121,8 +2069,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
         run.status = TaskState.CANCELED.value
         verb = NotificationVerb.RUN_CANCELED.value
         notification_level = NotificationLevel.WARNING.value
-
-    run.finished_at = timezone.now()
     run.save()
 
     # sendnotification to user via django notifications
@@ -2149,6 +2095,12 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
         msg.send()
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
+
+    try:
+        enforce_run_limit(run.job)
+    except Exception as e:
+        logger.error(e)
+        logger.error("Could not enforce run limit.")
 
     result["run_uid"] = run_uid
     result["stage_dir"] = stage_dir
@@ -2415,14 +2367,6 @@ def get_creation_options(config: str, driver: str):
         params = conf.get("formats", {}).get(driver, {})
         return params.get("warp_params"), params.get("translate_params")
     return None, None
-
-
-def make_dirs(path):
-    try:
-        os.makedirs(path)
-    except OSError:
-        if not os.path.isdir(path):
-            raise
 
 
 def get_ogcapi_data(

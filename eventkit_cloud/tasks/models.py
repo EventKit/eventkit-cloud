@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import logging
 import os
-import shutil
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
@@ -39,7 +36,6 @@ from eventkit_cloud.tasks import (
     set_cache_value,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.utils.s3 import download_folder_from_s3
 
 logger = logging.getLogger(__name__)
 
@@ -158,43 +154,28 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         return "FileProducingTaskResult ({}), {}".format(self.uid, self.filename)
 
     def clone(self, new_run):
-        from eventkit_cloud.tasks.export_tasks import make_file_downloadable
-        from eventkit_cloud.tasks.helpers import (
-            get_download_filename,
-            get_run_download_dir,
-            get_run_staging_dir,
-        )
 
-        old_run = self.export_task.export_provider_task.run
-        downloads = list(self.downloads.all())
+        #
+
+        # downloads = list(self.downloads.all())
+
         self.id = None
         self.uid = None
+        # Clear user download metric.  Old downloads still live on old run.
+        # self.downloads.remove()
         self.save()
+        #
+        # for download in downloads:
+        #     self.downloads.add(download.clone())
 
-        download_dir = get_run_download_dir(old_run.uid)
-        old_run_dir = get_run_staging_dir(old_run.uid)
-        new_run_dir = get_run_staging_dir(new_run.uid)
-
-        # Download the data from previous exports so we can rezip.
-        if not cache.get(f"{new_run.uid}"):
-            if getattr(settings, "USE_S3", False):
-                download_folder_from_s3(str(old_run.uid))
-                shutil.copytree(old_run_dir, new_run_dir)
-            else:
-                if not os.path.exists(new_run_dir):
-                    shutil.copytree(download_dir, new_run_dir, ignore=shutil.ignore_patterns("run/*.zip"))
-            cache.set(f"{new_run.uid}", True, DEFAULT_CACHE_EXPIRATION)
-
-        for download in downloads:
-            self.downloads.add(download.clone())
-
-        data_provider_slug = self.export_task.export_provider_task.provider.slug
-        file_ext = os.path.splitext(self.filename)[1]
-        download_filename = get_download_filename(os.path.splitext(os.path.basename(self.filename))[0], file_ext)
-        filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
-        self.download_url = make_file_downloadable(
-            filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename
-        )
+        # data_provider_slug = self.export_task.export_provider_task.provider.slug
+        # file_ext = os.path.splitext(self.filename)[1]
+        # download_filename = get_download_filename(os.path.splitext(os.path.basename(self.filename))[0], file_ext)
+        # new_run_dir = get_run_staging_dir(new_run.uid)
+        # filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
+        # self.download_url = make_file_downloadable(
+        #     filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename
+        # )
         self.save()
 
         return self
@@ -243,28 +224,72 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.save()
         self.soft_delete_notifications(*args, **kwargs)
 
-    def clone(self):
-        data_provider_task_records = list(self.data_provider_task_records.all())
-        old_run_zip_files = list(self.zip_files.all())
+    def clone(self, download_data=True):
+
+        data_provider_task_records = list(self.data_provider_task_records.exclude(provider__slug=""))
 
         self.pk = None
         self.id = None
         self.uid = None
-        self.save()
 
         self.expiration = timezone.now() + timezone.timedelta(days=14)
         self.created_at = timezone.now()
-        self.started_at = timezone.now()
+        self.started_at = None
         self.finished_at = None
         self.save()
 
         for data_provider_task_record in data_provider_task_records:
             if data_provider_task_record.provider:
-                self.data_provider_task_records.add(data_provider_task_record.clone(new_run=self))
+                dptr = data_provider_task_record.clone(new_run=self)
+                if not self.data_provider_task_records.filter(id=dptr.id):
+                    self.data_provider_task_records.add(dptr)
+        self.save()
 
-        data_provider_task_record_slug_sets = get_run_zip_file_slug_sets(self, old_run_zip_files)
+        if download_data:
+            self.download_data()
 
-        return self, data_provider_task_record_slug_sets
+        return self
+
+    def download_data(self):
+        """
+        Downloads the data for a run into the staging directory.
+        This is helpful when wanting to clone a run but delay the downloading of the data
+        onto a fresh node if not using shared storage.
+        """
+        # This logic was considered in each related model to the run, but was mostly just passing flags through
+        # to both keep existing models and/or download data for the related models.  This became messy and unnecessary,
+        # since cloning and managing datapacks is mostly done at the run level.  If managing data fell to the data
+        # provider or task level, then it doesn't make sense to have a
+        # complicated helper function like this for each model.
+        from eventkit_cloud.tasks.helpers import download_run_directory, get_download_filename, make_file_downloadable
+
+        previous_run = self.job.runs.order_by("-created_at")[1]
+        new_run_dir = download_run_directory(previous_run, self)
+
+        data_provider_task_records = (
+            previous_run.data_provider_task_records.exclude(slug="run")
+            .prefetch_related("tasks__result")
+            .select_related("preview")
+        )
+        for data_provider_task_record in data_provider_task_records:
+            file_models = [data_provider_task_record.preview]
+            export_task_record: ExportTaskRecord
+            for export_task_record in data_provider_task_record.tasks.all():
+                file_models.append(export_task_record.result)
+
+            data_provider_slug = data_provider_task_record.provider.slug
+            for file_model in file_models:
+                if not file_model:
+                    continue
+                file_ext = os.path.splitext(file_model.filename)[1]
+                download_filename = get_download_filename(
+                    os.path.splitext(os.path.basename(file_model.filename))[0], file_ext
+                )
+                filepath = os.path.join(new_run_dir, data_provider_slug, file_model.filename)
+                file_model.download_url = make_file_downloadable(
+                    filepath, str(file_model.uid), data_provider_slug, download_filename=download_filename
+                )
+                file_model.save()
 
 
 class ExportRunFile(UIDMixin, TimeStampedModelMixin):
@@ -309,7 +334,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default="")
     provider = models.ForeignKey(
-        DataProvider, on_delete=models.CASCADE, related_name="task_record_provider", null=True, blank=True
+        DataProvider, on_delete=models.CASCADE, related_name="task_record_providers", null=True, blank=True
     )
     run = models.ForeignKey(ExportRun, related_name="data_provider_task_records", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
@@ -329,6 +354,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
 
     def clone(self, new_run):
+
         export_task_records = list(self.tasks.all())
         preview = self.preview
         self.id = None
@@ -336,7 +362,9 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         self.save()
 
         for export_task_record in export_task_records:
-            self.tasks.add(export_task_record.clone(new_run=new_run))
+            etr = export_task_record.clone(new_run=new_run)
+            if not self.tasks.filter(id=etr.id).exists():
+                self.tasks.add(etr)
 
         if preview:
             self.preview = preview.clone(new_run, self)
@@ -365,9 +393,8 @@ class UserDownload(UIDMixin):
 
     @property
     def provider(self):
-        # TODO: This is one of many reasons why DataProviderTaskRecord should maybe point to DataProvider
         if self.downloadable.export_task:
-            return DataProvider.objects.filter(slug=self.downloadable.export_task.export_provider_task.slug).first()
+            return self.downloadable.export_task.export_provider_task.provider
 
     def clone(self):
         self.id = None
@@ -425,7 +452,6 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     def clone(self, new_run):
         # Get the exceptions from the old ExportTaskRecord
-        exceptions = ExportTaskException.objects.filter(task__uid=self.uid)
         exceptions = list(self.exceptions.all())
 
         # Create a new FPTR now because we can't clone the ETR with the old FPTR since it has a unique constraint.
@@ -443,7 +469,10 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
         # Add the exceptions to the new ExportTaskRecord
         for exception in exceptions:
-            self.exceptions.add(exception.clone())
+            e = exception.clone()
+            if not self.exceptions.filter(id=e.id).exists():
+                self.exceptions.add(e)
+        self.save()
 
         return self
 

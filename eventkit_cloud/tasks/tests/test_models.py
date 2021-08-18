@@ -126,26 +126,27 @@ class TestExportRun(TestCase):
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
 
+    @patch("eventkit_cloud.tasks.models.ExportRun.download_data")
     @patch("eventkit_cloud.tasks.models.ExportRun.data_provider_task_records")
-    def test_clone(self, data_provider_task_records_mock):
+    def test_clone(self, data_provider_task_records_mock, mock_download_data):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
-        provider = DataProvider.objects.get(slug="osm-generic")
-        data_provider_task_record_mock = Mock(provider=provider)
-        data_provider_task_records_mock.all().__iter__.return_value = [data_provider_task_record_mock]
-
+        data_provider_task_record_mock = Mock(provider=True)
+        data_provider_task_records_mock.exclude.return_value = [data_provider_task_record_mock]
         old_run = ExportRun.objects.get(uid=run.uid)
-        new_run, run_zip_file_slug_sets = run.clone()
+        old_run.started_at = datetime.datetime.now()
+        new_run = run.clone()
 
         self.assertNotEqual(old_run, new_run)
         self.assertNotEqual(old_run.id, new_run.id)
         self.assertNotEqual(old_run.uid, new_run.uid)
         self.assertNotEqual(old_run.expiration, new_run.expiration)
-        self.assertNotEqual(old_run.created_at, new_run.created_at)
         self.assertNotEqual(old_run.started_at, new_run.started_at)
 
         self.assertEqual(old_run.job, new_run.job)
+        print(data_provider_task_records_mock)
         data_provider_task_record_mock.clone.assert_called_once()
+        mock_download_data.assert_called_once()
 
 
 class TestRunZipFile(TestCase):

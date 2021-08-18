@@ -378,14 +378,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
     provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField()
-    created_at = serializers.SerializerMethodField()
-    started_at = serializers.SerializerMethodField()
-    finished_at = serializers.SerializerMethodField()
-    duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
@@ -410,8 +403,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_user(obj):
-        if not obj.deleted:
-            return obj.user.username
+        return obj.user.username
 
     def get_provider_task_list_status(self, obj):
         request = self.context["request"]
@@ -457,36 +449,9 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
         return data
 
-    def get_created_at(self, obj):
-        if not obj.deleted:
-            return obj.created_at
-
-    def get_started_at(self, obj):
-        if not obj.deleted:
-            return obj.started_at
-
-    def get_finished_at(self, obj):
-        if not obj.deleted:
-            return obj.finished_at
-
-    def get_duration(self, obj):
-        if not obj.deleted:
-            return obj.duration
-
-    def get_status(self, obj):
-        if not obj.deleted:
-            return obj.status
-
     def get_job(self, obj):
         data = SimpleJobSerializer(obj.job, context=self.context).data
-        if not obj.deleted:
-            return data
-        else:
-            return {"uid": data["uid"], "name": data["name"]}
-
-    def get_expiration(self, obj):
-        if not obj.deleted:
-            return obj.expiration
+        return data
 
 
 class ExportRunGeoFeatureSerializer(ExportRunSerializer, GeoFeatureModelSerializer):
@@ -532,7 +497,10 @@ class RunZipFileSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         if obj.downloadable_file:
-            return ExportTaskRecord.objects.get(result=obj.downloadable_file).status
+            try:
+                return ExportTaskRecord.objects.get(result=obj.downloadable_file).status
+            except ExportTaskRecord.DoesNotExist:
+                logger.error(f"ExportTaskRecord does not exist for file: {obj.downloadable_file}")
         return obj.status
 
     def get_url(self, obj):

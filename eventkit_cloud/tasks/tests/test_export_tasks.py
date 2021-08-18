@@ -1112,9 +1112,8 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.ZipFile")
     @patch("os.walk")
     @patch("os.path.getsize")
-    @patch("eventkit_cloud.tasks.export_tasks.s3.upload_to_s3")
     def test_zipfile_task(
-        self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry, mock_get_data_package_manifest
+        self, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry, mock_get_data_package_manifest
     ):
         os_path_getsize.return_value = 20
 
@@ -1163,9 +1162,6 @@ class TestExportTasks(ExportTaskBase):
                 ["test.gpkg", "test.om5", "test.osm"],  # om5 and osm should get filtered out
             )
         ]
-        date = timezone.now().strftime("%Y%m%d")
-        zipfile_name = os.path.join("/downloads", "{0}".format(run_uid), "testjob-test-eventkit-{0}.zip".format(date))
-        s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_files(include_files=include_files, run_zip_file_uid=run_zip_file.uid, file_path=zipfile_path)
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
@@ -1205,23 +1201,30 @@ class TestExportTasks(ExportTaskBase):
 
     @override_settings(CELERY_GROUP_NAME="test")
     @patch("eventkit_cloud.tasks.task_factory.TaskFactory")
+    @patch("eventkit_cloud.tasks.export_tasks.ExportRun")
     @patch("eventkit_cloud.tasks.export_tasks.socket")
-    def test_pickup_run_task(self, socket, task_factory):
-        run_uid = self.run.uid
+    def test_pickup_run_task(self, socket, mock_export_run, task_factory):
+
+        mock_run = MagicMock()
+        mock_run.uid = self.run.uid
+        mock_run.status = TaskState.SUBMITTED.value
+        # This would normally return providers.
+        mock_run.data_provider_task_records.exclude.return_value = True
+        mock_export_run.objects.get.return_value = mock_run
         socket.gethostname.return_value = "test"
         self.assertEqual("Pickup Run", pick_up_run_task.name)
-        pick_up_run_task.run(run_uid=run_uid, user_details={"username": "test_pickup_run_task"})
+        pick_up_run_task.run(run_uid=mock_run.uid, user_details={"username": "test_pickup_run_task"})
         task_factory.assert_called_once()
         expected_user_details = {"username": "test_pickup_run_task"}
         task_factory.return_value.parse_tasks.assert_called_once_with(
-            run_uid=run_uid,
+            run_uid=mock_run.uid,
             user_details=expected_user_details,
             worker="test",
-            data_provider_slugs=None,
             run_zip_file_slug_sets=None,
             session_token=None,
             queue_group="test",
         )
+        mock_run.download_data.assert_called_once()
 
     @patch("eventkit_cloud.tasks.export_tasks.logger")
     @patch("shutil.rmtree")

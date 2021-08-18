@@ -69,8 +69,18 @@ class TimeTrackingModelMixin(models.Model):
     Mixin for timestamped models.
     """
 
-    started_at = models.DateTimeField(default=timezone.now, editable=False)
+    started_at = models.DateTimeField(null=True, editable=False)
     finished_at = models.DateTimeField(editable=False, null=True)
+
+    def save(self, *args, **kwargs):
+        from eventkit_cloud.tasks.enumerations import TaskState
+
+        if hasattr(self, "status"):
+            if self.status and TaskState[self.status] == TaskState.RUNNING:
+                self.started_at = timezone.now()
+            if self.status and TaskState[self.status] in TaskState.get_finished_states():
+                self.finished_at = timezone.now()
+        super(TimeTrackingModelMixin, self).save(*args, **kwargs)
 
     class Meta:
         abstract = True

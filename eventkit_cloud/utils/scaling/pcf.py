@@ -5,7 +5,7 @@ from enum import Enum
 
 import requests
 
-from eventkit_cloud.utils.scale_client import ScaleClient
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)
@@ -17,7 +17,7 @@ class PcfTaskStates(Enum):
     FAILED = "FAILED"  # Used for runs that have not been started
 
 
-class PcfClient(ScaleClient):
+class Pcf(ScaleClient):
     def __init__(self, api_url=None, org_name=None, space_name=None):
         self.api_url = os.getenv("PCF_API_URL", api_url)
         if not self.api_url:

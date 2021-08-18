@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 import uuid
 from enum import Enum
 from typing import Union, List
@@ -63,22 +62,11 @@ class MapImageSnapshot(DownloadableMixin, UIDMixin):
     def __str__(self):
         return "MapImageSnapshot ({}), {}".format(self.uid, self.filename)
 
-    def clone(self, new_run, data_provider_task_record):
-        from eventkit_cloud.tasks.export_tasks import make_file_downloadable
-        from eventkit_cloud.tasks.helpers import get_download_filename, get_run_staging_dir
+    def clone(self):
 
         self.id = None
         self.uid = None
         self.save()
-
-        new_run_dir = get_run_staging_dir(new_run.uid)
-        data_provider_slug = data_provider_task_record.provider.slug
-        filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
-        file_ext = os.path.splitext(self.filename)[1]
-        download_filename = get_download_filename(os.path.splitext(os.path.basename(self.filename))[0], file_ext)
-        self.download_url = make_file_downloadable(
-            filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename
-        )
 
         return self
 

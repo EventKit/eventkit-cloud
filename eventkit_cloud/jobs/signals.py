@@ -21,7 +21,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.tasks.helpers import make_dirs
 from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
 from eventkit_cloud.utils.image_snapshot import (
     make_thumbnail_downloadable,

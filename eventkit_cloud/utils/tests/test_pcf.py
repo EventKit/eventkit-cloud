@@ -7,7 +7,7 @@ from unittest.mock import patch
 import requests_mock
 from django.test import TestCase
 
-from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.utils.scaling.pcf import Pcf
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +38,12 @@ class TestPcfClient(TestCase):
             "token_endpoint": self.token_url,
             "routing_endpoint": self.routing_url,
         }
-        self.client = PcfClient(api_url=self.api_url, org_name=self.org, space_name=self.space)
+        self.client = Pcf(api_url=self.api_url, org_name=self.org, space_name=self.space)
 
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_space_guid")
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_org_guid")
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_token")
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_info")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_space_guid")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_org_guid")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_token")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_info")
     def test_login(self, mock_get_info, mock_get_token, mock_get_org_guid, mock_get_space_guid):
         mock_get_org_guid.return_value = "org_guid", self.org
         mock_get_space_guid.return_value = "space_guid", self.space
@@ -132,7 +132,7 @@ class TestPcfClient(TestCase):
             self.mock_requests.get(app_url, text=json.dumps(app_not_found))
             self.client.get_app_guid(self.app)
 
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_app_guid")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_app_guid")
     def test_run_task(self, mock_get_app_guid):
         mock_get_app_guid.return_value = self.app_guid
 
@@ -156,7 +156,7 @@ class TestPcfClient(TestCase):
             mock_get_app_guid.return_value = None
             task = self.client.run_task(example_task_name, example_command, app_name=self.app)
 
-    @patch("eventkit_cloud.utils.pcf.PcfClient.get_app_guid")
+    @patch("eventkit_cloud.utils.scaling.pcf.Pcf.get_app_guid")
     def test_get_running_tasks(self, mock_get_app_guid):
         mock_get_app_guid.return_value = self.app_guid
 

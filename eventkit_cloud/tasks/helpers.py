@@ -1,4 +1,6 @@
 import copy
+from distutils import dir_util
+import glob
 import json
 import logging
 import os
@@ -18,6 +20,7 @@ from xml.dom import minidom
 from zipfile import ZipFile
 
 import requests
+import shutil
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -26,31 +29,21 @@ from django.db import connection
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
-from enum import Enum
 from numpy import linspace
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, get_data_type_from_provider, DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
+from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
-from eventkit_cloud.utils import gdalutils
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
+from eventkit_cloud.utils import gdalutils, s3
 from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
+from eventkit_cloud.utils.s3 import download_folder_from_s3
 
 logger = logging.getLogger()
-
-
-class Directory(Enum):
-    ARCGIS = "arcgis"
-    DATA = "data"
-    TEMPLATES = "templates"
-
-
-PREVIEW_TAIL = "preview.jpg"
-
-UNSUPPORTED_CARTOGRAPHY_FORMATS = [".pbf", ".gpx"]
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
 
@@ -325,7 +318,7 @@ def get_arcgis_templates(metadata: dict) -> dict:
 
     with open(arcgis_metadata_file, "w") as open_md_file:
         json.dump(arcgis_metadata, open_md_file)
-    files[os.path.abspath(arcgis_metadata_file)] = os.path.join(arcgis_metadata_file)
+    files[os.path.abspath(arcgis_metadata_file)] = os.path.join(Directory.ARCGIS.value, "metadata.json")
 
     return files
 
@@ -440,12 +433,12 @@ def progressive_kill(pid):
     :return: None.
     """
     try:
-        logger.info("Trying to terminate process group {0} with SIGTERM.".format(pid))
-        os.killpg(pid, signal.SIGTERM)
+        logger.info("Trying to terminate pid {0} with SIGTERM.".format(pid))
+        os.kill(pid, signal.SIGTERM)
         time.sleep(5)
 
-        logger.info("Trying to kill process group {0} with SIGKILL.".format(pid))
-        os.killpg(pid, signal.SIGKILL)
+        logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
+        os.kill(pid, signal.SIGKILL)
         time.sleep(1)
 
     except OSError:
@@ -1232,3 +1225,97 @@ def create_license_file(provider_task):
         license_file.write(data_provider_license.text.encode())
 
     return license_file_path
+
+
+def download_run_directory(old_run: ExportRun, new_run: ExportRun):
+    download_dir = get_run_download_dir(old_run.uid)
+    old_run_dir = get_run_staging_dir(old_run.uid)
+    new_run_dir = get_run_staging_dir(new_run.uid)
+    cache_key = str(new_run.uid)
+
+    if not os.path.exists(new_run_dir):
+        os.mkdir(new_run_dir)
+
+    # Download the data from previous exports so we can rezip.
+    if cache.add(cache_key, True, DEFAULT_CACHE_EXPIRATION):
+        logger.info(f"Downloading run data {old_run.uid} -> {new_run.uid}")
+        try:
+            # TODO: Switch to copytree when migrating to 3.8 after dirs_exist_ok is added.
+            dir_util.copy_tree(old_run_dir, new_run_dir)
+        except Exception:
+            logger.error(
+                f"Could not copy run data from staging directory {old_run_dir} it might have already been removed."
+            )
+        if getattr(settings, "USE_S3", False):
+            download_folder_from_s3(str(old_run.uid))
+        else:
+            try:
+                dir_util.copy_tree(download_dir, new_run_dir)
+            except Exception as e:
+                logger.error(e)
+                logger.error(
+                    f"Could not copy run data from download directory {download_dir} "
+                    f"it might have already been removed."
+                )
+        # TODO: Use ignore on copytree when switching to shutil in python 3.8.
+
+        copied_files = glob.glob(os.path.join(new_run_dir, "**/*"))
+        logger.error("Copied the files:")
+        for cf in copied_files:
+            logger.error(cf)
+        delete_files = glob.glob(os.path.join(new_run_dir, "run/*.zip"))
+        for delete_file in delete_files:
+            logger.error(f"deleting file: {delete_file}")
+            os.unlink(delete_file)
+        cache.delete(cache_key)
+    return new_run_dir
+
+
+def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None):
+    """ Construct the filesystem location and url needed to download the file at filepath.
+        Copy filepath to the filesystem location required for download.
+        @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
+        @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
+            generally can be ignored
+        @return A url to reach filepath.
+    """
+
+    if provider_slug:
+        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
+        run_download_dir = get_provider_download_dir(run_uid, provider_slug)
+    else:
+        staging_dir = get_run_staging_dir(run_uid)
+        run_download_dir = get_run_download_dir(run_uid)
+
+    run_download_url = get_run_download_url(run_uid, provider_slug)
+    filename = os.path.basename(filepath)
+    if download_filename is None:
+        download_filename = filename
+
+    if getattr(settings, "USE_S3", False):
+        source_path = os.path.join(staging_dir, filename)
+        if provider_slug:
+            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
+        else:
+            download_filepath = os.path.join(run_uid, download_filename)
+        download_url = s3.upload_to_s3(source_path, download_filepath)
+    else:
+        make_dirs(run_download_dir)
+
+        download_url = os.path.join(run_download_url, download_filename)
+
+        download_filepath = os.path.join(run_download_dir, download_filename)
+        if not skip_copy:
+            if not os.path.isfile(filepath):
+                logger.error(f"Cannot make file {filepath} downloadable because it does not exist.")
+            else:
+                shutil.copy(filepath, download_filepath)
+    return download_url
+
+
+def make_dirs(path):
+    try:
+        os.makedirs(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise

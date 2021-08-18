@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command
+from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
 
@@ -29,8 +30,8 @@ from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
-from eventkit_cloud.utils.docker_client import DockerClient
-from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.utils.scaling import get_scale_client
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
 logger = get_task_logger(__name__)
@@ -110,17 +111,11 @@ def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
 
 
 def scale_by_runs(max_tasks_memory):
-    if os.getenv("CELERY_TASK_APP"):
-        app_name = os.getenv("CELERY_TASK_APP")
-    else:
-        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
-
-    if os.getenv("PCF_SCALING"):
-        client = PcfClient()
-        client.login()
-    else:
-        client = DockerClient()
-        app_name = settings.DOCKER_IMAGE_NAME
+    """
+    @param max_tasks_memory: The amount of memory in MB to allow for all of the tasks.
+    @type max_tasks_memory: int
+    """
+    client, app_name = get_scale_client()
 
     celery_task_details = get_celery_task_details(client, app_name)
     running_tasks_memory = int(celery_task_details["memory"])
@@ -129,26 +124,33 @@ def scale_by_runs(max_tasks_memory):
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
     total_tasks = 0
     running_tasks = client.get_running_tasks(app_name)
-
+    logger.info(f"Running tasks: {running_tasks}")
     if running_tasks:
         total_tasks = running_tasks["pagination"].get("total_results", 0)
         running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
-        finished_runs = ExportRun.objects.filter(uid__in=running_task_names, status=TaskState.get_finished_states())
+        finished_runs = ExportRun.objects.filter(
+            Q(uid__in=running_task_names) & (Q(status=TaskState.get_finished_states()) | Q(deleted=True))
+        )
 
         for finished_run in finished_runs:
-            shutdown_celery_workers.s().apply_async(queue=finished_run.uid, routing_key=finished_run.uid)
+            logger.info(
+                f"Stopping {finished_run.uid} because it is in a finished state ({finished_run.status}) "
+                f"or was deleted ({finished_run.deleted})."
+            )
+            shutdown_celery_workers.s().apply_async(queue=str(finished_run.uid), routing_key=str(finished_run.uid))
 
     for run in runs:
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
+
         if max_runs and total_tasks >= max_runs:
+            logger.info(f"total_tasks ({total_tasks}) >= max_runs ({max_runs})")
             break
         if running_tasks_memory + celery_tasks["memory"] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
             break
         task_name = run.uid
-        task = copy.deepcopy(celery_tasks)
-        task["command"] = task["command"].format(celery_group_name=task_name)
+
         running_tasks_by_queue = client.get_running_tasks(app_name, task_name)
         running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
 
@@ -156,36 +158,27 @@ def scale_by_runs(max_tasks_memory):
         if running_tasks_by_queue_count:
             logger.info(f"Already a consumer for {task_name}")
             continue
-        logger.info(f"Running pick up run for {task_name}")
         user_session = UserSession.objects.filter(user=run.user).last()
         session_token = None
         if user_session:
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
-        pick_up_run_task(run_uid=run.uid, session_token=session_token)
-        logger.info("Spinning up a worker to complete those tasks...")
-        logger.info(
-            f"Running task command with client: {client}, app_name: {app_name}, run.uid: {run.uid}, and task: {task}"
+
+        pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token).apply_async(
+            queue=str(task_name), routing_key=str(task_name)
         )
+        task = copy.deepcopy(celery_tasks)
+        task["command"] = task["command"].format(celery_group_name=task_name)
         run_task_command(client, app_name, str(task_name), task)
         total_tasks += 1
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
-    if os.getenv("CELERY_TASK_APP"):
-        app_name = os.getenv("CELERY_TASK_APP")
-    else:
-        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+
+    client, app_name = get_scale_client()
 
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
-
-    if os.getenv("PCF_SCALING"):
-        client = PcfClient()
-        client.login()
-    else:
-        client = DockerClient()
-        app_name = settings.DOCKER_IMAGE_NAME
 
     celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
 
@@ -279,7 +272,7 @@ def order_celery_tasks(celery_tasks, task_counts):
     return ordered_tasks
 
 
-def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: dict):
+def run_task_command(client: ScaleClient, app_name: str, queue_name: str, task: dict):
     """
     :param client: A Pcf Client object.
     :param app_name: The name of the pcf application to send the task to.
@@ -358,7 +351,7 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 def clean_up_queues_task():
     """Deletes all of the queues that don't have any consumers or messages"""
     api_url = getattr(settings, "BROKER_API_URL")
-    delete_rabbit_objects(api_url)
+    delete_rabbit_objects(api_url, rabbit_classes=["queues", "exchanges"])
 
 
 @app.task(name="Clear Tile Cache", base=EventKitBaseTask)
@@ -398,7 +391,7 @@ def get_celery_health_check_command(node_type: str):
 
 def get_celery_tasks_scale_by_run():
     default_command = (
-        "echo '************STARTING NEW WORKER****************' && hostname && env & "
+        "echo '************STARTING NEW WORKER****************' && hostname && echo {celery_group_name} & "
         "CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 "
         "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
         "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "

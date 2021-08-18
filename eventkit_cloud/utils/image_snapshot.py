@@ -17,7 +17,7 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_path,
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.tasks.helpers import make_dirs
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.helpers import (
     get_download_paths,
