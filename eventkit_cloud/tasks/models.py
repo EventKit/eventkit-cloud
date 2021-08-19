@@ -221,7 +221,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
 
         for data_provider_task_record in data_provider_task_records:
             if data_provider_task_record.provider:
-                dptr = data_provider_task_record.clone(new_run=self)
+                dptr = data_provider_task_record.clone()
                 if not self.data_provider_task_records.filter(id=dptr.id):
                     self.data_provider_task_records.add(dptr)
         self.save()
@@ -334,7 +334,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     def __str__(self):
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
 
-    def clone(self, new_run):
+    def clone(self):
 
         export_task_records = list(self.tasks.all())
         preview = self.preview
@@ -343,12 +343,12 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         self.save()
 
         for export_task_record in export_task_records:
-            etr = export_task_record.clone(new_run=new_run)
+            etr = export_task_record.clone()
             if not self.tasks.filter(id=etr.id).exists():
                 self.tasks.add(etr)
 
         if preview:
-            self.preview = preview.clone(new_run, self)
+            self.preview = preview.clone()
 
         return self
 
@@ -431,13 +431,13 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
-    def clone(self, new_run):
+    def clone(self):
         # Get the exceptions from the old ExportTaskRecord
         exceptions = list(self.exceptions.all())
 
         # Create a new FPTR now because we can't clone the ETR with the old FPTR since it has a unique constraint.
         if self.result:
-            file_producing_task_result = self.result.clone(new_run=new_run)
+            file_producing_task_result = self.result.clone()
             file_producing_task_result.id = None
             file_producing_task_result.uid = None
             file_producing_task_result.save()

@@ -144,7 +144,6 @@ class TestExportRun(TestCase):
         self.assertNotEqual(old_run.started_at, new_run.started_at)
 
         self.assertEqual(old_run.job, new_run.job)
-        print(data_provider_task_records_mock)
         data_provider_task_record_mock.clone.assert_called_once()
         mock_download_data.assert_called_once()
 
@@ -568,7 +567,7 @@ class TestFileProducingTaskResult(TestCase):
         export_task_records_mock.all().__iter__.return_value = [export_task_record_mock]
 
         old_dptr = DataProviderTaskRecord.objects.get(uid=data_provider_task_record.uid)
-        new_dptr = data_provider_task_record.clone(new_run=run)
+        new_dptr = data_provider_task_record.clone()
 
         self.assertNotEqual(old_dptr, new_dptr)
         self.assertNotEqual(old_dptr.id, new_dptr.id)
