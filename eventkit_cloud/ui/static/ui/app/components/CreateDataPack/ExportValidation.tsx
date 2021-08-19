@@ -1,11 +1,12 @@
 import * as React from 'react';
+import {useCallback, useEffect} from 'react';
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
-import {useEffect} from "react";
 import {arrayHasValue} from "../../utils/generic";
 import {Props as Step2Props} from "./ExportInfo";
 import {Props as Step1Props} from "./ExportAOI";
-
+import {useDispatch, useSelector} from "react-redux";
+import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 
 export function Step1Validator(props: Step1Props) {
     const {setNextEnabled, setNextDisabled, nextEnabled} = props;
@@ -69,9 +70,24 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
 interface ValidationProps extends Step2Props {tourRunning: boolean}
 
 export function Step2Validator(props: ValidationProps) {
-    const {tourRunning, setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
+    const {tourRunning, walkthroughClicked} = props;
     const {aoiHasArea, isCollectingEstimates, dataSizeInfo, aoiArea} = useJobValidationContext();
     const {exceedingSize = [], noMaxDataSize = []} = dataSizeInfo || {};
+
+    const exportInfo = useSelector((store: any) => store.exportInfo)
+    const nextEnabled = useSelector((store: any) => store.stepperNextEnabled)
+
+    const dispatch = useDispatch()
+
+    const setNextDisabled = useCallback(
+        () => dispatch(stepperNextDisabled()),
+        [dispatch]
+    )
+
+    const setNextEnabled = useCallback(
+        () => dispatch(stepperNextEnabled()),
+        [dispatch]
+    )
 
     useEffectOnMount(() => {
         setNextDisabled();
