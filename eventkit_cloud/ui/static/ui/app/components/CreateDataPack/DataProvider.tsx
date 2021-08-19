@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -29,7 +30,6 @@ import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/Icon";
-import {useEffect, useRef, useState} from "react";
 import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {useJobValidationContext} from "./context/JobValidation";
@@ -168,9 +168,11 @@ export function DataProvider(props: Props) {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
         const {size = {value: -1}} = providerInfo.estimates || {};
         const {maxArea = 0, maxDataSize = 0} = limits || {};
-        const area = limits.useBbox ? aoiBboxArea : aoiArea;
-        setOverArea(maxArea && area > maxArea);
-        setOverSize(!arrayHasValue(noMaxDataSize, provider.slug) && (maxDataSize && size.value > maxDataSize));
+        if (limits) {
+            const area = limits.useBbox ? aoiBboxArea : aoiArea;
+            setOverArea(maxArea && area > maxArea);
+            setOverSize(!arrayHasValue(noMaxDataSize, provider.slug) && (maxDataSize && size.value > maxDataSize));
+        }
     }, [isProviderLoading, aoiArea, aoiBboxArea]);
 
     function getFormatCompatibility(formatSlug: string) {
