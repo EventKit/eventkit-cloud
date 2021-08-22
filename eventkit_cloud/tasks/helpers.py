@@ -15,7 +15,7 @@ from concurrent import futures
 from functools import reduce
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, ValuesView
+from typing import List, Optional, Union, ValuesView
 from xml.dom import minidom
 from zipfile import ZipFile
 
@@ -118,18 +118,6 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = None):
-    """
-    This provides specific formatting for the names of the downloadable files.
-    :param name: A name for the file, typically the job name.
-    :param ext: The file extension (e.g. .gpkg)
-    :param additional_descriptors: Additional descriptors, any list of items.
-    :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
-    """
-    download_filename = f"{'-'.join(filter(None, [name] + (additional_descriptors or [])))}{ext}"
-    return download_filename
-
-
 def get_archive_data_path(provider_slug=None, file_name=None, archive=True):
     """
     Gets a datapath for the files to be placed in the zip file.
@@ -154,6 +142,8 @@ def default_format_time(date_time):
 
 
 def normalize_name(name):
+    if not name:
+        return
     # Remove all non-word characters
     s = re.sub(r"[^\w\s]", "", name)
     # Replace all whitespace with a single underscore
@@ -167,7 +157,9 @@ def get_export_task_record(export_task_record_uid: str) -> ExportTaskRecord:
     :param export_task_record_uid: The UID of an ExportTaskRecord.
     :return provider_slug: The associated provider_slug value.
     """
-    return ExportTaskRecord.objects.select_related("export_provider_task__provider").get(uid=export_task_record_uid)
+    return ExportTaskRecord.objects.select_related(
+        "export_provider_task__provider", "export_provider_task__run__job"
+    ).get(uid=export_task_record_uid)
 
 
 def get_supported_projections(export_format: ExportFormat) -> List[int]:
@@ -187,24 +179,28 @@ def get_default_projection(supported_projections: List[int], selected_projection
     return None
 
 
-def get_export_filepath(stage_dir: str, job_name: str, projection: int, data_provider_slug: str, extension: str):
+def get_export_filepath(
+    stage_dir: str, export_task_record: ExportTaskRecord, projection: Union[int, str], extension: str
+):
     """
     Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
     :param job_name: The name of the job being processed.
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
-    :param data_provider_slug: The provider slug (e.g. osm) for the filename.
+    :param export_task: The provider slug (e.g. osm) for the filename.
     :param extension: The file extension for the filename.
     """
     descriptors = "-".join(
         filter(
             None,
             [
-                job_name,
+                normalize_name(export_task_record.export_provider_task.run.job.name),
                 str(projection),
-                data_provider_slug,
-                get_data_provider_label(data_provider_slug),
+                export_task_record.export_provider_task.provider.slug,
+                normalize_name(export_task_record.export_provider_task.run.job.event),
                 default_format_time(time),
+                "eventkit",
+                get_data_provider_label(export_task_record.export_provider_task.provider),
             ],
         )
     )
@@ -599,10 +595,9 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             current_files = metadata["data_sources"][data_provider_task_record.provider.slug]["files"]
 
             if full_file_path not in map(itemgetter("full_file_path"), current_files):
-                file_ext = os.path.splitext(filename)[1]
                 # Only include files relevant to the user that we can actually add to the carto.
                 if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], file_ext)
+                    download_filename = os.path.basename(filename)
 
                     filepath = get_archive_data_path(
                         data_provider_task_record.provider.slug, download_filename, archive=(not source_only)
@@ -615,7 +610,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,
-                        "file_ext": file_ext,
+                        "file_ext": os.path.splitext(filename)[1],
                         "projection": projection,
                     }
                     if (
@@ -641,6 +636,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
+                logger.error(f"Contents of directory: {os.listdir(os.path.dirname(full_file_path))}")
                 continue
             # Exclude zip files created by zip_export_provider
             if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
@@ -1247,7 +1243,7 @@ def download_run_directory(old_run: ExportRun, new_run: ExportRun):
                 f"Could not copy run data from staging directory {old_run_dir} it might have already been removed."
             )
         if getattr(settings, "USE_S3", False):
-            download_folder_from_s3(str(old_run.uid))
+            download_folder_from_s3(str(old_run.uid), output_dir=new_run_dir)
         else:
             try:
                 dir_util.copy_tree(download_dir, new_run_dir)
@@ -1315,7 +1311,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
 
 def make_dirs(path):
     try:
-        os.makedirs(path)
+        os.makedirs(path, 0o750, exist_ok=True)
     except OSError:
         if not os.path.isdir(path):
             raise

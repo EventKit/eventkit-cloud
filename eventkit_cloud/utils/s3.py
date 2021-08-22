@@ -49,31 +49,33 @@ def upload_to_s3(source_path, destination_filename, client=None, user_details=No
     ).split("?")[0]
 
 
-def download_folder_from_s3(folder_to_download: str):
+def download_folder_from_s3(folder_to_download: str, output_dir: str = None):
     """
     Downloads a folder from S3 into the EXPORT_STAGING_ROOT.
     :param folder_to_download: The folder path on S3 you want to download.
+    :param output_dir: A different directory other than the original uid in the staging root.
     """
+    logger.error(f"Downloading s3 {folder_to_download} to output_dir {output_dir}")
     resource = get_s3_resource()
     bucket = resource.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
 
-    for object in bucket.objects.filter(Prefix=folder_to_download):
+    for s3_object in bucket.objects.filter(Prefix=folder_to_download):
 
-        if object.key == folder_to_download:
-            os.makedirs(os.path.dirname(object.key), exist_ok=True)
-            continue
+        destination_path = os.path.join(settings.EXPORT_STAGING_ROOT, s3_object.key)
+        if output_dir:
+            destination_path = os.path.join(output_dir, s3_object.key.lstrip(folder_to_download).lstrip("\/"))
 
         # We don't want or need the original zip file, since we're creating a new one.
-        file_extension = pathlib.PurePosixPath(object.key).suffix
-        if file_extension == ".zip":
+        suffix = pathlib.PurePosixPath(s3_object.key).suffix
+        logger.error(f"file suffix: {suffix}")
+        if suffix == ".zip":
+            logger.error(f"Skipping zip {s3_object.key}.")
             continue
 
-        directory = os.path.dirname(object.key)
-        destination_directory = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), directory)
-        os.makedirs(destination_directory, exist_ok=True)
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
-        destination_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), object.key)
-        bucket.download_file(object.key, destination_path)
+        print(f"Downloading file {s3_object.key} -> {destination_path}")
+        bucket.download_file(s3_object.key, destination_path)
 
 
 def delete_from_s3(run_uid=None, download_url=None, client=None):

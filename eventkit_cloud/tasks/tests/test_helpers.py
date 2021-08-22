@@ -2,17 +2,17 @@
 
 import json
 import logging
+import os
 import signal
-import requests_mock
-import requests
+from unittest.mock import patch, call, Mock, MagicMock
 
+import requests
+import requests_mock
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
 from eventkit_cloud.tasks.enumerations import TaskState
-from unittest.mock import patch, call, Mock, MagicMock
-import os
 from eventkit_cloud.tasks.helpers import (
     get_style_files,
     get_file_paths,
@@ -25,7 +25,6 @@ from eventkit_cloud.tasks.helpers import (
     get_message_count,
     get_all_rabbitmq_objects,
     delete_rabbit_objects,
-    get_download_filename,
     get_data_package_manifest,
     update_progress,
 )
@@ -106,20 +105,6 @@ class TestHelpers(TestCase):
         returned_value = get_metadata_url(test_url, "arcgis-raster")
         self.assertEqual(test_url, returned_value)
 
-    @patch("eventkit_cloud.core.helpers.get_cached_model")
-    def test_get_download_filename(self, mock_get_cached_model):
-        name = "test_datapack"
-        ext = ".gpkg"
-        descriptors = ["test-descriptor"]
-
-        expected_descriptors_string = "-".join(filter(None, descriptors))
-
-        expected_value = f"{name}-{expected_descriptors_string}{ext}"
-        returned_value = get_download_filename(name=name, ext=ext, additional_descriptors=descriptors)
-
-        self.assertEqual(expected_value, returned_value)
-
-    @patch("eventkit_cloud.tasks.helpers.get_download_filename")
     @patch("os.path.isfile")
     @patch("eventkit_cloud.tasks.helpers.create_license_file")
     @patch("eventkit_cloud.tasks.helpers.get_metadata_url")
@@ -134,7 +119,6 @@ class TestHelpers(TestCase):
         mock_get_metadata_url,
         mock_create_license_file,
         mock_isfile,
-        mock_get_download_filename,
     ):
         run_uid = "1234"
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
@@ -199,12 +183,7 @@ class TestHelpers(TestCase):
         mocked_provider_task.run = mocked_run
 
         expected_date = timezone.now().strftime("%Y%m%d")
-        split_file = os.path.splitext(sample_file)
-
-        expected_download_filename = "{}-{}-{}{}".format(
-            split_file[0], expected_provider_slug, expected_date, split_file[1]
-        )
-        mock_get_download_filename.return_value = expected_download_filename
+        file_ext = os.path.splitext(sample_file)[1]
 
         expected_metadata = {
             "aoi": expected_aoi,
@@ -215,14 +194,8 @@ class TestHelpers(TestCase):
                     "description": expected_data_provider_desc,
                     "files": [
                         {
-                            "file_path": "data/{}/{}-{}-{}{}".format(
-                                expected_provider_slug,
-                                split_file[0],
-                                expected_provider_slug,
-                                expected_date,
-                                split_file[1],
-                            ),
-                            "file_ext": split_file[1],
+                            "file_path": f"data/{expected_provider_slug}/{sample_file}",
+                            "file_ext": file_ext,
                             "full_file_path": os.path.join(stage_dir, expected_provider_slug, sample_file),
                             "projection": "4326",
                         }
@@ -252,7 +225,7 @@ class TestHelpers(TestCase):
             "project": expected_project_name,
             "projections": [4326],
             "run_uid": run_uid,
-            "url": "{}/status/{}".format(getattr(settings, "SITE_URL"), expected_job_uid),
+            "url": f"{getattr(settings, 'SITE_URL')}/status/{expected_job_uid}",
         }
         returned_metadata = get_metadata([mocked_provider_task.uid])
         self.maxDiff = None

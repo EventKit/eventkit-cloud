@@ -24,7 +24,6 @@ from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
 from django.utils.text import slugify
 
-from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -955,12 +954,11 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     return yaml.dump(conf)
 
 
-def get_data_provider_label(data_provider_slug):
+def get_data_provider_label(data_provider: DataProvider):
     try:
-        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
         return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
     except DataProvider.DoesNotExist:
-        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
+        logger.info(f"{data_provider.slug} does not map to any known DataProvider.")
         raise
 
 

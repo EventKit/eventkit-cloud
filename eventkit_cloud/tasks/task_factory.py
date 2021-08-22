@@ -201,6 +201,7 @@ class TaskFactory:
                     selection_task = create_task(
                         data_provider_task_record_uid=provider_task_record_uid,
                         worker=worker,
+                        stage_dir=stage_dir,
                         task=output_selection_geojson_task,
                         selection=job.the_geom.geojson,
                         user_details=user_details,
@@ -320,6 +321,7 @@ def create_task(
     data_provider_task_record_uids=None,
     run_zip_file_uid=None,
     worker=None,
+    stage_dir=None,
     selection=None,
     task=None,
     job_name=None,
@@ -362,6 +364,7 @@ def create_task(
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file_uid,
         job_name=job_name,
+        stage_dir=stage_dir,
         user_details=user_details,
         bbox=export_provider_task.run.job.extents,
         locking_task_key=data_provider_task_record_uid,

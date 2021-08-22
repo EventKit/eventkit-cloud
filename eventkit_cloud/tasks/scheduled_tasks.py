@@ -30,7 +30,7 @@ from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
-from eventkit_cloud.utils.scaling import get_scale_client
+from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
@@ -129,7 +129,8 @@ def scale_by_runs(max_tasks_memory):
         total_tasks = running_tasks["pagination"].get("total_results", 0)
         running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
         finished_runs = ExportRun.objects.filter(
-            Q(uid__in=running_task_names) & (Q(status=TaskState.get_finished_states()) | Q(deleted=True))
+            Q(uid__in=running_task_names)
+            & (Q(status__in=[state.value for state in TaskState.get_finished_states()]) | Q(deleted=True))
         )
 
         for finished_run in finished_runs:

@@ -379,7 +379,7 @@ class TestDataProvider(TestCase):
     def setUp(self):
         self.data_provider = DataProvider.objects.get(slug="osm-generic")
 
-    @patch("os.makedirs")
+    @patch("eventkit_cloud.jobs.signals.make_dirs")
     @patch("eventkit_cloud.jobs.signals.make_thumbnail_downloadable")
     @patch("eventkit_cloud.jobs.signals.save_thumbnail")
     def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):

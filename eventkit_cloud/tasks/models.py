@@ -242,7 +242,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         # since cloning and managing datapacks is mostly done at the run level.  If managing data fell to the data
         # provider or task level, then it doesn't make sense to have a
         # complicated helper function like this for each model.
-        from eventkit_cloud.tasks.helpers import download_run_directory, get_download_filename, make_file_downloadable
+        from eventkit_cloud.tasks.helpers import download_run_directory, make_file_downloadable
 
         previous_run = self.job.runs.order_by("-created_at")[1]
         new_run_dir = download_run_directory(previous_run, self)
@@ -252,6 +252,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             .prefetch_related("tasks__result")
             .select_related("preview")
         )
+
         for data_provider_task_record in data_provider_task_records:
             file_models = [data_provider_task_record.preview]
             export_task_record: ExportTaskRecord
@@ -262,13 +263,11 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             for file_model in file_models:
                 if not file_model:
                     continue
-                file_ext = os.path.splitext(file_model.filename)[1]
-                download_filename = get_download_filename(
-                    os.path.splitext(os.path.basename(file_model.filename))[0], file_ext
-                )
                 filepath = os.path.join(new_run_dir, data_provider_slug, file_model.filename)
+                logger.error(f"Setting up file model: {file_model.filename} {filepath}")
+
                 file_model.download_url = make_file_downloadable(
-                    filepath, str(file_model.uid), data_provider_slug, download_filename=download_filename
+                    filepath, str(self.uid), data_provider_slug, download_filename=file_model.filename
                 )
                 file_model.save()
 
