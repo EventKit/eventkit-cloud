@@ -201,43 +201,20 @@ def get_user_data_from_schema(data):
 
 
 def request_access_tokens(auth_code: str) -> (str, str):
-
-    logger.debug(f'Requesting: code="{auth_code}"')
-    try:
-        session = get_or_update_session()
-        response = session.post(
-            settings.OAUTH_TOKEN_URL,
-            auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
-            data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI},
-        )
-        logger.debug(f"Received response: {response.text}")
-        response.raise_for_status()
-    except requests.ConnectionError as err:
-        logger.error(f"Could not reach Token Server: {err}")
-        raise OAuthServerUnreachable()
-    except requests.HTTPError as err:
-        status_code = err.response.status_code
-        if status_code == 401:
-            logger.error(f"OAuth server rejected user auth code: {err.response.text}")
-            raise Unauthorized("OAuth server rejected auth code")
-        logger.error(f"OAuth server returned HTTP {status_code}", err.response.text)
-        raise OAuthError(status_code)
-    access = response.json()
-    access_token = access.get(settings.OAUTH_TOKEN_KEY)
-    refresh_token = access.get(settings.OAUTH_REFRESH_KEY)
-    if not access_token:
-        logger.error(f"OAuth server response missing `{settings.OAUTH_TOKEN_KEY}`.  Response Text:\n{response.text}")
-        raise InvalidOauthResponse(f"missing `{settings.OAUTH_TOKEN_KEY}`", response.text)
-    return access_token, refresh_token
+    return get_access_tokens(
+        {"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI}
+    )
 
 
 def refresh_access_tokens(refresh_token: str) -> (str, str):
+    return get_access_tokens({"grant_type": "refresh_token", "refresh_token": refresh_token})
+
+
+def get_access_tokens(data):
     try:
         session = get_or_update_session()
         response = session.post(
-            settings.OAUTH_TOKEN_URL,
-            auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
-            data={"grant_type": "refresh_token", "refresh_token": refresh_token},
+            settings.OAUTH_TOKEN_URL, auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET), data=data,
         )
         logger.debug(f"Received response: {response.text}")
         response.raise_for_status()
