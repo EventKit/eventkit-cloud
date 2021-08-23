@@ -3,13 +3,13 @@
 
 import json
 import logging
+from unittest.mock import patch
 
 import requests
 import requests_mock
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
-from unittest.mock import patch
 
 from eventkit_cloud.auth.auth import (
     get_user,
@@ -21,6 +21,7 @@ from eventkit_cloud.auth.auth import (
     OAuthServerUnreachable,
     OAuthError,
     Error,
+    refresh_access_tokens,
 )
 
 logger = logging.getLogger(__name__)
@@ -124,8 +125,54 @@ class TestAuth(TestCase):
         with self.assertRaises(OAuthError):
             request_access_tokens(OAuthError)
 
-    def test_get_user_data_from_schema(self):
+    @override_settings(
+        OAUTH_TOKEN_URL="http://example.url/token",
+        OAUTH_CLIENT_ID="ID_CODE",
+        OAUTH_CLIENT_SECRET="SECRET_CODE",
+        OAUTH_REDIRECT_URI="http://example.url/callback",
+        OAUTH_TOKEN_KEY="access_token",
+        OAUTH_REFRESH_KEY="refresh_token",
+    )
+    def test_refresh_access_tokens(self):
+        example_access_token = "1234"
+        example_refresh_token = "2345"
 
+        # Test unauthorized users
+        self.mock_requests.post(settings.OAUTH_TOKEN_URL, status_code=401)
+        with self.assertRaises(Unauthorized):
+            refresh_access_tokens(example_refresh_token)
+
+        # Test bad/unexpected responses
+        self.mock_requests.post(
+            settings.OAUTH_TOKEN_URL, text=json.dumps({settings.OAUTH_REFRESH_KEY: None}), status_code=200
+        )
+        with self.assertRaises(InvalidOauthResponse):
+            refresh_access_tokens(example_refresh_token)
+
+        # Test valid responses
+        self.mock_requests.post(
+            settings.OAUTH_TOKEN_URL,
+            text=json.dumps(
+                {settings.OAUTH_TOKEN_KEY: example_access_token, settings.OAUTH_REFRESH_KEY: example_refresh_token}
+            ),
+            status_code=200,
+        )
+        returned_token, returned_refresh_token = refresh_access_tokens(example_refresh_token)
+        self.assertEqual(example_access_token, returned_token)
+        self.assertEqual(example_refresh_token, returned_refresh_token)
+
+        # Test connection issues
+        with patch("requests.Session.post") as mock_post:
+            mock_post.side_effect = requests.ConnectionError()
+            with self.assertRaises(OAuthServerUnreachable):
+                refresh_access_tokens(OAuthServerUnreachable)
+
+        # Test remote server error
+        self.mock_requests.post(settings.OAUTH_TOKEN_URL, status_code=404)
+        with self.assertRaises(OAuthError):
+            refresh_access_tokens(OAuthError)
+
+    def test_get_user_data_from_schema(self):
         example_schema = {
             "identification": ["DN"],
             "commonname": "username",

@@ -146,10 +146,20 @@ class TestAuthViews(TestCase):
             response = self.client.get(reverse("logout"))
             self.assertEqual(response.json().get("OAUTH_LOGOUT_URL"), settings.OAUTH_LOGOUT_URL)
 
+    @override_settings(
+        OAUTH_TOKEN_URL="http://example.url/token",
+        OAUTH_CLIENT_ID="ID_CODE",
+        OAUTH_CLIENT_SECRET="SECRET_CODE",
+        OAUTH_REDIRECT_URI="http://example.url/callback",
+        OAUTH_TOKEN_KEY="access_token",
+        OAUTH_REFRESH_KEY="refresh_token",
+    )
+    @patch("eventkit_cloud.auth.views.refresh_access_tokens")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    def test_check_oauth_authentication(self, mock_fetch_user):
+    def test_check_oauth_authentication(self, mock_fetch_user, mock_refresh_tokens):
         invalid_token = "invalid_token"
         example_token = "token"
+        example_refresh_token = "refresh"
 
         request = RequestFactory().get("/")
         middleware = SessionMiddleware()
@@ -161,12 +171,22 @@ class TestAuthViews(TestCase):
         self.assertEqual(valid_access_token, False)
 
         # Test with the return value from fetch_user_from_token being OAuthError aka an invalid token.
-        request.session["access_token"] = invalid_token
-        mock_fetch_user.side_effect = OAuthError(401)
-        valid_access_token = has_valid_access_token(request)
-        mock_fetch_user.assert_called_with(invalid_token)
-        self.assertEqual(valid_access_token, False)
-        self.assertRaises(OAuthError)
+        with self.assertRaises(OAuthError):
+            request.session["access_token"] = invalid_token
+            mock_fetch_user.side_effect = OAuthError(401)
+            mock_refresh_tokens.side_effect = OAuthError(401)
+            valid_access_token = has_valid_access_token(request)
+            mock_fetch_user.assert_called_with(invalid_token)
+            self.assertEqual(valid_access_token, False)
+
+        # Test with the refresh token returning a new valid access token.
+        with self.assertRaises(OAuthError):
+            request.session["access_token"] = invalid_token
+            mock_fetch_user.side_effect = OAuthError(401)
+            mock_refresh_tokens.return_value = (example_token, example_refresh_token)
+            valid_access_token = has_valid_access_token(request)
+            mock_fetch_user.assert_called_with(example_token)
+            self.assertEqual(valid_access_token, True)
 
         # Test with a mocked return value of a valid user from fetch_user_from_token
         mock_fetch_user.reset_mock(side_effect=True)
