@@ -13,7 +13,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
-from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError, Unauthorized
+from eventkit_cloud.auth.auth import request_access_tokens, fetch_user_from_token, OAuthError, Unauthorized
 from eventkit_cloud.core.helpers import get_id
 
 logger = getLogger(__name__)
@@ -45,8 +45,9 @@ def oauth(request, redirect_url=None):
 
 def callback(request):
     try:
-        access_token = request_access_token(request.GET.get("code"))
+        access_token, refresh_token = request_access_tokens(request.GET.get("code"))
         request.session["access_token"] = access_token
+        request.session["refresh_token"] = refresh_token
         user = fetch_user_from_token(access_token)
         state = request.GET.get("state")
         if user:

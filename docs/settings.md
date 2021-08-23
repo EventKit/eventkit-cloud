@@ -225,6 +225,7 @@ OAUTH targets specific servers, but it was written to be fairly generic and upda
 |OAUTH_RESPONSE_TYPE| The type of authorization request (default `code`) |
 |OAUTH_TOKEN_URL| The URL to request a user token with the Auth Code |
 |OAUTH_TOKEN_KEY| The key of the actual token from the OAUTH_TOKEN_URL response. |
+|OAUTH_REFRESH_KEY| The key of the refresh token from the OAUTH_TOKEN_URL response. |
 |OAUTH_LOGOUT_URL| The URL to log the user out. |
 |OAUTH_REDIRECT_URI| The URL that the Oauth server should send the user after authorization. |
 |OAUTH_SCOPE| The level of permission for authorization. |

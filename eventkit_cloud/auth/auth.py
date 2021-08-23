@@ -200,9 +200,9 @@ def get_user_data_from_schema(data):
     return user_data
 
 
-def request_access_token(auth_code):
+def request_access_tokens(auth_code) -> (str, str):
 
-    logger.debug('Requesting: code="{0}"'.format(auth_code))
+    logger.debug(f'Requesting: code="{auth_code}"')
     try:
         session = get_or_update_session()
         response = session.post(
@@ -210,26 +210,25 @@ def request_access_token(auth_code):
             auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
             data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI},
         )
-        logger.debug("Received response: {0}".format(response.text))
+        logger.debug(f"Received response: {response.text}")
         response.raise_for_status()
     except requests.ConnectionError as err:
-        logger.error("Could not reach Token Server: {0}".format(err))
+        logger.error(f"Could not reach Token Server: {err}")
         raise OAuthServerUnreachable()
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error("OAuth server rejected user auth code: {0}".format(err.response.text))
+            logger.error(f"OAuth server rejected user auth code: {err.response.text}")
             raise Unauthorized("OAuth server rejected auth code")
-        logger.error("OAuth server returned HTTP {0}".format(status_code), err.response.text)
+        logger.error(f"OAuth server returned HTTP {status_code}", err.response.text)
         raise OAuthError(status_code)
     access = response.json()
     access_token = access.get(settings.OAUTH_TOKEN_KEY)
+    refresh_token = access.get(settings.OAUTH_REFRESH_KEY)
     if not access_token:
-        logger.error(
-            "OAuth server response missing `{0}`.  Response Text:\n{1}".format(settings.OAUTH_TOKEN_KEY, response.text)
-        )
-        raise InvalidOauthResponse("missing `{0}`".format(settings.OAUTH_TOKEN_KEY), response.text)
-    return access_token
+        logger.error(f"OAuth server response missing `{settings.OAUTH_TOKEN_KEY}`.  Response Text:\n{response.text}")
+        raise InvalidOauthResponse(f"missing `{settings.OAUTH_TOKEN_KEY}`", response.text)
+    return access_token, refresh_token
 
 
 #
