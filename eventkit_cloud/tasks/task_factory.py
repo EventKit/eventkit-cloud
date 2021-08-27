@@ -124,7 +124,9 @@ class TaskFactory:
         if not run_uid:
             raise Exception("Cannot parse_tasks without a run uid.")
 
-        run = ExportRun.objects.get(uid=run_uid)
+        run = ExportRun.objects.prefetch_related(
+            "job__projections", "job__data_provider_tasks", "data_provider_task_records"
+        ).get(uid=run_uid)
         job = run.job
         run_dir = get_run_staging_dir(run.uid)
 
@@ -278,12 +280,8 @@ def create_run(job_uid, user=None, clone=False, download_data=True):
             sendnotification(
                 run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
             )
-            run_uid = run.uid
-            logger.debug("Saved run with id: {0}".format(str(run_uid)))
-            if clone:
-                return run_uid
-            else:
-                return run_uid
+            logger.debug("Saved run with id: {0}".format(str(run.uid)))
+            return run.uid
     except DatabaseError as e:
         logger.error("Error saving export run: {0}".format(e))
         raise e

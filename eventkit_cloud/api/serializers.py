@@ -988,8 +988,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
         fields = ["uid", "name", "slug", "description"]
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
             options__providers__contains=obj.slug
-        ).values("uid", "name", "slug", "description")
-        return export_formats
+        ).values(*fields)
+        return export_formats.distinct()
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult
@@ -998,7 +998,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         if thumbnail is not None:
             request = urlsplit(self.context["request"].build_absolute_uri())
             if getattr(settings, "USE_S3", False):
-                return get_presigned_url(thumbnail.download_url)
+                return get_presigned_url(thumbnail.download_url, expires=3000)
             # Otherwise, grab the hostname from the request and tack on the relative url.
             return ParseResult(
                 scheme=request.scheme,

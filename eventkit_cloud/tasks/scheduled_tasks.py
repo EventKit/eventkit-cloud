@@ -16,6 +16,7 @@ from django.core.management import call_command
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from requests import Response
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
@@ -314,13 +315,19 @@ def check_provider_availability_task():
     from eventkit_cloud.utils.provider_check import perform_provider_check
 
     for provider in DataProvider.objects.all():
-        status = json.loads(perform_provider_check(provider, None))
+        status = perform_provider_check(provider, None)
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
-        data_provider_status.status = status["status"]
-        data_provider_status.status_type = status["type"]
-        data_provider_status.message = status["message"]
-        data_provider_status.save()
+        try:
+            data_provider_status.status = status["status"]
+            data_provider_status.status_type = status["type"]
+            data_provider_status.message = status["message"]
+            data_provider_status.save()
+        except Exception as e:
+            logger.error(f"Cannot read index from {status}")
+            if isinstance(status, Response):
+                logger.error(f"Status content: {status.content}")
+            raise e
 
 
 def send_warning_email(date=None, url=None, addr=None, job_name=None):

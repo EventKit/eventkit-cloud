@@ -1160,7 +1160,11 @@ class TestExportTasks(ExportTaskBase):
         zipfile_path = os.path.join(self.stage_dir, "{0}".format(run_uid), provider_slug, "test.gpkg")
         expected_manifest_file = os.path.join("MANIFEST", "manifest.xml")
         mock_get_data_package_manifest.return_value = expected_manifest_file
-        include_files = ["{0}/file1.txt".format(provider_slug), "{0}/file2.txt".format(provider_slug)]
+        files = {
+            "{0}/file1.txt".format(provider_slug): "data/{0}/file1.txt".format(provider_slug),
+            "{0}/file2.txt".format(provider_slug): "data/{0}/file2.txt".format(provider_slug),
+        }
+
         mock_os_walk.return_value = [
             (
                 os.path.join(self.stage_dir, run_uid, provider_slug),
@@ -1168,14 +1172,14 @@ class TestExportTasks(ExportTaskBase):
                 ["test.gpkg", "test.om5", "test.osm"],  # om5 and osm should get filtered out
             )
         ]
-        result = zip_files(include_files=include_files, run_zip_file_uid=run_zip_file.uid, file_path=zipfile_path)
+        result = zip_files(files=files, run_zip_file_uid=run_zip_file.uid, file_path=zipfile_path)
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
         mock_get_data_package_manifest.assert_called_once()
 
         zipfile.testzip = Exception("Bad Zip")
         with self.assertRaises(Exception):
-            zip_files(include_files=include_files, file_path=zipfile_path)
+            zip_files(files=files, file_path=zipfile_path)
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
@@ -1249,16 +1253,6 @@ class TestExportTasks(ExportTaskBase):
         isdir.assert_called_with(self.stage_dir)
         rmtree.assert_called_with(self.stage_dir)
 
-        celery_uid = str(uuid.uuid4())
-        export_provider_task = DataProviderTaskRecord.objects.create(
-            run=self.run, name="Shapefile Export", provider=self.provider
-        )
-        ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task,
-            celery_uid=celery_uid,
-            status="SUCCESS",
-            name="Default Shapefile Export",
-        )
         rmtree.side_effect = IOError()
         finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, run_uid, (), {}, "Exception Info")
 
@@ -1460,6 +1454,7 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_arcgis_templates")
     @patch("eventkit_cloud.tasks.export_tasks.get_metadata")
     @patch("eventkit_cloud.tasks.export_tasks.zip_files")
@@ -1468,10 +1463,12 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.json")
     @patch("eventkit_cloud.tasks.export_tasks.generate_qgs_style")
     @patch("os.path.join", side_effect=lambda *args: args[-1])
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.DataProviderTaskRecord")
     def test_create_zip_task(
         self,
         mock_DataProviderTaskRecord,
+        mock_get_export_task_record,
         join,
         mock_generate_qgs_style,
         mock_json,
@@ -1480,13 +1477,25 @@ class TestExportTasks(ExportTaskBase):
         mock_zip_files,
         mock_get_metadata,
         mock_get_arcgis_templates,
+        mock_get_export_filepath,
     ):
+        meta_files = {}
         mock_get_style_files.return_value = style_files = {"/styles.png": "icons/styles.png"}
+        meta_files.update(style_files)
         mock_get_arcgis_templates.return_value = arcgis_files = {"/arcgis/create_aprx.py": "arcgis/create_aprx.pyt"}
-        style_files.update(arcgis_files)
-        mock_get_human_readable_metadata_document.return_value = human_metadata_doc = "/human_metadata.txt"
-        mock_generate_qgs_style.return_value = qgis_file = "/style.qgs"
+        meta_files.update(arcgis_files)
+        mock_get_human_readable_metadata_document.return_value = human_metadata_doc = {
+            "/human_metadata.txt": "/human_metadata.txt"
+        }
+        meta_files.update(human_metadata_doc)
+        mock_generate_qgs_style.return_value = qgis_file = {"/style.qgs": "/style.qgs"}
+        meta_files.update(qgis_file)
 
+        include_files = {
+            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg": "osm/test.gpkg",
+            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson": "osm/osm_selection.geojson",
+        }
+        include_files.update(meta_files)
         metadata = {
             "aoi": "AOI",
             "bbox": [-1, -1, 1, 1],
@@ -1511,12 +1520,7 @@ class TestExportTasks(ExportTaskBase):
             "description": "Test",
             "has_elevation": False,
             "has_raster": True,
-            "include_files": [
-                human_metadata_doc,
-                qgis_file,
-                "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
-                "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson",
-            ],
+            "include_files": include_files,
             "name": "test",
             "project": "Test",
             "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
@@ -1526,18 +1530,22 @@ class TestExportTasks(ExportTaskBase):
         mock_get_metadata.return_value = metadata
         run_zip_file = RunZipFile.objects.create(run=self.run)
         expected_zip = f"{metadata['name']}.zip"
+        mock_get_export_filepath.return_value = expected_zip
         mock_zip_files.return_value = expected_zip
         returned_zip = create_zip_task.run(
-            data_provider_task_record_uids=data_provider_task_record_uids, run_zip_file_uid=run_zip_file.uid
+            task_uid="UID",
+            data_provider_task_record_uids=data_provider_task_record_uids,
+            run_zip_file_uid=run_zip_file.uid,
         )
         mock_generate_qgs_style.assert_called_once_with(metadata)
         mock_zip_files.assert_called_once_with(
-            include_files=list(set(metadata["include_files"])),
+            files=metadata["include_files"],
             run_zip_file_uid=run_zip_file.uid,
+            meta_files=meta_files,
             file_path=expected_zip,
-            static_files=style_files,
             metadata=metadata,
         )
+        mock_get_export_task_record.assert_called_once()
         self.assertEqual(returned_zip, {"result": expected_zip})
 
     def test_zip_file_task_invalid_params(self):
@@ -1945,7 +1953,7 @@ class TestExportTasks(ExportTaskBase):
         expected_result = {
             "driver": "gpkg",
             "file_extension": ".gpkg",
-            "ogcapi_process": expected_outzip_path,
+            "ogcapi_process": expected_output_path,
             "source": expected_output_path,
             "gpkg": expected_output_path,
             "selection": example_geojson,

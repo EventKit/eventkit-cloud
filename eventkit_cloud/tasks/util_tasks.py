@@ -51,6 +51,7 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
     data_provider_task_record.save()
 
 
+@transaction.atomic
 def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
@@ -70,9 +71,9 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
 
         run: ExportRun = ExportRun.objects.get(uid=new_run_uid)
 
-        rerun_provider_slugs: List[str] = []
-        # Remove the old data provider task record for the providers we're recreating.
+        # Reset the old data provider task record for the providers we're recreating.
         data_provider_task_record: DataProviderTaskRecord
+        run.data_provider_task_records.filter(slug="run").delete()
         for data_provider_task_record in run.data_provider_task_records.all():
             if data_provider_task_record.provider is not None:
                 # Have to clean out the tasks that were finished and request the ones that weren't.
@@ -80,8 +81,10 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
                     data_provider_task_record.provider.slug in data_provider_slugs
                     or TaskState[data_provider_task_record.status] in TaskState.get_not_finished_states()
                 ):
-                    data_provider_task_record.delete()
-                    rerun_provider_slugs += [data_provider_task_record.slug]
+                    data_provider_task_record.status = TaskState.PENDING.value
+                    # Delete the associated tasks so that they can be recreated.
+                    data_provider_task_record.tasks.all().delete()
+                    data_provider_task_record.save()
 
         run.status = TaskState.SUBMITTED.value
         run.save()

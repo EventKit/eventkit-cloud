@@ -905,7 +905,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             data = DataProviderSerializer(providers, many=True, context={"request": request}).data
             data += FilteredDataProviderSerializer(filtered_providers, many=True).data
 
-            cache.set(cache_key, data, timeout=DEFAULT_TIMEOUT)
+            if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
+                provider_caches = cache.get(DataProvider.provider_caches_key, dict())
+                provider_caches[cache_key] = datetime.now()
+                cache.set(DataProvider.provider_caches_key, provider_caches)
 
         return Response(data)
 

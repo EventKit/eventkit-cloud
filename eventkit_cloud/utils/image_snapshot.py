@@ -73,6 +73,7 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
     else:
         # Ensure proper requests is loaded
         import requests
+
     response = requests.get(base_url.format(x=0, y=0, z=0))
     tile = get_tile(response)
     size_x, size_y = tile.size  # These should be the same
@@ -114,10 +115,9 @@ def save_thumbnail(base_url, filepath):
     thumbnail_size = (90, 45)
     thumbnail = get_wmts_snapshot_image(base_url, zoom_level=0)
 
-    full_filepath = f"{filepath}.jpg"
     thumbnail.thumbnail(thumbnail_size)
-    thumbnail.save(full_filepath)
-    return full_filepath
+    thumbnail.save(filepath)
+    return filepath
 
 
 def fit_to_area(image, pixels_x=500, pixels_y=250):

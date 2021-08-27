@@ -1,26 +1,26 @@
 import copy
-from distutils import dir_util
 import glob
 import json
 import logging
 import os
 import pickle
 import re
+import shutil
 import signal
 import time
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from concurrent import futures
+from distutils import dir_util
 from functools import reduce
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Union, ValuesView
+from typing import List, Optional, Union, ValuesView, Tuple, Dict
 from xml.dom import minidom
 from zipfile import ZipFile
 
 import requests
-import shutil
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -33,7 +33,7 @@ from numpy import linspace
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import ExportFormat, get_data_provider_label, get_data_type_from_provider, DataProvider
+from eventkit_cloud.jobs.models import ExportFormat, get_data_type_from_provider, DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
@@ -58,28 +58,23 @@ def get_run_staging_dir(run_uid):
     return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(run_uid))
 
 
-def get_run_download_dir(run_uid):
+def get_download_dir(file_name):
     """
-    The run download dir is where all files are stored after they are processed.
+    The download dir is where all files are stored after they are processed.
     It is a unique space to ensure that files aren't being improperly modified.
-    :param run_uid: The unique value to store the directory for the run data.
-    :return: The path to the run directory.
+    :param file_path: The unique value to store the directory for the data.
+    :return: The path to the directory.
     """
-    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(run_uid))
+    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(file_name))
 
 
-def get_run_download_url(run_uid, provider_slug=None):
+def get_download_url(file_name):
     """
     A URL path to the run data
     :param run_uid: The unique identifier for the run data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
-    if provider_slug:
-        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}/{provider_slug}"
-    else:
-        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}"
-
-    return url
+    return f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(file_name)}"
 
 
 def get_provider_staging_dir(run_uid, provider_slug):
@@ -92,18 +87,6 @@ def get_provider_staging_dir(run_uid, provider_slug):
     """
     run_staging_dir = get_run_staging_dir(run_uid)
     return os.path.join(run_staging_dir, provider_slug)
-
-
-def get_provider_download_dir(run_uid, provider_slug):
-    """
-    The provider staging dir is where all files are stored after they are processed.
-    It is a unique space to ensure that files aren't being improperly modified.
-    :param run_uid: The unique id for the run.
-    :param provider_slug: The unique value to store the directory for the provider data.
-    :return: The path to the provider directory.
-    """
-    run_download_dir = get_run_download_dir(run_uid)
-    return os.path.join(run_download_dir, provider_slug)
 
 
 def get_provider_staging_preview(run_uid, provider_slug):
@@ -180,27 +163,28 @@ def get_default_projection(supported_projections: List[int], selected_projection
 
 
 def get_export_filepath(
-    stage_dir: str, export_task_record: ExportTaskRecord, projection: Union[int, str], extension: str
+    stage_dir: str, export_task_record: ExportTaskRecord, descriptor: Optional[Union[int, str]], extension: str
 ):
     """
     Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
     :param job_name: The name of the job being processed.
-    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :param descriptor: A projection (or other description) as an int or string referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param export_task: The provider slug (e.g. osm) for the filename.
     :param extension: The file extension for the filename.
     """
+    provider = export_task_record.export_provider_task.provider if export_task_record else None
     descriptors = "-".join(
         filter(
             None,
             [
-                normalize_name(export_task_record.export_provider_task.run.job.name),
-                str(projection),
-                export_task_record.export_provider_task.provider.slug,
-                normalize_name(export_task_record.export_provider_task.run.job.event),
+                normalize_name(export_task_record.export_provider_task.run.job.name) if export_task_record else None,
+                str(descriptor) if descriptor else None,
+                provider.slug if provider else None,
+                normalize_name(export_task_record.export_provider_task.run.job.event) if export_task_record else None,
                 default_format_time(time),
                 "eventkit",
-                get_data_provider_label(export_task_record.export_provider_task.provider),
+                normalize_name(provider.label) if provider else None,
             ],
         )
     )
@@ -221,7 +205,7 @@ def get_style_files():
     return get_file_paths(style_dir)
 
 
-def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
+def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS) -> Dict[str, str]:
     """
     Task to create QGIS project file with styles for osm.
 
@@ -262,7 +246,7 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
 
     with open(style_file, "wb") as open_file:
         open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
-    return style_file
+    return {style_file: f"{job_name}.qgs"}
 
 
 def get_arcgis_templates(metadata: dict) -> dict:
@@ -356,7 +340,7 @@ def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_
     return cleaned_metadata
 
 
-def get_human_readable_metadata_document(metadata):
+def get_human_readable_metadata_document(metadata) -> Dict[str, str]:
     """
 
     :param metadata: A dictionary returned by get_metadata.
@@ -375,7 +359,7 @@ def get_human_readable_metadata_document(metadata):
             .replace("\n", "\r\n")
             .encode()
         )
-    return metadata_file
+    return {metadata_file: "metadata.txt"}
 
 
 def get_last_update(url, type, cert_info=None):
@@ -516,7 +500,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
-    include_files = list([])
+    include_files = {}
 
     # A dict is used here to ensure that just one file per provider is added,
     # this should be updated when multiple formats are supported.
@@ -539,7 +523,6 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         data_provider = data_provider_task_record.provider
         provider_type = data_provider.export_provider_type.type_name
 
-        provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
         cert_info = conf.get("cert_info", None)
         metadata["data_sources"][data_provider_task_record.provider.slug] = {
@@ -574,7 +557,9 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             metadata["has_vector"] = True
 
         if data_provider_task_record.preview is not None:
-            include_files += [get_provider_staging_preview(run.uid, data_provider_task_record.provider.slug)]
+            include_files[
+                data_provider_task_record.preview.get_file_path(staging=True)
+            ] = data_provider_task_record.preview.get_file_path(archive=True)
 
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
@@ -588,29 +573,25 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                 continue
 
             try:
-                filename = export_task.result.filename
+                staging_filepath = export_task.result.get_file_path(staging=True)
+                archive_filepath = export_task.result.get_file_path(archive=True)
             except Exception:
                 continue
-            full_file_path = os.path.join(provider_staging_dir, filename)
+
             current_files = metadata["data_sources"][data_provider_task_record.provider.slug]["files"]
 
-            if full_file_path not in map(itemgetter("full_file_path"), current_files):
+            if staging_filepath not in map(itemgetter("full_file_path"), current_files):
                 # Only include files relevant to the user that we can actually add to the carto.
                 if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = os.path.basename(filename)
-
-                    filepath = get_archive_data_path(
-                        data_provider_task_record.provider.slug, download_filename, archive=(not source_only)
-                    )
                     pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
                     matches = pattern.match(export_task.name)
                     projection = "4326"
                     if matches:
                         projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
-                        "file_path": filepath,
-                        "full_file_path": full_file_path,
-                        "file_ext": os.path.splitext(filename)[1],
+                        "file_path": archive_filepath,
+                        "full_file_path": staging_filepath,
+                        "file_ext": os.path.splitext(staging_filepath)[1],
                         "projection": projection,
                     }
                     if (
@@ -619,8 +600,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                     ):
                         # Get statistics to update ranges in template.
                         try:
-                            band_stats = get_band_statistics(full_file_path)
-                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            band_stats = get_band_statistics(staging_filepath)
+                            logger.info("Band Stats {0}: {1}".format(staging_filepath, band_stats))
                             file_data["band_stats"] = band_stats
                             # Calculate the value for each elevation step (of 16)
                             try:
@@ -634,27 +615,23 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
 
                     metadata["data_sources"][data_provider_task_record.provider.slug]["files"] += [file_data]
 
-            if not os.path.isfile(full_file_path):
-                logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
-                logger.error(f"Contents of directory: {os.listdir(os.path.dirname(full_file_path))}")
+            if not os.path.isfile(staging_filepath):
+                logger.error("Could not find file {0} for export {1}.".format(staging_filepath, export_task.name))
+                logger.error(f"Contents of directory: {os.listdir(os.path.dirname(staging_filepath))}")
                 continue
             # Exclude zip files created by zip_export_provider
-            if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
-                include_files += [full_file_path]
+            if not (staging_filepath.endswith(".zip") and export_task.name == create_zip_task.name):
+                include_files[staging_filepath] = archive_filepath
 
         # add the license for this provider if there are other files already
-        license_file = None
         if include_files:
             try:
-                license_file = create_license_file(data_provider_task_record)
+                include_files.update(create_license_file(data_provider_task_record))
             except FileNotFoundError:
                 # This fails if run at beginning of run.
                 pass
-            if license_file:
-                include_files += [license_file]
 
         metadata["include_files"] = include_files
-
     return metadata
 
 
@@ -999,7 +976,6 @@ def download_data(
     session=None,
     task_points=100,
     cookie=None,
-    provider_slug: str = None,
 ):
     """
     Function for downloading data, optionally using a certificate.
@@ -1007,7 +983,9 @@ def download_data(
 
     response = None
     try:
-        session = get_or_update_session(session=session, cert_info=cert_info, cookie=cookie)
+        session = get_or_update_session(
+            username=username, password=password, session=session, cert_info=cert_info, cookie=cookie
+        )
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1088,11 +1066,13 @@ def find_in_zip(
 
     for filepath in files_in_zip:
         file_path = Path(filepath)
+        logger.error(f"Searching file path: {file_path}")
 
         if extension in file_path.suffix.lower() and file_path not in matched_files:
             return f"/vsizip/{zip_filepath}/{filepath}"
 
         if archive_extension in file_path.suffix:
+            logger.error(f"Found file: {file_path}")
             nested = Path(f"{stage_dir}/{filepath}")
             nested.parent.mkdir(parents=True, exist_ok=True)
             with open(nested, "wb") as f:
@@ -1144,12 +1124,12 @@ def get_celery_queue_group(run_uid=None, worker=None):
     return worker
 
 
-def get_geometry(bbox, selection=None):
+def get_geometry(bbox: list, selection: str = None) -> GEOSGeometry:
     geom = GEOSGeometry(Polygon.from_bbox(bbox))
     if selection:
         try:
             with open(selection, "r") as geojson:
-                geom = GEOSGeometry(geojson)
+                geom = GEOSGeometry(geojson.read())
         except Exception as e:
             logger.error(e)
     return geom
@@ -1204,27 +1184,28 @@ def update_progress(
         )
 
 
-def create_license_file(provider_task):
+def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Dict[str, str]:
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
-    data_provider_license = DataProvider.objects.get(slug=provider_task.provider.slug).license
+    data_provider_license = data_provider_task_record.provider.license
 
     # DataProviders are not required to have a license
     if data_provider_license is None:
-        return
+        return {}
 
-    license_file_path = os.path.join(
-        get_provider_staging_dir(provider_task.run.uid, provider_task.provider.slug),
-        "{0}.txt".format(normalize_name(data_provider_license.name)),
-    )
+    stage_path = Path(data_provider_task_record.tasks().first().result.get_file_path(stage=True)).parent
+    archive_path = Path(data_provider_task_record.tasks().first().result.get_file_path(archive=True)).parent
 
-    with open(license_file_path, "wb") as license_file:
+    stage_license_path = stage_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))
+    archive_license_path = archive_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))
+
+    with open(stage_license_path, "wb") as license_file:
         license_file.write(data_provider_license.text.encode())
 
-    return license_file_path
+    return {str(stage_license_path): str(archive_license_path)}
 
 
 def download_run_directory(old_run: ExportRun, new_run: ExportRun):
-    download_dir = get_run_download_dir(old_run.uid)
+    download_dir = get_download_dir(old_run.uid)
     old_run_dir = get_run_staging_dir(old_run.uid)
     new_run_dir = get_run_staging_dir(new_run.uid)
     cache_key = str(new_run.uid)
@@ -1254,20 +1235,14 @@ def download_run_directory(old_run: ExportRun, new_run: ExportRun):
                     f"it might have already been removed."
                 )
         # TODO: Use ignore on copytree when switching to shutil in python 3.8.
-
-        copied_files = glob.glob(os.path.join(new_run_dir, "**/*"))
-        logger.error("Copied the files:")
-        for cf in copied_files:
-            logger.error(cf)
         delete_files = glob.glob(os.path.join(new_run_dir, "run/*.zip"))
         for delete_file in delete_files:
-            logger.error(f"deleting file: {delete_file}")
             os.unlink(delete_file)
         cache.delete(cache_key)
     return new_run_dir
 
 
-def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None):
+def make_file_downloadable(file_path: Path, skip_copy: bool = False) -> Tuple[Path, str]:
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
@@ -1276,37 +1251,26 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
         @return A url to reach filepath.
     """
 
-    if provider_slug:
-        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
-        run_download_dir = get_provider_download_dir(run_uid, provider_slug)
-    else:
-        staging_dir = get_run_staging_dir(run_uid)
-        run_download_dir = get_run_download_dir(run_uid)
+    # File name is the relative path, e.g. run/provider_slug/file.ext.
+    # File path is an absolute path e.g. /var/lib/eventkit/export_stage/run/provider_slug/file.ext.
+    file_name = Path(file_path)
+    if Path(settings.EXPORT_STAGING_ROOT) in file_name.parents:
+        file_name = file_name.relative_to(settings.EXPORT_STAGING_ROOT)
 
-    run_download_url = get_run_download_url(run_uid, provider_slug)
-    filename = os.path.basename(filepath)
-    if download_filename is None:
-        download_filename = filename
+    download_path = get_download_dir(file_name)
+    download_url = get_download_url(file_name)
 
     if getattr(settings, "USE_S3", False):
-        source_path = os.path.join(staging_dir, filename)
-        if provider_slug:
-            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
-        else:
-            download_filepath = os.path.join(run_uid, download_filename)
-        download_url = s3.upload_to_s3(source_path, download_filepath)
+        download_url = s3.upload_to_s3(file_path)
     else:
-        make_dirs(run_download_dir)
+        make_dirs(download_path)
 
-        download_url = os.path.join(run_download_url, download_filename)
-
-        download_filepath = os.path.join(run_download_dir, download_filename)
         if not skip_copy:
-            if not os.path.isfile(filepath):
-                logger.error(f"Cannot make file {filepath} downloadable because it does not exist.")
+            if not os.path.isfile(file_path):
+                logger.error(f"Cannot make file {file_path} downloadable because it does not exist.")
             else:
-                shutil.copy(filepath, download_filepath)
-    return download_url
+                shutil.copy(file_path, download_path)
+    return file_name, download_url
 
 
 def make_dirs(path):

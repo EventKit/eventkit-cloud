@@ -124,7 +124,7 @@ class TestHelpers(TestCase):
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
         expected_layers = ["layer1", "layer2"]
         expected_type = "vector"
-        mock_create_license_file.return_value = expected_license_file = "/license.txt"
+        mock_create_license_file.return_value = expected_license_file = {"/license.txt": "/license.txt"}
         mock_isfile.return_value = True
         mock_get_metadata_url.return_value = expected_metadata_url = "https://some.url/metadata"
         # Fill out the behavior for mocked ExportRun by adding a provider task with
@@ -133,12 +133,6 @@ class TestHelpers(TestCase):
         mock_get_last_update.return_value = expected_last_update = "2018-10-29T04:35:02Z\n"
         mocked_provider_subtasks = []
         sample_file = "F1.gpkg"
-        for fname in [sample_file]:
-            mps = MagicMock()
-            mps.result.filename = fname
-            mps.name = "something EPSG:4326"
-            mps.status = TaskState.COMPLETED.value
-            mocked_provider_subtasks.append(mps)
 
         mocked_provider_task = MagicMock()
         mocked_provider_task.name = expected_provider_task_name = "example_name"
@@ -146,7 +140,23 @@ class TestHelpers(TestCase):
         mocked_provider_task.provider.slug = expected_provider_slug = "example_slug"
         mocked_provider_task.tasks.filter.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = "5678"
+        expected_stage_preview_file = f"{stage_dir}/{expected_provider_slug}/preview.jpg"
+        expected_archive_preview_file = f"data/{expected_provider_slug}/preview.jpg"
+        mocked_provider_task.preview.get_file_path.side_effect = [
+            expected_archive_preview_file,
+            expected_stage_preview_file,
+        ]
 
+        mps = MagicMock()
+        mps.result.filename = sample_file
+        mps.name = "something EPSG:4326"
+        mps.status = TaskState.COMPLETED.value
+        mocked_provider_subtasks.append(mps)
+
+        expected_stage_file = f"{stage_dir}/{expected_provider_slug}/{sample_file}"
+        expected_archive_file = f"data/{expected_provider_slug}/{sample_file}"
+        # This is *look* backwards because the value will get called and resolved before the key in the method.
+        mps.result.get_file_path.side_effect = [expected_stage_file, expected_archive_file]
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
         mocked_data_provider.export_provider_type.type_name = "osm"
@@ -185,6 +195,12 @@ class TestHelpers(TestCase):
         expected_date = timezone.now().strftime("%Y%m%d")
         file_ext = os.path.splitext(sample_file)[1]
 
+        include_files = {
+            expected_stage_preview_file: expected_archive_preview_file,
+            expected_stage_file: expected_archive_file,
+        }
+        include_files.update(expected_license_file)
+
         expected_metadata = {
             "aoi": expected_aoi,
             "bbox": expected_extents,
@@ -216,11 +232,7 @@ class TestHelpers(TestCase):
             "has_elevation": False,
             "has_raster": False,
             "has_vector": True,
-            "include_files": [
-                os.path.join(stage_dir, expected_provider_slug, "preview.jpg"),
-                os.path.join(stage_dir, expected_provider_slug, sample_file),
-                expected_license_file,
-            ],
+            "include_files": include_files,
             "name": expected_job_name,
             "project": expected_project_name,
             "projections": [4326],

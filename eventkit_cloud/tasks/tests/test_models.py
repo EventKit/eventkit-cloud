@@ -562,18 +562,19 @@ class TestFileProducingTaskResult(TestCase):
             run=run, status=TaskState.PENDING.value, provider=DataProvider.objects.get(slug="osm-generic")
         )
         run.data_provider_task_records.add(data_provider_task_record)
-
+        # new_run would be a cloned run.
+        new_run = ExportRun.objects.create(job=job, user=job.user)
         export_task_record_mock = Mock()
         export_task_records_mock.all().__iter__.return_value = [export_task_record_mock]
 
         old_dptr = DataProviderTaskRecord.objects.get(uid=data_provider_task_record.uid)
-        new_dptr = data_provider_task_record.clone()
+        new_dptr = data_provider_task_record.clone(new_run)
 
         self.assertNotEqual(old_dptr, new_dptr)
         self.assertNotEqual(old_dptr.id, new_dptr.id)
         self.assertNotEqual(old_dptr.uid, new_dptr.uid)
+        self.assertNotEqual(old_dptr.run, new_dptr.run)
 
-        self.assertEqual(old_dptr.run, new_dptr.run)
         self.assertEqual(old_dptr.provider, new_dptr.provider)
 
         export_task_record_mock.clone.assert_called_once()

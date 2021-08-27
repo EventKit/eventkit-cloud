@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pathlib import Path, PurePath
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -21,6 +22,7 @@ from eventkit_cloud.core.models import (
     TimeStampedModelMixin,
     TimeTrackingModelMixin,
     LowerCaseCharField,
+    DownloadableMixin,
 )
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
@@ -35,7 +37,7 @@ from eventkit_cloud.tasks import (
     get_cache_value,
     set_cache_value,
 )
-from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.enumerations import TaskState, Directory
 
 logger = logging.getLogger(__name__)
 
@@ -86,14 +88,11 @@ class NotificationModelMixin(models.Model):
         abstract = True
 
 
-class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
+class FileProducingTaskResult(UIDMixin, DownloadableMixin, NotificationModelMixin):
     """
     A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
 
-    filename = models.CharField(max_length=508, blank=True, editable=False)
-    size = models.FloatField(null=True, editable=False)
-    download_url = models.URLField(verbose_name="URL to export task result output.", max_length=508)
     deleted = models.BooleanField(default=False)
 
     def soft_delete(self, *args, **kwargs):
@@ -221,7 +220,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
 
         for data_provider_task_record in data_provider_task_records:
             if data_provider_task_record.provider:
-                dptr = data_provider_task_record.clone()
+                dptr = data_provider_task_record.clone(self)
                 if not self.data_provider_task_records.filter(id=dptr.id):
                     self.data_provider_task_records.add(dptr)
         self.save()
@@ -245,10 +244,10 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         from eventkit_cloud.tasks.helpers import download_run_directory, make_file_downloadable
 
         previous_run = self.job.runs.order_by("-created_at")[1]
-        new_run_dir = download_run_directory(previous_run, self)
+        download_run_directory(previous_run, self)
 
         data_provider_task_records = (
-            previous_run.data_provider_task_records.exclude(slug="run")
+            self.data_provider_task_records.exclude(slug="run")
             .prefetch_related("tasks__result")
             .select_related("preview")
         )
@@ -259,16 +258,14 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             for export_task_record in data_provider_task_record.tasks.all():
                 file_models.append(export_task_record.result)
 
-            data_provider_slug = data_provider_task_record.provider.slug
             for file_model in file_models:
                 if not file_model:
                     continue
-                filepath = os.path.join(new_run_dir, data_provider_slug, file_model.filename)
-                logger.error(f"Setting up file model: {file_model.filename} {filepath}")
-
-                file_model.download_url = make_file_downloadable(
-                    filepath, str(self.uid), data_provider_slug, download_filename=file_model.filename
-                )
+                # strip the old run uid off the filename and add a new one.
+                filename = Path(str(self.uid)).joinpath(Path(file_model.filename).relative_to(str(previous_run.uid)))
+                file_model.filename = filename
+                filename, download_url = make_file_downloadable(file_model.get_file_path(staging=True))
+                file_model.download_url = download_url
                 file_model.save()
 
 
@@ -329,20 +326,24 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         ordering = ["name"]
         managed = True
         db_table = "data_provider_task_records"
+        unique_together = ["provider", "run"]
 
     def __str__(self):
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
 
-    def clone(self):
-
+    def clone(self, run: ExportRun):
+        """
+        The ExportRun needs to be a **new** run, otherwise integrity errors will happen.
+        """
         export_task_records = list(self.tasks.all())
         preview = self.preview
         self.id = None
         self.uid = None
+        self.run = run
         self.save()
 
         for export_task_record in export_task_records:
-            etr = export_task_record.clone()
+            etr = export_task_record.clone(self)
             if not self.tasks.filter(id=etr.id).exists():
                 self.tasks.add(etr)
 
@@ -406,6 +407,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         ordering = ["created_at"]
         managed = True
         db_table = "export_task_records"
+        unique_together = ["name", "export_provider_task"]
 
     def __str__(self):
         return "ExportTaskRecord uid: {0}".format(str(self.uid))
@@ -430,7 +432,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
-    def clone(self):
+    def clone(self, data_provider_task_record: DataProviderTaskRecord):
         # Get the exceptions from the old ExportTaskRecord
         exceptions = list(self.exceptions.all())
 
@@ -445,6 +447,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         # Create the new ExportTaskRecord
         self.id = None
         self.uid = None
+        self.export_provider_task = data_provider_task_record
         self.save()
 
         # Add the exceptions to the new ExportTaskRecord

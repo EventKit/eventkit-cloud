@@ -22,7 +22,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
-from django.utils.text import slugify
 
 from eventkit_cloud.core.models import (
     CachedModelMixin,
@@ -62,7 +61,6 @@ class MapImageSnapshot(DownloadableMixin, UIDMixin):
         return "MapImageSnapshot ({}), {}".format(self.uid, self.filename)
 
     def clone(self):
-
         self.id = None
         self.uid = None
         self.save()
@@ -301,6 +299,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
+
+    # Used to store user list of user caches so that they can be invalidated.
+    provider_caches_key = "data_provider_caches"
 
     class Meta:  # pragma: no cover
         managed = True
@@ -952,14 +953,6 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     if return_dict:
         return conf
     return yaml.dump(conf)
-
-
-def get_data_provider_label(data_provider: DataProvider):
-    try:
-        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
-    except DataProvider.DoesNotExist:
-        logger.info(f"{data_provider.slug} does not map to any known DataProvider.")
-        raise
 
 
 def get_data_type_from_provider(data_provider: DataProvider) -> str:

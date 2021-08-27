@@ -380,13 +380,13 @@ class TestDataProvider(TestCase):
         self.data_provider = DataProvider.objects.get(slug="osm-generic")
 
     @patch("eventkit_cloud.jobs.signals.make_dirs")
-    @patch("eventkit_cloud.jobs.signals.make_thumbnail_downloadable")
+    @patch("eventkit_cloud.jobs.signals.make_file_downloadable")
     @patch("eventkit_cloud.jobs.signals.save_thumbnail")
-    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
+    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_file_downloadable, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = "/var/lib/downloads/images/test_thumb.jpg"
         # An instance of MapImageSnapshot
-        mock_make_thumbnail_downloadable.return_value = 1
+        mock_make_file_downloadable.return_value = 1
         stat = os.stat
 
         # We don't want to interfere with any other os.stat functions
@@ -405,7 +405,7 @@ class TestDataProvider(TestCase):
             self.data_provider.preview_url = "http://url.com"
             self.data_provider.save()
             makedirs.assert_called()
-            mock_make_thumbnail_downloadable.assert_called()
+            mock_make_file_downloadable.assert_called()
 
     @patch("eventkit_cloud.core.models.cache")
     def test_cached_model_on_save(self, mocked_cache):

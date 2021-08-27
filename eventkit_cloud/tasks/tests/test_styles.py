@@ -60,4 +60,4 @@ class TestStyles(TestCase):
         style_file = os.path.join(stage_dir, metadata["name"] + "-osm-" + datestamp + ".qgs")
         mock_open.assert_called_once_with(style_file, "wb")
         mock_render_to_string.assert_called_once()
-        self.assertEqual(returnvalue, style_file)
+        self.assertEqual(list(returnvalue.keys())[0], style_file)

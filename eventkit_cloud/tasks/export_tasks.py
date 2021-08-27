@@ -23,6 +23,7 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -38,22 +39,19 @@ from eventkit_cloud.core.helpers import (
 )
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProviderTask, DataProvider, load_provider_config, clean_config
+from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot
 from eventkit_cloud.tasks import set_cache_value
-from eventkit_cloud.tasks.enumerations import TaskState, Directory, PREVIEW_TAIL
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     add_export_run_files_to_zip,
     check_cached_task_failures,
     generate_qgs_style,
-    get_archive_data_path,
     get_data_package_manifest,
     get_export_filepath,
-    get_human_readable_metadata_document,
     get_metadata,
     get_export_task_record,
     get_provider_staging_dir,
-    get_provider_staging_preview,
     get_run_staging_dir,
     get_style_files,
     pickle_exception,
@@ -69,6 +67,7 @@ from eventkit_cloud.tasks.helpers import (
     get_arcgis_templates,
     make_file_downloadable,
     make_dirs,
+    get_human_readable_metadata_document,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
@@ -191,22 +190,13 @@ class ExportTask(EventKitBaseTask):
             task.progress = 100
             task.pid = -1
             # get the output
-            output_url = retval["result"]
-            stat = os.stat(output_url)
+            file_path = retval["result"]
+            stat = os.stat(file_path)
             size = stat.st_size / 1024 / 1024.00
-            # construct the download_path
-            parts = output_url.split("/")
-            filename = parts[-1]
-            provider_slug = parts[-2]
-            run_uid = parts[-3]
-            # construct the download url
-            skip_copy = task.name == "OverpassQuery"
-            download_url = make_file_downloadable(
-                output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy, download_filename=filename,
-            )
+            file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=download_url)
+            result = FileProducingTaskResult.objects.create(filename=file_name, size=size, download_url=download_url)
 
             task.result = result
             task.status = TaskState.SUCCESS.value
@@ -724,7 +714,7 @@ def ogcapi_process_export_task(
     **kwargs,
 ):
     """
-    Function defining OGC API Processes export.
+    Function defining OGC API Processes export.  This is called to create a dataset and then
     """
 
     result = result or {}
@@ -751,7 +741,7 @@ def ogcapi_process_export_task(
         selection=selection,
         download_path=download_path,
     )
-
+    logger.error(f"OGC Download Path: {download_path}")
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
         source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir)
@@ -766,12 +756,11 @@ def ogcapi_process_export_task(
 
         result["driver"] = driver
         result["file_extension"] = ogc_config.get("output_file_ext")
-        result["ogcapi_process"] = download_path
+        result["ogcapi_process"] = out
         result["source"] = out
         result[driver] = out
 
     result["result"] = download_path
-    logger.error(f"OGC PROCESS RESULT: {result}")
     return result
 
 
@@ -791,10 +780,9 @@ def ogc_result_task(
     **kwargs,
 ):
     """
-    Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
-    exposed and passed through.
+    A helper method to get additional download formats from an ogcapi endpoint that aren't being converted into other
+    eventkit supported formats.
     """
-
     result = result or {}
 
     export_task_record = get_export_task_record(task_uid)
@@ -1751,6 +1739,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 @app.task(name="Project File (.zip)", base=ZipFileTask, acks_late=True)
 def create_zip_task(
     result: dict = None,
+    task_uid: str = None,
     data_provider_task_record_uid: List[str] = None,
     data_provider_task_record_uids: List[str] = None,
     run_zip_file_uid=None,
@@ -1767,6 +1756,8 @@ def create_zip_task(
 
     if not result:
         result = {}
+
+    export_task_record = get_export_task_record(task_uid)
 
     if not data_provider_task_record_uids:
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
@@ -1788,38 +1779,29 @@ def create_zip_task(
     include_files = metadata.get("include_files", None)
 
     if include_files:
-        arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
-        make_dirs(arcgis_dir)
-
-        # No need to add QGIS file if there aren't any files to be zipped.
-        include_files += [generate_qgs_style(metadata)]
-        include_files += [get_human_readable_metadata_document(metadata)]
+        # No need to add meta files if there aren't any files to be zipped.
+        meta_files = generate_qgs_style(metadata)
+        meta_files.update(get_human_readable_metadata_document(metadata))
 
         ogc_metadata_dir = os.path.join(
-            os.path.join(get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug), "metadata"
+            get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug, "metadata"
         )
 
         # TODO: make sure files are placed in the '../metadata' directory.
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
-            files = [str(file_) for file_ in path.rglob("*")]
-            include_files.extend(files)
+            for file in path.rglob("*"):
+                meta_files[file] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
 
-        # Need to remove duplicates from the list because
-        # some intermediate tasks produce files with the same name.
-        # and add the static resources
-        include_files = list(set(include_files))
-
-        zip_file_name = f"{metadata['name']}.zip"
-        style_files = get_style_files()
-        style_files.update(get_arcgis_templates(metadata))
+        meta_files.update(get_style_files())
+        meta_files.update(get_arcgis_templates(metadata))
+        include_files.update(meta_files)
+        zip_file_name = get_export_filepath(get_run_staging_dir(metadata["run_uid"]), export_task_record, "", "zip")
         result["result"] = zip_files(
-            include_files=include_files,
+            files=include_files,
             run_zip_file_uid=run_zip_file_uid,
-            file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name
-            ),
-            static_files=style_files,
+            meta_files=meta_files,
+            file_path=zip_file_name,
             metadata=metadata,
         )
     else:
@@ -1868,11 +1850,11 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-@gdalutils.retry
-def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None, metadata=None, *args, **kwargs):
+# @gdalutils.retry
+def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.
-    :param include_files: A list of files to be included.
+    :param files: A list of files to be included.
     :param run_zip_file_uid: The UUID of the zip file.
     :param file_path: The name for the archive.
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
@@ -1880,55 +1862,29 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
     :return: The zipfile path.
     """
 
-    if not include_files:
-        logger.error("zip_file_task called with no include_files.")
-        raise Exception("zip_file_task called with no include_files.")
+    if not files:
+        raise Exception("zip_file_task called with no include_files. Zip file task will be canceled.")
 
     if not file_path:
-        logger.error("zip_file_task called with no file path.")
-        raise Exception("zip_file_task called with no file path.")
+        raise Exception("zip_file_task called with no file path. Zip file task will be canceled.")
 
     run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
 
-    files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
+    cleaned_files = {}
+    for stage_path, archive_path in files.items():
+        if Path(stage_path).suffix not in BLACKLISTED_ZIP_EXTS:
+            cleaned_files[Path(stage_path)] = Path(archive_path)
 
-    manifest_ignore_files = []
     logger.debug("Opening the zipfile.")
     with ZipFile(file_path, "a", compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
-        if static_files:
-            for absolute_file_path, relative_file_path in static_files.items():
-                if "__pycache__" in absolute_file_path:
-                    continue
-                if os.path.basename(absolute_file_path) == "__init__.py":
-                    continue
-                manifest_ignore_files.append(relative_file_path)
-                zipfile.write(absolute_file_path, arcname=relative_file_path)
-        for filepath in files:
-            # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
-            # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
-            name, ext = os.path.splitext(filepath)
-            provider_slug, name = os.path.split(name)
-            provider_slug = os.path.split(provider_slug)[1]
-            download_filename = os.path.basename(filepath)
-            if filepath.endswith((".qgs", "ReadMe.txt")):
-                # put the style file in the root of the zip
-                filename = "{0}{1}".format(name, ext)
-                manifest_ignore_files.append(filename)
-            elif filepath.endswith("metadata.json"):
-                # put the metadata file in arcgis folder unless it becomes more useful.
-                filename = os.path.join(Directory.ARCGIS.value, download_filename)
-                manifest_ignore_files.append(filename)
-            elif filepath.endswith(PREVIEW_TAIL):
-                filename = get_archive_data_path(provider_slug, download_filename)
-                manifest_ignore_files.append(filename)
-            else:
-                # Put the files into directories based on their provider_slug
-                # prepend with `data`
-                filename = get_archive_data_path(provider_slug, download_filename)
-            run_zip_file.message = f"Adding {filename} to zip archive."
-            zipfile.write(filepath, arcname=filename)
+        for absolute_file_path, relative_file_path in cleaned_files.items():
+            if "__pycache__" in str(absolute_file_path):
+                continue
+            if absolute_file_path.name == "__init__.py":
+                continue
+            zipfile.write(str(absolute_file_path), arcname=str(relative_file_path))
 
-        manifest_file = get_data_package_manifest(metadata=metadata, ignore_files=manifest_ignore_files)
+        manifest_file = get_data_package_manifest(metadata=metadata, ignore_files=list(meta_files.values()))
         zipfile.write(manifest_file, arcname=os.path.join("MANIFEST", os.path.basename(manifest_file)))
         add_export_run_files_to_zip(zipfile, run_zip_file)
 
@@ -2144,9 +2100,7 @@ def fail_synchronous_task_chain(data_provider_task_record=None):
 
 
 @app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
-def create_datapack_preview(
-    result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs
-):
+def create_datapack_preview(result=None, task_uid=None, stage_dir=None, *args, **kwargs):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
     """
@@ -2156,24 +2110,28 @@ def create_datapack_preview(
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 
-        provider_task = DataProviderTask.objects.select_related("provider").get(uid=task_uid)
-        provider = provider_task.provider
+        data_provider_task_record = (
+            DataProviderTaskRecord.objects.select_related("run__job", "provider")
+            .prefetch_related("tasks")
+            .get(uid=task_uid)
+        )
 
-        provider_task_record = DataProviderTaskRecord.objects.get(uid=task_record_uid)
-
-        export_run = ExportRun.objects.get(uid=run_uid)
-        job = export_run.job
-
-        filepath = get_provider_staging_preview(export_run.uid, provider.slug)
-        make_dirs(stage_dir)
-        preview = get_wmts_snapshot_image(provider.preview_url, bbox=job.extents)
+        filepath = get_export_filepath(stage_dir, data_provider_task_record.tasks.first(), "preview", "jpg")
+        make_dirs(os.path.dirname(filepath))
+        preview = get_wmts_snapshot_image(
+            data_provider_task_record.provider.preview_url, bbox=data_provider_task_record.run.job.extents
+        )
         fit_to_area(preview)
         preview.save(filepath)
 
-        download_filename = f"{run_uid}/{provider.slug}/{PREVIEW_TAIL}"
-        snapshot = make_snapshot_downloadable(filepath, download_filename=download_filename, copy=True)
-        provider_task_record.preview = snapshot
-        provider_task_record.save()
+        filename, download_path = make_file_downloadable(filepath, skip_copy=False)
+        filesize = os.stat(filepath).st_size
+        data_provider_task_record.preview = MapImageSnapshot.objects.create(
+            download_url=download_path, filename=filename, size=filesize
+        )
+        data_provider_task_record.save()
+
+        result["preview"] = filepath
         result["result"] = filepath
 
     except Exception as e:
@@ -2363,7 +2321,8 @@ def get_ogcapi_data(
 
     configuration = load_provider_config(config)
 
-    geom = get_geometry(bbox, selection)
+    geom: GEOSGeometry = get_geometry(bbox, selection)
+    logger.error(geom)
 
     try:
         ogc_process = OgcApiProcess(

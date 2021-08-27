@@ -4,6 +4,9 @@
 import unicodedata
 import uuid
 
+import os
+
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
@@ -17,6 +20,7 @@ from typing import List, Callable, Tuple
 
 from typing import Union
 
+from eventkit_cloud.tasks.enumerations import Directory
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +158,16 @@ class DownloadableMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_file_path(self, staging: bool = True, archive: bool = False):
+        """
+        Get the file path for the file.  This
+        """
+        if archive:
+            return os.path.join(Directory.DATA.value, "/".join(self.filename.split("/")[1:]))
+        if staging:
+            return os.path.join(settings.EXPORT_STAGING_ROOT, self.filename)
+        return self.filename
 
 
 class GroupPermissionLevel(Enum):
