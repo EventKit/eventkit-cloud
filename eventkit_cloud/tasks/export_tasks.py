@@ -2106,7 +2106,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, *args, *
     """
     result = result or {}
     try:
-        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, make_snapshot_downloadable, fit_to_area
+        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, fit_to_area
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 

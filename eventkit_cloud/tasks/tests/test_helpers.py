@@ -109,12 +109,10 @@ class TestHelpers(TestCase):
     @patch("eventkit_cloud.tasks.helpers.create_license_file")
     @patch("eventkit_cloud.tasks.helpers.get_metadata_url")
     @patch("eventkit_cloud.tasks.helpers.get_last_update")
-    @patch("eventkit_cloud.tasks.helpers.DataProvider")
     @patch("eventkit_cloud.tasks.helpers.DataProviderTaskRecord")
     def test_get_metadata(
         self,
         mock_DataProviderTaskRecord,
-        mock_DataProvider,
         mock_get_last_update,
         mock_get_metadata_url,
         mock_create_license_file,

@@ -33,7 +33,7 @@ from numpy import linspace
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import ExportFormat, get_data_type_from_provider, DataProvider
+from eventkit_cloud.jobs.models import ExportFormat, get_data_type_from_provider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
@@ -169,7 +169,8 @@ def get_export_filepath(
     Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
     :param job_name: The name of the job being processed.
-    :param descriptor: A projection (or other description) as an int or string referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :param descriptor: A projection (or other description) as an int or string referencing an EPSG code
+    (e.g. 4326 = EPSG:4326)
     :param export_task: The provider slug (e.g. osm) for the filename.
     :param extension: The file extension for the filename.
     """

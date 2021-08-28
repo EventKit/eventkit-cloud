@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import logging
 from collections import OrderedDict
 from unittest.mock import patch, call, Mock
@@ -63,7 +62,6 @@ class TestExpireRunsTask(TestCase):
         ExportRun.objects.create(job=job, user=job.user, expiration=now_time - timezone.timedelta(hours=5))
 
         with patch("eventkit_cloud.tasks.scheduled_tasks.timezone.now") as mock_time:
-
             mock_time.return_value = now_time
 
             self.assertEqual("Expire Runs", expire_runs_task.name)

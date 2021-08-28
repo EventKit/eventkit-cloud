@@ -1,6 +1,5 @@
 import socket
 import subprocess
-from typing import List
 
 from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger

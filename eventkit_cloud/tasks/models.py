@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-import os
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -37,7 +36,7 @@ from eventkit_cloud.tasks import (
     get_cache_value,
     set_cache_value,
 )
-from eventkit_cloud.tasks.enumerations import TaskState, Directory
+from eventkit_cloud.tasks.enumerations import TaskState
 
 logger = logging.getLogger(__name__)
 

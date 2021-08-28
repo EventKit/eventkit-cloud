@@ -63,7 +63,7 @@ class TestImageSnapshot(TestCase):
     def test_save_thumbnail(self, mock_get_wmts_snapshot_image):
         mock_thumbnail = MagicMock()
         thumbnail_size = (90, 45)
-        expected_file_path = f"/some/path.jpg"
+        expected_file_path = "/some/path.jpg"
         test_slug = "slug"
         test_url = f"http://url.test/map/{test_slug}/path/to/service"
         mock_get_wmts_snapshot_image.return_value = mock_thumbnail

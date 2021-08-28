@@ -11,7 +11,6 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
-    get_metadata,
     get_supported_projections,
     get_default_projection,
     get_celery_queue_group,

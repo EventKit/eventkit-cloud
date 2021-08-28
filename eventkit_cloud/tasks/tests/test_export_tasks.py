@@ -1493,7 +1493,7 @@ class TestExportTasks(ExportTaskBase):
 
         include_files = {
             "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg": "osm/test.gpkg",
-            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson": "osm/osm_selection.geojson",
+            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson": "osm/osm_selection.geojson",  # NOQA
         }
         include_files.update(meta_files)
         metadata = {
