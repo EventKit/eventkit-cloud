@@ -1,0 +1,15 @@
+--- nmake.opt.orig	2021-05-11 13:46:37.055464628 +1000
++++ nmake.opt	2021-05-11 13:46:52.823685073 +1000
+@@ -305,9 +305,9 @@
+ !ENDIF
+ 
+ # This will enable 12bit libjpeg - use only with internal jpeg builds.
+-!IFNDEF JPEG12_SUPPORTED
+-JPEG12_SUPPORTED = 1
+-!ENDIF
++#!IFNDEF JPEG12_SUPPORTED
++#JPEG12_SUPPORTED = 1
++#!ENDIF
+ 
+ #if using an external jpeg library uncomment the following lines
+ #JPEG_EXTERNAL_LIB = 1

@@ -1,6 +1,6 @@
 
 package:
-  name: "mrsid-sdk"
+  name: "mrsid-dsdk"
   version: "9.5.4"
 
 source:
@@ -38,8 +38,6 @@ build:
     - liblaszip.so
     - libpdal_util.so.2
     - libgeos_c.so
-requirements:
-  build:
 
 about:
   home: https://www.extensis.com/support/developers

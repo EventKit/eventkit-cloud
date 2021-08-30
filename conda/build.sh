@@ -60,7 +60,7 @@ fi
 echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
-  for i in 1 2 3; do
+  for i in 1; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
     && echo "Installing: ${RECIPE}" \
