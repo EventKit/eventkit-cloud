@@ -161,7 +161,9 @@ class DownloadableMixin(models.Model):
 
     def get_file_path(self, staging: bool = True, archive: bool = False):
         """
-        Get the file path for the file.  This
+        A helper method to consolidate the logic for storing the files within datapacks and in the staging directory.
+
+        This and the get_export_filepath should be used when handling file paths to minimize adhoc filenaming logic.
         """
         if archive:
             return os.path.join(Directory.DATA.value, "/".join(self.filename.split("/")[1:]))
