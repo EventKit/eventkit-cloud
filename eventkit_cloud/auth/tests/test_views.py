@@ -25,11 +25,12 @@ class TestAuthViews(TestCase):
 
     @patch("eventkit_cloud.auth.views.login")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    @patch("eventkit_cloud.auth.views.request_access_token")
-    def test_callback(self, mock_get_token, mock_get_user, mock_login):
+    @patch("eventkit_cloud.auth.views.request_access_tokens")
+    def test_callback(self, mock_get_tokens, mock_get_user, mock_login):
         oauth_name = "provider"
         with self.settings(OAUTH_NAME=oauth_name):
-            example_token = "token"
+            example_access_token = "token"
+            example_refresh_token = "refresh"
 
             request = MagicMock(GET={"code": "1234"})
             group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
@@ -37,12 +38,12 @@ class TestAuthViews(TestCase):
                 mock_group.objects.get.return_value = group
             user = User.objects.create(username="test", email="test@email.com")
             OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
-            mock_get_token.return_value = example_token
+            mock_get_tokens.return_value = example_access_token, example_refresh_token
             mock_get_user.return_value = None
             response = callback(request)
             self.assertEqual(response.status_code, 401)
 
-            mock_get_token.return_value = example_token
+            mock_get_tokens.return_value = example_access_token, example_refresh_token
             mock_get_user.return_value = user
             response = callback(request)
             mock_login.assert_called_once_with(request, user, backend="django.contrib.auth.backends.ModelBackend")
@@ -51,7 +52,7 @@ class TestAuthViews(TestCase):
             mock_login.reset_mock()
             example_state = base64.b64encode("/status/12345".encode())
             request = MagicMock(GET={"code": "1234", "state": example_state})
-            mock_get_token.return_value = example_token
+            mock_get_tokens.return_value = example_access_token, example_refresh_token
             mock_get_user.return_value = user
             response = callback(request)
             mock_login.assert_called_once_with(request, user, backend="django.contrib.auth.backends.ModelBackend")
@@ -116,11 +117,12 @@ class TestAuthViews(TestCase):
             )
 
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    @patch("eventkit_cloud.auth.views.request_access_token")
-    def test_logout(self, mock_access_token, mock_fetch_user):
+    @patch("eventkit_cloud.auth.views.request_access_tokens")
+    def test_logout(self, mock_get_tokens, mock_fetch_user):
         # Test logout ensure logout of django, and redirect to login if OAUTH URL not provided
         example_auth_code = "code"
-        example_token = "token"
+        example_access_token = "token"
+        example_refresh_token = "refresh"
 
         logout_url = "http://remote.dev/logout"
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
@@ -128,7 +130,7 @@ class TestAuthViews(TestCase):
             mock_group.objects.get.return_value = group
             user = User.objects.create(username="test", password="password", email="test@email.com")
         OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
-        mock_access_token.return_value = example_token
+        mock_get_tokens.return_value = example_access_token, example_refresh_token
         mock_fetch_user.return_value = user
 
         # test without logout url
@@ -144,10 +146,20 @@ class TestAuthViews(TestCase):
             response = self.client.get(reverse("logout"))
             self.assertEqual(response.json().get("OAUTH_LOGOUT_URL"), settings.OAUTH_LOGOUT_URL)
 
+    @override_settings(
+        OAUTH_TOKEN_URL="http://example.url/token",
+        OAUTH_CLIENT_ID="ID_CODE",
+        OAUTH_CLIENT_SECRET="SECRET_CODE",
+        OAUTH_REDIRECT_URI="http://example.url/callback",
+        OAUTH_TOKEN_KEY="access_token",
+        OAUTH_REFRESH_KEY="refresh_token",
+    )
+    @patch("eventkit_cloud.auth.views.refresh_access_tokens")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    def test_check_oauth_authentication(self, mock_fetch_user):
+    def test_check_oauth_authentication(self, mock_fetch_user, mock_refresh_tokens):
         invalid_token = "invalid_token"
         example_token = "token"
+        example_refresh_token = "refresh"
 
         request = RequestFactory().get("/")
         middleware = SessionMiddleware()
@@ -159,12 +171,22 @@ class TestAuthViews(TestCase):
         self.assertEqual(valid_access_token, False)
 
         # Test with the return value from fetch_user_from_token being OAuthError aka an invalid token.
-        request.session["access_token"] = invalid_token
-        mock_fetch_user.side_effect = OAuthError(401)
-        valid_access_token = has_valid_access_token(request)
-        mock_fetch_user.assert_called_with(invalid_token)
-        self.assertEqual(valid_access_token, False)
-        self.assertRaises(OAuthError)
+        with self.assertRaises(OAuthError):
+            request.session["access_token"] = invalid_token
+            mock_fetch_user.side_effect = OAuthError(401)
+            mock_refresh_tokens.side_effect = OAuthError(401)
+            valid_access_token = has_valid_access_token(request)
+            mock_fetch_user.assert_called_with(invalid_token)
+            self.assertEqual(valid_access_token, False)
+
+        # Test with the refresh token returning a new valid access token.
+        with self.assertRaises(OAuthError):
+            request.session["access_token"] = invalid_token
+            mock_fetch_user.side_effect = OAuthError(401)
+            mock_refresh_tokens.return_value = (example_token, example_refresh_token)
+            valid_access_token = has_valid_access_token(request)
+            mock_fetch_user.assert_called_with(example_token)
+            self.assertEqual(valid_access_token, True)
 
         # Test with a mocked return value of a valid user from fetch_user_from_token
         mock_fetch_user.reset_mock(side_effect=True)

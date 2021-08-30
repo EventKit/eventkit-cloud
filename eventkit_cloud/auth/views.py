@@ -13,7 +13,13 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
-from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token, OAuthError, Unauthorized
+from eventkit_cloud.auth.auth import (
+    request_access_tokens,
+    fetch_user_from_token,
+    OAuthError,
+    Unauthorized,
+    refresh_access_tokens,
+)
 from eventkit_cloud.core.helpers import get_id
 
 logger = getLogger(__name__)
@@ -45,8 +51,9 @@ def oauth(request, redirect_url=None):
 
 def callback(request):
     try:
-        access_token = request_access_token(request.GET.get("code"))
+        access_token, refresh_token = request_access_tokens(request.GET.get("code"))
         request.session["access_token"] = access_token
+        request.session["refresh_token"] = refresh_token
         user = fetch_user_from_token(access_token)
         state = request.GET.get("state")
         if user:
@@ -95,10 +102,16 @@ def has_valid_access_token(request) -> bool:
                 fetch_user_from_token(access_token)
                 return True
             except (OAuthError, Unauthorized):
-                logger.info("Invalid access token, trying to log back in.")
-                return False
+                logger.info("Invalid access token, trying to refresh access token.")
+                access_token, refresh_token = refresh_access_tokens(request.session.get("refresh_token"))
+                request.session["access_token"] = access_token
+                request.session["refresh_token"] = refresh_token
+                try:
+                    fetch_user_from_token(access_token)
+                    return True
+                except (OAuthError, Unauthorized):
+                    return False
         else:
-            logger.info("No access token available, trying to log back in.")
             return False
     else:
         # If OAuth isn't enabled, allow without checking for a valid token.
