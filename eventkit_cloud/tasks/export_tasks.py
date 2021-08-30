@@ -1699,6 +1699,13 @@ def pick_up_run_task(
         run.save()
     except Exception as e:
         run.status = TaskState.FAILED.value
+        for data_provider_task_record in run.data_provider_task_records.all():
+            if TaskState[data_provider_task_record.status] not in TaskState.get_finished_states():
+                for export_task_record in data_provider_task_record.tasks.all():
+                    if TaskState[export_task_record.status] not in TaskState.get_finished_states():
+                        export_task_record.status = TaskState.FAILED.value
+                        export_task_record.save()
+                data_provider_task_record.save()
         run.save()
         logger.error(str(e))
         raise
