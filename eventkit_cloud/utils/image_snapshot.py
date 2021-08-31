@@ -69,7 +69,6 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
     else:
         # Ensure proper requests is loaded
         import requests
-
     response = requests.get(base_url.format(x=0, y=0, z=0))
     tile = get_tile(response)
     size_x, size_y = tile.size  # These should be the same

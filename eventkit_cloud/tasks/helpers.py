@@ -1067,13 +1067,10 @@ def find_in_zip(
 
     for filepath in files_in_zip:
         file_path = Path(filepath)
-        logger.error(f"Searching file path: {file_path}")
-
         if extension in file_path.suffix.lower() and file_path not in matched_files:
             return f"/vsizip/{zip_filepath}/{filepath}"
 
         if archive_extension in file_path.suffix:
-            logger.error(f"Found file: {file_path}")
             nested = Path(f"{stage_dir}/{filepath}")
             nested.parent.mkdir(parents=True, exist_ok=True)
             with open(nested, "wb") as f:

@@ -398,7 +398,6 @@ def osm_data_collection_pipeline(
 
     # --- Generate thematic gpkg from PBF
     export_task_record = get_export_task_record(export_task_record_uid)
-    # provider_slug = get_export_task_record(export_task_record_uid).export_provider_task.provider.slug
     gpkg_filepath = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
     feature_selection = FeatureSelection.example(clean_config(config))
@@ -714,7 +713,8 @@ def ogcapi_process_export_task(
     **kwargs,
 ):
     """
-    Function defining OGC API Processes export.  This is called to create a dataset and then
+    Function defining OGC API Processes export.  This is called to create a dataset and then convert it to an eventkit
+    supported dataset.
     """
 
     result = result or {}
@@ -1857,7 +1857,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-# @gdalutils.retry
+@gdalutils.retry
 def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.

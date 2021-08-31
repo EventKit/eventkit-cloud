@@ -34,7 +34,6 @@ def upload_to_s3(source_path: pathlib.Path, destination_filename: pathlib.Path =
     if user_details is None:
         user_details = {"username": "unknown-upload_to_s3"}
 
-    # TODO: Refactor calls to upload_to_s3 to use pathlib.Path
     source_path = pathlib.Path(source_path)
     destination_filename = pathlib.Path(destination_filename) if destination_filename else source_path
     stage_dir = pathlib.Path(settings.EXPORT_STAGING_ROOT)
@@ -51,7 +50,7 @@ def upload_to_s3(source_path: pathlib.Path, destination_filename: pathlib.Path =
 
     with logging_open(source_path, "rb", user_details=user_details) as asset_file:
         try:
-            logger.error(f"Uploading s3 file {source_path} -> {destination_filename}")
+            logger.info(f"Uploading s3 file {source_path} -> {destination_filename}")
             client.upload_fileobj(
                 Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=str(destination_filename), Fileobj=asset_file
             )
