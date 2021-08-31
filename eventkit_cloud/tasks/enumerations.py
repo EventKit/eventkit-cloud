@@ -7,7 +7,7 @@ class TaskState(Enum):
     SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
 
     PENDING = "PENDING"  # Used for tasks that have not been started
-    RUNNING = "RUNNING"  # Used for tasks that have been started
+    RUNNING = "RUNNING"  # Used for tasks or runs that have been started
     CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
@@ -57,3 +57,13 @@ class OGC_Status(Enum):
             OGC_Status.ACCEPTED.value,
             OGC_Status.RUNNING.value,
         ]
+
+
+class Directory(Enum):
+    ARCGIS = "arcgis"
+    DATA = "data"
+    TEMPLATES = "templates"
+
+
+PREVIEW_TAIL = "preview.jpg"
+UNSUPPORTED_CARTOGRAPHY_FORMATS = [".pbf", ".gpx"]

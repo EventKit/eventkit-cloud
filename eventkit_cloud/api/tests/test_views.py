@@ -1054,8 +1054,6 @@ class TestExportRunViewSet(APITestCase):
             run=run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         run.data_provider_task_records.add(data_provider_task_record)
-        run_uid = str(run.uid)
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         url = f"/api/runs/{run.uid}/rerun_providers"
         expected_slugs = ["osm-generic"]
         request_data = {"data_provider_slugs": expected_slugs}
@@ -1065,9 +1063,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 
         mock_check_job_permissions.assert_called_once_with(run.job)
-        mock_rerun_records.apply_async.assert_called_once_with(
-            args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue=run_uid, routing_key=run_uid
-        )
 
 
 class TestRunZipFileViewSet(APITestCase):

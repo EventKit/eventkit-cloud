@@ -342,6 +342,7 @@ def parse_duration(duration):
         if parts is not None:
             time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
             return timedelta(**time_params).seconds
+    return 0
 
 
 def convert_seconds_to_hms(seconds):

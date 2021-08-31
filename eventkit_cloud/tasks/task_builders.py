@@ -11,7 +11,6 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
-    get_metadata,
     get_supported_projections,
     get_default_projection,
     get_celery_queue_group,
@@ -89,10 +88,13 @@ class TaskChainBuilder(object):
         # get the formats to export
         formats: List[ExportFormat] = list(data_provider_task.formats.all())
 
-        data_provider_task_record: DataProviderTaskRecord = DataProviderTaskRecord.objects.create(
+        data_provider_task_record: DataProviderTaskRecord
+        created: bool
+        data_provider_task_record, created = DataProviderTaskRecord.objects.get_or_create(
             run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
         )
-        projections = get_metadata([data_provider_task_record.uid])["projections"]
+
+        projections = [projection.srid for projection in run.job.projections.all()]
 
         """
         Create a celery chain which gets the data & runs export formats
@@ -145,9 +147,8 @@ class TaskChainBuilder(object):
                     create_datapack_preview.s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
-                        task_uid=data_provider_task.uid,
+                        task_uid=data_provider_task_record.uid,
                         user_details=user_details,
-                        task_record_uid=data_provider_task_record.uid,
                     ).set(queue=queue_group, routing_key=queue_group)
                 )
 
@@ -270,7 +271,7 @@ def create_format_task(task_format):
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
-        export_task = ExportTaskRecord.objects.create(
+        export_task, created = ExportTaskRecord.objects.get_or_create(
             export_provider_task=export_provider_task,
             status=TaskState.PENDING.value,
             name=task_name,

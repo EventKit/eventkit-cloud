@@ -4,7 +4,7 @@ import logging
 import time
 import requests
 
-from django.contrib.gis.geos import WKTWriter
+from django.contrib.gis.geos import WKTWriter, GEOSGeometry
 from django.core.cache import cache
 from urllib.parse import urljoin
 
@@ -28,18 +28,23 @@ class OgcApiProcess:
         self.base_url += "/"
         self.config = config
         self.task_id = task_id
+        self.job_url = None
 
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = get_or_update_session(headers={"Authorization": f"Bearer: {session_token}"})
+        self.session = get_or_update_session(*args, **kwargs)
+        self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
 
-    def create_job(self, geometry, file_format=None):
+    def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
 
         jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
+            logger.error(jobs_endpoint)
+            logger.error(payload)
+
             response = self.session.post(jobs_endpoint, json=payload)
             response.raise_for_status()
 
@@ -124,7 +129,7 @@ class OgcApiProcess:
             return response_content
 
 
-def get_job_payload(config, geometry, file_format=None):
+def get_job_payload(config: dict, geometry: GEOSGeometry, file_format: str = None):
     """
     Function generates the request body needed for a POST request to the OGC /jobs endpoint.
     """

@@ -4,6 +4,9 @@
 import unicodedata
 import uuid
 
+import os
+
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
@@ -17,6 +20,7 @@ from typing import List, Callable, Tuple
 
 from typing import Union
 
+from eventkit_cloud.tasks.enumerations import Directory
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +73,18 @@ class TimeTrackingModelMixin(models.Model):
     Mixin for timestamped models.
     """
 
-    started_at = models.DateTimeField(default=timezone.now, editable=False)
+    started_at = models.DateTimeField(null=True, editable=False)
     finished_at = models.DateTimeField(editable=False, null=True)
+
+    def save(self, *args, **kwargs):
+        from eventkit_cloud.tasks.enumerations import TaskState
+
+        if hasattr(self, "status"):
+            if self.status and TaskState[self.status] == TaskState.RUNNING:
+                self.started_at = timezone.now()
+            if self.status and TaskState[self.status] in TaskState.get_finished_states():
+                self.finished_at = timezone.now()
+        super(TimeTrackingModelMixin, self).save(*args, **kwargs)
 
     class Meta:
         abstract = True
@@ -144,6 +158,18 @@ class DownloadableMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_file_path(self, staging: bool = True, archive: bool = False):
+        """
+        A helper method to consolidate the logic for storing the files within datapacks and in the staging directory.
+
+        This and the get_export_filepath should be used when handling file paths to minimize adhoc filenaming logic.
+        """
+        if archive:
+            return os.path.join(Directory.DATA.value, "/".join(self.filename.split("/")[1:]))
+        if staging:
+            return os.path.join(settings.EXPORT_STAGING_ROOT, self.filename)
+        return self.filename
 
 
 class GroupPermissionLevel(Enum):

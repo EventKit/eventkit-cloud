@@ -96,7 +96,7 @@ def soft_delete_runs(modeladmin, request, queryset: List[ExportRun]):
 
 
 class ExportRunAdmin(admin.ModelAdmin):
-    readonly_fields = ("delete_user", "user", "status", "started_at", "finished_at")
+    readonly_fields = ("delete_user", "user", "status", "created_at", "started_at", "finished_at")
     list_display = ["uid", "get_name", "status", "user", "notified", "expiration", "deleted"]
 
     actions = [soft_delete_runs]

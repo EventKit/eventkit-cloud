@@ -15,6 +15,7 @@ from django.conf import settings
 from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
 
+from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
@@ -55,8 +56,10 @@ def retry(f):
                     # Don't wait/retry when running tests.
                     break
                 attempts -= 1
+                logger.info(e)
                 if "canceled" in str(e).lower():
                     # If task was canceled (as opposed to fail) don't retry.
+                    logger.info("The task was canceled ")
                     attempts = 0
                 else:
                     if attempts:
@@ -411,9 +414,13 @@ def convert(
     try:
         task_process = TaskProcess(task_uid=task_uid)
         task_process.start_process(cmd)
+    except CancelException:
+        # If we don't allow cancel exception to propagate then the task won't exit properly.
+        # TODO: Allow retry state to be more informed.
+        raise
     except Exception as e:
         logger.error(e)
-        raise Exception("File conversion failed.  Please try again or contact support.")
+        raise Exception("File conversion failed. Please try again or contact support.")
 
     finally:
         if temp_boundfile:
