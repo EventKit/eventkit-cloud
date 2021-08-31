@@ -141,9 +141,7 @@ class EventKitClient(object):
         """
         url = f"{self.jobs_url}/{job_uid}/run?format=json"
 
-        response = self.client.post(
-            url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url}
-        )
+        response = self.client.post(url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url})
         if not response.ok:
             logger.error(response.content.decode())
             logger.error(url)
@@ -344,6 +342,7 @@ def parse_duration(duration):
         if parts is not None:
             time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
             return timedelta(**time_params).seconds
+    return 0
 
 
 def convert_seconds_to_hms(seconds):

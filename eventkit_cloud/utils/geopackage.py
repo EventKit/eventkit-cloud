@@ -341,9 +341,7 @@ class Geopackage(object):
         cur = conn.cursor()
         cur.execute("select load_extension('mod_spatialite')")
         cur.execute("CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)")
-        cur.execute(
-            "INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,)
-        )
+        cur.execute("INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,))
 
         update_progress(self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta)
 

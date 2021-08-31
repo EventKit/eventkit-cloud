@@ -172,7 +172,10 @@ class WCSConverter(object):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
             try:
-                for _bbox_idx, _tile_bbox, in enumerate(tile_bboxes):
+                for (
+                    _bbox_idx,
+                    _tile_bbox,
+                ) in enumerate(tile_bboxes):
                     outfile = "{0}-{1}-{2}{3}".format(file_path, idx, _bbox_idx, ext)
                     try:
                         os.remove(outfile)
@@ -229,7 +232,9 @@ class WCSConverter(object):
             raise Exception("The service failed to return a proper response")
 
     @gdalutils.retry
-    def convert(self,):
+    def convert(
+        self,
+    ):
         """
         Download WCS data and convert to geopackage
         """

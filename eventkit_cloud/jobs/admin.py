@@ -7,6 +7,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
+from django.core.cache import cache
 from django.shortcuts import render
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
@@ -234,6 +235,9 @@ class DataProviderAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, *args):
         super().save_model(request, obj, *args)
+        provider_caches = cache.get(DataProvider.provider_caches_key)
+        if provider_caches:
+            cache.delete_many(provider_caches.keys())
         process_formats = get_process_formats(obj, request)
         logger.error(f"Process_formats: {process_formats}")
         for process_format in process_formats:

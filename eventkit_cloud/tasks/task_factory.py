@@ -5,7 +5,6 @@ import itertools
 import logging
 
 from celery import chain
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
@@ -29,7 +28,6 @@ from eventkit_cloud.tasks.export_tasks import (
     raster_file_export_task,
     ogcapi_process_export_task,
 )
-from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_provider_staging_dir,
@@ -37,7 +35,6 @@ from eventkit_cloud.tasks.helpers import (
 )
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -73,7 +70,6 @@ class TaskFactory:
         worker=None,
         run_uid=None,
         user_details=None,
-        data_provider_slugs=None,
         run_zip_file_slug_sets=None,
         session_token=None,
         queue_group=None,
@@ -121,7 +117,9 @@ class TaskFactory:
         if not run_uid:
             raise Exception("Cannot parse_tasks without a run uid.")
 
-        run = ExportRun.objects.get(uid=run_uid)
+        run = ExportRun.objects.prefetch_related(
+            "job__projections", "job__data_provider_tasks", "data_provider_task_records"
+        ).get(uid=run_uid)
         job = run.job
         run_dir = get_run_staging_dir(run.uid)
 
@@ -142,35 +140,51 @@ class TaskFactory:
         finalized_provider_task_chain_list = []
         # Create a task record which can hold tasks for the run (datapack)
         run_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
+            run=run,
+            name="run",
+            slug="run",
+            status=TaskState.PENDING.value,
+            display=False,
         )
 
-        run_zip_task_chain = get_zip_task_chain(data_provider_task_record_uid=run_task_record.uid, worker=worker,)
-        for provider_task in job.data_provider_tasks.all():
-            # Skip any providers that weren't selected to be re-run.
-            if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
+        run_zip_task_chain = get_zip_task_chain(
+            data_provider_task_record_uid=run_task_record.uid,
+            worker=worker,
+        )
+        for data_provider_task in job.data_provider_tasks.all():
+
+            data_provider_task_record = run.data_provider_task_records.filter(
+                provider__slug=data_provider_task.provider.slug
+            ).first()
+            if (
+                data_provider_task_record
+                and TaskState[data_provider_task_record.status] in TaskState.get_finished_states()
+            ):
                 continue
 
-            if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
+            if self.type_task_map.get(data_provider_task.provider.export_provider_type.type_name):
                 # Each task builder has a primary task which pulls the source data, grab that task here...
-                type_name = provider_task.provider.export_provider_type.type_name
+                type_name = data_provider_task.provider.export_provider_type.type_name
 
                 primary_export_task = self.type_task_map.get(type_name)
 
-                stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
+                stage_dir = get_provider_staging_dir(run_dir, data_provider_task.provider.slug)
                 args = {
                     "primary_export_task": primary_export_task,
                     "user": job.user,
-                    "provider_task_uid": provider_task.uid,
+                    "provider_task_uid": data_provider_task.uid,
                     "stage_dir": stage_dir,
                     "run": run,
-                    "service_type": provider_task.provider.export_provider_type.type_name,
+                    "service_type": data_provider_task.provider.export_provider_type.type_name,
                     "worker": worker,
                     "user_details": user_details,
                     "session_token": session_token,
                 }
 
-                (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
+                (
+                    provider_task_record_uid,
+                    provider_subtask_chain,
+                ) = TaskChainBuilder().build_tasks(**args)
 
                 wait_for_providers_signature = wait_for_providers_task.s(
                     run_uid=run_uid,
@@ -192,6 +206,7 @@ class TaskFactory:
                     selection_task = create_task(
                         data_provider_task_record_uid=provider_task_record_uid,
                         worker=worker,
+                        stage_dir=stage_dir,
                         task=output_selection_geojson_task,
                         selection=job.the_geom.geojson,
                         user_details=user_details,
@@ -206,7 +221,7 @@ class TaskFactory:
 
                     # add zip if required
                     # skip zip if there is only one source in the data pack (they would be redundant files).
-                    if provider_task.provider.zip and len(job.data_provider_tasks.all()) > 1:
+                    if data_provider_task.provider.zip and len(job.data_provider_tasks.all()) > 1:
                         zip_export_provider_sig = get_zip_task_chain(
                             data_provider_task_record_uid=provider_task_record_uid,
                             data_provider_task_record_uids=[provider_task_record_uid],
@@ -232,7 +247,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job_uid, user=None, clone=False):
+def create_run(job_uid, user=None, clone=False, download_data=True):
     """
     This will create a new Run based on the provided job uid.
     :param job_uid: The UID to reference the Job model.
@@ -244,14 +259,12 @@ def create_run(job_uid, user=None, clone=False):
         # https://docs.djangoproject.com/en/1.10/topics/db/transactions/#django.db.transaction.atomic
         # enforce max runs
         with transaction.atomic():
-            max_runs = settings.EXPORT_MAX_RUNS
-            job = Job.objects.select_related("user").get(uid=job_uid)
+
+            job = Job.objects.select_related("user").prefetch_related("runs").get(uid=job_uid)
             job, user = check_job_permissions(job, user)
 
-            run_count = job.runs.filter(deleted=False).count()
-            run_zip_file_slug_sets = None
             if clone:
-                run, run_zip_file_slug_sets = job.last_export_run.clone()
+                run = job.last_export_run.clone(download_data=download_data)
                 run.status = TaskState.SUBMITTED.value
                 run.save()
                 job.last_export_run = run
@@ -267,21 +280,11 @@ def create_run(job_uid, user=None, clone=False):
                 job.last_export_run = run
                 job.save()
 
-            if run_count > 0:
-                while run_count > max_runs - 1:
-                    # delete the earliest runs
-                    job.runs.filter(deleted=False).earliest("started_at").soft_delete(user=user)
-                    run_count -= 1
-
             sendnotification(
                 run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, ""
             )
-            run_uid = run.uid
-            logger.debug("Saved run with id: {0}".format(str(run_uid)))
-            if clone:
-                return run_uid, run_zip_file_slug_sets
-            else:
-                return run_uid
+            logger.debug("Saved run with id: {0}".format(str(run.uid)))
+            return run.uid
     except DatabaseError as e:
         logger.error("Error saving export run: {0}".format(e))
         raise e
@@ -319,6 +322,7 @@ def create_task(
     data_provider_task_record_uids=None,
     run_zip_file_uid=None,
     worker=None,
+    stage_dir=None,
     selection=None,
     task=None,
     job_name=None,
@@ -361,6 +365,7 @@ def create_task(
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file_uid,
         job_name=job_name,
+        stage_dir=stage_dir,
         user_details=user_details,
         bbox=export_provider_task.run.job.extents,
         locking_task_key=data_provider_task_record_uid,
@@ -368,7 +373,10 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None,
+    data_provider_task_record_uid=None,
+    data_provider_task_record_uids=None,
+    run_zip_file_uid=None,
+    worker=None,
 ):
     return chain(
         create_task(
@@ -439,7 +447,9 @@ def create_finalize_run_task_collection(
                 all_task_sigs_list.append(zipfile_chain)
 
     finalize_export_provider_signature = finalize_export_provider_task.s(
-        data_provider_task_uid=run_provider_task_record_uid, status=TaskState.COMPLETED.value, locking_task_key=run_uid,
+        data_provider_task_uid=run_provider_task_record_uid,
+        status=TaskState.COMPLETED.value,
+        locking_task_key=run_uid,
     )
     all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)

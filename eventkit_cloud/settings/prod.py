@@ -165,6 +165,7 @@ if os.getenv("OAUTH_AUTHORIZATION_URL"):
     OAUTH_LOGOUT_URL = os.getenv("OAUTH_LOGOUT_URL")
     OAUTH_TOKEN_URL = os.getenv("OAUTH_TOKEN_URL")
     OAUTH_TOKEN_KEY = os.getenv("OAUTH_TOKEN_KEY", "access_token")
+    OAUTH_REFRESH_KEY = os.getenv("OAUTH_TOKEN_KEY", "refresh_token")
     OAUTH_RESPONSE_TYPE = os.getenv("OAUTH_RESPONSE_TYPE", "code")
     OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI")
     OAUTH_SCOPE = os.getenv("OAUTH_SCOPE")

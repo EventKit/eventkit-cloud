@@ -30,39 +30,18 @@ class TestUtilTasks(TestCase):
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
 
     @patch("eventkit_cloud.tasks.task_factory.create_run")
-    @patch("eventkit_cloud.tasks.util_tasks.shutil")
-    @patch("eventkit_cloud.tasks.util_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.pick_up_run_task")
-    def test_rerun_data_provider_records(self, mock_pickup, os_mock, shutil_mock, create_run_mock):
+    def test_rerun_data_provider_records(self, mock_pickup, create_run_mock):
         expected_slugs = ["osm"]
-        new_run_uid, run_zip_file_slug_sets = create_run_mock.return_value = (
-            ExportRun.objects.create(job=self.job, user=self.user).uid,
-            expected_slugs,
-        )
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
-        rerun_data_provider_records.run(
+        create_run_mock.return_value = ExportRun.objects.create(job=self.job, user=self.user).uid
+
+        rerun_data_provider_records(
             run_uid=self.run.uid,
             user_id=self.user.id,
-            user_details=expected_user_details,
             data_provider_slugs=expected_slugs,
         )
 
-        create_run_mock.assert_called_with(job_uid=self.job.uid, user=self.user, clone=True)
-
-        os_mock.path.exists.return_value = True
-        shutil_mock.rmtree.assert_called_once()
+        create_run_mock.assert_called_with(job_uid=self.job.uid, user=self.user, clone=True, download_data=False)
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
-            rerun_data_provider_records.run(
-                run_uid=self.run.uid,
-                user_id=self.user.id,
-                user_details=expected_user_details,
-                data_provider_slugs=expected_slugs,
-            )
-
-            mock_pickup.assert_called_with(
-                run_uid=new_run_uid,
-                user_details=expected_user_details,
-                data_provider_slugs=expected_slugs,
-                run_zip_file_slug_sets=expected_slugs,
-            )
+            rerun_data_provider_records(run_uid=self.run.uid, user_id=self.user.id, data_provider_slugs=expected_slugs)

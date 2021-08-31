@@ -122,13 +122,13 @@ class TestTaskBuilder(TestCase):
         worker = "Worker"
 
         expected_result = MagicMock(display=False)
-        mock_export_task.objects.create.return_value = expected_result
+        mock_export_task.objects.get_or_create.return_value = (expected_result, True)
         task_result = create_export_task_record(
             task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=False
         )
 
         self.assertEqual(task_result, expected_result)
-        mock_export_task.objects.create.assert_called_with(
+        mock_export_task.objects.get_or_create.assert_called_with(
             export_provider_task=export_provider_task_name,
             status=TaskState.PENDING.value,
             name=task_name,
@@ -137,13 +137,13 @@ class TestTaskBuilder(TestCase):
         )
 
         expected_result = MagicMock(display=True)
-        mock_export_task.objects.create.return_value = expected_result
+        mock_export_task.objects.get_or_create.return_value = (expected_result, True)
 
         task_result = create_export_task_record(
             task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True
         )
         self.assertEqual(task_result, expected_result)
-        mock_export_task.objects.create.assert_called_with(
+        mock_export_task.objects.get_or_create.assert_called_with(
             export_provider_task=export_provider_task_name,
             status=TaskState.PENDING.value,
             name=task_name,
@@ -151,7 +151,7 @@ class TestTaskBuilder(TestCase):
             display=True,
         )
 
-        mock_export_task.objects.create.side_effect = DatabaseError("SomeError")
+        mock_export_task.objects.get_or_create.side_effect = DatabaseError("SomeError")
         with self.assertRaises(DatabaseError):
             create_export_task_record(
                 task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True

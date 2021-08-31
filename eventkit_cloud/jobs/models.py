@@ -2,27 +2,22 @@
 
 import json
 import logging
-import os
 import uuid
 from enum import Enum
 from typing import Union, List
 
 import yaml
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields.jsonb import JSONField
-from django.core.serializers import serialize
 from django.contrib.gis.db import models
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
-from django.utils.text import slugify
 
-from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -60,22 +55,10 @@ class MapImageSnapshot(DownloadableMixin, UIDMixin):
     def __str__(self):
         return "MapImageSnapshot ({}), {}".format(self.uid, self.filename)
 
-    def clone(self, new_run, data_provider_task_record):
-        from eventkit_cloud.tasks.export_tasks import make_file_downloadable
-        from eventkit_cloud.tasks.helpers import get_download_filename, get_run_staging_dir
-
+    def clone(self):
         self.id = None
         self.uid = None
         self.save()
-
-        new_run_dir = get_run_staging_dir(new_run.uid)
-        data_provider_slug = data_provider_task_record.provider.slug
-        filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
-        file_ext = os.path.splitext(self.filename)[1]
-        download_filename = get_download_filename(os.path.splitext(os.path.basename(self.filename))[0], file_ext)
-        self.download_url = make_file_downloadable(
-            filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename
-        )
 
         return self
 
@@ -311,6 +294,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
+
+    # Used to store user list of user caches so that they can be invalidated.
+    provider_caches_key = "data_provider_caches"
 
     class Meta:  # pragma: no cover
         managed = True
@@ -962,15 +948,6 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     if return_dict:
         return conf
     return yaml.dump(conf)
-
-
-def get_data_provider_label(data_provider_slug):
-    try:
-        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
-        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
-    except DataProvider.DoesNotExist:
-        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
-        raise
 
 
 def get_data_type_from_provider(data_provider: DataProvider) -> str:

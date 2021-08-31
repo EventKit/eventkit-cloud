@@ -8,10 +8,7 @@ from django.core.cache import cache
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.jobs.helpers import (
-    get_provider_image_dir,
-    get_provider_thumbnail_name,
-)
+from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
 from eventkit_cloud.jobs.models import (
     DataProvider,
     Job,
@@ -21,11 +18,11 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
-from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
-from eventkit_cloud.utils.mapproxy import get_mapproxy_config_template
-from eventkit_cloud.utils.image_snapshot import make_thumbnail_downloadable, save_thumbnail
 from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.tasks.helpers import make_file_downloadable
+from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
+from eventkit_cloud.utils.image_snapshot import save_thumbnail
+from eventkit_cloud.utils.mapproxy import get_mapproxy_config_template
 from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
@@ -100,16 +97,21 @@ def provider_pre_save(sender, instance, **kwargs):
                 # Return a file system path to the image.
                 filepath = save_thumbnail(
                     instance.preview_url,
-                    os.path.join(provider_image_dir, get_provider_thumbnail_name(instance.slug)),
+                    os.path.join(provider_image_dir, f"{get_provider_thumbnail_name(instance.slug)}.jpg"),
                 )
-                # Return a MapImageSnapshot representing the thumbnail
-                thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
+
+                # TODO: This is redundant to code in export_tasks.py after __call__
+                filename, download_url = make_file_downloadable(filepath, skip_copy=False)
+                stat = os.stat(filepath)
+                size = stat.st_size / 1024 / 1024.00
 
                 if instance.thumbnail:
                     prev_thumb = instance.thumbnail
                     instance.thumbnail = None
                     prev_thumb.delete()
-                instance.thumbnail = thumbnail_snapshot
+                instance.thumbnail = MapImageSnapshot.objects.create(
+                    filename=filename, size=size, download_url=download_url
+                )
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
             # a thumbnail creation error occurs.

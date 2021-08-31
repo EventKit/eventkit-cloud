@@ -64,7 +64,7 @@ def get_accessors():
         # Get the size in MBs per unit area (valid for tasks objects)
         "size": lambda t, area_km: t.result.size / area_km,
         # Get the duration per unit area (valid for export_run, data_provider_task_records, or export_task_records)
-        "duration": lambda o, area_km: parse_duration(o.duration) / area_km if o.duration else 0,
+        "duration": lambda o, area_km: parse_duration(getattr(o, "duration", 0)) / area_km,
         # Get the area from the run or use the parent's area
         "area": lambda o, area_km: area_km,
     }

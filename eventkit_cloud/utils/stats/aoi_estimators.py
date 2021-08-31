@@ -1,4 +1,6 @@
 import logging
+from concurrent import futures
+from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -109,9 +111,15 @@ class AoiEstimator(object):
         raise ValueError(f"""Unable to compute '{estimate_type}' estimate.""")
 
     def get_provider_estimates(self, slug):
-        size = self.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-        time = self.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-        return {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures_list = [
+                executor.submit(lambda: self.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]),
+                executor.submit(lambda: self.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]),
+            ]
+            futures.wait(futures_list)
+
+            return [ftr.result() for ftr in futures_list]  # return size and time.
 
     def _get_size_estimate(self, provider):
         """Get size estimate for this provider by checking the provider type."""

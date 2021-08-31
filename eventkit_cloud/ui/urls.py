@@ -21,11 +21,11 @@ urlpatterns = [
     re_path(
         r"^login", never_cache(ensure_csrf_cookie(TemplateView.as_view(template_name="ui/index.html"))), name="login"
     ),
+    re_path(r"^$", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="home"),
     re_path(
-        r"^$", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="home"
-    ),
-    re_path(
-        r"^dashboard", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="dashboard"
+        r"^dashboard",
+        never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))),
+        name="dashboard",
     ),
     re_path(
         r"^exports/?$", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="exports"
@@ -39,9 +39,7 @@ urlpatterns = [
     re_path(
         r"^account", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="account"
     ),
-    re_path(
-        r"^about", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="about"
-    ),
+    re_path(r"^about", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="about"),
     re_path(
         r"^groups", never_cache(login_required(TemplateView.as_view(template_name="ui/index.html"))), name="groups"
     ),

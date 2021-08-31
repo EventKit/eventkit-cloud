@@ -196,7 +196,9 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
             mock_pickup.assert_called_once()
 
-    def test_get_job_detail(self,):
+    def test_get_job_detail(
+        self,
+    ):
         expected = "/api/jobs/{0}".format(self.job.uid)
         url = reverse("api:jobs-detail", args=[self.job.uid])
         self.assertEqual(expected, url)
@@ -504,7 +506,9 @@ class TestJobViewSet(APITestCase):
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
-    def test_invalid_selection(self,):
+    def test_invalid_selection(
+        self,
+    ):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -914,7 +918,9 @@ class TestExportRunViewSet(APITestCase):
         expected = f"/api/runs/{self.run_uid}?format=geojson"
         self.assertEqual(expected, url)
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + self.token.key, HTTP_ACCEPT_LANGUAGE="en", HTTP_HOST="testserver",
+            HTTP_AUTHORIZATION="Token " + self.token.key,
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
         )
         response = self.client.get(url)
         self.assertEqual(response["content-type"], "application/geo+json")
@@ -1054,8 +1060,6 @@ class TestExportRunViewSet(APITestCase):
             run=run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         run.data_provider_task_records.add(data_provider_task_record)
-        run_uid = str(run.uid)
-        expected_user_details = {"username": "demo", "is_superuser": False, "is_staff": False}
         url = f"/api/runs/{run.uid}/rerun_providers"
         expected_slugs = ["osm-generic"]
         request_data = {"data_provider_slugs": expected_slugs}
@@ -1065,9 +1069,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 
         mock_check_job_permissions.assert_called_once_with(run.job)
-        mock_rerun_records.apply_async.assert_called_once_with(
-            args=(run.uid, self.user.id, expected_user_details, expected_slugs), queue=run_uid, routing_key=run_uid
-        )
 
 
 class TestRunZipFileViewSet(APITestCase):

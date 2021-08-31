@@ -205,11 +205,9 @@ if __name__ == "__main__":
         "--bounding-box",
         required=True,
         dest="bbox",
-        help="A comma separated list of coordinates in the format: miny,minx,maxy,maxx"
+        help="A comma separated list of coordinates in the format: miny,minx,maxy,maxx",
     )
-    parser.add_argument(
-        "-u", "--url", required=False, dest="url", help="The url endpoint of the overpass interpreter"
-    )
+    parser.add_argument("-u", "--url", required=False, dest="url", help="The url endpoint of the overpass interpreter")
     parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     configuration = {}

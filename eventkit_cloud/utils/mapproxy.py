@@ -24,6 +24,7 @@ from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import (
     get_tile_table_names,
@@ -291,6 +292,8 @@ class MapproxyGeopackage(object):
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
             set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
+        except CancelException:
+            raise
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             logger.error(e)

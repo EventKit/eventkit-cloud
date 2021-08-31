@@ -824,7 +824,7 @@ def get_provider_checker(type_slug) -> Type[ProviderCheck]:
         return ProviderCheck
 
 
-def perform_provider_check(provider: DataProvider, geojson: dict) -> str:
+def perform_provider_check(provider: DataProvider, geojson: dict) -> dict:
     try:
         provider_type = str(provider.export_provider_type)
 

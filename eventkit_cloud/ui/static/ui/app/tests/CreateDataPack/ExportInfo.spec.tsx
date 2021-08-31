@@ -1,15 +1,12 @@
 import * as React from 'react';
-import * as sinon from 'sinon';
-import {mount} from 'enzyme';
-import List from '@material-ui/core/List';
-import Paper from '@material-ui/core/Paper';
-import Checkbox from '@material-ui/core/Checkbox';
-import MapCard from '../../components/common/MapCard';
-import {
-    ExportInfo,
-} from '../../components/CreateDataPack/ExportInfo';
-import CustomScrollbar from '../../components/common/CustomScrollbar';
-import * as utils from '../../utils/generic';
+import {createStore} from 'redux'
+import {Provider} from 'react-redux'
+import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
+import {fireEvent, render} from "@testing-library/react";
+import '@testing-library/jest-dom/extend-expect'
+import sinon from "sinon";
+import theme from "../../styles/eventkit_theme";
+import rootReducer from "../../reducers/rootReducer";
 
 jest.mock("../../components/common/CustomTableRow", () => {
     const React = require('react');
@@ -26,21 +23,15 @@ jest.mock("../../components/common/CustomTextField", () => {
     return (props) => (<div className="textField">{props.children}</div>);
 });
 
-import DataProvider from '../../components/CreateDataPack/DataProvider';
-import {render} from "@testing-library/react";
-import {hasDisallowedSelection, hasRequiredFields} from "../../components/CreateDataPack/ExportValidation";
-import {updateExportInfo} from "../../actions/datacartActions";
-
 jest.mock("../../components/CreateDataPack/DataProvider", () => {
     const React = require('react');
-    return (props) => (<div className="provider">{props.children}</div>);
+    return (children) => (<div className="provider" data-testid="DataProvider">{children.provider.name}</div>);
 });
 
 jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
-
 
 const formats = [
     {
@@ -49,6 +40,20 @@ const formats = [
         slug: 'shp',
         name: 'ESRI Shapefile Format',
         description: 'Esri Shapefile (OSM Schema)',
+        supported_projections: [
+            {
+                uid: "350fede7-4912-47b0-9164-d2c5e56723ed",
+                name: "World Geodetic System 1984 (WGS84)",
+                srid: 4326,
+                description: null
+            },
+            {
+                uid: "2202a4c5-df9b-49a2-ad43-970bea209f03",
+                name: "WGS 84 / Pseudo-Mercator",
+                srid: 3857,
+                description: null
+            }
+        ]
     },
     {
         uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
@@ -56,6 +61,20 @@ const formats = [
         slug: 'gpkg',
         name: 'Geopackage',
         description: 'GeoPackage',
+        supported_projections: [
+            {
+                uid: "350fede7-4912-47b0-9164-d2c5e56723ed",
+                name: "World Geodetic System 1984 (WGS84)",
+                srid: 4326,
+                description: null
+            },
+            {
+                uid: "2202a4c5-df9b-49a2-ad43-970bea209f03",
+                name: "WGS 84 / Pseudo-Mercator",
+                srid: 3857,
+                description: null
+            }
+        ]
     }];
 const projections = [
     {
@@ -64,8 +83,8 @@ const projections = [
         description: null,
     },
     {
-        srid: 1,
-        name: 'EPSG:1',
+        srid: 3857,
+        name: 'EPSG:3857',
         description: null,
     }
 ];
@@ -88,6 +107,24 @@ const providers = [
         level_to: 10,
         export_provider_type: 1,
     },
+    {
+        display: true,
+        id: 2,
+        model_url: 'http://cloud.eventkit.test/api/providers/2',
+        type: 'usgs',
+        created_at: '2021-03-24T17:44:22.940611Z',
+        updated_at: '2021-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'USGS',
+        slug: 'usgs',
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    }
 ];
 
 describe('ExportInfo component', () => {
@@ -145,344 +182,203 @@ describe('ExportInfo component', () => {
             checkProvider: sinon.spy(),
             ...(global as any).eventkit_test_props,
             classes: {},
+            theme: theme,
         }
     );
 
-    let props;
-    let wrapper;
-    let instance;
-    const setup = (overrides = {}, serveEstimates = true) => {
-        const config = {
-            BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-            SERVE_ESTIMATES: serveEstimates
-        };
-        props = {...getProps(), ...overrides};
-        wrapper = mount(<ExportInfo {...props} />, {
-            context: {config},
-        });
-        instance = wrapper.instance();
+    const getInitialState = () => (
+        {
+            aoiInfo: {
+                geojson: {},
+            },
+            exportInfo: {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                providers: [{slug: 'osm'}],
+                providerInfo: {
+                    'osm': {
+                        availability: {
+                            status: 'STAT'
+                        },
+                    }
+                },
+                exportOptions: {
+                    '123': {
+                        minZoom: 0,
+                        maxZoom: 2,
+                    }
+                },
+                projections: [],
+            },
+            providers,
+            projections,
+            formats,
+        }
+    );
+
+    const renderWithRedux = (
+        component,
+        {initialState, store = createStore(rootReducer, initialState)}: any = {}
+    ) => {
+        return {
+            ...render(<Provider store={store}>{component}</Provider>),
+            store,
+        }
     };
 
-    beforeEach(setup);
+    const renderComponent = () => {
+        const props = getProps();
+        return renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
+    };
+
+    it('should render without error', () => {
+        renderComponent();
+    });
 
     it('should render a form', () => {
-        expect(wrapper.find('#root')).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find('#form')).toHaveLength(1);
-        expect(wrapper.find(Paper)).toHaveLength(1);
-        expect(wrapper.find('#mainHeading')).toHaveLength(1);
-        // expect(wrapper.find('#root').html()).toBe('');
-        expect(wrapper.find('.textField')).toHaveLength(3);
-        expect(wrapper.find('#layersHeader')).toHaveLength(1);
-        expect(wrapper.find('#layersHeader').text()).toEqual('Select Data Sources');
-        expect(wrapper.find('#layersSubheader').text()).toEqual('(You must choose at least one)');
-        expect(wrapper.find(List)).toHaveLength(1);
-        expect(wrapper.find(DataProvider)).toHaveLength(1);
-        expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
-        expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
-        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
-        expect(wrapper.find('.qa-ExportInfo-ShareHeader').text()).toEqual('Share this DataPack');
-        expect(wrapper.find(MapCard)).toHaveLength(1);
+        const component = renderComponent();
 
+        expect(component.getByText('Enter General Information')).toBeInTheDocument();
+        expect(component.getByText('Select Data Sources')).toBeInTheDocument();
+        expect(component.getByText('Request New Data Source')).toBeInTheDocument();
+        expect(component.getByText('Select Projection')).toBeInTheDocument();
+        expect(component.getByText('Share this DataPack')).toBeInTheDocument();
+        expect(component.getByText('Area of Interest (AOI)')).toBeInTheDocument();
+        expect(component.getByText('Selected Area of Interest')).toBeInTheDocument();
     });
 
-    it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
-        const expectedString = '12,393 sq km';
-        const areaSpy = sinon.spy(utils, 'getSqKmString');
-        const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
-        setup();
-        expect(joyrideSpy.calledOnce).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            areaStr: expectedString,
-            projections: [4326], // We force 4326 to be selected by default (except when something is already selected e.g. cloning)
-            visibility: 'PRIVATE',
-        })).toBe(true);
-        expect(props.updateExportInfo.called).toBe(true);
-        areaSpy.restore();
-        joyrideSpy.restore();
+    it('should have a search button', () => {
+        const component = renderComponent();
+
+        expect(component.getByText('Search')).toBeInTheDocument();
     });
 
-    it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
-        setup();
-        instance.checkShareAll();
-        expect(props.updateExportInfo.calledWith({
-            visibility: 'PRIVATE',
-        })).toBe(true);
-        setup({
-            exportInfo: {
-            ...getProps().exportInfo,
-            visibility: 'PRIVATE',
-            }
-        });
-        instance.checkShareAll();
-        expect(props.updateExportInfo.calledWith({
-            visibility: 'PUBLIC',
-        })).toBe(true);
+    it('should have a sort / filter button', () => {
+        const component = renderComponent();
+
+        expect(component.getByText('Sort / Filter')).toBeInTheDocument();
     });
 
-    it('componentDidMount should not update projections when already in state', () => {
-        const expectedString = '12,393 sq km';
-        const areaSpy = sinon.spy(utils, 'getSqKmString');
-        const defaultProps = getProps();
-        setup({
-            exportInfo: {
-                ...defaultProps.exportInfo,
-                projections: [3857],
-            }
-        });
-        expect(props.updateExportInfo.calledWith({
-            areaStr: expectedString,
-            visibility: 'PRIVATE',
-        })).toBe(true);
-        expect(props.updateExportInfo.called).toBe(true);
-        areaSpy.restore();
+    it('should have a list of providers sorted A-Z by default', () => {
+        const component = renderComponent();
+
+        const providers = component.getAllByTestId("DataProvider");
+        expect(providers.length).toBe(3);
+        expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
-    it('componentDidUpdate should reset joyride and set running state', () => {
-        wrapper.update();
-        const stateStub = sinon.stub(instance, 'setState');
-        const nextProps = getProps();
-        nextProps.walkthroughClicked = true;
-        wrapper.setProps(nextProps);
-        expect(stateStub.calledWith({isRunning: true})).toBe(true);
+    it('should have filtering options hidden by default', () => {
+        const component = renderComponent();
+
+        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Raster')).toBeNull();
+        expect(component.queryByText('Vector')).toBeNull();
+        expect(component.queryByText('Elevation')).toBeNull();
+        expect(component.queryByText('Sort By')).toBeNull();
+        expect(component.queryByText('Alphabetical A-Z')).toBeNull();
+        expect(component.queryByText('Alphabetical Z-A')).toBeNull();
+        expect(component.queryByText('Clear All')).toBeNull();
+        expect(component.queryByText('Apply')).toBeNull();
+        expect(component.queryByText('Cancel')).toBeNull();
     });
 
-    it('componentDidUpdate should update the providers', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        const nextProps = getProps();
-        nextProps.providers = [{slug: '124'}];
-        wrapper.setProps(nextProps);
-        expect(stateStub.calledWith({providers: nextProps.providers})).toBe(true);
+    it('should provide filtering options when sort / filter is clicked', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        expect(component.getByText('Filter By')).toBeInTheDocument();
+        expect(component.getByText('Raster')).toBeInTheDocument();
+        expect(component.getByText('Vector')).toBeInTheDocument();
+        expect(component.getByText('Elevation')).toBeInTheDocument();
+        expect(component.getByText('Sort By')).toBeInTheDocument();
+        expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
+        expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
+        expect(component.queryByText('Clear All')).toBeInTheDocument();
+        expect(component.queryByText('Apply')).toBeInTheDocument();
+        expect(component.queryByText('Cancel')).toBeInTheDocument();
     });
 
-    it('onNameChange should call updateExportInfo', () => {
-        props.updateExportInfo.resetHistory();
-        instance.onNameChange('test');
-        expect(props.updateExportInfo.calledOnce).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            exportName: 'test',
-        })).toBe(true);
+    it('should have a list of projections', () => {
+        const component = renderComponent();
+
+        const projections = component.getAllByText(/EPSG/);
+        expect(projections.length).toBe(2);
     });
 
-    it('onDescriptionChange should call persist and nameHandler', () => {
-        props.updateExportInfo.resetHistory();
-        instance.onDescriptionChange('test');
-        expect(props.updateExportInfo.calledOnce).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            datapackDescription: 'test',
-        })).toBe(true);
+    it('should have a list of providers sorted Z-A after filter selected', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const radioButton = component.getByTestId('alphabetical-z-a');
+        fireEvent.click(radioButton);
+        const providers = component.getAllByTestId('DataProvider');
+        expect(providers[0]).toHaveTextContent('USGS');
     });
 
-    it('onProjectChange should call persist and nameHandler', () => {
-        props.updateExportInfo.resetHistory();
-        instance.onProjectChange('test');
-        expect(props.updateExportInfo.calledOnce).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            projectName: 'test',
-        })).toBe(true);
+    it('should display the correct checked value of a projection checkbox', () => {
+        const component = renderComponent();
+
+        const projectionCheckbox = component.getByRole('checkbox', {name: /EPSG:3857/});
+        fireEvent.click(projectionCheckbox);
+        expect(projectionCheckbox).toBeChecked();
+        fireEvent.click(projectionCheckbox);
+        expect(projectionCheckbox).not.toBeChecked();
     });
 
-    it('onChangeCheck should add a provider', () => {
-        const appProviders = [{name: 'one'}, {name: 'two'}];
-        const exportProviders = [{name: 'one'}];
-        const event = {target: {name: 'two', checked: true}};
-        wrapper.setProps({
-            providers: appProviders,
-            exportInfo: {
-                ...props.exportInfo,
-                providers: exportProviders,
-            },
-        });
-        instance.onChangeCheck(event);
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            providers: [{name: 'one'}, {name: 'two'}],
-        })).toBe(true);
+    it('should remove a filter when the user clicks the x on the filter chip', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const rasterFilter = component.getByText('Raster');
+
+        // Select the raster filter and close the dialog so that the filter chips show up.
+        fireEvent.click(rasterFilter);
+        fireEvent.click(sortFilter);
+
+        expect(component.queryByText("Raster")).toBeInTheDocument();
+
+        const rasterFilterChip = component.container.querySelector('.MuiChip-deleteIcon');
+        fireEvent.click(rasterFilterChip);
+
+        expect(component.queryByText("Raster")).toBeNull();
     });
 
-    it('onChangeCheck should remove a provider', () => {
-        const appProviders = [{name: 'one'}, {name: 'two'}];
-        const exportProviders = [{name: 'one'}, {name: 'two'}];
-        const event = {target: {name: 'two', checked: false}};
-        wrapper.setProps({
-            providers: appProviders,
-            exportInfo: {
-                ...props.exportInfo,
-                providers: exportProviders,
-            },
-        });
-        instance.onChangeCheck(event);
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            providers: [{name: 'one'}],
-        })).toBe(true);
+    it('should close the filter section when you click apply', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        expect(component.queryByText('Filter By')).toBeInTheDocument();
+
+        const applyFilterButton = component.queryByText('Apply');
+        fireEvent.click(applyFilterButton);
+
+        expect(component.queryByText('Filter By')).toBeNull();
     });
 
-    it('onRefresh should setState with empty availability and estimate', () => {
-        instance.onRefresh();
-        expect(props.checkProvider.called).toBe(true);
+    it('should close the filter section and clear filters when you click cancel', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        expect(component.queryByText('Filter By')).toBeInTheDocument();
+
+        const rasterFilter = component.getByText('Raster');
+        fireEvent.click(rasterFilter);
+        let providers = component.getAllByTestId('DataProvider');
+        expect(providers.length).toBe(1);
+
+        const applyFilterButton = component.queryByText('Cancel');
+        fireEvent.click(applyFilterButton);
+
+        expect(component.queryByText('Filter By')).toBeNull();
+        providers = component.getAllByTestId('DataProvider');
+        expect(providers.length).toBe(3);
     });
 
-    it('handlePopoverOpen should setState with anchorEl', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        const e = {currentTarget: sinon.spy()};
-        instance.handlePopoverOpen(e);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({refreshPopover: e.currentTarget})).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handlePopoverClose should setState anchorEl', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.handlePopoverClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({refreshPopover: null})).toBe(true);
-        stateStub.restore();
-    });
-
-    it('hasRequiredFields should return whether the exportInfo required fields are filled', () => {
-        const invalid = {
-            exportName: 'name',
-            datapackDescription: 'stuff',
-            projectName: 'name',
-            providers: [],
-            exportOptions: {}
-        } as any;
-        const valid = {
-            exportName: 'name',
-            datapackDescription: 'stuff',
-            projectName: 'name',
-            providers: [{slug: 'providerslug'}],
-            projections: [4326],
-            exportOptions: {
-                providerslug: {
-                    formats: ['validformat'],
-                }
-            },
-        } as any;
-        expect(hasRequiredFields(invalid)).toBe(false);
-        expect(hasRequiredFields(valid)).toBe(true);
-    });
-
-    it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
-        const defaultProps = getProps();
-        const providerInfo = {
-            osm: {
-                availability: {
-                    status: 'FATAL',
-                },
-            }
-        };
-        const exportInfo = {
-            ...defaultProps.exportInfo,
-            providerInfo
-        };
-        setup({exportInfo: exportInfo});
-        expect(hasDisallowedSelection(exportInfo)).toBe(true);
-    });
-
-    it('hasDisallowedSelection should return false if no status', () => {
-        const defaultProps = getProps();
-        const providerInfo = {
-            osm: {
-                availability: {
-                    status: undefined,
-                },
-            }
-        };
-        const exportInfo = {
-            ...defaultProps.exportInfo,
-            providerInfo
-        };
-        setup({exportInfo: exportInfo});
-        expect(hasDisallowedSelection(exportInfo)).toBe(false);
-    });
-
-    it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [
-            {
-                title: 'Search for location',
-                text: 'Type in location name to set area of interest.',
-                selector: '.bootstrap-typeahead-input',
-                position: 'bottom',
-                style: {},
-            },
-        ];
-        const stateSpy = sinon.stub(instance, 'setState');
-        instance.joyrideAddSteps(steps);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps}));
-        stateSpy.restore();
-    });
-
-    it('opens the dataprovider drawer when openDrawer is called', () => {
-        instance.state = {providerDrawerIsOpen: null};
-        instance.dataProvider = {current: {state: {open: false}}};
-        const stateSpy = sinon.stub(instance, 'setState');
-        const handleDataProviderExpandSpy = sinon.stub(instance, 'handleDataProviderExpand');
-        expect(stateSpy.calledWith({isRunning: false}));
-        expect(handleDataProviderExpandSpy.wasCalled);
-        stateSpy.restore();
-        handleDataProviderExpandSpy.restore();
-    });
-
-    it('closes the dataprovider drawer when resetDrawer is called', () => {
-        instance.state = {providerDrawerIsOpen: false};
-        instance.dataProvider = {current: {state: {open: true}}};
-        const stateSpy = sinon.stub(instance, 'setState');
-        const handleDataProviderExpandSpy = sinon.stub(instance, 'handleDataProviderExpand');
-        expect(stateSpy.calledWith({providerDrawerIsOpen: null}));
-        expect(handleDataProviderExpandSpy.wasCalled);
-        stateSpy.restore();
-        handleDataProviderExpandSpy.restore();
-    });
-
-    it('callback function should stop tour if close is clicked', () => {
-        const callbackData = {
-            action: 'close',
-            index: 2,
-            step: {
-                position: 'bottom',
-                selector: '.qa-DataPackLinkButton-Button',
-                style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
-                title: 'Create DataPack',
-            },
-            type: 'step:before',
-        };
-        instance.joyride = {current: {reset: sinon.spy()}};
-        const stateSpy = sinon.stub(instance, 'setState');
-        const resetDrawerSpy = sinon.stub(instance, 'resetDrawer');
-        instance.callback(callbackData);
-        expect(stateSpy.calledWith({isRunning: false}));
-        expect(resetDrawerSpy.wasCalled);
-        stateSpy.restore();
-        resetDrawerSpy.restore();
-    });
-
-    it('callback should set location hash', () => {
-        const data = {
-            action: 'something',
-            index: 2,
-            step: {
-                scrollToId: 'scrollhere',
-            },
-            type: 'step:before',
-        };
-        expect(window.location.hash).toEqual('');
-        instance.callback(data);
-        expect(window.location.hash).toEqual(`#${data.step.scrollToId}`);
-    });
-
-    it('callback should call setNextEnabled', () => {
-        const data = {
-            action: 'something',
-            index: 9,
-            step: {},
-            type: 'tooltip',
-        };
-        instance.callback(data);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
-    });
 });
 
