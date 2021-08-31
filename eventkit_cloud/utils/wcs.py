@@ -232,9 +232,7 @@ class WCSConverter(object):
             raise Exception("The service failed to return a proper response")
 
     @gdalutils.retry
-    def convert(
-        self,
-    ):
+    def convert(self):
         """
         Download WCS data and convert to geopackage
         """

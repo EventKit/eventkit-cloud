@@ -196,9 +196,7 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
             mock_pickup.assert_called_once()
 
-    def test_get_job_detail(
-        self,
-    ):
+    def test_get_job_detail(self):
         expected = "/api/jobs/{0}".format(self.job.uid)
         url = reverse("api:jobs-detail", args=[self.job.uid])
         self.assertEqual(expected, url)
@@ -506,9 +504,7 @@ class TestJobViewSet(APITestCase):
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
-    def test_invalid_selection(
-        self,
-    ):
+    def test_invalid_selection(self):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
