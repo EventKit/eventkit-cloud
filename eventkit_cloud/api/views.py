@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
+import json
 import logging
-from datetime import datetime, timedelta
+from collections import defaultdict, Counter
+import datetime
 
+import requests
 from audit_logging.models import AuditEvent
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
@@ -113,6 +117,7 @@ from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
     RunZipFile,
     prefetch_export_runs,
+    UserDownload,
 )
 from eventkit_cloud.tasks.task_factory import (
     create_run,
@@ -1263,7 +1268,7 @@ class ExportRunViewSet(EventkitViewSet):
         if not request.user.is_superuser:
             max_days = int(getattr(settings, "MAX_DATAPACK_EXPIRATION_DAYS", 30))
             now = datetime.today()
-            max_date = now + timedelta(max_days)
+            max_date = now + datetime.timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
                 return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
@@ -2294,6 +2299,90 @@ class EstimatorView(views.APIView):
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
+
+
+class MetricsView(views.APIView):
+    """
+     Api components for computing size estimates for providers within a specified bounding box
+    """
+
+    @action(detail=False, methods=["get"])
+    def get(self, request, *args, **kwargs):
+        User = get_user_model()
+
+        days_ago = 30
+
+        date = datetime.date.today() - datetime.timedelta(days=days_ago)
+
+        events = AuditEvent.objects.filter(datetime__gte=date, event="login")
+        date_list = [datetime.date.today() - datetime.timedelta(days=x) for x in range(days_ago)]
+        user_logins_by_date = defaultdict(dict)
+        user_cache = {}
+        orgs = {}
+        for current_date in date_list:
+            # Could filter again by date, but here its probably faster to just
+            # loop the dates instead of querying the DB again.
+            for event in events:
+                if event.datetime.date() != current_date:
+                    continue
+                user = user_cache.get(event.username)
+                if not user:
+                    user = User.objects.filter(username=event.username).first()
+                if user.is_staff or user.is_superuser:
+                    continue
+                user_cache[user.username] = user
+                # This makes users per date unique, so that one user coming
+                # back doesn't count twice except on different days.
+                user_logins_by_date[current_date][user.username] = events
+                if not hasattr(user, "oauth"):
+                    print(f"User {user.username} does not have oauth information")
+                else:
+                    user_info = user.oauth.user_info
+                    dept_id = user_info.get("Dept ID")
+                    service_or_agency = user_info.get("serviceOrAgency")
+                    orgs[(dept_id, service_or_agency)] = orgs.get((dept_id, service_or_agency), []) + [user.username]
+
+        total_users_per_duration = 0
+        for current_date, users in user_logins_by_date.items():
+            total_users_per_duration += len(users)
+            # for user, events in users.items():
+            #     dept_id = getattr(user, 'oauth', {}).get(user_info, {}).get("Dept ID")
+            #     service_or_agency = getattr(user, 'oauth', {}).get(user_info, {}).get("serviceOrAgency")
+            #     print(f"{current_date},{user.username}-{user.first_name}
+            #     {user.last_name},{dept_id},{service_or_agency}")
+
+        payload = {}
+        # Average number of users per day
+        payload["Total Users"] = total_users_per_duration
+        payload["Average Users Per Day"] = total_users_per_duration / days_ago
+
+        # Top five orgs accessing the system
+        org_counts = Counter()
+        for org in orgs:
+            org_counts[org] = list(set(orgs[org]))
+
+        payload["Top Five Orgs"] = org_counts.most_common()[:5]
+
+        area_url = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json"
+        area_list = requests.get(area_url, verify=False).json().get("features")
+        areas = {}
+        for area in area_list:
+            areas[area.get("properties").get("name")] = area
+        area_counts = Counter()
+
+        users = User.objects.filter(username__in=list(user_cache.keys()))
+
+        for name, area in areas.items():
+            area_counts[name] += UserDownload.objects.filter(
+                user__in=users,
+                downloadable__export_task__export_provider_task__run__job__the_geom__intersects=GEOSGeometry(
+                    json.dumps(area.get("geometry")), srid=4326
+                ),
+                downloaded_at__gte=date,
+            ).count()
+
+        payload["Top 10 Countries"] = area_counts.most_common()[:10]
+        return Response(json.dumps(payload), status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):

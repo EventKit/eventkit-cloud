@@ -29,6 +29,7 @@ from eventkit_cloud.api.views import (
     UserDataViewSet,
     UserJobActivityViewSet,
     api_docs_view,
+    MetricsView,
 )
 
 app_name = "api"
@@ -64,4 +65,5 @@ urlpatterns = [
     re_path(r"^api/", include(router.urls)),
     re_path(r"^api/", include(notifications.urls)),
     re_path(r"^api/estimate$", EstimatorView.as_view()),
+    re_path(r"^api/metrics$", MetricsView.as_view()),
 ]
