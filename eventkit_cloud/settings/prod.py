@@ -275,7 +275,7 @@ if os.getenv("MEMCACHED"):
     CACHES = {
         "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
         "primary_cache": {
-            "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
             "LOCATION": os.getenv("MEMCACHED"),
         },
         "fallback_cache": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"},

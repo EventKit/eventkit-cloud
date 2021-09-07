@@ -1,5 +1,5 @@
 {% set name = "mapproxy" %}
-{% set version = "1.13.0" %}
+{% set version = "1.13.2" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: 2433f9a05b863cecebe54460c92032cb8d176e0b773b7e08f623db41eb2710a6
+  sha256: a2a7c5764ebf952108fe1afa03c4b14d71608fdfb7cc88e80a0a401c48f1c27c
 
 build:
   number: 0
@@ -24,8 +24,9 @@ requirements:
     - pillow
     - python=3.9
     - pyyaml
-    - proj=7.1.1
-    - gdal=3.1.4
+    - proj
+    - pyproj
+    - gdal
     - geos
     - shapely
 

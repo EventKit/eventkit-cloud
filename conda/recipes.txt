@@ -2,7 +2,6 @@ berkeleydb
 osmctools
 django-audit-logging
 django-auth-ldap
-django-celery-beat
 swapper
 django-notifications-hq
 django-storages
