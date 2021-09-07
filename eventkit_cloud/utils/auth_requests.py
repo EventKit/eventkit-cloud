@@ -10,7 +10,7 @@ from tempfile import NamedTemporaryFile
 
 from django.conf import settings
 from mapproxy.client import http as mapproxy_http
-from requests_pkcs12 import create_ssl_context
+from requests_pkcs12 import create_pyopenssl_sslcontext
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ def patch_https(cert_info: dict = None):
             # create_ssl_sslcontext needs the cert data, instead of the filepath
             with open(cert_path, "rb") as pkcs12_file:
                 pkcs12_data = pkcs12_file.read()
-            kwargs["context"] = create_ssl_context(pkcs12_data, cert_pass)
+            kwargs["context"] = create_pyopenssl_sslcontext(pkcs12_data, cert_pass)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
