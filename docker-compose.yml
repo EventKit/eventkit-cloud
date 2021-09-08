@@ -137,7 +137,7 @@ services:
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
     user: eventkit
     depends_on:
       - postgis
@@ -173,7 +173,7 @@ services:
       - BIND_MOUNT_LOCATION
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:11.5-2.5
     environment:
