@@ -462,6 +462,7 @@ class Region(UIDMixin, TimeStampedModelMixin):
         verbose_name="Mercator extent for export region", srid=3857, default=""
     )
     the_geog = models.MultiPolygonField(verbose_name="Geographic extent for export region", geography=True, default="")
+    properties = models.JSONField(default=dict)
 
     class Meta:  # pragma: no cover
         managed = True

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class RegionForm(forms.ModelForm):
     class Meta:
         model = Region
-        fields = ("name", "description", "the_geom")
+        fields = ("name", "description", "the_geom", "properties")
 
     def __init__(self, *args, **kwargs):
         super(RegionForm, self).__init__(*args, **kwargs)
