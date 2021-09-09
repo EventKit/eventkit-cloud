@@ -72,6 +72,7 @@ from eventkit_cloud.api.serializers import (
     ExportRunGeoFeatureSerializer,
 )
 from eventkit_cloud.api.utils import get_run_zip_file
+from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -104,12 +105,10 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
 )
-from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
-from eventkit_cloud.tasks.helpers import get_celery_queue_group
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -127,7 +126,6 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
@@ -911,7 +909,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             data = DataProviderSerializer(providers, many=True, context={"request": request}).data
             data += FilteredDataProviderSerializer(filtered_providers, many=True).data
 
-            cache.set(cache_key, data, timeout=DEFAULT_TIMEOUT)
+            if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
+                provider_caches = cache.get(DataProvider.provider_caches_key, dict())
+                provider_caches[cache_key] = datetime.now()
+                cache.set(DataProvider.provider_caches_key, provider_caches)
 
         return Response(data)
 
@@ -1064,7 +1065,7 @@ class ExportRunViewSet(EventkitViewSet):
         "job__event",
         "job__featured",
     )
-    ordering = ("-started_at",)
+    ordering = ("-created_at",)
 
     def get_serializer_class(self, *args, **kwargs):
         if (
@@ -1333,20 +1334,8 @@ class ExportRunViewSet(EventkitViewSet):
             if user_details is None:
                 user_details = {"username": "unknown-JobViewSet.run"}
 
-            data_provider_task_records = run.data_provider_task_records.filter(provider__slug__in=data_provider_slugs)
-            ExportTaskRecord.objects.filter(export_provider_task__in=data_provider_task_records).update(
-                status=TaskState.PENDING.value
-            )
-            data_provider_task_records.update(status=TaskState.PENDING.value)
-            run.status = TaskState.SUBMITTED.value
-
             running = ExportRunSerializer(run, context={"request": request})
-            celery_group_name = get_celery_queue_group(run_uid=run.uid)
-            rerun_data_provider_records.apply_async(
-                args=(run.uid, request.user.id, user_details, data_provider_slugs),
-                queue=celery_group_name,
-                routing_key=celery_group_name,
-            )
+            rerun_data_provider_records(run.uid, request.user.id, data_provider_slugs)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
@@ -2291,9 +2280,14 @@ class EstimatorView(views.APIView):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                provider_estimate = cache.get_or_set(
+                size, time = cache.get_or_set(
                     cache_key, lambda: estimator.get_provider_estimates(slug), ESTIMATE_CACHE_TIMEOUT
                 )
+                provider_estimate = {
+                    "slug": slug,
+                    "size": {"value": size, "unit": "MB"},
+                    "time": {"value": time, "unit": "seconds"},
+                }
                 payload += [provider_estimate]
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)

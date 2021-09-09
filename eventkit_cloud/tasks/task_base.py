@@ -10,9 +10,9 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportTaskRecord
 
 from eventkit_cloud.tasks.helpers import get_message_count
-from eventkit_cloud.utils.docker_client import DockerClient
+from eventkit_cloud.utils.scaling.docker import Docker
 
-from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.utils.scaling.pcf import Pcf
 
 logger = get_task_logger(__name__)
 
@@ -40,10 +40,10 @@ class EventKitBaseTask(UserDetailsBase):
                     app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
                 if os.getenv("PCF_SCALING"):
-                    client = PcfClient()
+                    client = Pcf()
                     client.login()
                 else:
-                    client = DockerClient()
+                    client = Docker()
                     app_name = settings.DOCKER_IMAGE_NAME
 
                 # The message was a generic shutdown sent to a specific queue_name.

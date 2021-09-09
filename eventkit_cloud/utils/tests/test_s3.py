@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from unittest.mock import patch, mock_open, Mock, MagicMock
 
 from django.conf import settings
@@ -29,10 +30,10 @@ class TestS3Util(TestCase):
         example_filename = os.path.join(settings.EXPORT_STAGING_ROOT, self._uuid, self._filename)
         expected_download_path = f"{self._uuid}/{self._filename}"
         with patch("audit_logging.file_logging.logging_open", mock_open(read_data="test"), create=True):
-            upload_to_s3(example_filename, expected_download_path)
+            upload_to_s3(example_filename)
 
         mock_client.upload_fileobj.assert_called_once()
-        mock_isfile.assert_called_once_with(example_filename)
+        mock_isfile.assert_called_once_with(Path(example_filename))
         mock_client.generate_presigned_url.assert_called_once_with(
             "get_object", Params={"Bucket": "test-bucket", "Key": expected_download_path}
         )

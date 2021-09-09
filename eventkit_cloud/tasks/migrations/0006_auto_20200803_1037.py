@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataprovidertaskrecord',
             name='provider',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='task_record_provider', to='jobs.DataProvider'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='task_record_providers', to='jobs.DataProvider'),
         ),
         migrations.AlterField(
             model_name='exportrun',

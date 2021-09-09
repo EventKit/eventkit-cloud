@@ -10,13 +10,13 @@ try:
 except ModuleNotFoundError:
     pass
 
-from eventkit_cloud.utils.scale_client import ScaleClient
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-class DockerClient(ScaleClient):
+class Docker(ScaleClient):
     def __init__(self):
         self.client = docker.from_env()
         self.session = requests.Session()
