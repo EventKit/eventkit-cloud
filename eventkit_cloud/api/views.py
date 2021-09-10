@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
-import json
+import datetime
 import logging
 from collections import defaultdict, Counter
-import datetime
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
@@ -911,7 +910,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 provider_caches = cache.get(DataProvider.provider_caches_key, dict())
-                provider_caches[cache_key] = datetime.now()
+                provider_caches[cache_key] = datetime.datetime.now()
                 cache.set(DataProvider.provider_caches_key, provider_caches)
 
         return Response(data)
@@ -2299,23 +2298,32 @@ class MetricsView(views.APIView):
      This view should return a list of metrics detailing the use of the platform
     """
 
-    @action(detail=False, methods=["get"])
+    permission_classes = (permissions.IsAdminUser,)
+    renderer_classes = (JSONRenderer,)
+
     def get(self, request, *args, **kwargs):
         """
          Args:
              days: number of days from which to gather information. E.g. if '30' is specified
              the metrics will be from the last 30 days.
-             area_type: the specific type of areas on which to group download events
+             region__<props>: A key value pair to match for the area. For example "?area__name=Africa" would return
+             areas that filter on name which equals "Africa". Properties would be "region__properties__admin=admin_name"
              area_count: the number of 'top areas' to display, i.e. top 5 areas with the most downloads
              user_group: one or more user characteristics on which to group users.
              group_count: the number of top user groups to display, i.e. top 10 user groups with the most downloads
         """
         User = get_user_model()
 
+        # TODO:  Verify param is a valid option or raise an error so that user is not confused about implementation.
         days_ago = int(request.query_params.get("days", 30))
         group_count = int(request.query_params.get("group_count", 5))
         area_count = int(request.query_params.get("area_count", 10))
-        area_type = str(request.query_params.get("area_type", "countries"))
+        region_prefix = "region__"
+        area_props = {
+            field[len(region_prefix) :]: prop
+            for field, prop in request.query_params.items()
+            if field.startswith(region_prefix)
+        }
 
         user_group_bins = request.query_params.getlist("user_group", None)
 
@@ -2369,17 +2377,15 @@ class MetricsView(views.APIView):
         area_counts = Counter()
 
         users = User.objects.filter(username__in=list(user_cache.keys()))
-
-        filter = "properties__" + area_type
-        for region in Region.objects.filter(**{filter: True}):
+        for region in Region.objects.filter(**area_props):
             area_counts[region.name] += UserDownload.objects.filter(
                 user__in=users,
                 downloadable__export_task__export_provider_task__run__job__the_geom__intersects=region.the_geom,
                 downloaded_at__gte=date,
             ).count()
 
-        payload["Top Areas"] = area_counts.most_common()[:area_count]
-        return Response(json.dumps(payload), status=status.HTTP_200_OK)
+        payload["Downloads by Area"] = area_counts.most_common()[:area_count]
+        return Response(data=payload, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
@@ -2409,6 +2415,7 @@ def get_provider_task(export_provider, export_formats):
     Returns:
 
     """
+    # TODO:  What is this supposed to do we pass in export format then do nothing with it.
     provider_task = DataProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
         supported_formats = export_provider.export_provider_type.supported_formats.all()
