@@ -2381,7 +2381,7 @@ class MetricsView(views.APIView):
             area_counts[region.name] += UserDownload.objects.filter(
                 user__in=users,
                 downloadable__export_task__export_provider_task__run__job__the_geom__intersects=region.the_geom,
-                downloaded_at__gte=date,
+                downloaded_at__gte=start_date,
             ).count()
 
         payload["Downloads by Area"] = area_counts.most_common()[:area_count]
