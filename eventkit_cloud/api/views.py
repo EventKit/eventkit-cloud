@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
-import datetime
 import logging
 from collections import defaultdict, Counter
+from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
@@ -910,7 +910,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 provider_caches = cache.get(DataProvider.provider_caches_key, dict())
-                provider_caches[cache_key] = datetime.datetime.now()
+                provider_caches[cache_key] = datetime.now()
                 cache.set(DataProvider.provider_caches_key, provider_caches)
 
         return Response(data)
@@ -1267,7 +1267,7 @@ class ExportRunViewSet(EventkitViewSet):
         if not request.user.is_superuser:
             max_days = int(getattr(settings, "MAX_DATAPACK_EXPIRATION_DAYS", 30))
             now = datetime.today()
-            max_date = now + datetime.timedelta(max_days)
+            max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
                 return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
@@ -2327,10 +2327,10 @@ class MetricsView(views.APIView):
 
         user_group_bins = request.query_params.getlist("user_group", None)
 
-        date = datetime.date.today() - datetime.timedelta(days=days_ago)
+        start_date = date.today() - timedelta(days=days_ago)
 
-        events = AuditEvent.objects.filter(datetime__gte=date, event="login")
-        date_list = [datetime.date.today() - datetime.timedelta(days=x) for x in range(days_ago)]
+        events = AuditEvent.objects.filter(datetime__gte=start_date, event="login")
+        date_list = [date.today() - timedelta(days=x) for x in range(days_ago)]
         user_logins_by_date = defaultdict(dict)
         user_cache = {}
         groups = {}
@@ -2398,7 +2398,7 @@ def get_models(model_list, model_object, model_index):
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
+            logger.warning(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
             raise NotFound(
                 code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist."
             )
