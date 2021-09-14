@@ -37,7 +37,8 @@ def auto_logout(get_response):
                     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
                         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
                     response.delete_cookie(
-                        settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN,
+                        settings.AUTO_LOGOUT_COOKIE_NAME,
+                        domain=settings.SESSION_COOKIE_DOMAIN,
                     )
                     return response
             else:
@@ -131,7 +132,10 @@ def get_user(user_data, orig_data=None):
             raise e
         try:
             OAuth.objects.create(
-                user=user, identification=identification, commonname=commonname, user_info=cleaned_data,
+                user=user,
+                identification=identification,
+                commonname=commonname,
+                user_info=cleaned_data,
             )
         except Exception as e:
             logger.error(
@@ -214,7 +218,9 @@ def get_access_tokens(data):
     try:
         session = get_or_update_session()
         response = session.post(
-            settings.OAUTH_TOKEN_URL, auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET), data=data,
+            settings.OAUTH_TOKEN_URL,
+            auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
+            data=data,
         )
         logger.debug(f"Received response: {response.text}")
         response.raise_for_status()

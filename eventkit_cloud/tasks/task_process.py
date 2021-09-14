@@ -43,7 +43,7 @@ class TaskProcess(object):
             from eventkit_cloud.tasks.exceptions import CancelException
 
             raise CancelException(
-                task_name=self.export_task.export_provider_task.name, user_name=self.export_task.cancel_user.username,
+                task_name=self.export_task.export_provider_task.name, user_name=self.export_task.cancel_user.username
             )
 
     def store_pid(self, pid=None):

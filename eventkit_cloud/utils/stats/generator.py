@@ -21,11 +21,7 @@ from eventkit_cloud.jobs.models import DataProvider, load_provider_config
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportTaskRecord, ExportRun, DataProviderTaskRecord
 from eventkit_cloud.utils.client import parse_duration
-from eventkit_cloud.utils.stats.geomutils import (
-    get_area_bbox,
-    get_bbox_intersect,
-    get_geometry_description,
-)
+from eventkit_cloud.utils.stats.geomutils import get_area_bbox, get_bbox_intersect, get_geometry_description
 
 logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
@@ -123,19 +119,20 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
 
     max_estimate_export_task_records = os.getenv("MAX_ESTIMATE_EXPORT_TASK_RECORDS", 10000)
     # Order by time descending to ensure more recent samples are collected first
-    export_task_records: QuerySet[ExportTaskRecord] = ExportTaskRecord.objects.filter(
-        export_provider_task__provider__slug=provider_slug,
-        status=TaskState.SUCCESS.value,
-        export_provider_task__status=TaskState.COMPLETED.value,
-        result__isnull=False,
-        # Only use results larger than a MB,
-        # anything less is likely a failure or a test.
-        result__size__gt=1,
-    ).order_by("-finished_at").select_related(
-        "result", "export_provider_task__run__job", "export_provider_task__provider"
-    ).all()[
-        :max_estimate_export_task_records
-    ]
+    export_task_records: QuerySet[ExportTaskRecord] = (
+        ExportTaskRecord.objects.filter(
+            export_provider_task__provider__slug=provider_slug,
+            status=TaskState.SUCCESS.value,
+            export_provider_task__status=TaskState.COMPLETED.value,
+            result__isnull=False,
+            # Only use results larger than a MB,
+            # anything less is likely a failure or a test.
+            result__size__gt=1,
+        )
+        .order_by("-finished_at")
+        .select_related("result", "export_provider_task__run__job", "export_provider_task__provider")
+        .all()[:max_estimate_export_task_records]
+    )
 
     processed_runs = {}
     processed_dptr = {}
@@ -255,7 +252,7 @@ def collect_samples_for_export_task_record(export_task_record: ExportTaskRecord,
         affected_tile_stats = []
 
     collect_samples(
-        export_task_record, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area,
+        export_task_record, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area
     )
 
     sz = accessors["size"](export_task_record, area)
@@ -505,7 +502,7 @@ def get_provider_grid(provider, min_zoom=None, max_zoom=None):
 
 
 def query(
-    provider_slug, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None, custom_stats=None,
+    provider_slug, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None, custom_stats=None
 ):
     """
     Finds the highest resolution of the requested statistic:

@@ -11,12 +11,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import (
-    GEOSGeometry,
-    GeometryCollection,
-    Polygon,
-    MultiPolygon,
-)
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
@@ -559,7 +554,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return "{0}".format(self.name)
 
     @property
-    def overpass_extents(self,):
+    def overpass_extents(self):
         """
         Return the export extents in order required by Overpass API.
         """
@@ -569,11 +564,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def extents(self,):
+    def extents(self):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def filters(self,):
+    def filters(self):
         """
         Return key=value pairs for each tag in this export.
 
@@ -587,7 +582,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return filters
 
     @property
-    def categorised_tags(self,):
+    def categorised_tags(self):
         """
         Return tags mapped according to their geometry types.
         """
@@ -608,7 +603,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         }
 
     @property
-    def bounds_geojson(self,):
+    def bounds_geojson(self):
         return serialize("geojson", [self], geometry_field="the_geom", fields=("name", "the_geom"))
 
     @property

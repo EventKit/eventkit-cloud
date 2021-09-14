@@ -139,7 +139,7 @@ class TestJobViewSet(APITestCase):
         self.cache_key = "222222222222222"
         get_estimate_cache_key_mock.return_value = self.cache_key
 
-    def test_list(self,):
+    def test_list(self):
         expected = "/api/jobs"
         url = reverse("api:jobs-list")
         self.assertEqual(expected, url)
@@ -196,7 +196,7 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
             mock_pickup.assert_called_once()
 
-    def test_get_job_detail(self,):
+    def test_get_job_detail(self):
         expected = "/api/jobs/{0}".format(self.job.uid)
         url = reverse("api:jobs-detail", args=[self.job.uid])
         self.assertEqual(expected, url)
@@ -233,7 +233,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data["url"], data["url"])
         self.assertEqual(response.data["exports"][0]["formats"][0]["url"], data["exports"][0]["formats"][0]["url"])
 
-    def test_get_job_detail_no_attribute_class(self,):
+    def test_get_job_detail_no_attribute_class(self):
         self.attribute_class.users.remove(self.user)
         expected = "/api/jobs/{0}".format(self.job.uid)
         url = reverse("api:jobs-detail", args=[self.job.uid])
@@ -247,7 +247,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data["provider_task_list_status"], data["provider_task_list_status"])
         self.assertEqual(response.data["provider_tasks"], data["provider_tasks"])
 
-    def test_get_job_detail_no_permissions(self,):
+    def test_get_job_detail_no_permissions(self):
         user = User.objects.create_user(username="demo2", email="demo2@demo.com", password="demo")
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
@@ -269,7 +269,7 @@ class TestJobViewSet(APITestCase):
         # test significant content
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_delete_job(self,):
+    def test_delete_job(self):
         url = reverse("api:jobs-detail", args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
@@ -277,7 +277,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Length"], "0")
         self.assertEqual(response["Content-Language"], "en")
 
-    def test_delete_job_no_permission(self,):
+    def test_delete_job_no_permission(self):
         user = User.objects.create_user(username="demo2", email="demo2@demo.com", password="demo")
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
@@ -504,7 +504,7 @@ class TestJobViewSet(APITestCase):
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
 
-    def test_invalid_selection(self,):
+    def test_invalid_selection(self):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -521,7 +521,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertEqual("No Geometry", response.data["errors"][0]["title"])
 
-    def test_empty_string_param(self,):
+    def test_empty_string_param(self):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -537,7 +537,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertIsNotNone(response.data["errors"][0]["title"])
 
-    def test_string_too_long_param(self,):
+    def test_string_too_long_param(self):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         name = "x" * 300
@@ -557,7 +557,7 @@ class TestJobViewSet(APITestCase):
             "name: Ensure this field has no more than 100 characters.", response.data["errors"][0]["detail"]
         )
 
-    def test_missing_format_param(self,):
+    def test_missing_format_param(self):
         url = reverse("api:jobs-list")
         request_data = {
             "name": "TestJob",
@@ -571,7 +571,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertIsNotNone(response.data["errors"][0]["title"])
 
-    def test_invalid_format_param(self,):
+    def test_invalid_format_param(self):
         url = reverse("api:jobs-list")
         request_data = {
             "name": "TestJob",
@@ -586,7 +586,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertIsNotNone(response.data.get("errors")[0]["title"])
 
-    def test_no_matching_format_slug(self,):
+    def test_no_matching_format_slug(self):
         url = reverse("api:jobs-list")
         request_data = {
             "name": "TestJob",
@@ -601,7 +601,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_extents_too_large(self,):
+    def test_extents_too_large(self):
         url = reverse("api:jobs-list")
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         # job outside any region
@@ -757,7 +757,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(16, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
-    def test_bbox_search_success(self,):
+    def test_bbox_search_success(self):
         url = reverse("api:jobs-list")
         extent = (-79.5, -16.16, 7.40, 52.44)
         param = "bbox={0},{1},{2},{3}".format(extent[0], extent[1], extent[2], extent[3])
@@ -765,7 +765,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
         self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_list_jobs_no_bbox(self,):
+    def test_list_jobs_no_bbox(self):
         url = reverse("api:jobs-list")
         response = self.client.get(url)
         self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
@@ -774,7 +774,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(response["Link"], '<http://testserver/api/jobs?page=2>; rel="next"')
         self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_bbox_search_missing_params(self,):
+    def test_bbox_search_missing_params(self):
         url = reverse("api:jobs-list")
         param = "bbox="  # missing params
         response = self.client.get("{0}?{1}".format(url, param))
@@ -783,7 +783,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(response["Content-Language"], "en")
         self.assertEqual("Missing Bbox Parameter", response.data["errors"][0]["title"])
 
-    def test_bbox_missing_coord(self,):
+    def test_bbox_missing_coord(self):
         url = reverse("api:jobs-list")
         extent = (-79.5, -16.16, 7.40)  # one missing
         param = "bbox={0},{1},{2}".format(extent[0], extent[1], extent[2])
@@ -817,7 +817,7 @@ class TestExportRunViewSet(APITestCase):
         self.export_run = None
         self.run_uid = None
 
-    def setUp(self,):
+    def setUp(self):
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
         self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
@@ -878,7 +878,7 @@ class TestExportRunViewSet(APITestCase):
         run = ExportRun.objects.get(uid=self.export_run.uid)
         self.assertEqual(ok_expiration, run.expiration.replace(tzinfo=None))
 
-    def test_delete_run(self,):
+    def test_delete_run(self):
         url = reverse("api:runs-detail", args=[self.export_run.uid])
         response = self.client.delete(url)
         # test the response headers
@@ -886,7 +886,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(response["Content-Length"], "0")
         self.assertEqual(response["Content-Language"], "en")
 
-    def test_retrieve_run(self,):
+    def test_retrieve_run(self):
         expected = "/api/runs/{0}".format(self.run_uid)
 
         url = reverse("api:runs-detail", args=[self.run_uid])
@@ -914,12 +914,14 @@ class TestExportRunViewSet(APITestCase):
         expected = f"/api/runs/{self.run_uid}?format=geojson"
         self.assertEqual(expected, url)
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + self.token.key, HTTP_ACCEPT_LANGUAGE="en", HTTP_HOST="testserver",
+            HTTP_AUTHORIZATION="Token " + self.token.key,
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
         )
         response = self.client.get(url)
         self.assertEqual(response["content-type"], "application/geo+json")
 
-    def test_retrieve_run_no_attribute_class(self,):
+    def test_retrieve_run_no_attribute_class(self):
         expected = "/api/runs/{0}".format(self.run_uid)
         self.attribute_class.users.remove(self.user)
         url = reverse("api:runs-detail", args=[self.run_uid])
@@ -957,7 +959,7 @@ class TestExportRunViewSet(APITestCase):
         mock_invalid_licenses.return_value = []
         self.assertTrue(ExportRunViewSet.validate_licenses(queryset))
 
-    def test_list_runs(self,):
+    def test_list_runs(self):
         expected = "/api/runs"
         url = reverse("api:runs-list")
         self.assertEqual(expected, url)
@@ -983,7 +985,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertTrue("InvalidLicense" in result["errors"][0].get("detail"))
         self.assertEqual(response.status_code, 400)
 
-    def test_filter_runs(self,):
+    def test_filter_runs(self):
         expected = "/api/runs/filter"
         url = reverse("api:runs-filter")
         self.assertEqual(expected, url)
@@ -1163,7 +1165,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.task = None
         self.task_uid = None
 
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
@@ -1209,7 +1211,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         )
         self.task_uid = str(self.task.uid)
 
-    def test_retrieve(self,):
+    def test_retrieve(self):
         url = reverse("api:provider_tasks-detail", args=[self.data_provider_task_record.uid])
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1227,7 +1229,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.assertEqual(response.data["hidden"], expected_response["hidden"])
         self.assertEqual(response.data["display"], expected_response["display"])
 
-    def test_list(self,):
+    def test_list(self):
         url = reverse("api:provider_tasks-list")
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1244,7 +1246,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.assertEqual(response.data[0]["hidden"], expected_response["hidden"])
         self.assertEqual(response.data[0]["display"], expected_response["display"])
 
-    def test_patch_cancel_task(self,):
+    def test_patch_cancel_task(self):
         expected = "/api/provider_tasks/{0}".format(self.data_provider_task_record.uid)
         url = reverse("api:provider_tasks-list") + "/%s" % (self.data_provider_task_record.uid,)
         self.assertEqual(expected, url)
@@ -1259,7 +1261,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.assertEqual(pt.status, TaskState.CANCELED.value)
         self.assertEqual(et.status, TaskState.SUCCESS.value)
 
-    def test_patch_cancel_task_no_permissions(self,):
+    def test_patch_cancel_task_no_permissions(self):
         user = User.objects.create_user(username="demo2", email="demo2@demo.com", password="demo")
         self.attribute_class.users.add(user)
         token = Token.objects.create(user=user)
@@ -1312,7 +1314,7 @@ class TestExportTaskViewSet(APITestCase):
         self.task = None
         self.task_uid = None
 
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
@@ -1356,7 +1358,7 @@ class TestExportTaskViewSet(APITestCase):
         )
         self.task_uid = str(self.task.uid)
 
-    def test_retrieve(self,):
+    def test_retrieve(self):
         expected = "/api/tasks/{0}".format(self.task_uid)
         url = reverse("api:tasks-detail", args=[self.task_uid])
         self.assertEqual(expected, url)
@@ -1369,7 +1371,7 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(self.task_uid, data[0].get("uid"))
         response = self.client.get(url)
 
-    def test_list(self,):
+    def test_list(self):
         expected = "/api/tasks"
         url = reverse("api:tasks-list")
         self.assertEqual(expected, url)
@@ -1418,7 +1420,7 @@ class TestStaticFunctions(APITestCase):
 
 
 class TestLicenseViewSet(APITestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
         self.licenses = [License.objects.create(slug="test1", name="name1", text="text1")]
@@ -1477,7 +1479,7 @@ class TestLicenseViewSet(APITestCase):
 class TestUserDataViewSet(APITestCase):
     fixtures = ("osm_provider.json",)
 
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
@@ -1607,7 +1609,7 @@ class TestUserDataViewSet(APITestCase):
 
 
 class TestGroupDataViewSet(APITestCase):
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.user1 = User.objects.create_user(username="user_1", email="groupuser@demo.com", password="demo")
         self.user2 = User.objects.create_user(username="user_2", email="groupuser@demo.com", password="demo")
@@ -1958,7 +1960,7 @@ class TestDataProviderRequestViewSet(APITestCase):
 
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_delete_job(self,):
+    def test_delete_job(self):
         url = reverse("api:provider_requests-detail", args=[self.provider_request.uid])
         response = self.client.delete(url)
 
@@ -2047,7 +2049,7 @@ class TestSizeIncreaseRequestViewSet(APITestCase):
 
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_delete_job(self,):
+    def test_delete_job(self):
         url = reverse("api:size_requests-detail", args=[self.size_request.uid])
         response = self.client.delete(url)
 

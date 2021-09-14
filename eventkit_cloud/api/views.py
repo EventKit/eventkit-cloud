@@ -38,10 +38,7 @@ from eventkit_cloud.api.filters import (
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
-from eventkit_cloud.api.renderers import (
-    PlainTextRenderer,
-    GeojsonRenderer,
-)
+from eventkit_cloud.api.renderers import GeojsonRenderer, PlainTextRenderer
 from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
     DataProviderRequestSerializer,
@@ -104,10 +101,12 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
 )
+
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
+
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -523,7 +522,9 @@ class JobViewSet(EventkitViewSet):
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 # Run is passed to celery to start the tasks.
                 pick_up_run_task(
-                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
+                    run_uid=run_uid,
+                    user_details=user_details,
+                    session_token=request.session.get("access_token"),
                 )
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -564,7 +565,9 @@ class JobViewSet(EventkitViewSet):
         if run:
             if not getattr(settings, "CELERY_SCALE_BY_RUN", False):
                 pick_up_run_task(
-                    run_uid=run_uid, user_details=user_details, session_token=request.session.get("access_token"),
+                    run_uid=run_uid,
+                    user_details=user_details,
+                    session_token=request.session.get("access_token"),
                 )
             logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
@@ -578,28 +581,28 @@ class JobViewSet(EventkitViewSet):
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
-           Update one or more attributes for the given job
+        Update one or more attributes for the given job
 
-           * request: the HTTP request in JSON.
+        * request: the HTTP request in JSON.
 
-               Examples:
+            Examples:
 
-                   { "visibility" : 'SHARED', "featured" : true }
-                   { "featured" : false }
+                { "visibility" : 'SHARED', "featured" : true }
+                { "featured" : false }
 
-           * Returns: a copy of the new  values on success
+        * Returns: a copy of the new  values on success
 
-               Example:
+            Example:
 
-                   {
-                       "visibility": 'SHARED',
-                       "featured" : true,
-                       "success": true
-                   }
+                {
+                    "visibility": 'SHARED',
+                    "featured" : true,
+                    "success": true
+                }
 
-           ** returns: 400 on error
+        ** returns: 400 on error
 
-           """
+        """
 
         job = Job.objects.get(uid=uid)
 
@@ -607,7 +610,8 @@ class JobViewSet(EventkitViewSet):
         jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not jobs.filter(id=job.id):
             return Response(
-                [{"detail": "ADMIN permission is required to update this Datapack."}], status.HTTP_400_BAD_REQUEST,
+                [{"detail": "ADMIN permission is required to update this Datapack."}],
+                status.HTTP_400_BAD_REQUEST,
             )
         response = {}
         payload = request.data
@@ -654,12 +658,14 @@ class JobViewSet(EventkitViewSet):
 
                     if not record.exists():
                         return Response(
-                            [{"detail": "unidentified user or group : %s" % key}], status.HTTP_400_BAD_REQUEST,
+                            [{"detail": "unidentified user or group : %s" % key}],
+                            status.HTTP_400_BAD_REQUEST,
                         )
                     perm = set[key]
                     if perm not in JobPermissionLevel.__members__:
                         return Response(
-                            [{"detail": "invalid permission value : %s" % perm}], status.HTTP_400_BAD_REQUEST,
+                            [{"detail": "invalid permission value : %s" % perm}],
+                            status.HTTP_400_BAD_REQUEST,
                         )
 
                     if perm == GroupPermissionLevel.ADMIN.value:
@@ -667,7 +673,8 @@ class JobViewSet(EventkitViewSet):
 
             if admins == 0:
                 return Response(
-                    [{"detail": "Cannot update job permissions with no administrator."}], status.HTTP_400_BAD_REQUEST,
+                    [{"detail": "Cannot update job permissions with no administrator."}],
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
             # The request represents all expected permissions for the file not a partial update of the permissions.
@@ -711,14 +718,14 @@ class JobViewSet(EventkitViewSet):
     @action(methods=["post"], detail=False)
     def filter(self, request, *args, **kwargs):
         """
-             Return all jobs that are readable by every
-             groups and every user in the payload
+        Return all jobs that are readable by every
+        groups and every user in the payload
 
-             {  "permissions" : {
-                groups : [ 'group_one', 'group_two', ...]
-                members : ['user_one', 'user_two' ... ]
-                 }
-             }
+        {  "permissions" : {
+           groups : [ 'group_one', 'group_two', ...]
+           members : ['user_one', 'user_two' ... ]
+            }
+        }
 
         """
 
@@ -732,7 +739,7 @@ class JobViewSet(EventkitViewSet):
     @transaction.atomic
     def destroy(self, request, uid=None, *args, **kwargs):
         """
-            Destroy a job
+        Destroy a job
         """
 
         job = Job.objects.get(uid=uid)
@@ -1128,7 +1135,8 @@ class ExportRunViewSet(EventkitViewSet):
         jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not jobs.filter(id=job.id):
             return Response(
-                [{"detail": "ADMIN permission is required to delete this DataPack."}], status.HTTP_400_BAD_REQUEST,
+                [{"detail": "ADMIN permission is required to delete this DataPack."}],
+                status.HTTP_400_BAD_REQUEST,
             )
 
         permissions = JobPermission.jobpermissions(job)
@@ -1270,10 +1278,16 @@ class ExportRunViewSet(EventkitViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response(
+                    {"success": False, "detail": message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response(
+                    {"success": False, "detail": message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         run.expiration = target_date
         run.save()
@@ -1486,7 +1500,8 @@ class DataProviderTaskRecordViewSet(EventkitViewSet):
             return Response({"success": False}, status=status.HTTP_403_FORBIDDEN)
 
         cancel_export_provider_task.run(
-            data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username,
+            data_provider_task_uid=data_provider_task_record.uid,
+            canceling_username=request.user.username,
         )
 
         return Response({"success": True}, status=status.HTTP_200_OK)
@@ -1749,7 +1764,11 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
+                    return Response(
+                        {"ignored": True},
+                        content_type="application/json",
+                        status=status.HTTP_200_OK,
+                    )
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
@@ -1908,7 +1927,9 @@ class GroupViewSet(EventkitViewSet):
                     user = User.objects.all().filter(username=member)[0]
                     if user:
                         GroupPermission.objects.create(
-                            user=user, group=group, permission=GroupPermissionLevel.MEMBER.value,
+                            user=user,
+                            group=group,
+                            permission=GroupPermissionLevel.MEMBER.value,
                         )
                         sendnotification(
                             request.user,
@@ -1926,7 +1947,9 @@ class GroupViewSet(EventkitViewSet):
                     user = User.objects.all().filter(username=admin)[0]
                     if user:
                         GroupPermission.objects.create(
-                            user=user, group=group, permission=GroupPermissionLevel.ADMIN.value,
+                            user=user,
+                            group=group,
+                            permission=GroupPermissionLevel.ADMIN.value,
                         )
                         sendnotification(
                             request.user,
@@ -2057,7 +2080,13 @@ class GroupViewSet(EventkitViewSet):
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
                 sendnotification(
-                    request.user, user, verb, group, None, NotificationLevel.INFO.value, permission,
+                    request.user,
+                    user,
+                    verb,
+                    group,
+                    None,
+                    NotificationLevel.INFO.value,
+                    permission,
                 )
 
             # Remove existing users for this permission level
@@ -2069,7 +2098,13 @@ class GroupViewSet(EventkitViewSet):
                 verb = NotificationVerb.REMOVED_AS_GROUP_ADMIN.value
             for user in users:
                 sendnotification(
-                    request.user, user, verb, group, None, NotificationLevel.INFO.value, permission,
+                    request.user,
+                    user,
+                    verb,
+                    group,
+                    None,
+                    NotificationLevel.INFO.value,
+                    permission,
                 )
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms:
@@ -2090,7 +2125,7 @@ class GroupViewSet(EventkitViewSet):
 
 class NotificationViewSet(EventkitViewSet):
     """
-     Api components for viewing and working with notifications
+    Api components for viewing and working with notifications
     """
 
     serializer_class = NotificationSerializer
@@ -2182,20 +2217,20 @@ class NotificationViewSet(EventkitViewSet):
     @action(detail=False, methods=["post"])
     def mark(self, request, *args, **kwargs):
         """
-         Change the status of one or more notifications.
-         **Use if you need to modify in more than one way. Otherwise just use 'delete', 'read', or 'unread'**
+        Change the status of one or more notifications.
+        **Use if you need to modify in more than one way. Otherwise just use 'delete', 'read', or 'unread'**
 
-         Args:
-             A list containing one or more records like this:
-            [
-             {"id": 3, "action": "DELETE" },
-             {"id": 17, "action": "READ" },
-             {"id" : 19, "action" "UNREAD" },
-             ...
-            ]
+        Args:
+            A list containing one or more records like this:
+           [
+            {"id": 3, "action": "DELETE" },
+            {"id": 17, "action": "READ" },
+            {"id" : 19, "action" "UNREAD" },
+            ...
+           ]
 
-         Returns:
-            { "success" : True} or error
+        Returns:
+           { "success" : True} or error
         """
 
         logger.debug(request.data)
@@ -2254,18 +2289,18 @@ class SizeIncreaseRequestViewSet(EventkitViewSet):
 
 class EstimatorView(views.APIView):
     """
-     Api components for computing size estimates for providers within a specified bounding box
+    Api components for computing size estimates for providers within a specified bounding box
     """
 
     @action(detail=False, methods=["get"])
     def get(self, request, *args, **kwargs):
         """
-         Args:
-             slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
-             bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
-             srs: EPSG code for the bbox srs (default=4326)
-         Returns:
-            [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
+        Args:
+            slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
+            bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
+            srs: EPSG code for the bbox srs (default=4326)
+        Returns:
+           [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
         """
         payload = []
         logger.debug(request.query_params)
