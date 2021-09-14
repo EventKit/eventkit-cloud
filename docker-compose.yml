@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.10.0
+    image: eventkit/eventkit-base:1.11.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -84,7 +84,7 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
-    image: eventkit/eventkit-base:1.10.0
+    image: eventkit/eventkit-base:1.11.0
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -127,17 +127,17 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   memcached:
-    image: eventkit/eventkit-base:1.10.0
+    image: eventkit/eventkit-base:1.11.0
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 10m"
   celery:
-    image: eventkit/eventkit-base:1.10.0
+    image: eventkit/eventkit-base:1.11.0
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
     user: eventkit
     depends_on:
       - postgis
@@ -173,7 +173,7 @@ services:
       - BIND_MOUNT_LOCATION
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:11.5-2.5
     environment:
@@ -219,7 +219,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.10.0
+    image: eventkit/eventkit-base:1.11.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -252,7 +252,7 @@ services:
       - SSL_VERIFICATION
       - SECRET_KEY
   webpack:
-    image: eventkit/eventkit-webpack:1.10.0
+    image: eventkit/eventkit-webpack:1.11.0
     build:
       context: .
       dockerfile: config/Dockerfile_webpack

@@ -28,7 +28,7 @@ class TestExportTaskFactory(TestCase):
 
     fixtures = ("osm_provider.json",)
 
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
@@ -67,7 +67,12 @@ class TestExportTaskFactory(TestCase):
     @patch("eventkit_cloud.tasks.task_factory.finalize_export_provider_task")
     @patch("eventkit_cloud.tasks.task_factory.chain")
     def test_task_factory(
-        self, task_factory_chain, finalize_task, mock_task_chain_builder, create_task, mock_invalid_licenses,
+        self,
+        task_factory_chain,
+        finalize_task,
+        mock_task_chain_builder,
+        create_task,
+        mock_invalid_licenses,
     ):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
@@ -126,8 +131,7 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
     def test_create_finalize_run_task_collection(
         self, chain, finalize_run_task, zip_file_task, finalize_export_provider_task
     ):
-        """ Checks that all of the expected tasks were prepared and combined in a chain for return.
-        """
+        """Checks that all of the expected tasks were prepared and combined in a chain for return."""
         chain.return_value = "When not mocked, this would be a celery chain"
         # None of these need correspond to real things, they're just to check the inner calls.
         run_uid = 1

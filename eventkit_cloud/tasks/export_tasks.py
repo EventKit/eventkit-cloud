@@ -32,11 +32,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot
@@ -454,7 +450,10 @@ def osm_data_collection_pipeline(
     ret_gpkg_filepath = g.results[0].parts[0]
     assert ret_gpkg_filepath == gpkg_filepath
     update_progress(
-        export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
+        export_task_record_uid,
+        progress=100,
+        eta=eta,
+        msg="Completed OSM data collection pipeline",
     )
     result = {"pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
@@ -675,7 +674,10 @@ def gpx_export_task(
 
 @app.task(name="OSM PBF (.pbf)", bind=True, base=FormatTask, acks_late=True)
 def pbf_export_task(
-    self, result=None, *args, **kwargs,
+    self,
+    result=None,
+    *args,
+    **kwargs,
 ):
     """
     Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
@@ -2304,7 +2306,7 @@ def get_creation_options(config: str, driver: str):
     :param config: The configuration for a datasource.
     :param driver: The file format to look for specific creation options.
     :return: A tuple of None or the first value is list of warp creation options, and
-     the second value is a list of translate create options.     """
+     the second value is a list of translate create options."""
     if config:
         conf = yaml.safe_load(config) or dict()
         params = conf.get("formats", {}).get(driver, {})
@@ -2355,7 +2357,11 @@ def get_ogcapi_data(
     if basic_auth:
         username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(getattr(settings, "SITE_URL"), username=username, password=password,)
+        session = EventKitClient(
+            getattr(settings, "SITE_URL"),
+            username=username,
+            password=password,
+        )
         session = session.client
         cert_info = None
     else:

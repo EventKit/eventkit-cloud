@@ -20,11 +20,7 @@ from requests import Response
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects

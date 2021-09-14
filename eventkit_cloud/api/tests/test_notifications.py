@@ -15,15 +15,12 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 
 
 class TestNotifications(APITestCase):
-    fixtures = (
-        "osm_provider.json",
-        "datamodel_presets.json",
-    )
+    fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def __init__(self, *args, **kwargs):
         super(TestNotifications, self).__init__(*args, **kwargs)
 
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user1 = User.objects.create_user(username="user_1", email="demo@demo.com", password="demo")
@@ -36,7 +33,7 @@ class TestNotifications(APITestCase):
             HTTP_HOST="testserver",
         )
 
-    def test_send(self,):
+    def test_send(self):
         memo = "Note to myself"
         level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.REMOVED_FROM_GROUP.value

@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-from eventkit_cloud.user_requests.models import (
-    DataProviderRequest,
-    SizeIncreaseRequest,
-    UserSizeRule,
-)
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest, UserSizeRule
 
 
 class DataProviderRequestAdmin(admin.ModelAdmin):

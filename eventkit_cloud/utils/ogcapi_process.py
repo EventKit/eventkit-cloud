@@ -72,7 +72,7 @@ class OgcApiProcess:
 
         return response_content
 
-    def get_job_results(self,):
+    def get_job_results(self):
         """
         Fetches the job results
         Returns the results' download URL.
@@ -172,7 +172,10 @@ def get_process(provider, session):
     process_json = cache.get(cache_key)
     if process_json is None:
         try:
-            response = session.get(f"{service_url}/processes/{process}", stream=True,)
+            response = session.get(
+                f"{service_url}/processes/{process}",
+                stream=True,
+            )
             response.raise_for_status()
             process_json = json.loads(response.content)
             cache.set(cache_key, process_json, timeout=PROCESS_CACHE_TIMEOUT)
@@ -198,7 +201,13 @@ def get_process_formats_from_json(process_json: dict, provider_config: dict):
         .get(product)
         .get("file_formats")
     )
-    return [dict(slug=str(_format.get("value")), **_format,) for _format in formats]
+    return [
+        dict(
+            slug=str(_format.get("value")),
+            **_format,
+        )
+        for _format in formats
+    ]
 
 
 def get_process_formats(provider, request):

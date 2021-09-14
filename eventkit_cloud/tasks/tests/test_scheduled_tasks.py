@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestExpireRunsTask(TestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
@@ -81,7 +81,7 @@ class TestExpireRunsTask(TestCase):
 
 @override_settings(PCF_SCALING=False)
 class TestScaleCeleryTask(TestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group

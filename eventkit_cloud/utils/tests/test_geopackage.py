@@ -37,7 +37,7 @@ def load_tests(loader, tests, ignore):
 
 
 class TestGeopackage(TransactionTestCase):
-    def setUp(self,):
+    def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.task_uid = uuid4()
 

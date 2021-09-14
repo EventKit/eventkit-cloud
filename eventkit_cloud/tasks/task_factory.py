@@ -9,11 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.jobs.models import Job, JobPermission, JobPermissionLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
@@ -38,10 +34,7 @@ from eventkit_cloud.tasks.helpers import (
     get_celery_queue_group,
 )
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
-from eventkit_cloud.tasks.task_builders import (
-    TaskChainBuilder,
-    create_export_task_record,
-)
+from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
 
 User = get_user_model()
 
@@ -54,7 +47,7 @@ class TaskFactory:
     A class to assemble task chains (using TaskChainBuilders) based on an Export Run.
     """
 
-    def __init__(self,):
+    def __init__(self):
         self.type_task_map = {
             "osm": osm_data_collection_task,
             "wfs": wfs_export_task,
@@ -147,10 +140,17 @@ class TaskFactory:
         finalized_provider_task_chain_list = []
         # Create a task record which can hold tasks for the run (datapack)
         run_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
+            run=run,
+            name="run",
+            slug="run",
+            status=TaskState.PENDING.value,
+            display=False,
         )
 
-        run_zip_task_chain = get_zip_task_chain(data_provider_task_record_uid=run_task_record.uid, worker=worker,)
+        run_zip_task_chain = get_zip_task_chain(
+            data_provider_task_record_uid=run_task_record.uid,
+            worker=worker,
+        )
         for data_provider_task in job.data_provider_tasks.all():
 
             data_provider_task_record = run.data_provider_task_records.filter(
@@ -181,7 +181,10 @@ class TaskFactory:
                     "session_token": session_token,
                 }
 
-                (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
+                (
+                    provider_task_record_uid,
+                    provider_subtask_chain,
+                ) = TaskChainBuilder().build_tasks(**args)
 
                 wait_for_providers_signature = wait_for_providers_task.s(
                     run_uid=run_uid,
@@ -278,7 +281,7 @@ def create_run(job_uid, user=None, clone=False, download_data=True):
                 job.save()
 
             sendnotification(
-                run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
+                run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, ""
             )
             logger.debug("Saved run with id: {0}".format(str(run.uid)))
             return run.uid
@@ -370,7 +373,10 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None,
+    data_provider_task_record_uid=None,
+    data_provider_task_record_uids=None,
+    run_zip_file_uid=None,
+    worker=None,
 ):
     return chain(
         create_task(
@@ -423,8 +429,8 @@ def create_finalize_run_task_collection(
     run_zip_file_slug_sets=None,
     apply_args=None,
 ):
-    """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
-        have finished, and a finalize_run_task signature for use as an errback.
+    """Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
+    have finished, and a finalize_run_task signature for use as an errback.
     """
     from eventkit_cloud.tasks.views import generate_zipfile_chain
 
@@ -441,7 +447,9 @@ def create_finalize_run_task_collection(
                 all_task_sigs_list.append(zipfile_chain)
 
     finalize_export_provider_signature = finalize_export_provider_task.s(
-        data_provider_task_uid=run_provider_task_record_uid, status=TaskState.COMPLETED.value, locking_task_key=run_uid,
+        data_provider_task_uid=run_provider_task_record_uid,
+        status=TaskState.COMPLETED.value,
+        locking_task_key=run_uid,
     )
     all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)

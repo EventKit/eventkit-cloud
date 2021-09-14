@@ -33,7 +33,7 @@ class TestUIViews(TestCase):
                 "BANNER_TEXT_COLOR": "green",
                 "BANNER_TEXT": "This is banner text",
                 "MAX_DATAPACK_EXPIRATION_DAYS": "30",
-            },
+            }
         ):
             response = self.client.get("/configuration")
             self.assertEqual(response.status_code, 200)
