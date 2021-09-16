@@ -244,7 +244,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job_uid, user=None, clone=False, download_data=True):
+def create_run(job_uid, user=None, clone=False, download_data=True, parent_run=None):
     """
     This will create a new Run based on the provided job uid.
     :param job_uid: The UID to reference the Job model.

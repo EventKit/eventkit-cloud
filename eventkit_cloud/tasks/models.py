@@ -171,12 +171,14 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     """
 
     job = models.ForeignKey(Job, related_name="runs", on_delete=models.CASCADE)
+    parent_run = models.IntegerField(null=True, editable=True, default=None)
     user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default="", null=True)
     status = models.CharField(blank=True, max_length=20, db_index=True, default="")
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
     deleted = models.BooleanField(default=False, db_index=True)
+    is_cloning = models.BooleanField(default=False)
     delete_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     class Meta:
@@ -207,6 +209,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
 
         data_provider_task_records = list(self.data_provider_task_records.exclude(provider__slug=""))
 
+        parent_id = self.id
         self.pk = None
         self.id = None
         self.uid = None
@@ -223,9 +226,13 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                 if not self.data_provider_task_records.filter(id=dptr.id):
                     self.data_provider_task_records.add(dptr)
         self.save()
+        self.parent_run = parent_id
 
+        self.is_cloning = True
         if download_data:
             self.download_data()
+            self.is_cloning = False
+            self.save()
 
         return self
 

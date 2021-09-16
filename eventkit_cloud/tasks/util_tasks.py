@@ -59,6 +59,16 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
 
         user: User = User.objects.get(pk=user_id)
 
+        while old_run.is_cloning:
+            old_run: ExportRun = ExportRun.objects.select_related("job__user").get(id=old_run.parent_run)
+            # Find pending providers and add them to list
+            for dptr in old_run.data_provider_task_records:
+                if dptr.status == TaskState.PENDING:
+                    data_provider_slugs.append(dptr.slug)
+
+        # Remove any duplicates
+        data_provider_slugs = list(set(data_provider_slugs))
+
         try:
             new_run_uid = create_run(job_uid=old_run.job.uid, user=user, clone=True, download_data=False)
         except Unauthorized:
