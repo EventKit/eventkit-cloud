@@ -2,7 +2,7 @@
 
 """Provides classes for handling API requests."""
 import logging
-from collections import defaultdict, Counter
+from collections import Counter
 from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
@@ -14,7 +14,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Count, Subquery
+from django.db.models.functions import TruncDay
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
@@ -34,8 +35,7 @@ from eventkit_cloud.api.filters import (
     UserFilter,
     GroupFilter,
     UserJobActivityFilter,
-    LogFilter,
-)
+    LogFilter, )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
 from eventkit_cloud.api.renderers import GeojsonRenderer, PlainTextRenderer
@@ -67,7 +67,7 @@ from eventkit_cloud.api.serializers import (
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
 )
-from eventkit_cloud.api.utils import get_run_zip_file
+from eventkit_cloud.api.utils import get_run_zip_file, get_binned_groups, get_download_counts_by_area
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -101,19 +101,16 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
 )
-
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
-
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
     ExportTaskRecord,
     RunZipFile,
     prefetch_export_runs,
-    UserDownload,
 )
 from eventkit_cloud.tasks.task_factory import (
     create_run,
@@ -2334,7 +2331,7 @@ class MetricsView(views.APIView):
     """
 
     permission_classes = (permissions.IsAdminUser,)
-    renderer_classes = (JSONRenderer,)
+    renderer_classes = renderer_classes
 
     def get(self, request, *args, **kwargs):
         """
@@ -2349,7 +2346,11 @@ class MetricsView(views.APIView):
         """
         User = get_user_model()
 
-        # TODO:  Verify param is a valid option or raise an error so that user is not confused about implementation.
+        valid_params = ["days", "group_count", "area_count"]
+        for param in request.query_params.keys():
+            if not (param in valid_params or param.startswith("region__")):
+                raise ValidationError(f"Param must be one of {', '.join(valid_params)} or a region filter (i.e. region__<region_prop>)")
+
         days_ago = int(request.query_params.get("days", 30))
         group_count = int(request.query_params.get("group_count", 5))
         area_count = int(request.query_params.get("area_count", 10))
@@ -2362,44 +2363,25 @@ class MetricsView(views.APIView):
 
         user_group_bins = request.query_params.getlist("user_group", None)
 
-        start_date = date.today() - timedelta(days=days_ago)
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days_ago)
 
-        events = AuditEvent.objects.filter(datetime__gte=start_date, event="login")
-        date_list = [date.today() - timedelta(days=x) for x in range(days_ago)]
-        user_logins_by_date = defaultdict(dict)
-        user_cache = {}
-        groups = {}
-        for current_date in date_list:
-            # Could filter again by date, but here its probably faster to just
-            # loop the dates instead of querying the DB again.
-            for event in events:
-                if event.datetime.date() != current_date:
-                    continue
-                user = user_cache.get(event.username)
-                if not user:
-                    user = User.objects.filter(username=event.username).first()
-                if user.is_staff or user.is_superuser:
-                    continue
-                user_cache[user.username] = user
-                # This makes users per date unique, so that one user coming
-                # back doesn't count twice except on different days.
-                user_logins_by_date[current_date][user.username] = events
-                if not hasattr(user, "oauth"):
-                    logger.debug(f"User {user.username} does not have oauth information")
-                elif user_group_bins is None:
-                    logger.debug("No user groups specified, specify user groups with `?user_group=groupName`")
-                else:
-                    user_info = user.oauth.user_info
-                    user_group_key = tuple([user_info.get(user_group_param) for user_group_param in user_group_bins])
-                    groups[repr(user_group_key)] = groups.get(repr(user_group_key), []) + [user.username]
+        logins_subquery = AuditEvent.objects.filter(datetime__gte=start_date, datetime__lte=end_date, event="login",
+                                                    username=OuterRef('username')).values('username')
+        login_count = logins_subquery.annotate(c=Count(TruncDay("datetime"))).values('c')
+        # .annotate(day=TruncDay("datetime")).values('day')
 
-        total_users_per_duration = 0
-        for current_date, users in user_logins_by_date.items():
-            total_users_per_duration += len(users)
+        users = User.objects.filter(is_superuser=False, is_staff=False).annotate(logins=Subquery(login_count))
+        logger.error(dir(users[0]))
+        logger.error(f"Logins: {users.first().logins}")
 
+        groups = get_binned_groups(users, user_group_bins)
         payload = {}
+
         # Average number of users per day
+        total_users_per_duration = users.count()
         payload["Total Users"] = total_users_per_duration
+
         payload["Average Users Per Day"] = total_users_per_duration / days_ago
 
         # Top user groups accessing the system
@@ -2409,17 +2391,8 @@ class MetricsView(views.APIView):
 
         payload["Top User Groups"] = group_counts.most_common()[:group_count]
 
-        area_counts = Counter()
-
-        users = User.objects.filter(username__in=list(user_cache.keys()))
-        for region in Region.objects.filter(**area_props):
-            area_counts[region.name] += UserDownload.objects.filter(
-                user__in=users,
-                downloadable__export_task__export_provider_task__run__job__the_geom__intersects=region.the_geom,
-                downloaded_at__gte=start_date,
-            ).count()
-
-        payload["Downloads by Area"] = area_counts.most_common()[:area_count]
+        payload["Downloads by Area"] = get_download_counts_by_area(region_filter=area_props, users=users,
+                                                                   count=area_count, start_date=start_date)
         return Response(data=payload, status=status.HTTP_200_OK)
 
 

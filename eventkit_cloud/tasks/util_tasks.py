@@ -60,7 +60,10 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
         user: User = User.objects.get(pk=user_id)
 
         try:
+
             new_run_uid = create_run(job_uid=old_run.job.uid, user=user, clone=True, download_data=False)
+            while old_run.is_cloning:
+                old_run = old_run.parent_run
         except Unauthorized:
             raise PermissionDenied(
                 code="permission_denied", detail="ADMIN permission is required to run this DataPack."

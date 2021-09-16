@@ -192,6 +192,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     def clone(self, download_data=True):
 
         data_provider_task_records = list(self.data_provider_task_records.exclude(provider__slug=""))
+        parent_id = self.id
 
         self.pk = None
         self.id = None
@@ -202,6 +203,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.started_at = None
         self.finished_at = None
         self.save()
+        self.parent_run = parent_id
 
         for data_provider_task_record in data_provider_task_records:
             if data_provider_task_record.provider:
