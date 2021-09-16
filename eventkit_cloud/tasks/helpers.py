@@ -1190,8 +1190,8 @@ def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Di
     if data_provider_license is None:
         return {}
 
-    stage_path = Path(data_provider_task_record.tasks().first().result.get_file_path(stage=True)).parent
-    archive_path = Path(data_provider_task_record.tasks().first().result.get_file_path(archive=True)).parent
+    stage_path = Path(data_provider_task_record.tasks.first().result.get_file_path(staging=True)).parent
+    archive_path = Path(data_provider_task_record.tasks.first().result.get_file_path(archive=True)).parent
 
     stage_license_path = stage_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))
     archive_license_path = archive_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))

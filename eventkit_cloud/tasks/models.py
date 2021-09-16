@@ -171,7 +171,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     """
 
     job = models.ForeignKey(Job, related_name="runs", on_delete=models.CASCADE)
-    parent_run = models.IntegerField(null=True, editable=True, default=None)
+    parent_run = models.ForeignKey('ExportRun', related_name="child_runs", null=True, default=None, on_delete=models.SET_NULL)
     user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default="", null=True)
     status = models.CharField(blank=True, max_length=20, db_index=True, default="")
@@ -225,8 +225,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                 dptr = data_provider_task_record.clone(self)
                 if not self.data_provider_task_records.filter(id=dptr.id):
                     self.data_provider_task_records.add(dptr)
+
+        self.parent_run = ExportRun.objects.get(id=parent_id)
         self.save()
-        self.parent_run = parent_id
 
         self.is_cloning = True
         if download_data:

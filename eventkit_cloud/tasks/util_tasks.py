@@ -50,17 +50,16 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
     data_provider_task_record.save()
 
 
-@transaction.atomic
 def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
     from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
 
     with transaction.atomic():
-        old_run: ExportRun = ExportRun.objects.select_related("job__user").get(uid=run_uid)
+        old_run: ExportRun = ExportRun.objects.select_related("job__user", "parent_run__job__user").get(uid=run_uid)
 
         user: User = User.objects.get(pk=user_id)
 
         while old_run.is_cloning:
-            old_run: ExportRun = ExportRun.objects.select_related("job__user").get(id=old_run.parent_run)
+            old_run: ExportRun = old_run.parent_run
             # Find pending providers and add them to list
             for dptr in old_run.data_provider_task_records:
                 if dptr.status == TaskState.PENDING:
