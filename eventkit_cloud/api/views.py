@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
+import itertools
 import logging
 from collections import Counter
 from datetime import date, datetime, timedelta
@@ -67,7 +68,8 @@ from eventkit_cloud.api.serializers import (
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
 )
-from eventkit_cloud.api.utils import get_run_zip_file, get_binned_groups, get_download_counts_by_area
+from eventkit_cloud.api.utils import get_run_zip_file, get_binned_groups, get_download_counts_by_area, \
+    get_logins_per_day
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -2344,9 +2346,11 @@ class MetricsView(views.APIView):
              user_group: one or more user characteristics on which to group users.
              group_count: the number of top user groups to display, i.e. top 10 user groups with the most downloads
         """
+
+        # TODO: Rewrite this after AuditLog links to users.
         User = get_user_model()
 
-        valid_params = ["days", "group_count", "area_count"]
+        valid_params = ["days", "group_count", "area_count", "user_group"]
         for param in request.query_params.keys():
             if not (param in valid_params or param.startswith("region__")):
                 raise ValidationError(f"Param must be one of {', '.join(valid_params)} or a region filter (i.e. region__<region_prop>)")
@@ -2366,30 +2370,25 @@ class MetricsView(views.APIView):
         end_date = date.today()
         start_date = end_date - timedelta(days=days_ago)
 
-        logins_subquery = AuditEvent.objects.filter(datetime__gte=start_date, datetime__lte=end_date, event="login",
-                                                    username=OuterRef('username')).values('username')
-        login_count = logins_subquery.annotate(c=Count(TruncDay("datetime"))).values('c')
-        # .annotate(day=TruncDay("datetime")).values('day')
+        users = User.objects.filter(is_superuser=False, is_staff=False)
+        events = AuditEvent.objects.filter(datetime__gte=start_date, datetime__lte=end_date, event="login",
+                                                    username__in=[user.username for user in users])
 
-        users = User.objects.filter(is_superuser=False, is_staff=False).annotate(logins=Subquery(login_count))
-        logger.error(dir(users[0]))
-        logger.error(f"Logins: {users.first().logins}")
+        user_logins = get_logins_per_day(users, events)
 
-        groups = get_binned_groups(users, user_group_bins)
         payload = {}
 
         # Average number of users per day
         total_users_per_duration = users.count()
         payload["Total Users"] = total_users_per_duration
 
-        payload["Average Users Per Day"] = total_users_per_duration / days_ago
+        total_logins = sum([login for user_login in user_logins.values() for login in user_login['logins'].values()])
+        payload["Average Users Per Day"] = total_logins / days_ago
 
         # Top user groups accessing the system
-        group_counts = Counter()
-        for grp in groups:
-            group_counts[grp] = list(set(groups[grp]))
+        groups = get_binned_groups(user_logins, user_group_bins)
 
-        payload["Top User Groups"] = group_counts.most_common()[:group_count]
+        payload["Top User Groups"] = dict(itertools.islice(groups.items(), group_count))
 
         payload["Downloads by Area"] = get_download_counts_by_area(region_filter=area_props, users=users,
                                                                    count=area_count, start_date=start_date)

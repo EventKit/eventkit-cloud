@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from datetime import date, datetime, timedelta
 from functools import reduce
 from typing import Optional, Union, List, Dict, Any
@@ -155,20 +155,28 @@ def get_run_zip_file(field=None, values=[]):
     return queryset.select_related("downloadable_file")
 
 
-def get_binned_groups(users: QuerySet, user_group_bins: List[str]):
+def get_binned_groups(users: dict, user_group_bins: List[str]):
 
-    groups = {}
+    groups = OrderedDict()
 
-    for user in users:
+    # Bin the users by groups and aggregate login counts.
+    for user_data in users.values():
+        user = user_data.get("user")
         if not hasattr(user, "oauth"):
             logger.debug(f"User {user.username} does not have oauth information")
         elif user_group_bins is None:
             logger.debug("No user groups specified, specify user groups with `?user_group=groupName`")
         else:
             user_info = user.oauth.user_info
-            user_group_key = tuple([user_info.get(user_group_param) for user_group_param in user_group_bins])
-            groups[repr(user_group_key)] = groups.get(repr(user_group_key), []) + [user.username]
-    return groups
+            user_group_key = repr(tuple([user_info.get(user_group_param) for user_group_param in user_group_bins]))
+            if not groups.get(user_group_key):
+                groups[user_group_key] = {"users": [], "logins": 0}
+            groups[user_group_key]["users"] = groups[user_group_key]["users"] + [user.username]
+            groups[user_group_key]["logins"] = groups[user_group_key]["logins"] + sum(user_data["logins"].values())
+
+    group_order = sorted(groups, key=lambda x: (groups[x]['logins']))
+    sorted_groups = {group_name: groups[group_name] for group_name in group_order}
+    return sorted_groups
 
 
 def get_date_list(start_date: Optional[Union[date, datetime]], end_date: Optional[Union[date, datetime]]) -> List[date]:
@@ -197,3 +205,13 @@ def get_download_counts_by_area(region_filter: Dict[str, Any], users: Union[Quer
         '-downloads')[:count]
 
     return {region.name: region.downloads for region in regions}
+
+
+def get_logins_per_day(users: List[User], events: List[AuditEvent]):
+    user_cache = {user.username: {"user": user, "logins": dict()} for user in users}
+    # Could filter again by date, but here its probably faster to just
+    # loop the dates instead of querying the DB again.
+    for event in events:
+        date = event.datetime.date()
+        user_cache[event.username]["logins"][date] = user_cache.get(date, 0) + 1
+    return user_cache
