@@ -10,7 +10,7 @@ from django.shortcuts import redirect
 
 from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_download_dir
+from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_download_path
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
@@ -71,7 +71,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
     run_zip_file.message = "Downloading files to be zipped..."
     run_zip_file.status = TaskState.RUNNING.value
     stage_dir = get_run_staging_dir(run.uid)
-    download_dir = get_download_dir(run.uid)
+    download_dir = get_download_path(run.uid)
 
     if getattr(settings, "USE_S3", False):
         download_folder_from_s3(str(run.uid))

@@ -58,14 +58,14 @@ def get_run_staging_dir(run_uid):
     return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(run_uid))
 
 
-def get_download_dir(file_name):
+def get_download_path(folder_name):
     """
     The download dir is where all files are stored after they are processed.
     It is a unique space to ensure that files aren't being improperly modified.
     :param file_path: The unique value to store the directory for the data.
     :return: The path to the directory.
     """
-    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(file_name))
+    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(folder_name))
 
 
 def get_download_url(file_name):
@@ -1190,8 +1190,8 @@ def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Di
     if data_provider_license is None:
         return {}
 
-    stage_path = Path(data_provider_task_record.tasks().first().result.get_file_path(stage=True)).parent
-    archive_path = Path(data_provider_task_record.tasks().first().result.get_file_path(archive=True)).parent
+    stage_path = Path(data_provider_task_record.tasks.first().result.get_file_path(staging=True)).parent
+    archive_path = Path(data_provider_task_record.tasks.first().result.get_file_path(archive=True)).parent
 
     stage_license_path = stage_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))
     archive_license_path = archive_path.joinpath("{0}.txt".format(normalize_name(data_provider_license.name)))
@@ -1203,7 +1203,7 @@ def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Di
 
 
 def download_run_directory(old_run: ExportRun, new_run: ExportRun):
-    download_dir = get_download_dir(old_run.uid)
+    download_dir = get_download_path(old_run.uid)
     old_run_dir = get_run_staging_dir(old_run.uid)
     new_run_dir = get_run_staging_dir(new_run.uid)
     cache_key = str(new_run.uid)
@@ -1255,25 +1255,27 @@ def make_file_downloadable(file_path: Path, skip_copy: bool = False) -> Tuple[Pa
     if Path(settings.EXPORT_STAGING_ROOT) in file_name.parents:
         file_name = file_name.relative_to(settings.EXPORT_STAGING_ROOT)
 
-    download_path = get_download_dir(file_name)
     download_url = get_download_url(file_name)
 
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(file_path)
     else:
-        make_dirs(download_path)
+
+        download_path = get_download_path(file_name)
+        make_dirs(os.path.dirname(download_path))
 
         if not skip_copy:
             if not os.path.isfile(file_path):
                 logger.error(f"Cannot make file {file_path} downloadable because it does not exist.")
             else:
                 shutil.copy(file_path, download_path)
+
     return file_name, download_url
 
 
 def make_dirs(path):
     try:
-        os.makedirs(path, 0o750, exist_ok=True)
+        os.makedirs(path, 0o751, exist_ok=True)
     except OSError:
         if not os.path.isdir(path):
             raise

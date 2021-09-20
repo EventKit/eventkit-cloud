@@ -197,10 +197,12 @@ class ExportTask(EventKitBaseTask):
 
             # save the task and task result
             result = FileProducingTaskResult.objects.create(filename=file_name, size=size, download_url=download_url)
+            download_path = Path(settings.EXPORT_DOWNLOAD_ROOT).joinpath(Path(file_name))
 
             task.result = result
             task.status = TaskState.SUCCESS.value
             task.save()
+
             retval["status"] = TaskState.SUCCESS.value
             retval["file_producing_task_result_id"] = result.id
             return retval
