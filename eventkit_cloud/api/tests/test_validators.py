@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestValidators(TestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
@@ -30,7 +30,7 @@ class TestValidators(TestCase):
         self.selection = bbox_to_geojson(self.extents)
         self.bbox_geom = GEOSGeometry(Polygon.from_bbox(self.extents).wkt, srid=4326)
 
-    def test_validate_bbox(self,):
+    def test_validate_bbox(self):
 
         with self.settings(JOB_MAX_EXTENT=99999999):
             bbox = validate_bbox(self.extents, user=self.user)

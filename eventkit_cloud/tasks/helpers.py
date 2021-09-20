@@ -228,7 +228,9 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS) -
 
     if len(provider_details) == 1:
         style_file_name = "{0}-{1}-{2}.qgs".format(
-            job_name, normalize_name(provider_details[0]["slug"]), default_format_time(timezone.now()),
+            job_name,
+            normalize_name(provider_details[0]["slug"]),
+            default_format_time(timezone.now()),
         )
     else:
         style_file_name = "{0}-{1}.qgs".format(job_name, default_format_time(timezone.now()))
@@ -246,7 +248,12 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS) -
     }
 
     with open(style_file, "wb") as open_file:
-        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
+        open_file.write(
+            render_to_string(
+                "styles/Style.qgs",
+                context=context,
+            ).encode()
+        )
     return {style_file: f"{job_name}.qgs"}
 
 
@@ -321,10 +328,10 @@ def update_arcgis_json_extents(document, bbox):
 
 def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_FORMATS):
     """
-        Used to remove formats from the metadata especially so that they don't show up in the cartography.
-        :param data_sources: A dict of metadata provided by get_metadata.
-        :param formats: A list of unsupported file extensions (i.e. .gpx)
-        :return: The path to the generated qgs file.
+    Used to remove formats from the metadata especially so that they don't show up in the cartography.
+    :param data_sources: A dict of metadata provided by get_metadata.
+    :param formats: A list of unsupported file extensions (i.e. .gpx)
+    :return: The path to the generated qgs file.
     """
     # Create a new dict to not alter the input data.
     if metadata is None:
@@ -1080,7 +1087,7 @@ def find_in_zip(
 
 
 def extract_metadata_files(
-    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"],
+    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]
 ):
     """
     Function extract metadata files from archives.
@@ -1134,7 +1141,13 @@ def get_geometry(bbox: list, selection: str = None) -> GEOSGeometry:
 
 
 def update_progress(
-    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
+    task_uid,
+    progress=None,
+    subtask_percentage=100.0,
+    subtask_start=0,
+    estimated_finish=None,
+    eta=None,
+    msg=None,
 ):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.
@@ -1166,19 +1179,28 @@ def update_progress(
 
     if absolute_progress:
         set_cache_value(
-            uid=task_uid, attribute="progress", model_name="ExportTaskRecord", value=absolute_progress,
+            uid=task_uid,
+            attribute="progress",
+            model_name="ExportTaskRecord",
+            value=absolute_progress,
         )
         if eta is not None:
             eta.update(absolute_progress / 100.0, dbg_msg=msg)  # convert to [0-1.0]
 
     if estimated_finish:
         set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated_finish,
+            uid=task_uid,
+            attribute="estimated_finish",
+            model_name="ExportTaskRecord",
+            value=estimated_finish,
         )
     elif eta is not None:
         # Use the updated ETA estimator to determine an estimated_finish
         set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=eta.eta_datetime(),
+            uid=task_uid,
+            attribute="estimated_finish",
+            model_name="ExportTaskRecord",
+            value=eta.eta_datetime(),
         )
 
 
@@ -1241,12 +1263,12 @@ def download_run_directory(old_run: ExportRun, new_run: ExportRun):
 
 
 def make_file_downloadable(file_path: Path, skip_copy: bool = False) -> Tuple[Path, str]:
-    """ Construct the filesystem location and url needed to download the file at filepath.
-        Copy filepath to the filesystem location required for download.
-        @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
-        @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
-            generally can be ignored
-        @return A url to reach filepath.
+    """Construct the filesystem location and url needed to download the file at filepath.
+    Copy filepath to the filesystem location required for download.
+    @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
+    @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
+        generally can be ignored
+    @return A url to reach filepath.
     """
 
     # File name is the relative path, e.g. run/provider_slug/file.ext.

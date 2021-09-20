@@ -185,7 +185,9 @@ def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None
     if cert_path and cert_pass:
         try:
             adapter = requests_pkcs12.Pkcs12Adapter(
-                pkcs12_filename=cert_path, pkcs12_password=cert_pass, max_retries=max_retries,
+                pkcs12_filename=cert_path,
+                pkcs12_password=cert_pass,
+                max_retries=max_retries,
             )
             session.mount("https://", adapter)
         except FileNotFoundError:

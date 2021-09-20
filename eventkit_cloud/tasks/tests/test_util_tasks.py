@@ -36,7 +36,9 @@ class TestUtilTasks(TestCase):
         create_run_mock.return_value = ExportRun.objects.create(job=self.job, user=self.user).uid
 
         rerun_data_provider_records(
-            run_uid=self.run.uid, user_id=self.user.id, data_provider_slugs=expected_slugs,
+            run_uid=self.run.uid,
+            user_id=self.user.id,
+            data_provider_slugs=expected_slugs,
         )
 
         create_run_mock.assert_called_with(job_uid=self.job.uid, user=self.user, clone=True, download_data=False)
