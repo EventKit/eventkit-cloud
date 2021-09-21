@@ -197,6 +197,7 @@ class ExportTask(EventKitBaseTask):
             task.result = result
             task.status = TaskState.SUCCESS.value
             task.save()
+
             retval["status"] = TaskState.SUCCESS.value
             retval["file_producing_task_result_id"] = result.id
             return retval
