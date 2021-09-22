@@ -65,5 +65,5 @@ urlpatterns = [
     re_path(r"^api/", include(router.urls)),
     re_path(r"^api/", include(notifications.urls)),
     re_path(r"^api/estimate$", EstimatorView.as_view()),
-    re_path(r"^api/metrics$", MetricsView.as_view()),
+    re_path(r"^api/metrics$", MetricsView.as_view(), name="metrics"),
 ]

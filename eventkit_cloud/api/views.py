@@ -3,7 +3,6 @@
 """Provides classes for handling API requests."""
 import itertools
 import logging
-from collections import Counter
 from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
@@ -15,8 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, OuterRef, Count, Subquery
-from django.db.models.functions import TruncDay
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
@@ -36,7 +34,8 @@ from eventkit_cloud.api.filters import (
     UserFilter,
     GroupFilter,
     UserJobActivityFilter,
-    LogFilter, )
+    LogFilter,
+)
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
 from eventkit_cloud.api.renderers import GeojsonRenderer, PlainTextRenderer
@@ -68,8 +67,12 @@ from eventkit_cloud.api.serializers import (
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
 )
-from eventkit_cloud.api.utils import get_run_zip_file, get_binned_groups, get_download_counts_by_area, \
-    get_logins_per_day
+from eventkit_cloud.api.utils import (
+    get_run_zip_file,
+    get_binned_groups,
+    get_download_counts_by_area,
+    get_logins_per_day,
+)
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -2329,7 +2332,7 @@ class EstimatorView(views.APIView):
 
 class MetricsView(views.APIView):
     """
-     This view should return a list of metrics detailing the use of the platform
+    This view should return a list of metrics detailing the use of the platform
     """
 
     permission_classes = (permissions.IsAdminUser,)
@@ -2337,14 +2340,14 @@ class MetricsView(views.APIView):
 
     def get(self, request, *args, **kwargs):
         """
-         Args:
-             days: number of days from which to gather information. E.g. if '30' is specified
-             the metrics will be from the last 30 days.
-             region__<props>: A key value pair to match for the area. For example "?area__name=Africa" would return
-             areas that filter on name which equals "Africa". Properties would be "region__properties__admin=admin_name"
-             area_count: the number of 'top areas' to display, i.e. top 5 areas with the most downloads
-             user_group: one or more user characteristics on which to group users.
-             group_count: the number of top user groups to display, i.e. top 10 user groups with the most downloads
+        Args:
+            days: number of days from which to gather information. E.g. if '30' is specified
+            the metrics will be from the last 30 days.
+            region__<props>: A key value pair to match for the area. For example "?area__name=Africa" would return
+            areas that filter on name which equals "Africa". Properties would be "region__properties__admin=admin_name"
+            area_count: the number of 'top areas' to display, i.e. top 5 areas with the most downloads
+            user_group: one or more user characteristics on which to group users.
+            group_count: the number of top user groups to display, i.e. top 10 user groups with the most downloads
         """
 
         # TODO: Rewrite this after AuditLog links to users.
@@ -2353,7 +2356,9 @@ class MetricsView(views.APIView):
         valid_params = ["days", "group_count", "area_count", "user_group"]
         for param in request.query_params.keys():
             if not (param in valid_params or param.startswith("region__")):
-                raise ValidationError(f"Param must be one of {', '.join(valid_params)} or a region filter (i.e. region__<region_prop>)")
+                raise ValidationError(
+                    f"Param must be one of {', '.join(valid_params)} or a region filter (i.e. region__<region_prop>)"
+                )
 
         days_ago = int(request.query_params.get("days", 30))
         group_count = int(request.query_params.get("group_count", 5))
@@ -2371,8 +2376,12 @@ class MetricsView(views.APIView):
         start_date = end_date - timedelta(days=days_ago)
 
         users = User.objects.filter(is_superuser=False, is_staff=False)
-        events = AuditEvent.objects.filter(datetime__gte=start_date, datetime__lte=end_date, event="login",
-                                                    username__in=[user.username for user in users])
+        events = AuditEvent.objects.filter(
+            datetime__gte=start_date,
+            datetime__lte=end_date,
+            event="login",
+            username__in=[user.username for user in users],
+        )
 
         user_logins = get_logins_per_day(users, events)
 
@@ -2382,7 +2391,7 @@ class MetricsView(views.APIView):
         total_users_per_duration = users.count()
         payload["Total Users"] = total_users_per_duration
 
-        total_logins = sum([login for user_login in user_logins.values() for login in user_login['logins'].values()])
+        total_logins = sum([login for user_login in user_logins.values() for login in user_login["logins"].values()])
         payload["Average Users Per Day"] = total_logins / days_ago
 
         # Top user groups accessing the system
@@ -2390,8 +2399,9 @@ class MetricsView(views.APIView):
 
         payload["Top User Groups"] = dict(itertools.islice(groups.items(), group_count))
 
-        payload["Downloads by Area"] = get_download_counts_by_area(region_filter=area_props, users=users,
-                                                                   count=area_count, start_date=start_date)
+        payload["Downloads by Area"] = get_download_counts_by_area(
+            region_filter=area_props, users=users, count=area_count, start_date=start_date
+        )
         return Response(data=payload, status=status.HTTP_200_OK)
 
 

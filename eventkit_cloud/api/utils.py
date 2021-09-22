@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from datetime import date, datetime, timedelta
 from functools import reduce
 from typing import Optional, Union, List, Dict, Any
@@ -8,7 +8,7 @@ import rest_framework.status
 from audit_logging.models import AuditEvent
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, QuerySet, OuterRef, Subquery, F
+from django.db.models import Count, QuerySet, OuterRef, Subquery
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
@@ -174,22 +174,17 @@ def get_binned_groups(users: dict, user_group_bins: List[str]):
             groups[user_group_key]["users"] = groups[user_group_key]["users"] + [user.username]
             groups[user_group_key]["logins"] = groups[user_group_key]["logins"] + sum(user_data["logins"].values())
 
-    group_order = sorted(groups, key=lambda x: (groups[x]['logins']))
+    group_order = sorted(groups, key=lambda x: (groups[x]["logins"]))
     sorted_groups = {group_name: groups[group_name] for group_name in group_order}
     return sorted_groups
 
 
-def get_date_list(start_date: Optional[Union[date, datetime]], end_date: Optional[Union[date, datetime]]) -> List[date]:
-    """
-    Gets a list of days as date objects, [date1, date2, date3], give a start datetime and an end datetime.
-    """
-
-    days = (end_date - start_date).days
-    return [end_date - timedelta(days=day_diff) for day_diff in range(days)]
-
-
-def get_download_counts_by_area(region_filter: Dict[str, Any], users: Union[QuerySet, List[User]] = None, count: int = None,
-                          start_date: Optional[Union[date, datetime]] = None):
+def get_download_counts_by_area(
+    region_filter: Dict[str, Any],
+    users: Union[QuerySet, List[User]] = None,
+    count: int = None,
+    start_date: Optional[Union[date, datetime]] = None,
+):
 
     region_filter = region_filter or dict()
     query = dict()
@@ -198,11 +193,14 @@ def get_download_counts_by_area(region_filter: Dict[str, Any], users: Union[Quer
     if start_date:
         query["downloaded_at__gte"] = start_date
 
-    query["downloadable__export_task__export_provider_task__run__job__the_geom__intersects"] = OuterRef('the_geom')
-    download_subquery = UserDownload.objects.filter(**query).values('uid')
+    query["downloadable__export_task__export_provider_task__run__job__the_geom__intersects"] = OuterRef("the_geom")
+    download_subquery = UserDownload.objects.filter(**query).values("uid")
 
-    regions = Region.objects.filter(**region_filter).annotate(downloads=Count(Subquery(download_subquery))).order_by(
-        '-downloads')[:count]
+    regions = (
+        Region.objects.filter(**region_filter)
+        .annotate(downloads=Count(Subquery(download_subquery)))
+        .order_by("-downloads")[:count]
+    )
 
     return {region.name: region.downloads for region in regions}
 
