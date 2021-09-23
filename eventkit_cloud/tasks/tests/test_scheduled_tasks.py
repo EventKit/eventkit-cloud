@@ -175,12 +175,12 @@ class TestScaleCeleryTask(TestCase):
         ordered_celery_tasks = OrderedDict(
             {
                 "queue1": {
-                    "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q queue1 ",
+                    "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q queue1 ",
                     "disk": 2048,
                     "memory": 2048,
                 },
                 "celery": {
-                    "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
+                    "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
                     "disk": 2048,
                     "memory": 3072,
                     "limit": 2,
