@@ -155,7 +155,7 @@ services:
       - CELERY_GROUP_NAME
       - CONCURRENCY=1
       - CELERY_SCALE_BY_RUN=True
-      - RUNS_CONCURRENCY=1
+      - RUNS_CONCURRENCY
       - SITE_NAME
       - SITE_IP
       - TERM
