@@ -61,7 +61,7 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
         while old_run.is_cloning:
             old_run: ExportRun = old_run.parent_run
             # Find pending providers and add them to list
-            for dptr in old_run.data_provider_task_records:
+            for dptr in old_run.data_provider_task_records.all():
                 if dptr.status == TaskState.PENDING:
                     data_provider_slugs.append(dptr.slug)
 
