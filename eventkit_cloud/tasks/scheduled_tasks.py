@@ -20,11 +20,7 @@ from requests import Response
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
-from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
-    NotificationLevel,
-)
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
@@ -400,12 +396,12 @@ def get_celery_health_check_command(node_type: str):
 def get_celery_tasks_scale_by_run():
     default_command = (
         "echo '************STARTING NEW WORKER****************' && hostname && echo {celery_group_name} & "
-        "CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --concurrency=1 "
+        "CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --concurrency=1 "
         "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
-        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-        "& CELERY_GROUP_NAME={celery_group_name} exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL "
+        "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "& CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL "
         "-n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} "
-        "exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
+        "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
     )
 
     celery_tasks = {
@@ -428,12 +424,12 @@ def get_celery_tasks_scale_by_task():
     """
     celery_group_name = getattr(settings, "CELERY_GROUP_NAME", socket.gethostname())
 
-    priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
+    priority_queue_command = " & exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
 
     celery_tasks = OrderedDict(
         {
             f"{celery_group_name}": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+                "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
                 + priority_queue_command
                 + get_celery_health_check_command("worker"),
                 # NOQA
@@ -441,7 +437,7 @@ def get_celery_tasks_scale_by_task():
                 "memory": 2048,
             },
             f"{celery_group_name}.large": {
-                "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
+                "command": "celery -A eventkit_cloud worker --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
                 + priority_queue_command
                 + get_celery_health_check_command("large"),
                 # NOQA
@@ -449,7 +445,7 @@ def get_celery_tasks_scale_by_task():
                 "memory": 4096,
             },
             "celery": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+                "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
                 + priority_queue_command
                 + get_celery_health_check_command("celery"),
                 "disk": 2048,
@@ -457,7 +453,7 @@ def get_celery_tasks_scale_by_task():
                 "limit": 6,
             },
             f"{celery_group_name}.priority": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
+                "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
                 + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
                 "disk": 2048,

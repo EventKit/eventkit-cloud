@@ -6,11 +6,12 @@ import re
 import urllib.error
 import urllib.parse
 from functools import wraps
+from http.cookiejar import CookieJar
 from tempfile import NamedTemporaryFile
 
 from django.conf import settings
 from mapproxy.client import http as mapproxy_http
-from requests_pkcs12 import create_ssl_context
+from requests_pkcs12 import create_pyopenssl_sslcontext
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ def patch_https(cert_info: dict = None):
             # create_ssl_sslcontext needs the cert data, instead of the filepath
             with open(cert_path, "rb") as pkcs12_file:
                 pkcs12_data = pkcs12_file.read()
-            kwargs["context"] = create_ssl_context(pkcs12_data, cert_pass)
+            kwargs["context"] = create_pyopenssl_sslcontext(pkcs12_data, cert_pass)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
@@ -137,7 +138,7 @@ def patch_mapproxy_opener_cache(slug=None, cred_var=None):
     """
     # Source: https://github.com/mapproxy/mapproxy/blob/1.11.0/mapproxy/client/http.py#L133
 
-    def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
+    def _new_call(self, ssl_ca_certs, url, username, password, insecure=False, manage_cookies=True):
 
         if ssl_ca_certs not in self._opener or slug not in self._opener:
             ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
@@ -146,12 +147,14 @@ def patch_mapproxy_opener_cache(slug=None, cred_var=None):
             https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             handlers = [
-                urllib.request.HTTPCookieProcessor,
                 urllib.request.HTTPRedirectHandler(),
                 https_handler,
                 urllib.request.HTTPBasicAuthHandler(passman),
                 urllib.request.HTTPDigestAuthHandler(passman),
             ]
+            if manage_cookies:
+                cj = CookieJar()
+                handlers.append(urllib.request.HTTPCookieProcessor(cj))
 
             opener = urllib.request.build_opener(*handlers)
             opener.addheaders = [("User-agent", "MapProxy-%s" % (mapproxy_http.version,))]

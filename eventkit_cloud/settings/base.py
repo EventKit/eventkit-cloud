@@ -17,12 +17,7 @@ TIME_ZONE = "UTC"
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = "en"
 
-LANGUAGES = (
-    ("en", _("English")),
-    ("de", _("German")),
-    ("es", _("Spanish")),
-    ("fr", _("French")),
-)
+LANGUAGES = (("en", _("English")), ("de", _("German")), ("es", _("Spanish")), ("fr", _("French")))
 
 LOCALE_PATHS = (ABS_PATH("locales"),)
 
@@ -62,7 +57,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    # ABS_PATH('core', 'base_static'),
+    # ABS_PATH('core', 'base_static')
 )
 
 # default middleware classes

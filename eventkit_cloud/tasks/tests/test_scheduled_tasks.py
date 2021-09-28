@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestExpireRunsTask(TestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
@@ -81,7 +81,7 @@ class TestExpireRunsTask(TestCase):
 
 @override_settings(PCF_SCALING=False)
 class TestScaleCeleryTask(TestCase):
-    def setUp(self,):
+    def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
@@ -175,12 +175,12 @@ class TestScaleCeleryTask(TestCase):
         ordered_celery_tasks = OrderedDict(
             {
                 "queue1": {
-                    "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q queue1 ",
+                    "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q queue1 ",
                     "disk": 2048,
                     "memory": 2048,
                 },
                 "celery": {
-                    "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
+                    "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
                     "disk": 2048,
                     "memory": 3072,
                     "limit": 2,

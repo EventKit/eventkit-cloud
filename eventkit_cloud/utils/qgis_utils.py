@@ -1,8 +1,7 @@
 import logging
 import os
 
-import gdal
-import osgeo
+from osgeo import gdal, ogr
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str, stage_dir: str
                 symbologyScale=symbology_scale,
             )
 
-        out_driver = osgeo.ogr.GetDriverByName(driver_name)
+        out_driver = ogr.GetDriverByName(driver_name)
         if os.path.exists(output_kml_path):
             out_driver.DeleteDataSource(output_kml_path)
 

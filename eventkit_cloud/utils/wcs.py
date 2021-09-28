@@ -131,12 +131,12 @@ class WCSConverter(object):
 
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(
-            convert_cmd, shell=True, executable="/bin/sh", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            convert_cmd, shell=True, executable="/bin/sh", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if task_process.exitcode != 0:
             logger.error("%s", task_process.stderr)
             raise Exception(
-                "WCS translation failed with code %s: \n%s\n%s", task_process.exitcode, convert_cmd, wcs_xml_string,
+                "WCS translation failed with code %s: \n%s\n%s", task_process.exitcode, convert_cmd, wcs_xml_string
             )
         if self.debug:
             logger.debug("gdal_translate returned: %s", task_process.exitcode)
@@ -172,7 +172,10 @@ class WCSConverter(object):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
             try:
-                for _bbox_idx, _tile_bbox, in enumerate(tile_bboxes):
+                for (
+                    _bbox_idx,
+                    _tile_bbox,
+                ) in enumerate(tile_bboxes):
                     outfile = "{0}-{1}-{2}{3}".format(file_path, idx, _bbox_idx, ext)
                     try:
                         os.remove(outfile)
@@ -229,7 +232,7 @@ class WCSConverter(object):
             raise Exception("The service failed to return a proper response")
 
     @gdalutils.retry
-    def convert(self,):
+    def convert(self):
         """
         Download WCS data and convert to geopackage
         """

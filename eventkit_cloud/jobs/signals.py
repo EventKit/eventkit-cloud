@@ -8,10 +8,7 @@ from django.core.cache import cache
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.jobs.helpers import (
-    get_provider_image_dir,
-    get_provider_thumbnail_name,
-)
+from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
 from eventkit_cloud.jobs.models import (
     DataProvider,
     Job,
@@ -21,7 +18,8 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.tasks.helpers import make_dirs, make_file_downloadable
+from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.tasks.helpers import make_file_downloadable
 from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
 from eventkit_cloud.utils.image_snapshot import save_thumbnail
 from eventkit_cloud.utils.mapproxy import get_mapproxy_config_template
@@ -51,7 +49,9 @@ def job_post_save(sender, instance, created, **kwargs):
 
     if created:
         jp = JobPermission.objects.create(
-            job=instance, content_object=instance.user, permission=JobPermissionLevel.ADMIN.value,
+            job=instance,
+            content_object=instance.user,
+            permission=JobPermissionLevel.ADMIN.value,
         )
         jp.save()
 

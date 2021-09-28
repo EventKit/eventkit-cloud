@@ -15,12 +15,7 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
-from eventkit_cloud.ui.helpers import (
-    file_to_geojson,
-    set_session_user_last_active_at,
-    is_mgrs,
-    is_lat_lon,
-)
+from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 from eventkit_cloud.utils.geocoding.geocode import Geocode
 from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode
@@ -187,7 +182,7 @@ def search(request):
             result["features"] = features + result["features"]
             return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if no results just return the MGRS feature in the response
-        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json",)
+        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json")
 
     elif is_lat_lon(q):
         coords = is_lat_lon(q)
@@ -320,7 +315,7 @@ def help_formats(request):
 @require_http_methods(["GET"])
 def help_presets(request):
     configurations_url = reverse("configurations")
-    return render(request, "help/help_presets.html", {"configurations_url": configurations_url},)
+    return render(request, "help/help_presets.html", {"configurations_url": configurations_url})
 
 
 @require_http_methods(["GET"])

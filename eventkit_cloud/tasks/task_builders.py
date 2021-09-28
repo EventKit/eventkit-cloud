@@ -91,7 +91,11 @@ class TaskChainBuilder(object):
         data_provider_task_record: DataProviderTaskRecord
         created: bool
         data_provider_task_record, created = DataProviderTaskRecord.objects.get_or_create(
-            run=run, name=data_provider.name, provider=data_provider, status=TaskState.PENDING.value, display=True,
+            run=run,
+            name=data_provider.name,
+            provider=data_provider,
+            status=TaskState.PENDING.value,
+            display=True,
         )
 
         projections = [projection.srid for projection in run.job.projections.all()]
@@ -254,7 +258,7 @@ class TaskChainBuilder(object):
         else:
             tasks = primary_export_task_signature
 
-        tasks = chain(tasks,)
+        tasks = chain(tasks)
 
         return data_provider_task_record.uid, tasks
 

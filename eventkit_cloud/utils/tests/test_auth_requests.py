@@ -42,7 +42,7 @@ class TestAuthResult(TransactionTestCase):
         self.assertEqual("test", result.content)
 
     @patch.dict(os.environ, {"fakepassvar": "FAKEPASS"})
-    @patch("eventkit_cloud.utils.auth_requests.create_ssl_context")
+    @patch("eventkit_cloud.utils.auth_requests.create_pyopenssl_sslcontext")
     @patch("eventkit_cloud.utils.auth_requests.os.getenv")
     def test_patch_https(self, getenv, create_ssl_sslcontext):
         # NB: HTTPSConnection is never mocked here; the monkey-patch applies to the actual httplib library.
