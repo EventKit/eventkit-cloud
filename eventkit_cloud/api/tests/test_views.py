@@ -2160,3 +2160,24 @@ class TestRegionalJustification(APITestCase):
         self.assertRaisesMessage(
             ValidationError, "No suboption was available, so justification_suboption_value cannot be used."
         )
+
+
+class TestMetricsViewSet(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo", is_staff=True)
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + token.key,
+            HTTP_ACCEPT="application/json; version=1.0",
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
+        )
+
+    def test_metrics(self):
+        url = reverse("api:metrics")
+        response = self.client.get(url, content_type="application/json; version=1.0")
+        response_data = response.json()
+        expected_keys = ["Total Users", "Average Users Per Day", "Top User Groups", "Downloads by Area"]
+        self.assertEqual(expected_keys, list(response_data.keys()))
+
+        # TODO: Add example users, groups, and UserDownloads to ensure filters work correctly.
