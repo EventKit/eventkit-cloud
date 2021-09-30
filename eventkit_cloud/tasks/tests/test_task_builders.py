@@ -44,7 +44,7 @@ class TestTaskBuilder(TestCase):
         provider_task.formats.add(self.shp_task)
         provider_task.save()
         self.job.data_provider_tasks.add(provider_task)
-        create_run(job_uid=self.job.uid)
+        create_run(job=self.job)
 
         task_chain_builder = TaskChainBuilder()
 
@@ -70,7 +70,7 @@ class TestTaskBuilder(TestCase):
         self.job.data_provider_tasks.add(provider_task_record)
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        create_run(job_uid=self.job.uid)
+        create_run(job=self.job)
         task_chain_builder = TaskChainBuilder()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
@@ -95,7 +95,7 @@ class TestTaskBuilder(TestCase):
         self.job.data_provider_tasks.add(provider_task_record)
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        create_run(job_uid=self.job.uid)
+        create_run(job=self.job)
         task_chain_builder = TaskChainBuilder()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:

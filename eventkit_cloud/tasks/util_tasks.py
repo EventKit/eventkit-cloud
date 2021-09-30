@@ -59,17 +59,17 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
         user: User = User.objects.get(pk=user_id)
 
         while old_run.is_cloning:
-            old_run: ExportRun = old_run.parent_run
             # Find pending providers and add them to list
             for dptr in old_run.data_provider_task_records.all():
-                if dptr.status == TaskState.PENDING:
-                    data_provider_slugs.append(dptr.slug)
+                if dptr.status == TaskState.PENDING.value:
+                    data_provider_slugs.append(dptr.provider.slug)
+            old_run: ExportRun = old_run.parent_run
 
         # Remove any duplicates
         data_provider_slugs = list(set(data_provider_slugs))
 
         try:
-            new_run_uid = create_run(job_uid=old_run.job.uid, user=user, clone=True, download_data=False)
+            new_run_uid = create_run(job=old_run.job, user=user, clone=old_run, download_data=False)
         except Unauthorized:
             raise PermissionDenied(
                 code="permission_denied", detail="ADMIN permission is required to run this DataPack."
