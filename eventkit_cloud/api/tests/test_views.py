@@ -368,8 +368,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format="json")
         job_uid = response.data["uid"]
+        job = Job.objects.get(uid=job_uid)
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
+        create_run_mock.assert_called_once_with(job=job, user=self.user)
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -426,8 +427,9 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format="json")
 
         job_uid = response.data["uid"]
+        job = Job.objects.get(uid=job_uid)
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
+        create_run_mock.assert_called_once_with(job=job, user=self.user)
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -479,8 +481,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format="json")
         job_uid = response.data["uid"]
+        job = Job.objects.get(uid=job_uid)
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
+        create_run_mock.assert_called_once_with(job=job, user=self.user)
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
