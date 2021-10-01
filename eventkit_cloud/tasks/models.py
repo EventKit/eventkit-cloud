@@ -217,8 +217,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.parent_run = ExportRun.objects.get(id=parent_id)
         self.is_cloning = True
         self.deleted = False
-
         self.save()
+
         if download_data:
             self.download_data()
             self.is_cloning = False

@@ -27,7 +27,8 @@ class TestUtilTasks(TestCase):
             original_selection=original_selection,
         )
         self.provider = DataProvider.objects.first()
-        self.run = ExportRun.objects.create(job=self.job, user=self.user)
+        self.parent_run = ExportRun.objects.create(job=self.job, user=self.user, is_cloning=False)
+        self.run = ExportRun.objects.create(job=self.job, user=self.user, is_cloning=True, parent_run=self.parent_run)
 
     @patch("eventkit_cloud.tasks.task_factory.create_run")
     @patch("eventkit_cloud.tasks.export_tasks.pick_up_run_task")
@@ -41,7 +42,7 @@ class TestUtilTasks(TestCase):
             data_provider_slugs=expected_slugs,
         )
 
-        create_run_mock.assert_called_with(job=self.job, user=self.user, clone=self.run, download_data=False)
+        create_run_mock.assert_called_with(job=self.job, user=self.user, clone=self.parent_run, download_data=False)
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             rerun_data_provider_records(run_uid=self.run.uid, user_id=self.user.id, data_provider_slugs=expected_slugs)
