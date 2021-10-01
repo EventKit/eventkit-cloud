@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
+import itertools
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
@@ -65,7 +67,12 @@ from eventkit_cloud.api.serializers import (
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
 )
-from eventkit_cloud.api.utils import get_run_zip_file
+from eventkit_cloud.api.utils import (
+    get_run_zip_file,
+    get_binned_groups,
+    get_download_counts_by_area,
+    get_logins_per_day,
+)
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -99,12 +106,10 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
 )
-
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
-
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -2325,6 +2330,81 @@ class EstimatorView(views.APIView):
         return Response(payload, status=status.HTTP_200_OK)
 
 
+class MetricsView(views.APIView):
+    """
+    This view should return a list of metrics detailing the use of the platform
+    """
+
+    permission_classes = (permissions.IsAdminUser,)
+    renderer_classes = renderer_classes
+
+    def get(self, request, *args, **kwargs):
+        """
+        Args:
+            days: number of days from which to gather information. E.g. if '30' is specified
+            the metrics will be from the last 30 days.
+            region__<props>: A key value pair to match for the area. For example "?area__name=Africa" would return
+            areas that filter on name which equals "Africa". Properties would be "region__properties__admin=admin_name"
+            area_count: the number of 'top areas' to display, i.e. top 5 areas with the most downloads
+            user_group: one or more user characteristics on which to group users.
+            group_count: the number of top user groups to display, i.e. top 10 user groups with the most downloads
+        """
+
+        # TODO: Rewrite this after AuditLog links to users.
+        User = get_user_model()
+
+        valid_params = ["days", "group_count", "area_count", "user_group"]
+        for param in request.query_params.keys():
+            if not (param in valid_params or param.startswith("region__")):
+                raise ValidationError(
+                    f"Param must be one of {', '.join(valid_params)} or a region filter (i.e. region__<region_prop>)"
+                )
+
+        days_ago = int(request.query_params.get("days", 30))
+        group_count = int(request.query_params.get("group_count", 5))
+        area_count = int(request.query_params.get("area_count", 10))
+        region_prefix = "region__"
+        area_props = {
+            field[len(region_prefix) :]: prop
+            for field, prop in request.query_params.items()
+            if field.startswith(region_prefix)
+        }
+
+        user_group_bins = request.query_params.getlist("user_group", None)
+
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days_ago)
+
+        users = User.objects.filter(is_superuser=False, is_staff=False)
+        events = AuditEvent.objects.filter(
+            datetime__gte=start_date,
+            datetime__lte=end_date,
+            event="login",
+            username__in=[user.username for user in users],
+        )
+
+        user_logins = get_logins_per_day(users, events)
+
+        payload = {}
+
+        # Average number of users per day
+        total_users_per_duration = users.count()
+        payload["Total Users"] = total_users_per_duration
+
+        total_logins = sum([login for user_login in user_logins.values() for login in user_login["logins"].values()])
+        payload["Average Users Per Day"] = total_logins / days_ago
+
+        # Top user groups accessing the system
+        groups = get_binned_groups(user_logins, user_group_bins)
+
+        payload["Top User Groups"] = dict(itertools.islice(groups.items(), group_count))
+
+        payload["Downloads by Area"] = get_download_counts_by_area(
+            region_filter=area_props, users=users, count=area_count, start_date=start_date
+        )
+        return Response(data=payload, status=status.HTTP_200_OK)
+
+
 def get_models(model_list, model_object, model_index):
     models = []
     if not model_list:
@@ -2335,7 +2415,7 @@ def get_models(model_list, model_object, model_index):
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
+            logger.warning(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
             raise NotFound(
                 code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist."
             )
@@ -2352,6 +2432,7 @@ def get_provider_task(export_provider, export_formats):
     Returns:
 
     """
+    # TODO:  What is this supposed to do we pass in export format then do nothing with it.
     provider_task = DataProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
         supported_formats = export_provider.export_provider_type.supported_formats.all()

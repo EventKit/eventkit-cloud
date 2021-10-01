@@ -1,14 +1,20 @@
 import logging
+from collections import OrderedDict
+from datetime import date, datetime
 from functools import reduce
+from typing import Optional, Union, List, Dict, Any
 
 import rest_framework.status
+from audit_logging.models import AuditEvent
 from django.conf import settings
-from django.db.models import Count
+from django.contrib.auth.models import User
+from django.db.models import Count, QuerySet, OuterRef, Subquery
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from eventkit_cloud.tasks.models import RunZipFile
+from eventkit_cloud.jobs.models import Region
+from eventkit_cloud.tasks.models import RunZipFile, UserDownload
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +153,63 @@ def get_run_zip_file(field=None, values=[]):
     queryset = reduce(lambda qs, value: qs.filter(**{f"data_provider_task_records{field}": value}), values, initial_qs)
 
     return queryset.select_related("downloadable_file")
+
+
+def get_binned_groups(users: dict, user_group_bins: List[str]):
+
+    groups = OrderedDict()
+
+    # Bin the users by groups and aggregate login counts.
+    for user_data in users.values():
+        user = user_data.get("user")
+        if not hasattr(user, "oauth"):
+            logger.debug(f"User {user.username} does not have oauth information")
+        elif user_group_bins is None:
+            logger.debug("No user groups specified, specify user groups with `?user_group=groupName`")
+        else:
+            user_info = user.oauth.user_info
+            user_group_key = repr(tuple([user_info.get(user_group_param) for user_group_param in user_group_bins]))
+            if not groups.get(user_group_key):
+                groups[user_group_key] = {"users": [], "logins": 0}
+            groups[user_group_key]["users"] = groups[user_group_key]["users"] + [user.username]
+            groups[user_group_key]["logins"] = groups[user_group_key]["logins"] + sum(user_data["logins"].values())
+
+    group_order = sorted(groups, key=lambda x: (groups[x]["logins"]))
+    sorted_groups = {group_name: groups[group_name] for group_name in group_order}
+    return sorted_groups
+
+
+def get_download_counts_by_area(
+    region_filter: Dict[str, Any],
+    users: Union[QuerySet, List[User]] = None,
+    count: int = None,
+    start_date: Optional[Union[date, datetime]] = None,
+):
+
+    region_filter = region_filter or dict()
+    query = dict()
+    if users:
+        query["user__in"] = users
+    if start_date:
+        query["downloaded_at__gte"] = start_date
+
+    query["downloadable__export_task__export_provider_task__run__job__the_geom__intersects"] = OuterRef("the_geom")
+    download_subquery = UserDownload.objects.filter(**query).values("uid")
+
+    regions = (
+        Region.objects.filter(**region_filter)
+        .annotate(downloads=Count(Subquery(download_subquery)))
+        .order_by("-downloads")[:count]
+    )
+
+    return {region.name: region.downloads for region in regions}
+
+
+def get_logins_per_day(users: List[User], events: List[AuditEvent]):
+    user_cache = {user.username: {"user": user, "logins": dict()} for user in users}
+    # Could filter again by date, but here its probably faster to just
+    # loop the dates instead of querying the DB again.
+    for event in events:
+        date = event.datetime.date()
+        user_cache[event.username]["logins"][date] = user_cache.get(date, 0) + 1
+    return user_cache
