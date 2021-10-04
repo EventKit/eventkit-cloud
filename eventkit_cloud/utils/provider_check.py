@@ -20,6 +20,10 @@ from eventkit_cloud.core.helpers import get_or_update_session
 from urllib.parse import urljoin
 
 from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.utils.services.base import GisClient
+from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError
+from eventkit_cloud.utils.services.tms import TMS
+from eventkit_cloud.utils.services.wmts import WMTS
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +128,7 @@ class CheckResult(Enum):
     SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
-class ProviderCheck(object):
+class ProviderCheck(GisClient):
     """
     During the second stage of creating a datapack, each available data provider is pinged to apprise the user
     of its availability. This class and its subclasses contain methods to ping OWS and Overpass servers, and determine:
@@ -134,51 +138,6 @@ class ProviderCheck(object):
         * Whether the requested layer intersects the AOI of the DataPack to be created.
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
-
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None):
-        """
-        Initialize this ProviderCheck object with a service URL and layer.
-        :param service_url: URL of provider, if applicable. Query string parameters are ignored.
-        :param layer: Layer or coverage to check for
-        :param aoi_geojson: (Optional) AOI to check for layer intersection
-        :param slug: (Optional) A provider slug to use for getting credentials.
-        :param max_area: The upper limit for this datasource.
-        """
-
-        self.service_url = service_url
-        self.query = None
-        self.layer = layer
-        self.slug = slug
-        self.max_area = max_area
-        self.timeout = 10
-        self.config = config or dict()
-        self.session = get_or_update_session(
-            session=None,
-            cert_info=self.config.get("cert_info", None),
-            slug=self.slug,
-            params=self.query,
-            timeout=self.timeout,
-        )
-
-        if aoi_geojson is not None and aoi_geojson != "":
-            if isinstance(aoi_geojson, str):
-                aoi_geojson = json.loads(aoi_geojson)
-
-            geoms = tuple(
-                [
-                    GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326)
-                    for feature in aoi_geojson.get("features")
-                ]
-            )
-
-            geom_collection = GeometryCollection(geoms, srid=4326)
-
-            logger.debug("AOI: {}".format(json.dumps(aoi_geojson)))
-
-            self.aoi = geom_collection
-        else:
-            self.aoi = None
-            logger.debug("AOI was not given")
 
     @staticmethod
     def get_status_result(check_result: CheckResult, *args, **kwargs):
@@ -359,32 +318,6 @@ class OWSProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for OWS (WMS, WMTS, WFS, WCS) providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize this OWSProviderCheck object with a service URL and layer.
-        :param service_url: URL of provider, if applicable. Query string parameters are ignored.
-        :param layer: Layer or coverage to check for
-        :param aoi_geojson: (Optional) AOI to check for layer intersection
-        """
-        super(OWSProviderCheck, self).__init__(*args, **kwargs)
-
-        self.query = {"VERSION": "1.0.0", "REQUEST": "GetCapabilities"}
-        # Amended with "SERVICE" parameter by subclasses
-
-        # If service or version parameters are left in query string, it can lead to a protocol error and false negative
-        self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
-
-        self.layer = self.layer.lower()
-
-    def find_layer(self, root):
-        raise NotImplementedError("Method is specific to provider type")
-
-    def get_bbox(self, element):
-        raise NotImplementedError("Method is specific to provider type")
-
-    def get_layer_name(self):
-        raise NotImplementedError("Method is specific to provider type")
-
     def check_intersection(self, bbox):
         """
         Given a bounding box, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
@@ -415,7 +348,14 @@ class OWSProviderCheck(ProviderCheck):
                 if "}" in element.tag:
                     element.tag = element.tag.split("}", 1)[1]
             root = iterator.root
-            layer_element = self.find_layer(root)
+            try:
+                layer_element = self.find_layer(root)
+            except UnsupportedFormatError:
+                logger.error("Missing expected root layer", exc_info=True)
+                raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
+            except MissingLayerError:
+                logger.error("Missing expected layer %s", self.layer,exc_info=True)
+                raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
             if layer_element is None:
                 return False
@@ -553,153 +493,21 @@ class WFSProviderCheck(OWSProviderCheck):
         return bbox
 
 
-class WMSProviderCheck(OWSProviderCheck):
+class WMSProviderCheck(OWSProviderCheck, WMS):
     """
     Implementation of OWSProviderCheck for WMS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WMS"
 
-        # 1.3.0 will work as well, if that's returned. 1.0.0 isn't widely supported.
-        self.query["VERSION"] = "1.1.1"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        capability = root.find(".//capability")
-        if capability is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Flatten nested layers to single list
-        layers = capability.findall("layer")
-        sublayers = layers
-        while len(sublayers) > 0:
-            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
-            layers.extend(sublayers)
-
-        # Get layer names
-        layer_names = [(layer, layer.find("name")) for layer in layers]
-        logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
-
-        requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer = layer[0]
-        return layer
-
-    def get_bbox(self, element):
-
-        bbox_element = element.find("latlonboundingbox")
-        if bbox_element is not None:
-            bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-            return bbox
-
-        bbox_element = element.find("ex_geographicboundingbox")
-        if bbox_element is not None:
-            points = ["westboundlongitude", "southboundlatitude", "eastboundlongitude", "northboundlatitude"]
-            bbox = [float(bbox_element.findtext(point)) for point in points]
-            return bbox
-
-    def get_layer_name(self):
-
-        try:
-            layer_name = (
-                self.config.get("sources", {})
-                .get("default", {})
-                .get("req", {})
-                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
-            )
-        except AttributeError:
-            logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
-
-        if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer_name = str(layer_name).lower()
-        return layer_name
-
-
-class WMTSProviderCheck(OWSProviderCheck):
+class WMTSProviderCheck(OWSProviderCheck, WMTS):
     """
-    Implementation of OWSProviderCheck for WMS providers
+    Implementation of OWSProviderCheck for WMTS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WMTS"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        contents = root.find(".//contents")
-        if contents is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Flatten nested layers to single list
-        layers = contents.findall("layer")
-        sublayers = layers
-        while sublayers:
-            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
-            layers.extend(sublayers)
-
-        # Get layer names
-        layer_names = [(layer, layer.find("identifier")) for layer in layers]
-        logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer = layer[0]
-        return layer
-
-    def get_bbox(self, element) -> Optional[List[float]]:
-
-        bbox_element = element.find("wgs84boundingbox")
-
-        if bbox_element is None:
-            return
-
-        southwest = bbox_element.find("lowercorner").text.split()[::-1]
-        northeast = bbox_element.find("uppercorner").text.split()[::-1]
-
-        bbox = list(map(float, southwest + northeast))
-        return bbox
-
-    def get_layer_name(self) -> str:
-
-        try:
-            layer_name = (
-                self.config.get("sources", {})
-                .get("default", {})
-                .get("req", {})
-                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
-            )
-        except AttributeError:
-            logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
-
-        if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer_name = layer_name.lower()
-        return layer_name
-
-
-class TMSProviderCheck(ProviderCheck):
-    def __init__(self, service_url, *args, **kwargs):
-        super(TMSProviderCheck, self).__init__(service_url, *args, **kwargs)
-        self.service_url = self.service_url.format(z="0", y="0", x="0")
-
+class TMSProviderCheck(ProviderCheck, TMS):
+    """
+    Implementation of TMSProviderCheck for TMS providers
+    """
 
 class FileProviderCheck(ProviderCheck):
     """
