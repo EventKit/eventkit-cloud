@@ -29,7 +29,7 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_runs,
     scale_celery_task,
 )
-from eventkit_cloud.utils.provider_check import CheckResult
+from eventkit_cloud.utils.services.provider_check import CheckResult
 
 logger = logging.getLogger(__name__)
 

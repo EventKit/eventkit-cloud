@@ -294,6 +294,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
+    the_geom = models.MultiPolygonField(verbose_name="Covered Area", srid=4326, default=None, null=True, blank=True)
 
     # Used to store user list of user caches so that they can be invalidated.
     provider_caches_key = "data_provider_caches"
@@ -440,7 +441,7 @@ class Region(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
 
-    the_geom = models.MultiPolygonField(verbose_name="HOT Export Region", srid=4326, default="")
+    the_geom = models.MultiPolygonField(verbose_name="Geometry", srid=4326, default="")
     the_geom_webmercator = models.MultiPolygonField(
         verbose_name="Mercator extent for export region", srid=3857, default=""
     )
