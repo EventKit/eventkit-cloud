@@ -1,6 +1,6 @@
 import logging
 
-from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
+from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError, ServiceError
 from eventkit_cloud.utils.services.ows import OWS
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,8 @@ class WMS(OWS):
             )
         except AttributeError:
             logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)  # TODO: Make a new error for this? or functionally the same as MissingLayer??
+            logger.info(self.config)
+            raise ServiceError()
 
         if layer_name is None:
             raise MissingLayerError()

@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.test import TransactionTestCase
 
-from eventkit_cloud.utils.provider_check import (
+from eventkit_cloud.utils.services.provider_check import (
     WCSProviderCheck,
     WFSProviderCheck,
     WMSProviderCheck,
@@ -45,12 +45,12 @@ class TestProviderCheck(TransactionTestCase):
         """
 
         mock_session = Mock()
-        pc.session = mock_session
+        pc.client.session = mock_session
 
-        with patch("eventkit_cloud.utils.provider_check.cache") as mock_cache:
+        with patch("eventkit_cloud.utils.services.provider_check.cache") as mock_cache:
 
             mock_cache.get.return_value = None
-            mock_cache.get_or_set = lambda *args, **kwargs: pc.get_provider_response()
+            mock_cache.get_or_set = lambda *args, **kwargs: pc.client.get_response()
 
             # Test: cannot connect to server
             mock_session.get.side_effect = requests.exceptions.ConnectionError()

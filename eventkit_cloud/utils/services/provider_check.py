@@ -19,7 +19,7 @@ from urllib.parse import urljoin
 
 from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.utils.services.base import GisClient
-from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError
+from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
 from eventkit_cloud.utils.services.tms import TMS
 from eventkit_cloud.utils.services.wcs import WCS
 from eventkit_cloud.utils.services.wfs import WFS
@@ -129,7 +129,7 @@ class CheckResult(Enum):
     SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
-class ProviderCheck(GisClient):
+class ProviderCheck:
     """
     During the second stage of creating a datapack, each available data provider is pinged to apprise the user
     of its availability. This class and its subclasses contain methods to ping OWS and Overpass servers, and determine:
@@ -139,6 +139,12 @@ class ProviderCheck(GisClient):
         * Whether the requested layer intersects the AOI of the DataPack to be created.
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
+
+    def __init__(self, service_url: str, layer: str, aoi_geojson: str = None, slug: str = None, max_area: int = 0,
+                 config: dict = None, client: GisClient = None):
+        self.client = GisClient(service_url, layer, aoi_geojson=aoi_geojson, slug=slug, max_area=max_area,
+                                config=config)
+
 
     @staticmethod
     def get_status_result(check_result: CheckResult, *args, **kwargs):
@@ -156,26 +162,26 @@ class ProviderCheck(GisClient):
         :return: True if AOI is lower than area limit
         """
 
-        if self.aoi is None or int(self.max_area) <= 0:
+        if self.client.aoi is None or int(self.client.max_area) <= 0:
             return True
 
-        geom = self.aoi.transform(3857, clone=True)
+        geom = self.client.aoi.transform(3857, clone=True)
         area = geom.area
 
         area_sq_km = area / 1000000
 
-        return area_sq_km < self.max_area
+        return area_sq_km < self.client.max_area
 
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a GET request to provider URL and returns its response if status code is ok
         """
 
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            response = self.session.get(self.service_url, params=self.query, timeout=self.timeout)
+            response = self.client.get_response()
 
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
@@ -189,23 +195,23 @@ class ProviderCheck(GisClient):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("SSL connection failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except requests.exceptions.ConnectionError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except ProviderCheckError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
     def validate_response(self, response) -> bool:
@@ -218,7 +224,7 @@ class ProviderCheck(GisClient):
         return response is not None
 
     def get_cache_key(self, aoi: GeometryCollection = None):
-        cache_key = f"provider-status-{normalize_name(self.service_url)}"
+        cache_key = f"provider-status-{normalize_name(self.client.service_url)}"
         if aoi:
             cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
         cache_key = cache_key[:200]
@@ -230,7 +236,7 @@ class ProviderCheck(GisClient):
         """
 
         #  If the last check was successful assume checks will be successful for some period of time.
-        status_check_cache_key = self.get_cache_key(aoi=self.aoi)
+        status_check_cache_key = self.get_cache_key(aoi=self.client.aoi)
 
         try:
             status = cache.get(status_check_cache_key)
@@ -245,7 +251,7 @@ class ProviderCheck(GisClient):
 
             # This response will rarely change, it will be information about the service.
             response = cache.get_or_set(
-                self.get_cache_key(), lambda: self.get_provider_response(), timeout=DEFAULT_CACHE_TIMEOUT
+                self.get_cache_key(), lambda: self.check_provider_response(), timeout=DEFAULT_CACHE_TIMEOUT
             )
 
             if not self.validate_response(response):
@@ -266,26 +272,15 @@ class OverpassProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for Overpass providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            query = "out meta;"
-
-            response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
-
-            if not response.ok:
-                # Workaround for https://bugs.python.org/issue27777
-                query = {"data": query}
-                response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
-
+            response = self.client.get_response()
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
@@ -298,19 +293,19 @@ class OverpassProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -328,7 +323,7 @@ class OWSProviderCheck(ProviderCheck):
         minx, miny, maxx, maxy = bbox
         bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
-        if self.aoi is not None and not self.aoi.intersects(bbox):
+        if self.client.aoi is not None and not self.client.aoi.intersects(bbox):
             raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
     def validate_response(self, response: requests.Response) -> bool:
@@ -350,18 +345,22 @@ class OWSProviderCheck(ProviderCheck):
                     element.tag = element.tag.split("}", 1)[1]
             root = iterator.root
             try:
-                layer_element = self.find_layer(root)
+                layer_element = self.client.find_layer(root)
             except UnsupportedFormatError:
                 logger.error("Missing expected root layer", exc_info=True)
                 raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
             except MissingLayerError:
-                logger.error("Missing expected layer %s", self.layer, exc_info=True)
+                logger.error("Missing expected layer %s", self.client.layer, exc_info=True)
                 raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
+            except ServiceError:
+                logger.error("Failed to properly parse the response", exc_info=True)
+                logger.info(xml)
+                raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
             if layer_element is None:
                 return False
 
-            bbox = self.get_bbox(layer_element)
+            bbox = self.client.get_bbox(layer_element)
             if bbox is not None:
                 self.check_intersection(bbox)
             return True
@@ -371,7 +370,7 @@ class OWSProviderCheck(ProviderCheck):
             raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
 
-class WCSProviderCheck(OWSProviderCheck, WCS):
+class WCSProviderCheck(OWSProviderCheck):
     """
     Implementation of OWSProviderCheck for WCS providers
     """
@@ -386,35 +385,31 @@ class WCSProviderCheck(OWSProviderCheck, WCS):
             minx, miny, maxx, maxy = box
             bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
-            if not (self.aoi is not None and not self.aoi.intersects(bbox)):
+            if not (self.client.aoi is not None and not self.client.aoi.intersects(bbox)):
                 return
 
         raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
 
-class WFSProviderCheck(OWSProviderCheck, WFS):
+class WFSProviderCheck(OWSProviderCheck):
     """
     Implementation of OWSProviderCheck for WFS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WFS"
 
-
-class WMSProviderCheck(OWSProviderCheck, WMS):
+class WMSProviderCheck(OWSProviderCheck):
     """
     Implementation of OWSProviderCheck for WMS providers
     """
 
 
-class WMTSProviderCheck(OWSProviderCheck, WMTS):
+class WMTSProviderCheck(OWSProviderCheck):
     """
     Implementation of OWSProviderCheck for WMTS providers
     """
 
 
-class TMSProviderCheck(ProviderCheck, TMS):
+class TMSProviderCheck(ProviderCheck):
     """
     Implementation of TMSProviderCheck for TMS providers
     """
@@ -425,18 +420,15 @@ class FileProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for geospatial file providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            response = self.session.head(url=self.service_url, timeout=self.timeout)
+            response = self.client.session.head(url=self.client.service_url, timeout=self.client.timeout)
 
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
@@ -450,19 +442,19 @@ class FileProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -471,21 +463,15 @@ class OGCProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for geospatial file providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-
-    def get_provider_response(self):
+    def check_provider_response(self):
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            service_url = self.service_url.rstrip("/\\")
-            processes_endpoint = urljoin(service_url, "processes/")
-
-            response = self.session.get(url=processes_endpoint, timeout=self.timeout)
+            response = self.client.get_response()
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
@@ -498,19 +484,19 @@ class OGCProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 

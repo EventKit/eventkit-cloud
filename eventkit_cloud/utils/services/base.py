@@ -2,6 +2,7 @@ import abc
 import json
 import logging
 
+import requests
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
 
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -65,3 +66,7 @@ class GisClient(abc.ABC):
 
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to service type")
+
+    def get_response(self) -> requests.Response:
+        return self.session.get(self.service_url, params=self.query,
+                                           timeout=self.timeout)

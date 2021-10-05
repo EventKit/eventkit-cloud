@@ -1,10 +1,15 @@
+from __future__ import annotations
 import re
 import logging
 from typing import Union, List
 
-from eventkit_cloud.utils.provider_check import CheckResult
 from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
 from eventkit_cloud.utils.services.ows import OWS
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from eventkit_cloud.utils.services.provider_check import CheckResult
+
 
 logger = logging.getLogger(__name__)
 

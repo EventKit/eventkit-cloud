@@ -1,4 +1,7 @@
 import re
+from urllib.parse import urljoin
+
+import requests
 
 from eventkit_cloud.utils.services.base import GisClient
 
@@ -11,7 +14,7 @@ class OWS(GisClient):
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
-        super(OWS, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(*args, **kwargs)
 
         self.query = {"VERSION": "1.0.0", "REQUEST": "GetCapabilities"}
         # Amended with "SERVICE" parameter by subclasses
@@ -29,3 +32,10 @@ class OWS(GisClient):
 
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to provider type")
+
+    def get_provider_response(self, url=None) -> requests.Response:
+        url = url or self.service_url
+        service_url = url.rstrip("/\\")
+        processes_endpoint = urljoin(service_url, "processes/")
+
+        return self.session.get(url=processes_endpoint, timeout=self.timeout)
