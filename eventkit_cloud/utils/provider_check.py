@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
 import logging
 import re
 import xml.etree.ElementTree as ET
 from enum import Enum
 from io import StringIO
-from typing import Type, Union, Optional, List
+from typing import Type
 
 import requests
 import yaml
 from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.contrib.gis.geos import Polygon, GeometryCollection
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.core.helpers import get_or_update_session
 from urllib.parse import urljoin
 
 from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError
 from eventkit_cloud.utils.services.tms import TMS
+from eventkit_cloud.utils.services.wcs import WCS
+from eventkit_cloud.utils.services.wfs import WFS
+from eventkit_cloud.utils.services.wms import WMS
 from eventkit_cloud.utils.services.wmts import WMTS
 
 logger = logging.getLogger(__name__)
@@ -354,7 +355,7 @@ class OWSProviderCheck(ProviderCheck):
                 logger.error("Missing expected root layer", exc_info=True)
                 raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
             except MissingLayerError:
-                logger.error("Missing expected layer %s", self.layer,exc_info=True)
+                logger.error("Missing expected layer %s", self.layer, exc_info=True)
                 raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
 
             if layer_element is None:
@@ -370,70 +371,10 @@ class OWSProviderCheck(ProviderCheck):
             raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
 
 
-class WCSProviderCheck(OWSProviderCheck):
+class WCSProviderCheck(OWSProviderCheck, WCS):
     """
     Implementation of OWSProviderCheck for WCS providers
     """
-
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WCS"
-
-    def find_layer(self, root) -> Union[CheckResult, List[str]]:
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-
-        content_meta = root.find(".//contentmetadata")
-        if content_meta is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Get names of available coverages
-        coverage_offers = content_meta.findall("coverageofferingbrief")
-
-        cover_names = [(c, c.find("name")) for c in coverage_offers]
-        if not cover_names:  # No coverages are offered
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        try:
-            coverages = self.config.get("service", dict()).get("coverages")
-            coverages = coverages.split(",") if coverages else None
-            coverages = list(map(str.lower, coverages)) if coverages else None
-        except AttributeError:
-            logger.error("Unable to get coverages from WCS provider configuration.")
-
-        if coverages:
-            covers = [c for c, n in cover_names if n is not None and n.text in coverages]
-        else:
-            covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
-
-        if not covers:  # Requested coverage is not offered
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        return covers
-
-    def get_bbox(self, elements):
-        bboxes = []
-        for element in elements:
-            envelope = element.find("lonlatenvelope")
-            if envelope is None:
-                continue
-
-            pos = list(envelope)
-            # Make sure there aren't any surprises
-            coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-            if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
-                continue
-
-            x1, y1 = list(map(float, pos[0].text.split(" ")))
-            x2, y2 = list(map(float, pos[1].text.split(" ")))
-
-            minx, maxx = sorted([x1, x2])
-            miny, maxy = sorted([y1, y2])
-
-            bboxes.append([minx, miny, maxx, maxy])
-        return bboxes if bboxes else None
 
     def check_intersection(self, bboxes):
         """
@@ -451,7 +392,7 @@ class WCSProviderCheck(OWSProviderCheck):
         raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
 
-class WFSProviderCheck(OWSProviderCheck):
+class WFSProviderCheck(OWSProviderCheck, WFS):
     """
     Implementation of OWSProviderCheck for WFS providers
     """
@@ -459,38 +400,6 @@ class WFSProviderCheck(OWSProviderCheck):
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WFS"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        feature_type_list = root.find(".//featuretypelist")
-        if feature_type_list is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        feature_types = feature_type_list.findall("featuretype")
-
-        # Get layer names
-        feature_names = [(ft, ft.find("name")) for ft in feature_types]
-        logger.debug("WFS layers offered: {}".format([name.text for feature, name in feature_names if name]))
-        features = [feature for feature, name in feature_names if name is not None and self.layer == name.text]
-
-        if not features:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        feature = features[0]
-        return feature
-
-    def get_bbox(self, element) -> Optional[List[float]]:
-
-        bbox_element = element.find("latlongboundingbox")
-
-        if bbox_element is None:
-            return
-
-        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-        return bbox
 
 
 class WMSProviderCheck(OWSProviderCheck, WMS):
@@ -504,10 +413,12 @@ class WMTSProviderCheck(OWSProviderCheck, WMTS):
     Implementation of OWSProviderCheck for WMTS providers
     """
 
+
 class TMSProviderCheck(ProviderCheck, TMS):
     """
     Implementation of TMSProviderCheck for TMS providers
     """
+
 
 class FileProviderCheck(ProviderCheck):
     """

@@ -1,10 +1,12 @@
+import logging
+
 from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
-from eventkit_cloud.utils.services.interface import IGisClient
 from eventkit_cloud.utils.services.ows import OWS
+
+logger = logging.getLogger(__name__)
 
 
 class WMS(OWS):
-
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMS"
@@ -54,20 +56,19 @@ class WMS(OWS):
             return bbox
 
     def get_layer_name(self):
-
         try:
             layer_name = (
                 self.config.get("sources", {})
-                    .get("default", {})
-                    .get("req", {})
-                    .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
+                .get("default", {})
+                .get("req", {})
+                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
             )
         except AttributeError:
             logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)  # TODO: Make a new error for this? or functionally the same as MissingLayer??
 
         if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
+            raise MissingLayerError()
 
         layer_name = str(layer_name).lower()
         return layer_name

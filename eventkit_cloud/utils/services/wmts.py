@@ -1,11 +1,13 @@
+from typing import Optional, List
+
 from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError
 from eventkit_cloud.utils.services.ows import OWS
 from logging import getLogger
 
 logger = getLogger("__name__")
 
-class WMTS(OWS):
 
+class WMTS(OWS):
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMTS"
@@ -62,10 +64,10 @@ class WMTS(OWS):
             )
         except AttributeError:
             logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
+            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)  # TODO: Make a new error for this? or functionally the same as MissingLayer??
 
         if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
+            raise MissingLayerError()
 
         layer_name = layer_name.lower()
         return layer_name

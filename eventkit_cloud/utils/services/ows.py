@@ -2,8 +2,8 @@ import re
 
 from eventkit_cloud.utils.services.base import GisClient
 
-class OWS(GisClient):
 
+class OWS(GisClient):
     def __init__(self, *args, **kwargs):
         """
         Initialize this OWSProviderCheck object with a service URL and layer.

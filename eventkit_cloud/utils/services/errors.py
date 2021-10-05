@@ -1,6 +1,8 @@
 class ServiceError(Exception):
     """Base class for exceptions in this module."""
+
     pass
+
 
 class UnsupportedFormatError(ServiceError):
     """Used to raise exceptions when a response doesn't match expected semantics or for failed version checks."""

@@ -8,6 +8,7 @@ from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
 
+
 class GisClient(abc.ABC):
     aoi = None
 
@@ -56,7 +57,6 @@ class GisClient(abc.ABC):
             self.aoi = None
             logger.debug("AOI was not given")
 
-
     def find_layer(self, root):
         raise NotImplementedError("Method is specific to service type")
 
@@ -65,4 +65,3 @@ class GisClient(abc.ABC):
 
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to service type")
-
