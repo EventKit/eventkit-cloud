@@ -247,7 +247,7 @@ class TestScaleCeleryTask(TestCase):
 
 
 class TestCheckProviderAvailabilityTask(TestCase):
-    @patch("eventkit_cloud.utils.provider_check.perform_provider_check")
+    @patch("eventkit_cloud.utils.services.provider_check.perform_provider_check")
     def test_check_provider_availability(self, perform_provider_check_mock):
         perform_provider_check_mock.return_value = CheckResult.SUCCESS.value
         first_provider = DataProvider.objects.create(slug="first_provider", name="first_provider")

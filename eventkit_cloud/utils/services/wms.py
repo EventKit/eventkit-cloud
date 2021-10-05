@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class WMS(OWS):
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(WMS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMS"
 
         # 1.3.0 will work as well, if that's returned. 1.0.0 isn't widely supported.
@@ -37,7 +37,10 @@ class WMS(OWS):
         requested_layer = self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            raise MissingLayerError()
+            raise MissingLayerError(
+                f"Unable to find requested WMS layer '{requested_layer}'"
+                f" in layer list: {' '.join(str(ln.text) for ln in layer_names)}"
+            )
 
         layer = layer[0]
         return layer
@@ -69,7 +72,7 @@ class WMS(OWS):
             raise ServiceError()
 
         if layer_name is None:
-            raise MissingLayerError()
+            raise MissingLayerError("Unable to find WMS layer, no layer name found in config")
 
         layer_name = str(layer_name).lower()
         return layer_name

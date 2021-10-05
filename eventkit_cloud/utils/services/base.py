@@ -68,5 +68,4 @@ class GisClient(abc.ABC):
         raise NotImplementedError("Method is specific to service type")
 
     def get_response(self) -> requests.Response:
-        return self.session.get(self.service_url, params=self.query,
-                                           timeout=self.timeout)
+        return self.session.get(self.service_url, params=self.query, timeout=self.timeout)

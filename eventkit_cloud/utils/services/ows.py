@@ -14,7 +14,7 @@ class OWS(GisClient):
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(OWS, self).__init__(*args, **kwargs)
 
         self.query = {"VERSION": "1.0.0", "REQUEST": "GetCapabilities"}
         # Amended with "SERVICE" parameter by subclasses

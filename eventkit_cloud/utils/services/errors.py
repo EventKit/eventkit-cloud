@@ -7,14 +7,11 @@ class ServiceError(Exception):
 class UnsupportedFormatError(ServiceError):
     """Used to raise exceptions when a response doesn't match expected semantics or for failed version checks."""
 
-    def __init__(self, expression, message):
-        self.expression = expression
-        self.message = message
+    pass
 
 
 class MissingLayerError(ServiceError):
     """Used if expected layer could not be found in the service."""
 
-    def __init__(self, expression, message):
-        self.expression = expression
+    def __init__(self, message):
         self.message = message

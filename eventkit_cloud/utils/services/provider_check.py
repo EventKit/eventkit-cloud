@@ -15,11 +15,12 @@ from django.core.cache import cache
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
-from urllib.parse import urljoin
 
 from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.utils.overpass import Overpass
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
+from eventkit_cloud.utils.services.ows import OWS
 from eventkit_cloud.utils.services.tms import TMS
 from eventkit_cloud.utils.services.wcs import WCS
 from eventkit_cloud.utils.services.wfs import WFS
@@ -140,11 +141,20 @@ class ProviderCheck:
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url: str, layer: str, aoi_geojson: str = None, slug: str = None, max_area: int = 0,
-                 config: dict = None, client: GisClient = None):
-        self.client = GisClient(service_url, layer, aoi_geojson=aoi_geojson, slug=slug, max_area=max_area,
-                                config=config)
+    client_class: Type[GisClient] = GisClient
 
+    def __init__(
+        self,
+        service_url: str,
+        layer: str,
+        aoi_geojson: str = None,
+        slug: str = None,
+        max_area: int = 0,
+        config: dict = None,
+    ):
+        self.client = self.client_class(
+            service_url, layer, aoi_geojson=aoi_geojson, slug=slug, max_area=max_area, config=config
+        )
 
     @staticmethod
     def get_status_result(check_result: CheckResult, *args, **kwargs):
@@ -272,6 +282,8 @@ class OverpassProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for Overpass providers.
     """
 
+    client_class = Overpass
+
     def check_provider_response(self) -> requests.Response:
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
@@ -313,6 +325,8 @@ class OWSProviderCheck(ProviderCheck):
     """
     Implementation of ProviderCheck for OWS (WMS, WMTS, WFS, WCS) providers.
     """
+
+    client_class = OWS
 
     def check_intersection(self, bbox):
         """
@@ -375,6 +389,8 @@ class WCSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WCS providers
     """
 
+    client_class = WCS
+
     def check_intersection(self, bboxes):
         """
         Given a list bounding boxes, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
@@ -396,11 +412,15 @@ class WFSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WFS providers
     """
 
+    client_class = WFS
+
 
 class WMSProviderCheck(OWSProviderCheck):
     """
     Implementation of OWSProviderCheck for WMS providers
     """
+
+    client_class = WMS
 
 
 class WMTSProviderCheck(OWSProviderCheck):
@@ -408,11 +428,15 @@ class WMTSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WMTS providers
     """
 
+    client_class = WMTS
+
 
 class TMSProviderCheck(ProviderCheck):
     """
     Implementation of TMSProviderCheck for TMS providers
     """
+
+    client_class = TMS
 
 
 class FileProviderCheck(ProviderCheck):

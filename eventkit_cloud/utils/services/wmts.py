@@ -9,7 +9,7 @@ logger = getLogger("__name__")
 
 class WMTS(OWS):
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(WMTS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMTS"
 
     def find_layer(self, root):
@@ -35,7 +35,7 @@ class WMTS(OWS):
         requested_layer = self.get_layer_name()
         layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            raise MissingLayerError()
+            raise MissingLayerError("Unable to find WMTS layer in layer names list")
 
         layer = layer[0]
         return layer
@@ -67,7 +67,7 @@ class WMTS(OWS):
             raise ServiceError()
 
         if layer_name is None:
-            raise MissingLayerError()
+            raise MissingLayerError("Unable to find WMTS layer, no layer name found in config")
 
         layer_name = layer_name.lower()
         return layer_name
