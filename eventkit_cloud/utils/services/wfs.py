@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class WFS(OWS):
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(WFS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WFS"
 
     def find_layer(self, root):
@@ -28,7 +28,10 @@ class WFS(OWS):
         features = [feature for feature, name in feature_names if name is not None and self.layer == name.text]
 
         if not features:
-            raise MissingLayerError()
+            raise MissingLayerError(
+                f"Unable to find {self.layer} in offered WFS layers: "
+                f"{[name.text for feature, name in feature_names if name]}"
+            )
 
         feature = features[0]
         return feature

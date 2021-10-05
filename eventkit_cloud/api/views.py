@@ -126,7 +126,7 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.provider_check import perform_provider_check
+from eventkit_cloud.utils.services.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 

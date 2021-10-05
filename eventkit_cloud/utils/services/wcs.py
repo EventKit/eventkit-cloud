@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class WCS(OWS):
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(WCS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WCS"
 
     def find_layer(self, root) -> Union[CheckResult, List[str]]:
@@ -34,7 +34,7 @@ class WCS(OWS):
 
         cover_names = [(c, c.find("name")) for c in coverage_offers]
         if not cover_names:  # No coverages are offered
-            raise MissingLayerError()
+            raise MissingLayerError(f"WCS Layer {self.layer} not found because no coverages were found")
 
         try:
             coverages = self.config.get("service", dict()).get("coverages")
@@ -49,7 +49,7 @@ class WCS(OWS):
             covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
 
         if not covers:  # Requested coverage is not offered
-            raise MissingLayerError()
+            raise MissingLayerError("Unable to find requested WCS layer")
 
         return covers
 
