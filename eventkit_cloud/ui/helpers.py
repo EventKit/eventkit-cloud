@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import pathlib
 import re
 import shutil
 import zipfile
@@ -10,40 +11,24 @@ from uuid import uuid4
 import pytz
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from eventkit_cloud.utils.gdalutils import get_meta, convert_vector, polygonize
 
 logger = get_task_logger(__name__)
 
 
-def file_to_geojson(in_memory_file):
+def file_to_geojson(in_path: str):
     """
-    :param in_memory_file: A WSGI In memory file
+    :param in_path: A str path to a file.
     :return: A geojson object if available
     """
-    stage_dir = settings.EXPORT_STAGING_ROOT.rstrip("\/")
-    uid = str(uuid4())
-    dir_name = os.path.join(stage_dir, uid)
-
+    dir_name = os.path.dirname(in_path)
+    file_path = pathlib.Path(in_path)
     try:
-        os.mkdir(dir_name)
-        file_name = in_memory_file.name
+        out_path = os.path.join(dir_name, "out_{0}.geojson".format(file_path.stem))
 
-        file_name, file_extension = os.path.splitext(file_name)
-        if not file_name or not file_extension:
-            raise Exception("No file type detected")
-
-        # Remove all non-word characters
-        file_name = re.sub(r"[^\w\s]", "", file_name)
-        # Replace all whitespace with a single underscore
-        file_name = re.sub(r"\s+", "_", file_name).lower()
-        file_name = f"{file_name}-{uid}"
-
-        in_path = os.path.join(dir_name, "in_{0}{1}".format(file_name, file_extension))
-        out_path = os.path.join(dir_name, "out_{0}.geojson".format(file_name))
-        write_uploaded_file(in_memory_file, in_path)
-
-        if file_extension == ".zip":
+        if file_path.suffix == ".zip":
             if unzip_file(in_path, dir_name):
                 has_shp = False
                 for unzipped_file in os.listdir(dir_name):
@@ -107,19 +92,37 @@ def unzip_file(fp, dir):
         raise Exception("Could not unzip file")
 
 
-def write_uploaded_file(in_memory_file, write_path):
+def write_uploaded_file(in_memory_file: InMemoryUploadedFile) -> str:
     """
     :param in_memory_file: An WSGI in memory file
     :param write_path: The path which the file should be written to on disk
-    :return: True if successful
+    :return: A str of path to file on disk.
     """
     try:
-        with open(write_path, "wb+") as temp_file:
+        stage_dir = settings.EXPORT_STAGING_ROOT.rstrip("\/")
+        uid = str(uuid4())
+        dir_name = os.path.join(stage_dir, uid)
+
+        os.mkdir(dir_name)
+        file_name = in_memory_file.name
+
+        file_name, file_extension = os.path.splitext(file_name)
+        if not file_name or not file_extension:
+            raise Exception("No file type detected")
+
+        # Remove all non-word characters
+        file_name = re.sub(r"[^\w\s]", "", file_name)
+        # Replace all whitespace with a single underscore
+        file_name = re.sub(r"\s+", "_", file_name).lower()
+        file_name = f"{file_name}-{uid}"
+
+        out_path = os.path.join(dir_name, "in_{0}{1}".format(file_name, file_extension))
+        with open(out_path, "wb+") as temp_file:
             for chunk in in_memory_file.chunks():
                 temp_file.write(chunk)
-        return True
+        return out_path
     except Exception as e:
-        logger.debug(e)
+        logger.debug(e, exc_info=True)
         raise Exception("Could not write file to disk")
 
 

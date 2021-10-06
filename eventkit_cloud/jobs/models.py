@@ -28,6 +28,7 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.ui.helpers import file_to_geojson
 
 logger = logging.getLogger(__name__)
 
@@ -311,6 +312,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
 
         cache.delete(f"base-config-{self.slug}")
+        # if True:
+            # file =
+        file_to_geojson()
         super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
