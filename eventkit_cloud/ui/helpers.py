@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytz
+import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile

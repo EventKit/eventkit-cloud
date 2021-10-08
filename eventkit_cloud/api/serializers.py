@@ -1037,6 +1037,39 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return obj.get_use_bbox()
 
 
+class DataProviderGeoFeatureSerializer(DataProviderSerializer, GeoFeatureModelSerializer):
+    data_provider_geom = GeometrySerializerMethodField()
+    bbox = GeometrySerializerMethodField()
+
+    class Meta(DataProviderSerializer.Meta):
+        geo_field = "data_provider_geom"
+        bbox_geo_field = "bbox"
+
+    def get_data_provider_geom(self, obj):
+        return obj.the_geom
+
+    def get_bbox(self, obj):
+        return obj.the_geom.extent
+
+
+class FilteredDataProviderGeoFeatureSerializer(FilteredDataProviderSerializer, GeoFeatureModelSerializer):
+    """
+    Used to mixin geojson views.
+    """
+    data_provider_geom = GeometrySerializerMethodField()
+    bbox = GeometrySerializerMethodField()
+
+    class Meta(DataProviderSerializer.Meta):
+        geo_field = "data_provider_geom"
+        bbox_geo_field = "bbox"
+
+    def get_data_provider_geom(self, obj):
+        return None
+
+    def get_bbox(self, obj):
+        return []
+
+
 class ListJobSerializer(serializers.Serializer):
     """
     Return a sub-set of Job model attributes.

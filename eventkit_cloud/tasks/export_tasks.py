@@ -1507,7 +1507,7 @@ def vector_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(task_uid, service_url, gpkg, cert_info=configuration.get("cert_info"), provider_slug=provider_slug)
+    download_data(task_uid, service_url, gpkg)
 
     out = gdalutils.convert(
         driver="gpkg",
@@ -1558,7 +1558,7 @@ def raster_file_export_task(
 
     configuration = load_provider_config(config)
 
-    download_data(task_uid, service_url, gpkg, cert_info=configuration.get("cert_info"), provider_slug=provider_slug)
+    download_data(task_uid, service_url, gpkg)
 
     out = gdalutils.convert(
         driver="gpkg",
@@ -2370,16 +2370,7 @@ def get_ogcapi_data(
         cookie = download_credentials.get("cookie")
         cookie = json.loads(cookie) if cookie else None
 
-    download_path = download_data(
-        task_uid,
-        download_url,
-        download_path,
-        username=username,
-        password=password,
-        session=session,
-        cert_info=cert_info,
-        cookie=cookie,
-    )
+    download_path = download_data(task_uid, download_url, download_path, session=session, cookie=cookie)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path
