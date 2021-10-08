@@ -982,15 +982,18 @@ def get_file_name_from_response(response: Response) -> str:
     """
     filename = "download"
     logger.error(f"Response Headers:{response.headers.get('content-type', '')}")
-    mimetype = response.headers.get('content-type', "").split(";")
+    mimetype = response.headers.get("content-type", "").split(";")
     if mimetype:
-        ext = mimetype[0].split('/')
+        ext = mimetype[0].split("/")
         if ext:
             filename = f"{filename}.{ext[1]}"
     return filename
 
+
 @handle_auth
-def download_data(task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, cookie=None, *args, **kwargs):
+def download_data(
+    task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, cookie=None, *args, **kwargs
+):
     """
     Function for downloading data, optionally using a certificate.
     """

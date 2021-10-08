@@ -1056,6 +1056,7 @@ class FilteredDataProviderGeoFeatureSerializer(FilteredDataProviderSerializer, G
     """
     Used to mixin geojson views.
     """
+
     data_provider_geom = GeometrySerializerMethodField()
     bbox = GeometrySerializerMethodField()
 

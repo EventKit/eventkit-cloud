@@ -12,12 +12,10 @@ from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.gdal import OGRGeometry
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
-from django.db import connection, connections
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
 
@@ -297,17 +295,23 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
-    the_geom = models.MultiPolygonField(verbose_name="Covered Area", srid=4326, default='SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))')
+    the_geom = models.MultiPolygonField(
+        verbose_name="Covered Area",
+        srid=4326,
+        default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
+    )
 
     # Used to store user list of user caches so that they can be invalidated.
     provider_caches_key = "data_provider_caches"
 
     class Meta:  # pragma: no cover
+
         managed = True
         db_table = "export_provider"
 
     # Check if config changed to updated geometry
     __config = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__config = self.config
@@ -315,6 +319,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     def update_geom(self):
         from eventkit_cloud.tasks.helpers import download_data
         from eventkit_cloud.ui.helpers import file_to_geojson
+
         if self.config != self.__config:
             orig_extent_url = load_provider_config(self.__config).get("extent_url")
             extent_url = load_provider_config(self.config).get("extent_url")
@@ -322,8 +327,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 random_uuid = uuid.uuid4()
                 output_file = download_data(task_uid=str(random_uuid), input_url=extent_url)
                 geojson = file_to_geojson(output_file)
-                geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get(
-                    "geometry")
+                geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
                 if geometry:
                     self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
 
@@ -341,7 +345,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         cache.delete(f"base-config-{self.slug}")
 
         super(DataProvider, self).save(*args, **kwargs)
-
 
     def __str__(self):
         return "{0}".format(self.name)

@@ -1501,11 +1501,8 @@ def vector_file_export_task(
     """
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
-    provider_slug = export_task_record.export_provider_task.provider.slug
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
-
-    configuration = load_provider_config(config)
 
     download_data(task_uid, service_url, gpkg)
 
@@ -1552,11 +1549,8 @@ def raster_file_export_task(
     """
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
-    provider_slug = export_task_record.export_provider_task.provider.slug
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
-
-    configuration = load_provider_config(config)
 
     download_data(task_uid, service_url, gpkg)
 
@@ -2364,9 +2358,7 @@ def get_ogcapi_data(
             password=password,
         )
         session = session.client
-        cert_info = None
     else:
-        cert_info = download_credentials.get("cert_info")
         cookie = download_credentials.get("cookie")
         cookie = json.loads(cookie) if cookie else None
 
