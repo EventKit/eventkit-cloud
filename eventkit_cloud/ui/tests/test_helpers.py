@@ -2,6 +2,7 @@
 import logging
 import os
 from unittest.mock import Mock, patch, mock_open
+from uuid import uuid4
 
 from django.test import TestCase
 
@@ -26,14 +27,14 @@ class TestHelpers(TestCase):
     @patch("eventkit_cloud.ui.helpers.get_meta")
     @patch("eventkit_cloud.ui.helpers.os.listdir")
     @patch("eventkit_cloud.ui.helpers.unzip_file")
-    @patch("eventkit_cloud.ui.helpers.write_uploaded_file")
-    @patch("eventkit_cloud.ui.helpers.os.mkdir")
     @patch("eventkit_cloud.ui.helpers.uuid4")
+    @patch("eventkit_cloud.ui.helpers.os.path.dirname")
+    @patch("eventkit_cloud.ui.helpers.pathlib.Path")
     def test_file_to_geojson(
         self,
+        mock_path,
+        mock_dirname,
         mock_uid,
-        mock_makedir,
-        mock_write,
         mock_unzip,
         mock_listdirs,
         mock_meta,
@@ -47,10 +48,11 @@ class TestHelpers(TestCase):
         file = Mock()
         example_uid = 12345
         file.name = "test_file.geojson"
+        dir = f"/var/lib/stage/{example_uid}"
+        mock_dirname.return_value = dir
+        mock_path.return_value = file.name
         mock_uid.return_value = example_uid
         mock_split.return_value = "test_file", ".geojson"
-        mock_makedir.return_value = True
-        mock_write.return_value = True
         mock_unzip.return_value = False
         mock_listdirs.return_value = []
         mock_meta.return_value = {"driver": "GeoJSON", "is_raster": False}
@@ -59,16 +61,13 @@ class TestHelpers(TestCase):
         mock_reader.return_value = geojson
         with self.settings(EXPORT_STAGING_ROOT="/var/lib/stage"):
             # It should run through the entire process for a geojson file and return it
-            dir = f"/var/lib/stage/{example_uid}"
             expected_file_name, expected_file_ext = os.path.splitext(file.name)
-            expected_in_path = os.path.join(dir, f"in_{expected_file_name}-{example_uid}{expected_file_ext}")
-            expected_out_path = os.path.join(dir, f"out_{expected_file_name}-{example_uid}.geojson")
-            ret = file_to_geojson(file)
+            expected_out_path =  f"{dir}/out_{expected_file_name}.geojson"
+            ret = file_to_geojson(file.name)
             self.assertEqual(ret, geojson)
-            mock_makedir.assert_called_once_with(dir)
-            mock_write.assert_called_once_with(file, expected_in_path)
-            mock_meta.assert_called_once_with(expected_in_path, is_raster=False)
-            mock_convert_vector.assert_called_once_with(expected_in_path, expected_out_path, driver="geojson")
+            mock_meta.assert_called_once_with(file.name, is_raster=False)
+            mock_convert_vector.assert_called_once_with(file.name, expected_out_path, driver="geojson")
+            mock_rm.assert_called_once_with(dir)
             mock_rm.assert_called_once_with(dir)
             mock_convert_vector.reset_mock()
             mock_meta.reset_mock()
@@ -155,14 +154,18 @@ class TestHelpers(TestCase):
         mock_zip.extractall.side_effect = Exception("oh no!")
         self.assertRaises(Exception, unzip_file, file_path, directory)
 
-    def test_write_uploaded_file(self):
+    @patch("eventkit_cloud.ui.helpers.uuid4")
+    def test_write_uploaded_file(self, mock_uuid):
+        example_uuid = 54321
+        mock_uuid.return_value = example_uuid
         with patch("eventkit_cloud.ui.helpers.open", new_callable=mock_open()) as m:
             test_file = Mock()
             test_file.chunks = Mock(return_value=["1", "2", "3", "4", "5"])
+            test_file.name = "file.txt"
             file_path = "/path/to/file.txt"
-            ret = write_uploaded_file(test_file, file_path)
+            ret = write_uploaded_file(test_file)
             self.assertTrue(ret)
-            m.assert_called_once_with(file_path, "wb+")
+            m.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file.name}-{example_uuid}", "wb+")
             test_file.chunks.assert_called_once
             self.assertEqual(m.return_value.__enter__.return_value.write.call_count, 5)
 
