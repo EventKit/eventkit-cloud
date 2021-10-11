@@ -17,7 +17,7 @@ from django.utils.translation import ugettext as _
 from eventkit_cloud.jobs.models import DataProvider
 
 from eventkit_cloud.tasks.helpers import normalize_name
-from eventkit_cloud.utils.overpass import Overpass
+from eventkit_cloud.utils.services.overpass import Overpass
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
 from eventkit_cloud.utils.services.ows import OWS
@@ -305,19 +305,23 @@ class OverpassProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
+            logger.error(
+                "Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True
+            )
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True)
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True)
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
+            logger.error(
+                "An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True
+            )
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -577,7 +581,7 @@ def perform_provider_check(provider: DataProvider, geojson: dict) -> dict:
         logger.error(e)
         response = ProviderCheck.get_status_result(CheckResult.UNKNOWN_ERROR)
         if provider:
-            logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
+            logger.error(f"An exception occurred while checking the {provider.name} provider.", exc_info=True)
             logger.info(f"Status of provider '{provider.name}': {response}")
 
     return response
