@@ -29,6 +29,8 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.utils.services.base import GisClient
+from eventkit_cloud.utils.services.gis_client_builder import GisClientBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -331,6 +333,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 if geometry:
                     self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
 
+        provider_client: GisClient = self.get_provider_client()
+
     def save(self, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
         # Using a separate process allows the connection to be closed in separate process while leaving it open.
@@ -442,6 +446,15 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 return user_size_rule[0].max_selection_size
 
         return self.max_selection
+
+    def get_provider_client(self):
+        builder = GisClientBuilder(self.url, self.layer)
+        return builder\
+            .set_slug(self.slug)\
+            .set_max_area(self.max_selection)\
+            .set_config(self.config)\
+            .set_export_provider_type(self.export_provider_type)\
+            .build()
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
