@@ -30,8 +30,9 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from numpy import linspace
+from requests import Response
 
-from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import ExportFormat, get_data_type_from_provider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
@@ -932,7 +933,7 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_inf
     # or redirect to a parent URL if a resource is not found.
 
     try:
-        out_file = download_data(task_uid, input_url, out_file, cert_info=cert_info, task_points=task_points)
+        out_file = download_data(task_uid, input_url, out_file, task_points=task_points)
         with open(out_file) as f:
             json_response = json.load(f)
 
@@ -974,16 +975,24 @@ def download_chunks(
     return chunks
 
 
+def get_file_name_from_response(response: Response) -> str:
+    """
+    Creates an arbitary file name from a content-type for example content-type: 'application/json; charset=UTF-8'
+    would return, 'download.json'.
+    """
+    filename = "download"
+    logger.error(f"Response Headers:{response.headers.get('content-type', '')}")
+    mimetype = response.headers.get("content-type", "").split(";")
+    if mimetype:
+        ext = mimetype[0].split("/")
+        if ext:
+            filename = f"{filename}.{ext[1]}"
+    return filename
+
+
+@handle_auth
 def download_data(
-    task_uid: str,
-    input_url: str,
-    out_file: str,
-    username=None,
-    password=None,
-    cert_info=None,
-    session=None,
-    task_points=100,
-    cookie=None,
+    task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, cookie=None, *args, **kwargs
 ):
     """
     Function for downloading data, optionally using a certificate.
@@ -991,9 +1000,7 @@ def download_data(
 
     response = None
     try:
-        session = get_or_update_session(
-            username=username, password=password, session=session, cert_info=cert_info, cookie=cookie
-        )
+        session = get_or_update_session(session=session, cookie=cookie, *args, **kwargs)
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1014,9 +1021,13 @@ def download_data(
             raise Exception("Request failed to return any data.")
 
     try:
-        content_type = response.headers.get("content-type")
-        if Path(out_file).suffix.replace(".", "") not in content_type:
-            raise Exception("The returned data is not in the expected format.")
+        if out_file:
+            content_type = response.headers.get("content-type")
+            if Path(out_file).suffix.replace(".", "") not in content_type:
+                raise Exception("The returned data is not in the expected format.")
+        else:
+            out_file = os.path.join(get_run_staging_dir(task_uid), get_file_name_from_response(response))
+            make_dirs(os.path.dirname(out_file))
     except Exception:
         logger.error("Unable to verify data type.")
 
@@ -1025,6 +1036,7 @@ def download_data(
     start_points = cache.get_or_set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
     start_percent = (start_points / task_points) * 100
 
+    logger.info(f"Saving data to: {out_file}")
     with logging_open(out_file, "wb") as file_:
         for chunk in response.iter_content(CHUNK):
             file_.write(chunk)

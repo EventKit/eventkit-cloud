@@ -149,6 +149,7 @@ class DataProviderForm(forms.ModelForm):
             "zip",
             "display",
             "attribute_class",
+            "the_geom",
         ]
 
     def clean_config(self):

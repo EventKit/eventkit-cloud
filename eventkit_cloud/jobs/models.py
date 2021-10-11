@@ -6,6 +6,7 @@ import uuid
 from enum import Enum
 from typing import Union, List
 
+import multiprocessing
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -294,22 +295,55 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
+    the_geom = models.MultiPolygonField(
+        verbose_name="Covered Area",
+        srid=4326,
+        default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
+    )
 
     # Used to store user list of user caches so that they can be invalidated.
     provider_caches_key = "data_provider_caches"
 
     class Meta:  # pragma: no cover
+
         managed = True
         db_table = "export_provider"
 
+    # Check if config changed to updated geometry
+    __config = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__config = self.config
+
+    def update_geom(self):
+        from eventkit_cloud.tasks.helpers import download_data
+        from eventkit_cloud.ui.helpers import file_to_geojson
+
+        if self.config != self.__config:
+            orig_extent_url = load_provider_config(self.__config).get("extent_url")
+            extent_url = load_provider_config(self.config).get("extent_url")
+            if extent_url != orig_extent_url:
+                random_uuid = uuid.uuid4()
+                output_file = download_data(task_uid=str(random_uuid), input_url=extent_url)
+                geojson = file_to_geojson(output_file)
+                geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
+                if geometry:
+                    self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
+
     def save(self, *args, **kwargs):
+        # Something is closing the database connection which is raising an error.
+        # Using a separate process allows the connection to be closed in separate process while leaving it open.
+        proc = multiprocessing.dummy.Process(target=self.update_geom)
+        proc.start()
+        proc.join()
 
         if not self.slug:
             self.slug = self.name.replace(" ", "_").lower()
             if len(self.slug) > 40:
                 self.slug = self.slug[0:39]
-
         cache.delete(f"base-config-{self.slug}")
+
         super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -440,7 +474,7 @@ class Region(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
 
-    the_geom = models.MultiPolygonField(verbose_name="HOT Export Region", srid=4326, default="")
+    the_geom = models.MultiPolygonField(verbose_name="Geometry", srid=4326, default="")
     the_geom_webmercator = models.MultiPolygonField(
         verbose_name="Mercator extent for export region", srid=3857, default=""
     )
@@ -531,7 +565,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom_webmercator = models.MultiPolygonField(verbose_name="Mercator extent for export", srid=3857, default="")
     the_geog = models.MultiPolygonField(verbose_name="Geographic extent for export", geography=True, default="")
     original_selection = models.GeometryCollectionField(
-        verbose_name="The original map selection", srid=4326, default=GeometryCollection(), null=True, blank=True
+        verbose_name="The original map selection", srid=4326, default=GeometryCollection, null=True, blank=True
     )
     include_zipfile = models.BooleanField(default=False)
     json_tags = models.JSONField(default=dict)

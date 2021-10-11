@@ -1627,8 +1627,6 @@ class TestExportTasks(ExportTaskBase):
             str(saved_export_task.uid),
             service_url,
             expected_output_path,
-            cert_info=expected_cert_info,
-            provider_slug=expected_provider_slug,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
@@ -1695,8 +1693,6 @@ class TestExportTasks(ExportTaskBase):
             str(saved_export_task.uid),
             service_url,
             expected_output_path,
-            cert_info=expected_cert_info,
-            provider_slug=expected_provider_slug,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
@@ -2045,10 +2041,7 @@ class TestExportTasks(ExportTaskBase):
             task_uid,
             example_download_url,
             example_download_path,
-            username=None,
-            password=None,
             session=None,
-            cert_info=configuration["download_credentials"]["cert_info"],
             cookie=None,
         )
         mock_extract_metadata_files.assert_called_once_with(example_download_path, self.stage_dir)
