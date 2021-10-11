@@ -54,7 +54,7 @@ def file_to_geojson(in_path: str):
         raise Exception("An unknown error occurred while processing the file")
 
     except Exception as e:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         raise e
 
     finally:

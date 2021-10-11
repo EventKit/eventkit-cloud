@@ -4,6 +4,7 @@ import os
 from unittest.mock import Mock, patch, mock_open
 from uuid import uuid4
 
+import pathlib
 from django.test import TestCase
 
 from eventkit_cloud.ui.helpers import (
@@ -19,107 +20,59 @@ logger = logging.getLogger(__name__)
 
 
 class TestHelpers(TestCase):
+    @patch("eventkit_cloud.ui.helpers.unzip_file")
+    @patch("eventkit_cloud.ui.helpers.polygonize")
     @patch("eventkit_cloud.ui.helpers.convert_vector")
-    @patch("eventkit_cloud.ui.helpers.os.path.splitext")
     @patch("eventkit_cloud.ui.helpers.shutil.rmtree")
     @patch("eventkit_cloud.ui.helpers.read_json_file")
     @patch("eventkit_cloud.ui.helpers.os.path.exists")
     @patch("eventkit_cloud.ui.helpers.get_meta")
     @patch("eventkit_cloud.ui.helpers.os.listdir")
-    @patch("eventkit_cloud.ui.helpers.unzip_file")
-    @patch("eventkit_cloud.ui.helpers.uuid4")
-    @patch("eventkit_cloud.ui.helpers.os.path.dirname")
-    @patch("eventkit_cloud.ui.helpers.pathlib.Path")
     def test_file_to_geojson(
         self,
-        mock_path,
-        mock_dirname,
-        mock_uid,
-        mock_unzip,
-        mock_listdirs,
-        mock_meta,
+        mock_listdir,
+        mock_get_meta,
         mock_exists,
-        mock_reader,
-        mock_rm,
-        mock_split,
+        mock_read_json_file,
+        mock_rmtree,
         mock_convert_vector,
+        mock_polygonize,
+        mock_unzip_file
     ):
-        geojson = {"type": "FeatureCollection", "other_stuff": {}}
-        file = Mock()
-        example_uid = 12345
-        file.name = "test_file.geojson"
-        dir = f"/var/lib/stage/{example_uid}"
-        mock_dirname.return_value = dir
-        mock_path.return_value = file.name
-        mock_uid.return_value = example_uid
-        mock_split.return_value = "test_file", ".geojson"
-        mock_unzip.return_value = False
-        mock_listdirs.return_value = []
-        mock_meta.return_value = {"driver": "GeoJSON", "is_raster": False}
-        mock_convert_vector.return_value = file.name
+        expected_geojson = {"type": "FeatureCollection", "other_stuff": {}}
+        stage_dir = f"/var/lib/stage"
+        file_name_stem = "test_file"
+        input_path = f"{stage_dir}/{file_name_stem}.geojson"
+        expected_output_path = f"{stage_dir}/out_{file_name_stem}.geojson"
+        mock_convert_vector.return_value = expected_output_path
         mock_exists.return_value = True
-        mock_reader.return_value = geojson
-        with self.settings(EXPORT_STAGING_ROOT="/var/lib/stage"):
-            # It should run through the entire process for a geojson file and return it
-            expected_file_name, expected_file_ext = os.path.splitext(file.name)
-            expected_out_path =  f"{dir}/out_{expected_file_name}.geojson"
-            ret = file_to_geojson(file.name)
-            self.assertEqual(ret, geojson)
-            mock_meta.assert_called_once_with(file.name, is_raster=False)
-            mock_convert_vector.assert_called_once_with(file.name, expected_out_path, driver="geojson")
-            mock_rm.assert_called_once_with(dir)
-            mock_rm.assert_called_once_with(dir)
-            mock_convert_vector.reset_mock()
-            mock_meta.reset_mock()
+        mock_read_json_file.return_value = expected_geojson
 
-            # It should run through the entire process for a zip shp and return a geojson
-            file.name = "something.zip"
-            mock_split.return_value = "something", ".zip"
-            mock_unzip.return_value = True
-            expected_file_name, expected_file_ext = os.path.splitext(file.name)
-            expected_in_path = os.path.join(dir, f"in_{expected_file_name}-{example_uid}{expected_file_ext}")
-            expected_out_path = os.path.join(dir, f"out_{expected_file_name}-{example_uid}.geojson")
-            mock_listdirs.return_value = ["something.shp"]
-            updated_in_path = os.path.join(dir, "something.shp")
-            ret = file_to_geojson(file)
-            self.assertEqual(ret, geojson)
-            mock_unzip.assert_called_once_with(expected_in_path, dir)
-            mock_listdirs.assert_called_with(dir)
-            mock_meta.convert_vector(updated_in_path, is_raster=False)
-            mock_convert_vector.assert_called_once_with(updated_in_path, expected_out_path, driver="geojson")
+        # Test raster
+        mock_get_meta.return_value = {"driver": "GeoJSON", "is_raster": True}
+        self.assertEqual(expected_geojson, file_to_geojson(input_path))
+        mock_polygonize.assert_called_once_with(input_path, expected_output_path)
 
-            # It should raise an exception if there is no file extension
-            file.name = "something"
-            mock_split.return_value = "something", ""
-            self.assertRaises(Exception, file_to_geojson, file)
+        # Test vector
+        mock_get_meta.return_value = {"driver": "GeoJSON", "is_raster": False}
+        self.assertEqual(expected_geojson, file_to_geojson(input_path))
+        mock_convert_vector.assert_called_once_with(input_path, expected_output_path, driver='geojson')
+        mock_convert_vector.reset_mock()
+        mock_rmtree(stage_dir)
 
-            # It should raise an exception if zip does not contain shp
-            file.name = "thing.zip"
-            mock_split.return_value = "thing", ".zip"
-            mock_unzip.return_value = True
-            mock_listdirs.return_value = ["thing.dbf", "thing.prj"]
-            self.assertRaises(Exception, file_to_geojson, file)
+        # Test shapefile
+        input_path = f"{stage_dir}/{file_name_stem}.zip"
+        mock_unzip_file.return_value = True
+        shapefile = "test.shp"
+        mock_listdir.return_value = [shapefile]
+        expected_input_path = f"{stage_dir}/{shapefile}"
+        self.assertEqual(expected_geojson, file_to_geojson(input_path))
+        mock_convert_vector.assert_called_once_with(expected_input_path, expected_output_path, driver='geojson')
 
-            # It should raise an exception if no driver can be found
-            file.name = "test.geojson"
-            mock_split.return_value = "test", ".geojson"
-            mock_meta.return_value = {"driver": None, "is_raster": None}
-            self.assertRaises(Exception, file_to_geojson, file)
-
-            # It should raise an exception if input file is not vector
-            mock_meta.return_value = {"driver": "GTiff", "is_raster": True}
-            self.assertRaises(Exception, file_to_geojson, file)
-
-            # It should raise an exception if the convert throws one
-            with self.assertRaises(Exception):
-                mock_meta.return_value = {"driver": "GeoJSON", "is_raster": False}
-                mock_convert_vector.side_effect = Exception("doh!")
-                file_to_geojson(file)
-
-            # It should raise and exception if output file does not exist
-            with self.assertRaises(Exception):
-                mock_exists.return_value = False
-                file_to_geojson(file)
+        with self.assertRaises(Exception):
+            # Test bad file
+            mock_exists.return_value = False
+            file_to_geojson(input_path)
 
     @patch("eventkit_cloud.ui.helpers.json")
     def test_read_json_file(self, fake_json):
@@ -161,11 +114,13 @@ class TestHelpers(TestCase):
         with patch("eventkit_cloud.ui.helpers.open", new_callable=mock_open()) as m:
             test_file = Mock()
             test_file.chunks = Mock(return_value=["1", "2", "3", "4", "5"])
-            test_file.name = "file.txt"
+            test_file_stem_name = "file"
+            test_file_name = f"{test_file_stem_name}.txt"
+            test_file.name = test_file_name
             file_path = "/path/to/file.txt"
             ret = write_uploaded_file(test_file)
             self.assertTrue(ret)
-            m.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file.name}-{example_uuid}", "wb+")
+            m.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}", "wb+")
             test_file.chunks.assert_called_once
             self.assertEqual(m.return_value.__enter__.return_value.write.call_count, 5)
 
