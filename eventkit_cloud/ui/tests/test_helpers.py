@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-import os
 from unittest.mock import Mock, patch, mock_open
 from uuid import uuid4
 
-import pathlib
 from django.test import TestCase
 
 from eventkit_cloud.ui.helpers import (
@@ -37,10 +35,10 @@ class TestHelpers(TestCase):
         mock_rmtree,
         mock_convert_vector,
         mock_polygonize,
-        mock_unzip_file
+        mock_unzip_file,
     ):
         expected_geojson = {"type": "FeatureCollection", "other_stuff": {}}
-        stage_dir = f"/var/lib/stage"
+        stage_dir = "/var/lib/stage"
         file_name_stem = "test_file"
         input_path = f"{stage_dir}/{file_name_stem}.geojson"
         expected_output_path = f"{stage_dir}/out_{file_name_stem}.geojson"
@@ -56,7 +54,7 @@ class TestHelpers(TestCase):
         # Test vector
         mock_get_meta.return_value = {"driver": "GeoJSON", "is_raster": False}
         self.assertEqual(expected_geojson, file_to_geojson(input_path))
-        mock_convert_vector.assert_called_once_with(input_path, expected_output_path, driver='geojson')
+        mock_convert_vector.assert_called_once_with(input_path, expected_output_path, driver="geojson")
         mock_convert_vector.reset_mock()
         mock_rmtree(stage_dir)
 
@@ -67,7 +65,7 @@ class TestHelpers(TestCase):
         mock_listdir.return_value = [shapefile]
         expected_input_path = f"{stage_dir}/{shapefile}"
         self.assertEqual(expected_geojson, file_to_geojson(input_path))
-        mock_convert_vector.assert_called_once_with(expected_input_path, expected_output_path, driver='geojson')
+        mock_convert_vector.assert_called_once_with(expected_input_path, expected_output_path, driver="geojson")
 
         with self.assertRaises(Exception):
             # Test bad file
@@ -109,7 +107,7 @@ class TestHelpers(TestCase):
 
     @patch("eventkit_cloud.ui.helpers.uuid4")
     def test_write_uploaded_file(self, mock_uuid):
-        example_uuid = 54321
+        example_uuid = str(uuid4())
         mock_uuid.return_value = example_uuid
         with patch("eventkit_cloud.ui.helpers.open", new_callable=mock_open()) as m:
             test_file = Mock()
@@ -120,7 +118,10 @@ class TestHelpers(TestCase):
             file_path = "/path/to/file.txt"
             ret = write_uploaded_file(test_file)
             self.assertTrue(ret)
-            m.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}", "wb+")
+            m.assert_called_once_with(
+                f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}.txt", "wb+"
+            )
+
             test_file.chunks.assert_called_once
             self.assertEqual(m.return_value.__enter__.return_value.write.call_count, 5)
 
