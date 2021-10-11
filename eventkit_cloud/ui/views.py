@@ -15,7 +15,13 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
-from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
+from eventkit_cloud.ui.helpers import (
+    file_to_geojson,
+    set_session_user_last_active_at,
+    is_mgrs,
+    is_lat_lon,
+    write_uploaded_file,
+)
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 from eventkit_cloud.utils.geocoding.geocode import Geocode
 from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode
@@ -330,11 +336,12 @@ def get_config(request):
 
 @require_http_methods(["POST"])
 def convert_to_geojson(request):
-    file = request.FILES.get("file", None)
-    if not file:
+    in_memory_file = request.FILES.get("file", None)
+    if not in_memory_file:
         return HttpResponse("No file supplied in the POST request", status=400)
     try:
-        geojson = file_to_geojson(file)
+        output_file = write_uploaded_file(in_memory_file)
+        geojson = file_to_geojson(output_file)
         return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)

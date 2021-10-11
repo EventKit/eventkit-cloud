@@ -1,25 +1,31 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
 import logging
 import re
 import xml.etree.ElementTree as ET
 from enum import Enum
 from io import StringIO
-from typing import Type, Union, Optional, List
+from typing import Type
 
 import requests
 import yaml
 from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.contrib.gis.geos import Polygon, GeometryCollection
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.core.helpers import get_or_update_session
-from urllib.parse import urljoin
 
 from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.utils.services.overpass import Overpass
+from eventkit_cloud.utils.services.base import GisClient
+from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
+from eventkit_cloud.utils.services.ows import OWS
+from eventkit_cloud.utils.services.tms import TMS
+from eventkit_cloud.utils.services.wcs import WCS
+from eventkit_cloud.utils.services.wfs import WFS
+from eventkit_cloud.utils.services.wms import WMS
+from eventkit_cloud.utils.services.wmts import WMTS
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +130,7 @@ class CheckResult(Enum):
     SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
-class ProviderCheck(object):
+class ProviderCheck:
     """
     During the second stage of creating a datapack, each available data provider is pinged to apprise the user
     of its availability. This class and its subclasses contain methods to ping OWS and Overpass servers, and determine:
@@ -135,50 +141,20 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None):
-        """
-        Initialize this ProviderCheck object with a service URL and layer.
-        :param service_url: URL of provider, if applicable. Query string parameters are ignored.
-        :param layer: Layer or coverage to check for
-        :param aoi_geojson: (Optional) AOI to check for layer intersection
-        :param slug: (Optional) A provider slug to use for getting credentials.
-        :param max_area: The upper limit for this datasource.
-        """
+    client_class: Type[GisClient] = GisClient
 
-        self.service_url = service_url
-        self.query = None
-        self.layer = layer
-        self.slug = slug
-        self.max_area = max_area
-        self.timeout = 10
-        self.config = config or dict()
-        self.session = get_or_update_session(
-            session=None,
-            cert_info=self.config.get("cert_info", None),
-            slug=self.slug,
-            params=self.query,
-            timeout=self.timeout,
+    def __init__(
+        self,
+        service_url: str,
+        layer: str,
+        aoi_geojson: str = None,
+        slug: str = None,
+        max_area: int = 0,
+        config: dict = None,
+    ):
+        self.client = self.client_class(
+            service_url, layer, aoi_geojson=aoi_geojson, slug=slug, max_area=max_area, config=config
         )
-
-        if aoi_geojson is not None and aoi_geojson != "":
-            if isinstance(aoi_geojson, str):
-                aoi_geojson = json.loads(aoi_geojson)
-
-            geoms = tuple(
-                [
-                    GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326)
-                    for feature in aoi_geojson.get("features")
-                ]
-            )
-
-            geom_collection = GeometryCollection(geoms, srid=4326)
-
-            logger.debug("AOI: {}".format(json.dumps(aoi_geojson)))
-
-            self.aoi = geom_collection
-        else:
-            self.aoi = None
-            logger.debug("AOI was not given")
 
     @staticmethod
     def get_status_result(check_result: CheckResult, *args, **kwargs):
@@ -196,26 +172,26 @@ class ProviderCheck(object):
         :return: True if AOI is lower than area limit
         """
 
-        if self.aoi is None or int(self.max_area) <= 0:
+        if self.client.aoi is None or int(self.client.max_area) <= 0:
             return True
 
-        geom = self.aoi.transform(3857, clone=True)
+        geom = self.client.aoi.transform(3857, clone=True)
         area = geom.area
 
         area_sq_km = area / 1000000
 
-        return area_sq_km < self.max_area
+        return area_sq_km < self.client.max_area
 
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a GET request to provider URL and returns its response if status code is ok
         """
 
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            response = self.session.get(self.service_url, params=self.query, timeout=self.timeout)
+            response = self.client.get_response()
 
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
@@ -229,23 +205,23 @@ class ProviderCheck(object):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("SSL connection failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except requests.exceptions.ConnectionError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except ProviderCheckError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
     def validate_response(self, response) -> bool:
@@ -258,7 +234,7 @@ class ProviderCheck(object):
         return response is not None
 
     def get_cache_key(self, aoi: GeometryCollection = None):
-        cache_key = f"provider-status-{normalize_name(self.service_url)}"
+        cache_key = f"provider-status-{normalize_name(self.client.service_url)}"
         if aoi:
             cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
         cache_key = cache_key[:200]
@@ -270,7 +246,7 @@ class ProviderCheck(object):
         """
 
         #  If the last check was successful assume checks will be successful for some period of time.
-        status_check_cache_key = self.get_cache_key(aoi=self.aoi)
+        status_check_cache_key = self.get_cache_key(aoi=self.client.aoi)
 
         try:
             status = cache.get(status_check_cache_key)
@@ -285,7 +261,7 @@ class ProviderCheck(object):
 
             # This response will rarely change, it will be information about the service.
             response = cache.get_or_set(
-                self.get_cache_key(), lambda: self.get_provider_response(), timeout=DEFAULT_CACHE_TIMEOUT
+                self.get_cache_key(), lambda: self.check_provider_response(), timeout=DEFAULT_CACHE_TIMEOUT
             )
 
             if not self.validate_response(response):
@@ -306,26 +282,17 @@ class OverpassProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for Overpass providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+    client_class = Overpass
 
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            query = "out meta;"
-
-            response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
-
-            if not response.ok:
-                # Workaround for https://bugs.python.org/issue27777
-                query = {"data": query}
-                response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
-
+            response = self.client.get_response()
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
@@ -338,19 +305,23 @@ class OverpassProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error(
+                "Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True
+            )
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True)
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True)
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error(
+                "An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)), exc_info=True
+            )
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -359,31 +330,7 @@ class OWSProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for OWS (WMS, WMTS, WFS, WCS) providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize this OWSProviderCheck object with a service URL and layer.
-        :param service_url: URL of provider, if applicable. Query string parameters are ignored.
-        :param layer: Layer or coverage to check for
-        :param aoi_geojson: (Optional) AOI to check for layer intersection
-        """
-        super(OWSProviderCheck, self).__init__(*args, **kwargs)
-
-        self.query = {"VERSION": "1.0.0", "REQUEST": "GetCapabilities"}
-        # Amended with "SERVICE" parameter by subclasses
-
-        # If service or version parameters are left in query string, it can lead to a protocol error and false negative
-        self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
-
-        self.layer = self.layer.lower()
-
-    def find_layer(self, root):
-        raise NotImplementedError("Method is specific to provider type")
-
-    def get_bbox(self, element):
-        raise NotImplementedError("Method is specific to provider type")
-
-    def get_layer_name(self):
-        raise NotImplementedError("Method is specific to provider type")
+    client_class = OWS
 
     def check_intersection(self, bbox):
         """
@@ -394,7 +341,7 @@ class OWSProviderCheck(ProviderCheck):
         minx, miny, maxx, maxy = bbox
         bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
-        if self.aoi is not None and not self.aoi.intersects(bbox):
+        if self.client.aoi is not None and not self.client.aoi.intersects(bbox):
             raise ProviderCheckError(CheckResult.NO_INTERSECT)
 
     def validate_response(self, response: requests.Response) -> bool:
@@ -415,12 +362,23 @@ class OWSProviderCheck(ProviderCheck):
                 if "}" in element.tag:
                     element.tag = element.tag.split("}", 1)[1]
             root = iterator.root
-            layer_element = self.find_layer(root)
+            try:
+                layer_element = self.client.find_layer(root)
+            except UnsupportedFormatError:
+                logger.error("Missing expected root layer", exc_info=True)
+                raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
+            except MissingLayerError:
+                logger.error("Missing expected layer %s", self.client.layer, exc_info=True)
+                raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
+            except ServiceError:
+                logger.error("Failed to properly parse the response", exc_info=True)
+                logger.info(xml)
+                raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
             if layer_element is None:
                 return False
 
-            bbox = self.get_bbox(layer_element)
+            bbox = self.client.get_bbox(layer_element)
             if bbox is not None:
                 self.check_intersection(bbox)
             return True
@@ -435,65 +393,7 @@ class WCSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WCS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WCS"
-
-    def find_layer(self, root) -> Union[CheckResult, List[str]]:
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-
-        content_meta = root.find(".//contentmetadata")
-        if content_meta is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Get names of available coverages
-        coverage_offers = content_meta.findall("coverageofferingbrief")
-
-        cover_names = [(c, c.find("name")) for c in coverage_offers]
-        if not cover_names:  # No coverages are offered
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        try:
-            coverages = self.config.get("service", dict()).get("coverages")
-            coverages = coverages.split(",") if coverages else None
-            coverages = list(map(str.lower, coverages)) if coverages else None
-        except AttributeError:
-            logger.error("Unable to get coverages from WCS provider configuration.")
-
-        if coverages:
-            covers = [c for c, n in cover_names if n is not None and n.text in coverages]
-        else:
-            covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
-
-        if not covers:  # Requested coverage is not offered
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        return covers
-
-    def get_bbox(self, elements):
-        bboxes = []
-        for element in elements:
-            envelope = element.find("lonlatenvelope")
-            if envelope is None:
-                continue
-
-            pos = list(envelope)
-            # Make sure there aren't any surprises
-            coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-            if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
-                continue
-
-            x1, y1 = list(map(float, pos[0].text.split(" ")))
-            x2, y2 = list(map(float, pos[1].text.split(" ")))
-
-            minx, maxx = sorted([x1, x2])
-            miny, maxy = sorted([y1, y2])
-
-            bboxes.append([minx, miny, maxx, maxy])
-        return bboxes if bboxes else None
+    client_class = WCS
 
     def check_intersection(self, bboxes):
         """
@@ -505,7 +405,7 @@ class WCSProviderCheck(OWSProviderCheck):
             minx, miny, maxx, maxy = box
             bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
-            if not (self.aoi is not None and not self.aoi.intersects(bbox)):
+            if not (self.client.aoi is not None and not self.client.aoi.intersects(bbox)):
                 return
 
         raise ProviderCheckError(CheckResult.NO_INTERSECT)
@@ -516,41 +416,7 @@ class WFSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WFS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WFS"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        feature_type_list = root.find(".//featuretypelist")
-        if feature_type_list is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        feature_types = feature_type_list.findall("featuretype")
-
-        # Get layer names
-        feature_names = [(ft, ft.find("name")) for ft in feature_types]
-        logger.debug("WFS layers offered: {}".format([name.text for feature, name in feature_names if name]))
-        features = [feature for feature, name in feature_names if name is not None and self.layer == name.text]
-
-        if not features:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        feature = features[0]
-        return feature
-
-    def get_bbox(self, element) -> Optional[List[float]]:
-
-        bbox_element = element.find("latlongboundingbox")
-
-        if bbox_element is None:
-            return
-
-        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-        return bbox
+    client_class = WFS
 
 
 class WMSProviderCheck(OWSProviderCheck):
@@ -558,147 +424,23 @@ class WMSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WMS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WMS"
-
-        # 1.3.0 will work as well, if that's returned. 1.0.0 isn't widely supported.
-        self.query["VERSION"] = "1.1.1"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        capability = root.find(".//capability")
-        if capability is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Flatten nested layers to single list
-        layers = capability.findall("layer")
-        sublayers = layers
-        while len(sublayers) > 0:
-            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
-            layers.extend(sublayers)
-
-        # Get layer names
-        layer_names = [(layer, layer.find("name")) for layer in layers]
-        logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
-
-        requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer = layer[0]
-        return layer
-
-    def get_bbox(self, element):
-
-        bbox_element = element.find("latlonboundingbox")
-        if bbox_element is not None:
-            bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-            return bbox
-
-        bbox_element = element.find("ex_geographicboundingbox")
-        if bbox_element is not None:
-            points = ["westboundlongitude", "southboundlatitude", "eastboundlongitude", "northboundlatitude"]
-            bbox = [float(bbox_element.findtext(point)) for point in points]
-            return bbox
-
-    def get_layer_name(self):
-
-        try:
-            layer_name = (
-                self.config.get("sources", {})
-                .get("default", {})
-                .get("req", {})
-                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
-            )
-        except AttributeError:
-            logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
-
-        if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer_name = str(layer_name).lower()
-        return layer_name
+    client_class = WMS
 
 
 class WMTSProviderCheck(OWSProviderCheck):
     """
-    Implementation of OWSProviderCheck for WMS providers
+    Implementation of OWSProviderCheck for WMTS providers
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.query["SERVICE"] = "WMTS"
-
-    def find_layer(self, root):
-        """
-        :param root: Name of layer to find
-        :return: XML 'Layer' Element, or None if not found
-        """
-        contents = root.find(".//contents")
-        if contents is None:
-            raise ProviderCheckError(CheckResult.UNKNOWN_FORMAT)
-
-        # Flatten nested layers to single list
-        layers = contents.findall("layer")
-        sublayers = layers
-        while sublayers:
-            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
-            layers.extend(sublayers)
-
-        # Get layer names
-        layer_names = [(layer, layer.find("identifier")) for layer in layers]
-        logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer = layer[0]
-        return layer
-
-    def get_bbox(self, element) -> Optional[List[float]]:
-
-        bbox_element = element.find("wgs84boundingbox")
-
-        if bbox_element is None:
-            return
-
-        southwest = bbox_element.find("lowercorner").text.split()[::-1]
-        northeast = bbox_element.find("uppercorner").text.split()[::-1]
-
-        bbox = list(map(float, southwest + northeast))
-        return bbox
-
-    def get_layer_name(self) -> str:
-
-        try:
-            layer_name = (
-                self.config.get("sources", {})
-                .get("default", {})
-                .get("req", {})
-                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
-            )
-        except AttributeError:
-            logger.error("Unable to get layer name from provider configuration.")
-            raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
-
-        if layer_name is None:
-            raise ProviderCheckError(CheckResult.LAYER_NOT_AVAILABLE)
-
-        layer_name = layer_name.lower()
-        return layer_name
+    client_class = WMTS
 
 
 class TMSProviderCheck(ProviderCheck):
-    def __init__(self, service_url, *args, **kwargs):
-        super(TMSProviderCheck, self).__init__(service_url, *args, **kwargs)
-        self.service_url = self.service_url.format(z="0", y="0", x="0")
+    """
+    Implementation of TMSProviderCheck for TMS providers
+    """
+
+    client_class = TMS
 
 
 class FileProviderCheck(ProviderCheck):
@@ -706,18 +448,15 @@ class FileProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for geospatial file providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-
-    def get_provider_response(self) -> requests.Response:
+    def check_provider_response(self) -> requests.Response:
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            response = self.session.head(url=self.service_url, timeout=self.timeout)
+            response = self.client.session.head(url=self.client.service_url, timeout=self.client.timeout)
 
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
@@ -731,19 +470,19 @@ class FileProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -752,21 +491,15 @@ class OGCProviderCheck(ProviderCheck):
     Implementation of ProviderCheck for geospatial file providers.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-
-    def get_provider_response(self):
+    def check_provider_response(self):
         """
         Sends a HEAD request to the provided service URL returns its response if the status code is OK
         """
         try:
-            if not self.service_url:
+            if not self.client.service_url:
                 raise ProviderCheckError(CheckResult.NO_URL)
 
-            service_url = self.service_url.rstrip("/\\")
-            processes_endpoint = urljoin(service_url, "processes/")
-
-            response = self.session.get(url=processes_endpoint, timeout=self.timeout)
+            response = self.client.get_response()
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
@@ -779,19 +512,19 @@ class OGCProviderCheck(ProviderCheck):
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
-            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check timed out for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.TIMEOUT)
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.SSL_EXCEPTION)
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("Provider check failed for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.CONNECTION)
 
         except Exception as ex:
-            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
@@ -848,7 +581,7 @@ def perform_provider_check(provider: DataProvider, geojson: dict) -> dict:
         logger.error(e)
         response = ProviderCheck.get_status_result(CheckResult.UNKNOWN_ERROR)
         if provider:
-            logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
+            logger.error(f"An exception occurred while checking the {provider.name} provider.", exc_info=True)
             logger.info(f"Status of provider '{provider.name}': {response}")
 
     return response

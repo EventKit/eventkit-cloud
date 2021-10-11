@@ -66,6 +66,8 @@ from eventkit_cloud.api.serializers import (
     UserDataSerializer,
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
+    DataProviderGeoFeatureSerializer,
+    FilteredDataProviderGeoFeatureSerializer,
 )
 from eventkit_cloud.api.utils import (
     get_run_zip_file,
@@ -126,7 +128,7 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.provider_check import perform_provider_check
+from eventkit_cloud.utils.services.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 
@@ -857,16 +859,23 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
-class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class DataProviderViewSet(EventkitViewSet):
     """
     Endpoint exposing the supported data providers.
     """
 
-    serializer_class = DataProviderSerializer
+    renderer_classes += (GeojsonRenderer,)
     permission_classes = (permissions.IsAuthenticated,)
-    parser_classes = (JSONParser,)
     lookup_field = "slug"
     ordering = ["name"]
+
+    def get_serializer_classes(self, *args, **kwargs):
+        if (
+            self.request.query_params.get("format", "").lower() == "geojson"
+            or self.request.headers.get("content-type") == "application/geo+json"
+        ):
+            return DataProviderGeoFeatureSerializer, FilteredDataProviderGeoFeatureSerializer
+        return DataProviderSerializer, FilteredDataProviderSerializer
 
     def get_queryset(self):
         """
@@ -913,9 +922,14 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         data = cache.get(cache_key)
         if not data:
             providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
-
-            data = DataProviderSerializer(providers, many=True, context={"request": request}).data
-            data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+            serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+            data = serializer(providers, many=True, context={"request": request}).data
+            filtered_data = filtered_serializer(filtered_providers, many=True).data
+            if isinstance(data, list):
+                data += filtered_data
+            else:
+                filtered_data.update(data)
+                data = filtered_data
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 provider_caches = cache.get(DataProvider.provider_caches_key, dict())
@@ -931,10 +945,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * return: The data provider with the given slug.
         """
         providers, filtered_providers = attribute_class_filter(self.get_queryset().filter(slug=slug), self.request.user)
+        serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
         if providers:
-            return Response(DataProviderSerializer(providers.get(slug=slug), context={"request": request}).data)
+            return Response(serializer(providers.get(slug=slug), context={"request": request}).data)
         elif filtered_providers:
-            return Response(FilteredDataProviderSerializer(providers.get(slug=slug)).data)
+            return Response(filtered_serializer(providers.get(slug=slug)).data)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1004,6 +1019,7 @@ class ExportRunViewSet(EventkitViewSet):
     **retrieve:**
 
     Returns the exact run as specified by the run UID in the url `/runs/{uid}`
+
 
     **list:**
 

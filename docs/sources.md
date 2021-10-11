@@ -42,6 +42,7 @@ and select "Add Data Provider".
 | License | This adds specific licensing for the data source.  Users MUST agree before creating or downloading ANY data in the application. | 
 | Zip | Add all data from the source to a zip file. |
 | Display | Checking this will allow users to see the data source as an option in the UI. |
+| Extent URL | URL from which to retrieve the 'extent' of the source, i.e. a polygon/bbox indicating the coverage of the source |
 
 
 #### Service Types
