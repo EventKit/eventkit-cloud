@@ -509,12 +509,11 @@ class JobViewSet(EventkitViewSet):
                     )
 
             # run the tasks
-            job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
             user_details = get_user_details(request)
             try:
                 # run needs to be created so that the UI can be updated with the task list.
-                run_uid = create_run(job_uid=job_uid, user=request.user)
+                run_uid = create_run(job=job, user=request.user)
             except InvalidLicense as il:
                 raise ValidationError(code="invalid_license", detail=str(il))
             except Unauthorized as ua:
@@ -557,7 +556,8 @@ class JobViewSet(EventkitViewSet):
 
         try:
             # run needs to be created so that the UI can be updated with the task list.
-            run_uid = create_run(job_uid=uid, user=request.user)
+            job = Job.objects.select_related("user").prefetch_related("runs").get(uid=uid)
+            run_uid = create_run(job=job, user=request.user)
         except (InvalidLicense, Error) as err:
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.

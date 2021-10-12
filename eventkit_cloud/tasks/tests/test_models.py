@@ -22,6 +22,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
     RegionalJustification,
+    MapImageSnapshot,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import (
@@ -146,6 +147,26 @@ class TestExportRun(TestCase):
         self.assertEqual(old_run.job, new_run.job)
         data_provider_task_record_mock.clone.assert_called_once()
         mock_download_data.assert_called_once()
+
+    @patch("eventkit_cloud.tasks.helpers.download_run_directory")
+    @patch("eventkit_cloud.tasks.helpers.make_file_downloadable")
+    def test_download_data(self, mock_make_file_downloadable, mock_download_run_directory):
+        job = Job.objects.first()
+        parent_run = ExportRun.objects.create(job=job, user=job.user)
+        run = ExportRun.objects.create(job=job, user=job.user, parent_run=parent_run)
+        mock_make_file_downloadable.return_value = ["string1", "string2"]
+
+        filename = f"{parent_run.uid}/test.pdf"
+        file_model = MapImageSnapshot.objects.create(filename=filename, size=100, download_url="download.url")
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=run, provider=DataProvider.objects.first(), preview=file_model
+        )
+
+        ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=str(uuid.uuid4()))
+
+        run.download_data()
+        mock_download_run_directory.assert_called_once_with(parent_run, run)
+        mock_make_file_downloadable.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{run.uid}/test.pdf")
 
 
 class TestRunZipFile(TestCase):

@@ -567,10 +567,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
     original_selection = models.GeometryCollectionField(
         verbose_name="The original map selection", srid=4326, default=GeometryCollection, null=True, blank=True
     )
+
     include_zipfile = models.BooleanField(default=False)
     json_tags = models.JSONField(default=dict)
     last_export_run = models.ForeignKey(
-        "tasks.ExportRun", on_delete=models.CASCADE, null=True, related_name="last_export_run"
+        "tasks.ExportRun", on_delete=models.DO_NOTHING, null=True, related_name="last_export_run"
     )
     projections = models.ManyToManyField(Projection, related_name="projections")
 
@@ -644,6 +645,9 @@ class Job(UIDMixin, TimeStampedModelMixin):
     def attribute_classes(self):
         providers = [provider_task.provider for provider_task in self.data_provider_tasks.all()]
         return AttributeClass.objects.filter(data_providers__in=providers).distinct()
+
+    def get_last_run(self):
+        return self.runs.last()
 
 
 class DataProviderTask(models.Model):

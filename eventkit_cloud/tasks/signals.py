@@ -17,6 +17,9 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     """
     Delete the associated export files and notifications when an ExportRun is deleted.
     """
+    runs = instance.job.runs.all().order_by("-created_at")
+    instance.job.last_export_run = runs[1] if len(runs) > 1 else None
+    instance.job.save()
     if getattr(settings, "USE_S3", False):
         delete_from_s3(run_uid=str(instance.uid))
     run_dir = "{0}/{1}".format(settings.EXPORT_DOWNLOAD_ROOT.rstrip("/"), str(instance.uid))

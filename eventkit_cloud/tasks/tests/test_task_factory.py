@@ -50,7 +50,7 @@ class TestExportTaskFactory(TestCase):
         self.job.save()
 
     def test_create_run_success(self):
-        run_uid = create_run(job_uid=self.job.uid)
+        run_uid = create_run(job=self.job)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
 
@@ -58,7 +58,7 @@ class TestExportTaskFactory(TestCase):
     def test_create_run_failure(self, ExportRun):
         ExportRun.objects.create.side_effect = DatabaseError("FAIL")
         with self.assertRaises(DatabaseError):
-            run_uid = create_run(job_uid=self.job.uid)
+            run_uid = create_run(job=self.job)
             self.assertIsNone(run_uid)
 
     @patch("eventkit_cloud.tasks.task_factory.get_invalid_licenses")
@@ -75,7 +75,7 @@ class TestExportTaskFactory(TestCase):
         mock_invalid_licenses,
     ):
         mock_invalid_licenses.return_value = []
-        run_uid = create_run(job_uid=self.job.uid)
+        run_uid = create_run(job=self.job)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
         worker = "some_worker"

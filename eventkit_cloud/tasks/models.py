@@ -157,12 +157,16 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     """
 
     job = models.ForeignKey(Job, related_name="runs", on_delete=models.CASCADE)
+    parent_run = models.ForeignKey(
+        "ExportRun", related_name="child_runs", null=True, default=None, on_delete=models.SET_NULL
+    )
     user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default="", null=True)
     status = models.CharField(blank=True, max_length=20, db_index=True, default="")
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
     deleted = models.BooleanField(default=False, db_index=True)
+    is_cloning = models.BooleanField(default=False)
     delete_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     class Meta:
@@ -192,8 +196,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     def clone(self, download_data=True):
 
         data_provider_task_records = list(self.data_provider_task_records.exclude(provider__slug=""))
-        parent_id = self.id
 
+        parent_id = self.id
         self.pk = None
         self.id = None
         self.uid = None
@@ -203,17 +207,22 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.started_at = None
         self.finished_at = None
         self.save()
-        self.parent_run = parent_id
 
         for data_provider_task_record in data_provider_task_records:
             if data_provider_task_record.provider:
                 dptr = data_provider_task_record.clone(self)
                 if not self.data_provider_task_records.filter(id=dptr.id):
                     self.data_provider_task_records.add(dptr)
+
+        self.parent_run = ExportRun.objects.get(id=parent_id)
+        self.is_cloning = True
+        self.deleted = False
         self.save()
 
         if download_data:
             self.download_data()
+            self.is_cloning = False
+            self.save()
 
         return self
 
@@ -230,7 +239,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         # complicated helper function like this for each model.
         from eventkit_cloud.tasks.helpers import download_run_directory, make_file_downloadable
 
-        previous_run = self.job.runs.order_by("-created_at")[1]
+        previous_run = self.parent_run
         download_run_directory(previous_run, self)
 
         data_provider_task_records = (
@@ -254,6 +263,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                 filename, download_url = make_file_downloadable(file_model.get_file_path(staging=True))
                 file_model.download_url = download_url
                 file_model.save()
+
+        self.is_cloning = False
+        self.save()
 
 
 class ExportRunFile(UIDMixin, TimeStampedModelMixin):

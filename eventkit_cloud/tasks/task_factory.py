@@ -247,10 +247,13 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job_uid, user=None, clone=False, download_data=True):
+def create_run(job: Job, user: User = None, clone: ExportRun = None, download_data=True):
     """
-    This will create a new Run based on the provided job uid.
-    :param job_uid: The UID to reference the Job model.
+    This will create a new Run based on the provided job.
+    :param job: The Job model on which to create a new run.
+    :param user: The user creating the run.
+    :param clone: The run to clone, 'None' if not cloning.
+    :param download_data: boolean value to indicate whether or not to download data.
     :return: An ExportRun object.
     """
 
@@ -260,11 +263,10 @@ def create_run(job_uid, user=None, clone=False, download_data=True):
         # enforce max runs
         with transaction.atomic():
 
-            job = Job.objects.select_related("user").prefetch_related("runs").get(uid=job_uid)
             job, user = check_job_permissions(job, user)
 
             if clone:
-                run = job.last_export_run.clone(download_data=download_data)
+                run = clone.clone(download_data=download_data)
                 run.status = TaskState.SUBMITTED.value
                 run.save()
                 job.last_export_run = run
