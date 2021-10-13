@@ -46,7 +46,7 @@ def get_query_cache_key(*args):
         if hasattr(arg, "__name__"):
             cleaned_args += [normalize_name(str(arg.__name__))]
         else:
-            cleaned_args += [normalize_name(str(args))]
+            cleaned_args += [normalize_name(str(arg))]
     return "-".join(cleaned_args)
 
 
