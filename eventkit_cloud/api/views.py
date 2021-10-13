@@ -1242,7 +1242,7 @@ class ExportRunViewSet(EventkitViewSet):
                 )
             )
         if not request.query_params.get("job_uid"):
-            queryset = queryset.filter(deleted=False)
+            queryset = queryset.filter(deleted=False).order_by("-created_at")
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={"request": request, "no_license": True})

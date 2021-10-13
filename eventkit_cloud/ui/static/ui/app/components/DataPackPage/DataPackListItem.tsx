@@ -296,7 +296,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                     className="qa-DataPackListItem-subtitle-date"
                                     style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}
                                 >
-                                    {`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}
+                                    {`Added: ${moment(this.props.run.created_at).format('M/D/YY')}`}
                                     {this.props.run.user === this.props.user.data.user.username ?
                                         <div style={styles.ownerLabel}>My DataPack</div>
                                         :
