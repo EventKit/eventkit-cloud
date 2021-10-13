@@ -5,8 +5,8 @@ import DropDownMenu from '../common/DropDownMenu';
 
 const NAME_LOOKUP = {
     '-job__featured': 'Featured',
-    '-started_at': 'Newest',
-    started_at: 'Oldest',
+    '-created_at': 'Newest',
+    created_at: 'Oldest',
     job__name: 'Name (A-Z)',
     '-job__name': 'Name (Z-A)',
 };
@@ -54,8 +54,8 @@ export class DataPackSortDropDown extends React.Component<Props, {}> {
                     key="newest"
                     className="qa-DataPackSortDropDown-MenuItem-newest"
                     style={styles.item}
-                    selected={this.props.value === '-started_at'}
-                    onClick={() => this.handleChange('-started_at')}
+                    selected={this.props.value === '-created_at'}
+                    onClick={() => this.handleChange('-created_at')}
                 >
                     Newest
                 </MenuItem>
@@ -63,8 +63,8 @@ export class DataPackSortDropDown extends React.Component<Props, {}> {
                     key="oldest"
                     className="qa-DataPackSortDropDown-MenuItem-oldest"
                     style={styles.item}
-                    selected={this.props.value === 'started_at'}
-                    onClick={() => this.handleChange('started_at')}
+                    selected={this.props.value === 'created_at'}
+                    onClick={() => this.handleChange('created_at')}
                 >
                     Oldest
                 </MenuItem>

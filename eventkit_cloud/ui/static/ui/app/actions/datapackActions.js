@@ -89,7 +89,7 @@ export function getRuns(args = {}) {
     params.page = args.page;
     if (args.ordering) {
         params.ordering = args.ordering.includes('featured')
-            ? `${args.ordering},-started_at`
+            ? `${args.ordering},-created_at`
             : args.ordering;
     } else {
         params.ordering = '-job__featured';

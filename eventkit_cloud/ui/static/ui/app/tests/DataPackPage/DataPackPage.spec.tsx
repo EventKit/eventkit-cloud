@@ -540,7 +540,7 @@ describe('DataPackPage component', () => {
 
     it('changeView updateLocationQuery with new order if its not a shared order, otherwise just update with view', () => {
         wrapper.setProps({
-            location: {...props.location, query: {...props.location.search, order: 'started_at'}}
+            location: {...props.location, query: {...props.location.search, order: 'created_at'}}
         });
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
         instance.changeView('list');
@@ -552,7 +552,7 @@ describe('DataPackPage component', () => {
         wrapper.setProps({location: {search: queryString.stringify(location.search)}});
         instance.changeView('map');
         expect(updateStub.calledTwice).toBe(true);
-        expect(updateStub.calledWith({view: 'map', order: '-started_at'})).toBe(true);
+        expect(updateStub.calledWith({view: 'map', order: '-created_at'})).toBe(true);
     });
 
     it('handleToggle should set state', () => {

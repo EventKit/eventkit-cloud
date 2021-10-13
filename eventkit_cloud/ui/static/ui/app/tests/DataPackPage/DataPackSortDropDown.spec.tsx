@@ -7,7 +7,7 @@ import { DataPackSortDropDown } from '../../components/DataPackPage/DataPackSort
 describe('DataPackSortDropDown component', () => {
     const getProps = () => ({
         handleChange: sinon.spy(),
-        value: '-started_at',
+        value: '-created_at',
         ...(global as any).eventkit_test_props,
     });
 
@@ -39,7 +39,7 @@ describe('DataPackSortDropDown component', () => {
         });
 
         it('should render with text "Oldest"', () => {
-            wrapper.setProps({ value: 'started_at' });
+            wrapper.setProps({ value: 'created_at' });
             expect(wrapper.html()).toContain('Oldest');
         });
 
@@ -68,16 +68,16 @@ describe('DataPackSortDropDown component', () => {
             expect(changeStub.calledWith('-job__featured')).toBe(true);
         });
 
-        it('The second MenuItem should call handleChange with -started_at', () => {
+        it('The second MenuItem should call handleChange with -created_at', () => {
             menuItems.at(1).props().onClick();
             expect(changeStub.calledOnce).toBe(true);
-            expect(changeStub.calledWith('-started_at')).toBe(true);
+            expect(changeStub.calledWith('-created_at')).toBe(true);
         });
 
-        it('The third MenuItem should call handleChange with started_at', () => {
+        it('The third MenuItem should call handleChange with created_at', () => {
             menuItems.at(2).props().onClick();
             expect(changeStub.calledOnce).toBe(true);
-            expect(changeStub.calledWith('started_at')).toBe(true);
+            expect(changeStub.calledWith('created_at')).toBe(true);
         });
 
         it('The fourth MenuItem should call handleChange with job__name', () => {

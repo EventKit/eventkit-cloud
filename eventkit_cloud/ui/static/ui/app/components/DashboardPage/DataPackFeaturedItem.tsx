@@ -210,7 +210,7 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
                                         {`Event: ${this.props.run.job.event}`}
                                     </div>
                                     <span className="qa-DataPackFeaturedItem-Subtitle-Added">
-                                        {`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}
+                                        {`Added: ${moment(this.props.run.created_at).format('M/D/YY')}`}
                                     </span>
                                     <br />
                                     <span className="qa-DataPackFeaturedItem-Subtitle-Expires">

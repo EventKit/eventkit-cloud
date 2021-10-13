@@ -107,7 +107,7 @@ describe('DataPackList actions', () => {
                 status: 'A,B',
                 providers: 'provider_one,provider_two',
                 page_size: 11,
-                ordering: 'featured,-started_at',
+                ordering: 'featured,-created_at',
                 user: 'test_user',
                 min_date: args.minDate,
                 max_date: args.maxDate,

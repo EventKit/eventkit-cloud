@@ -226,14 +226,14 @@ export class DataPackList extends React.Component<Props, {}> {
                                     <div
                                         role="button"
                                         tabIndex={0}
-                                        onKeyPress={() => { this.handleOrder('-started_at'); }}
-                                        onClick={() => { this.handleOrder('-started_at'); }}
+                                        onKeyPress={() => { this.handleOrder('-created_at'); }}
+                                        onClick={() => { this.handleOrder('-created_at'); }}
                                         style={styles.clickable}
                                     >
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'created_at'))}>
                                             Date Added
                                         </span>
-                                        {this.getIcon('started_at')}
+                                        {this.getIcon('created_at')}
                                     </div>
                                 </TableCell>
                                 <TableCell className="qa-DataPackList-TableCell-status" style={styles.statusColumn}>
