@@ -14,6 +14,11 @@ export interface Props {
 export class DataCartInfoTable extends React.Component<Props, {}> {
     render() {
         const { dataPack } = this.props;
+        let finishedAt = 'Not Started';
+        if (dataPack.started_at) {
+            finishedAt = dataPack.finished_at
+                ? moment(dataPack.finished_at).format('M/D/YY h:mma') : 'Currently Processing...';
+        }
         return (
             <div>
                 <CustomTableRow
@@ -29,12 +34,14 @@ export class DataCartInfoTable extends React.Component<Props, {}> {
                 <CustomTableRow
                     title="Started"
                 >
-                    {moment(dataPack.started_at).format('M/D/YY h:mma')}
+                    {dataPack.started_at
+                        ? moment(dataPack.started_at).format('M/D/YY h:mma') : "Not Started"}
+
                 </CustomTableRow>
                 <CustomTableRow
                     title="Finished"
                 >
-                    {dataPack.finished_at === null ? 'Currently Processing...' : moment(dataPack.finished_at).format('M/D/YY h:mma')}
+                    {finishedAt}
                 </CustomTableRow>
             </div>
         );
