@@ -864,6 +864,7 @@ class DataProviderViewSet(EventkitViewSet):
     Endpoint exposing the supported data providers.
     """
 
+    serializer_class = DataProviderSerializer
     renderer_classes += (GeojsonRenderer,)
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "slug"
@@ -918,11 +919,12 @@ class DataProviderViewSet(EventkitViewSet):
         * return: A list of data providers.
         """
 
-        cache_key = get_query_cache_key(DataProvider, User, "serialized")
+        serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+        # The cache_key will be different if serializing a geojson or an api json.
+        cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)
         data = cache.get(cache_key)
         if not data:
             providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
-            serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
             data = serializer(providers, many=True, context={"request": request}).data
             filtered_data = filtered_serializer(filtered_providers, many=True).data
             if isinstance(data, list):
