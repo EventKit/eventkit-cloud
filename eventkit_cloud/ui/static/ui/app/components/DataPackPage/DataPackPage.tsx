@@ -453,9 +453,9 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private changeView(view: string) {
-        const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
+        const sharedViewOrders = ['created_at', '-created_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
         if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order as string) < 0) {
-            this.updateLocationQuery({view, order: '-started_at'});
+            this.updateLocationQuery({view, order: '-created_at'});
         } else {
             this.updateLocationQuery({view});
         }

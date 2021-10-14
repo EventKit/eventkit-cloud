@@ -393,7 +393,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                 >
                                     {`Event: ${this.props.run.job.event}`}
                                 </div>
-                                <span>{`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}</span><br/>
+                                <span>{`Added: ${moment(this.props.run.created_at).format('M/D/YY')}`}</span><br/>
                                 <span>{`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}</span><br/>
                             </div>
                         }

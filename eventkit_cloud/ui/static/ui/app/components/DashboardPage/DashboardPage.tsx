@@ -229,7 +229,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private refreshMyDataPacks({isAuto = false} = {}) {
         this.props.getRuns({
             pageSize: this.getGridColumns({getMax: true}) * 3,
-            ordering: '-started_at',
+            ordering: '-created_at',
             ownerFilter: this.props.userData.user.username,
             isAuto,
         });

@@ -20,7 +20,7 @@ describe('DataPackList component', () => {
         onRunDelete: sinon.spy(),
         onRunShare: sinon.spy(),
         onSort: sinon.spy(),
-        order: '-started_at',
+        order: '-created_at',
         users: [],
         groups: [],
         providers: [],
@@ -97,7 +97,7 @@ describe('DataPackList component', () => {
         expect(orderStub.called).toBe(false);
         wrapper.find(TableCell).at(2).find('div').simulate('click');
         expect(orderStub.called).toBe(true);
-        expect(orderStub.calledWith('-started_at')).toBe(true);
+        expect(orderStub.calledWith('-created_at')).toBe(true);
         orderStub.restore();
     });
 
@@ -141,23 +141,23 @@ describe('DataPackList component', () => {
 
         let newOrder = 'job__name';
         instance.handleOrder(newOrder);
-        expect(isSameSpy.calledWith('-started_at', 'job__name')).toBe(true);
+        expect(isSameSpy.calledWith('-created_at', 'job__name')).toBe(true);
         expect(props.onSort.calledOnce).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
 
-        newOrder = 'started_at';
+        newOrder = 'created_at';
         instance.handleOrder(newOrder);
-        expect(isSameSpy.calledWith('-started_at', 'started_at')).toBe(true);
+        expect(isSameSpy.calledWith('-created_at', 'created_at')).toBe(true);
         expect(props.onSort.calledTwice).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
 
         const nextProps = getProps();
-        nextProps.order = 'started_at';
+        nextProps.order = 'created_at';
         nextProps.onSort = props.onSort;
         wrapper.setProps(nextProps);
-        newOrder = '-started_at';
+        newOrder = '-created_at';
         instance.handleOrder(newOrder);
-        expect(isSameSpy.calledWith('started_at', '-started_at')).toBe(true);
+        expect(isSameSpy.calledWith('created_at', '-created_at')).toBe(true);
         expect(props.onSort.calledThrice).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
 
@@ -165,19 +165,19 @@ describe('DataPackList component', () => {
     });
 
     it('isSameOrderType should return true or false', () => {
-        expect(instance.isSameOrderType('-started_at', 'started_at')).toBe(true);
-        expect(instance.isSameOrderType('job__name', 'started_at')).toBe(false);
+        expect(instance.isSameOrderType('-created_at', 'created_at')).toBe(true);
+        expect(instance.isSameOrderType('job__name', 'created_at')).toBe(false);
     });
 
     it('getIcon should return up arrow if activeSort is equal to passed in sort, else it return down arrow', () => {
-        let icon = instance.getIcon('started_at');
+        let icon = instance.getIcon('created_at');
         expect(icon).toEqual((
             <NavigationArrowDropDown
                 className="qa-DataPackList-NavigationArrowDropDown"
                 style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4598bf' }}
             />
         ));
-        icon = instance.getIcon('-started_at');
+        icon = instance.getIcon('-created_at');
         expect(icon).toEqual((
             <NavigationArrowDropUp
                 className="qa-DataPackList-NavigationArrowDropUp"

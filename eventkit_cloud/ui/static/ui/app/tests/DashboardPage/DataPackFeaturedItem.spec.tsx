@@ -15,7 +15,7 @@ describe('DataPackFeaturedItem component', () => {
         return {
             run: {
                 uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-                started_at: '2017-03-10T15:52:35.637331Z',
+                created_at: '2017-03-10T15:52:35.637331Z',
                 job: {
                     uid: '7643f806-1484-4446-b498-7ddaa65d011a',
                     name: 'Test1',
@@ -64,7 +64,7 @@ describe('DataPackFeaturedItem component', () => {
             `Event: ${instance.props.run.job.event}`,
         );
         expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Added').text()).toBe(
-            `Added: ${moment(instance.props.run.started_at).format('M/D/YY')}`,
+            `Added: ${moment(instance.props.run.created_at).format('M/D/YY')}`,
         );
         expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Expires').text()).toBe(
             `Expires: ${moment(instance.props.run.expiration).format('M/D/YY')}`,

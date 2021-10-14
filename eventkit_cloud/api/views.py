@@ -1084,6 +1084,7 @@ class ExportRunViewSet(EventkitViewSet):
     )
     ordering_fields = (
         "job__name",
+        "created_at",
         "started_at",
         "user__username",
         "job__published",
