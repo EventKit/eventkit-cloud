@@ -213,7 +213,10 @@ ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
-INSTALLED_APPS += ("django_extensions", "audit_logging")
+INSTALLED_APPS += (
+    "django_extensions",
+    "audit_logging",
+)
 
 MIDDLEWARE += ["audit_logging.middleware.UserDetailsMiddleware"]
 
@@ -254,6 +257,8 @@ if os.getenv("FEATURE_DATABASE_URL"):
 else:
     DATABASES["feature_data"] = DATABASES["default"]
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -275,8 +280,9 @@ if os.getenv("MEMCACHED"):
     CACHES = {
         "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
         "primary_cache": {
-            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+            "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": os.getenv("MEMCACHED"),
+            "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
         },
         "fallback_cache": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"},
     }
@@ -296,7 +302,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 DATAPACKS_DEFAULT_SHARED = is_true(os.getenv("DATAPACKS_DEFAULT_SHARED", "false"))
-VERSION = os.getenv("VERSION", "1.11.0")
+VERSION = os.getenv("VERSION", "1.10.0")
 UI_CONFIG = {
     "VERSION": VERSION,
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -376,7 +382,10 @@ if os.path.isfile(ssl_verification_settings):
 else:
     SSL_VERIFICATION = is_true(ssl_verification_settings)
 
-LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip")
+LAND_DATA_URL = os.getenv(
+    "LAND_DATA_URL",
+    "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",
+)
 
 AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
 
@@ -394,4 +403,4 @@ REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIME
 OSM_MAX_TMPFILE_SIZE = os.getenv("OSM_MAX_TMPFILE_SIZE", "100")
 OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 
-DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.11.0")
+DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.10.0")
