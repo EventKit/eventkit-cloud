@@ -151,7 +151,7 @@ export function ProviderStatusCheck(props: Props) {
         title = 'CANNOT SELECT';
     } else {
         if (!props.isProviderLoading) {
-            if ((props.overSize && props.overArea) || (!props.overSize && props.overArea)) {
+            if (props.overArea) {
                 status = STATUS.OVER_AREA_SIZE
             }
             if (!props.overSize && !props.overArea) {
