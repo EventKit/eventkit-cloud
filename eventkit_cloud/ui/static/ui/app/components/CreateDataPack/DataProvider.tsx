@@ -166,9 +166,9 @@ export function DataProvider(props: Props) {
 
     useEffect(() => {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
-        const {size = {value: -1}} = providerInfo.estimates || {};
-        const {maxArea = 0, maxDataSize = 0} = limits || {};
-        if (limits) {
+        if (providerInfo.estimates && limits) {
+            const {size = {value: -1}} = providerInfo.estimates;
+            const {maxArea = 0, maxDataSize = 0} = limits;
             const area = limits.useBbox ? aoiBboxArea : aoiArea;
             setOverArea(maxArea && area > maxArea);
             setOverSize(!arrayHasValue(noMaxDataSize, provider.slug) && (maxDataSize && size.value > maxDataSize));

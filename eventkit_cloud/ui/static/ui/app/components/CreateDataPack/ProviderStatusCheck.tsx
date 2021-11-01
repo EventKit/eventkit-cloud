@@ -7,11 +7,12 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
+import {createStyles, IconButton, Theme, withStyles, withTheme} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
 import {ACTIONS, useAsyncRequest} from "../../utils/hooks/api";
+import {connect} from "react-redux";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     iconBtn: {
@@ -76,7 +77,7 @@ export function ProviderStatusCheck(props: Props) {
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
     const makeRequest = async () => {
-        const estimatedSize = providerInfo.estimates.size;
+        const estimatedSize = providerInfo.estimates?.size;
         requestCall({
             url: `/api/providers/requests/size`,
             method: 'post',
@@ -149,14 +150,14 @@ export function ProviderStatusCheck(props: Props) {
         message = makeMessage('');
         title = 'CANNOT SELECT';
     } else {
-        if (props.overSize) {
-            status = STATUS.OVER_DATA_SIZE;
-        } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
-            status = STATUS.SUCCESS;
-            message = makeMessage('No problems: Export should proceed without issues.', false);
-        } else {
-            if (props.overArea) {
-                status = STATUS.OVER_AREA_SIZE;
+        if (!props.isProviderLoading) {
+            if ((props.overSize && props.overArea) || (!props.overSize && props.overArea)) {
+                status = STATUS.OVER_AREA_SIZE
+            }
+            if (!props.overSize && !props.overArea) {
+                if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
+                    status = STATUS.OVER_AREA_SIZE
+                }
             }
         }
         switch (status) {
@@ -347,4 +348,12 @@ export function ProviderStatusCheck(props: Props) {
     );
 }
 
-export default withStyles(jss)(ProviderStatusCheck);
+function mapStateToProps(state, ownProps) {
+    return {
+        providerInfo: state.exportInfo.providerInfo[ownProps.provider.slug] || {} as Eventkit.Store.ProviderInfo,
+    };
+}
+
+export default withTheme(withStyles(jss)(connect(
+    mapStateToProps,
+)(ProviderStatusCheck)));
