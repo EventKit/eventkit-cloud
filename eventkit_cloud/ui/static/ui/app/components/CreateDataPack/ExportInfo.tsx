@@ -3,14 +3,15 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
-import {getSqKmString} from '../../utils/generic';
 import {Step} from 'react-joyride';
-import List from '@material-ui/core/List';
+import { Virtuoso } from 'react-virtuoso';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import NavigationRefresh from '@material-ui/icons/Refresh';
+
+import {getSqKmString} from '../../utils/generic';
 import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
@@ -716,18 +717,6 @@ export function ExportInfo(props: Props) {
         }
     };
 
-    const getProviders = () => {
-        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
-        currentProviders = filterProviders(currentProviders);
-
-        // Merge the filtered results and currently selected providers for display.
-        currentProviders = unionBy(exportInfo.providers, currentProviders, 'id');
-
-        currentProviders = sortProviders(currentProviders);
-
-        return currentProviders;
-    };
-
     const filterProviders = (currentProviders) => {
         currentProviders = currentProviders.filter(provider => {
             return provider.name.toLowerCase().includes(providerSearch.toLowerCase())
@@ -769,6 +758,56 @@ export function ExportInfo(props: Props) {
     const sortProvidersZtoA = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
     };
+
+    const getProviders = () => {
+        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
+        currentProviders = filterProviders(currentProviders);
+
+        // Merge the filtered results and currently selected providers for display.
+        currentProviders = unionBy(exportInfo.providers, currentProviders, 'id');
+
+        currentProviders = sortProviders(currentProviders);
+
+        return currentProviders;
+    };
+
+    const dataProviders = getProviders().map((provider, ix) => (
+        <DataProvider
+            key={provider.slug + "-DataProviderList"}
+            geojson={geojson}
+            provider={provider}
+            onChange={onChangeCheck}
+            deselect={deselect}
+            checked={exportInfo.providers.map(x => x.name)
+                .indexOf(provider.name) !== -1}
+            alt={ix % 2 === 0}
+            renderEstimate={appContext.SERVE_ESTIMATES}
+            checkProvider={() => {
+                // Check the provider for updated info.
+                props.checkProvider(provider).then(providerInfo => {
+                    updateExportInfoCallback({
+                        providerInfo: {
+                            ...exportInfo.providerInfo,
+                            [provider.slug]: providerInfo.data,
+                        }
+                    });
+                    // Trigger an estimate calculation update in the parent
+                    // Does not re-request any data, calculates the total from available results.
+                    props.onUpdateEstimate();
+                });
+            }}
+            incompatibilityInfo={incompatibilityInfo}
+            clearEstimate={clearEstimate}
+            // Get reference to handle logic for joyride.
+            {...(() => {
+                const refProps = {} as any;
+                if (ix === 0) {
+                    refProps.getRef = (ref: any) => dataProvider.current = ref;
+                }
+                return refProps;
+            })()}
+        />
+    )) || [];
 
     const projectionHasErrors = (srid: number) => {
         const projectionInfo = incompatibilityInfo.projections[srid];
@@ -1191,49 +1230,14 @@ export function ExportInfo(props: Props) {
                                 </div>
                             </div>
                             <div>
-                                <List
+                                <Virtuoso
+                                    style={{width: '100%', height: 500}}
                                     id="ProviderList"
+                                    totalCount={getProviders().length}
+                                    initialItemCount={10}
+                                    itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                    style={{width: '100%', fontSize: '16px'}}
-                                >
-                                    {getProviders().map((provider, ix) => (
-                                        <DataProvider
-                                            key={provider.slug + "-DataProviderList"}
-                                            geojson={geojson}
-                                            provider={provider}
-                                            onChange={onChangeCheck}
-                                            deselect={deselect}
-                                            checked={exportInfo.providers.map(x => x.name)
-                                                .indexOf(provider.name) !== -1}
-                                            alt={ix % 2 === 0}
-                                            renderEstimate={appContext.SERVE_ESTIMATES}
-                                            checkProvider={() => {
-                                                // Check the provider for updated info.
-                                                props.checkProvider(provider).then(providerInfo => {
-                                                    updateExportInfoCallback({
-                                                        providerInfo: {
-                                                            ...exportInfo.providerInfo,
-                                                            [provider.slug]: providerInfo.data,
-                                                        }
-                                                    });
-                                                    // Trigger an estimate calculation update in the parent
-                                                    // Does not re-request any data, calculates the total from available results.
-                                                    props.onUpdateEstimate();
-                                                });
-                                            }}
-                                            incompatibilityInfo={incompatibilityInfo}
-                                            clearEstimate={clearEstimate}
-                                            // Get reference to handle logic for joyride.
-                                            {...(() => {
-                                                const refProps = {} as any;
-                                                if (ix === 0) {
-                                                    refProps.getRef = (ref: any) => dataProvider.current = ref;
-                                                }
-                                                return refProps;
-                                            })()}
-                                        />
-                                    )) || "No Providers Found"}
-                                </List>
+                                />
                             </div>
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}
