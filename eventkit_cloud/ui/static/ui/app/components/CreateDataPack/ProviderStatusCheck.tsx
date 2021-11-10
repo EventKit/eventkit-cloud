@@ -11,7 +11,7 @@ import {createStyles, IconButton, Theme, withStyles, withTheme} from "@material-
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
-import {ACTIONS, useAsyncRequest} from "../../utils/hooks/api";
+import {useAsyncRequest} from "../../utils/hooks/api";
 import {connect} from "react-redux";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -150,15 +150,16 @@ export function ProviderStatusCheck(props: Props) {
         message = makeMessage('');
         title = 'CANNOT SELECT';
     } else {
-        if (!props.isProviderLoading) {
-            if (props.overArea) {
+        if (!props.isProviderLoading && avail.status) {
+            if (props.overArea && props.overSize) {
+                status = STATUS.OVER_DATA_SIZE
+                //if the selected aoi is over both area limit and data limit, show an error.
+            } else if (props.overArea && !props.provider.max_data_size) {
                 status = STATUS.OVER_AREA_SIZE
+                //if the selected aoi is over area limit, and no max data size is configured
+                //show error and allow user to request larger aoi size limit
             }
-            if (!props.overSize && !props.overArea) {
-                if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
-                    status = STATUS.OVER_AREA_SIZE
-                }
-            }
+            //all other cases, go with the status returned from the availability check.
         }
         switch (status) {
             case STATUS.SUCCESS:

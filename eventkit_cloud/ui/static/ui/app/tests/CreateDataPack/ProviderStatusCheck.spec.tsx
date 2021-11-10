@@ -30,7 +30,7 @@ describe('ProviderStatusCheck component', () => {
                 last_login: '',
                 identification: ''
             }},
-        provider: '',
+        provider: { max_data_size: 100 },
         geojson: '',
         areaStr: '',
         overSize: false,
@@ -66,7 +66,7 @@ describe('ProviderStatusCheck component', () => {
             expect(wrapper.find(ActionDone)).toHaveLength(1);
         });
 
-        it('should show the success icon when only over size', () => {
+        it('should show the success icon when over data size with successful availability check', () => {
             const props = defaultProps();
             setup({
                 overArea: false,
@@ -74,28 +74,51 @@ describe('ProviderStatusCheck component', () => {
             expect(wrapper.find(ActionDone)).toHaveLength(1);
         });
 
-        it('should show the fatal icon when over area', () => {
-            setup({overArea: true, providerHasEstimates: false });
+        it('should show the success icon when over area with successful availability check', () => {
+            setup({
+                overArea: true,
+                overSize: false,
+                providerHasEstimates: false,
+                availability: {status: 'SUCCESS', type: ''}
+            });
+            expect(wrapper.find(ActionDone)).toHaveLength(1);
+        });
+
+        it('should show the error icon when over area with failing availability check', () => {
+            setup({
+                overArea: true,
+                overSize: false,
+                providerHasEstimates: false,
+                availability: {status: 'FATAL', type: ''}
+            });
             expect(wrapper.find(AlertError)).toHaveLength(1);
         });
 
-        it('should show the fatal icon when over area on backend but under size', () => {
+        it('should show the warning icon when over area with warning from availability check', () => {
             setup({
                 overArea: true, providerHasEstimates: true,
                 overSize: false, availability: {status: 'WARN', type: 'SELECTION_TOO_LARGE'}});
-            expect(wrapper.find(AlertError)).toHaveLength(1);
+            expect(wrapper.find(AlertWarning)).toHaveLength(1);
         });
 
-        it('should show the fatal icon when no estimates but status over size', () => {
+        it('should show the error icon when over area with no max data size', () => {
+            setup({
+                overArea: true,
+                overSize: false,
+                availability: {status: 'SUCCESS', type: ''},
+                provider: { max_data_size: undefined }
+            });
+            expect(wrapper.find(AlertError)).toHaveLength(1);
+            setup({
+                provider: { max_data_size: 100 }
+            });
+        });
+
+        it('should show the warning icon when no estimates with warning from availability check', () => {
             setup({
                 overArea: false,
                 overSize: false, availability: {status: 'WARN', type: 'SELECTION_TOO_LARGE'}});
-            expect(wrapper.find(AlertError)).toHaveLength(1);
-        });
-
-        it('should show the fatal icon when over area but under size', () => {
-            setup({ overArea: true, providerHasEstimates: false, overSize: false});
-            expect(wrapper.find(AlertError)).toHaveLength(1);
+            expect(wrapper.find(AlertWarning)).toHaveLength(1);
         });
 
         it('should show the fatal icon', () => {
