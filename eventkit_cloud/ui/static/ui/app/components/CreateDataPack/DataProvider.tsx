@@ -609,7 +609,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme(withStyles(jss)(connect(
+export default React.memo(withTheme(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(DataProvider)));
+)(DataProvider))));
