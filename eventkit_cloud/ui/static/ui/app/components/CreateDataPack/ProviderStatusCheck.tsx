@@ -153,13 +153,19 @@ export function ProviderStatusCheck(props: Props) {
         if (!props.isProviderLoading && avail.status) {
             if (props.overArea && props.overSize) {
                 status = STATUS.OVER_DATA_SIZE
-                //if the selected aoi is over both area limit and data limit, show an error.
+                // if the selected aoi is over both area limit and data limit
+                // show error and allow user to request larger aoi size limit
             } else if (props.overArea && !props.provider.max_data_size) {
                 status = STATUS.OVER_AREA_SIZE
-                //if the selected aoi is over area limit, and no max data size is configured
-                //show error and allow user to request larger aoi size limit
+                // if the selected aoi is over area limit, and no max data size is configured
+                // show error and allow user to request larger aoi size limit
+            } else if ((props.overArea || props.overSize) && STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
+                status = STATUS.SUCCESS
+                message = makeMessage('No problems: Export should proceed without issues.', false);
+                // if only over size or over area, and availability check returns 'warning: selection too large'
+                // disregard availability check and show success message. If only over one check export can proceed.
             }
-            //all other cases, go with the status returned from the availability check.
+            // all other cases, proceed with the status returned from the availability check.
         }
         switch (status) {
             case STATUS.SUCCESS:

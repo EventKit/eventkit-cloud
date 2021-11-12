@@ -94,11 +94,11 @@ describe('ProviderStatusCheck component', () => {
             expect(wrapper.find(AlertError)).toHaveLength(1);
         });
 
-        it('should show the warning icon when over area with warning from availability check', () => {
+        it('should show the success icon when over area with warning from availability check', () => {
             setup({
                 overArea: true, providerHasEstimates: true,
                 overSize: false, availability: {status: 'WARN', type: 'SELECTION_TOO_LARGE'}});
-            expect(wrapper.find(AlertWarning)).toHaveLength(1);
+            expect(wrapper.find(ActionDone)).toHaveLength(1);
         });
 
         it('should show the error icon when over area with no max data size', () => {
