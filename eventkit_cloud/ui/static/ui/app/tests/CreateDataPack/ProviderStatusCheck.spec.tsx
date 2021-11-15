@@ -74,6 +74,22 @@ describe('ProviderStatusCheck component', () => {
             expect(wrapper.find(ActionDone)).toHaveLength(1);
         });
 
+        it('should show the error icon when over data and area with successful availability check', () => {
+            const props = defaultProps();
+            setup({
+                overArea: true,
+                overSize: true, availability: {status: 'SUCCESS', type: ''}});
+            expect(wrapper.find(AlertError)).toHaveLength(1);
+        });
+
+        it('should show the error icon when over data and area with warning from availability check', () => {
+            const props = defaultProps();
+            setup({
+                overArea: true,
+                overSize: true, availability: {status: 'WARN', type: 'SELECTION_TOO_LARGE'}});
+            expect(wrapper.find(AlertError)).toHaveLength(1);
+        });
+
         it('should show the success icon when over area with successful availability check', () => {
             setup({
                 overArea: true,
