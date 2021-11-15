@@ -255,7 +255,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
-            search: props.location.search || '',
+            search: queryString.parse(props.location.search).search as string || '',
             showAddUsers: false,
             showCreate: false,
             showLeave: false,
@@ -1022,7 +1022,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         <TextField
                             type="text"
                             placeholder="Search Users"
-                            value={queryString.parse(this.props.location.search).search}
+                            value={this.state.search}
                             InputProps={{className: classes.input}}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
