@@ -34,11 +34,11 @@ export class MapView extends React.Component<Props> {
         this.maxZoom = this.props.maxZoom || 20;
         this.mapDiv = this.props.id || "ProviderMap";
         this.style = this.props.style
-        this.selectedBaseMap = (typeof props.selectedBaseMap === 'string' || props.selectedBaseMap instanceof String) ?
-            {mapUrl: props.selectedBaseMap} as MapLayer : props.selectedBaseMap;
     }
 
     render() {
+        this.selectedBaseMap = (typeof this.props.selectedBaseMap === 'string' || this.props.selectedBaseMap instanceof String) ?
+            {mapUrl: this.props.selectedBaseMap} as MapLayer : this.props.selectedBaseMap;
         const layer = (this.selectedBaseMap) ? <OlRasterTileLayer mapLayer={this.selectedBaseMap} copyright={this.props.copyright}
                                        zIndex={0}/> : <div/>
         return (
