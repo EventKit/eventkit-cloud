@@ -203,7 +203,7 @@ export function MapDrawer(props: Props) {
     const {providers, classes} = props;
 
     const [expandedSources, setExpandedSources] = useState([]);
-    const [selectedTab, setSelectedTab] = useState(false);
+    const [selectedTab, setSelectedTab] = useState('');
     const [selectedBaseMap, setBaseMap] = useState(-1);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
@@ -218,7 +218,7 @@ export function MapDrawer(props: Props) {
 
     function handleChange(event, newValue) {
         if (selectedTab === newValue) {
-            setSelectedTab(false);
+            setSelectedTab('');
         } else {
             setSelectedTab(newValue);
         }
@@ -323,7 +323,7 @@ export function MapDrawer(props: Props) {
                 >
                     <VerticalTabs
                         className={classes.tabs}
-                        value={(selectedTab) ? selectedTab : false}
+                        value={(selectedTab) ? selectedTab : ''}
                         onChange={handleChange}
                     >
                         <Tab
@@ -344,15 +344,33 @@ export function MapDrawer(props: Props) {
                                     </Icon>
                                 </Card>)}
                         />
+                        <Tab
+                            value="coverage"
+                            classes={{
+                                root: classes.tab,
+                                selected: classes.selected,
+                            }}
+                            label={(
+                                <Card className={classes.tabHeader}>
+                                    <Icon classes={{root: classes.iconRoot}}>
+                                        <img
+                                            className={classes.imageIcon}
+                                            src={theme.eventkit.images.basemap}
+                                            alt="Coverages"
+                                            title="Coverages"
+                                        />
+                                    </Icon>
+                                </Card>)}
+                        />
                     </VerticalTabs>
-                    <div style={{display: 'block'}} className={classes.heading}>
+
+                    <div style={{display: selectedTab === 'basemap' ? 'block' : 'none'}} className={classes.heading}>
                         <div style={{display: 'flex'}}>
                             <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
                             <Clear
                                 className={classes.clear}
                                 color="primary"
-                                onClick={(event) => setSelectedTab(false)}
-
+                                onClick={(event) => setSelectedTab('basemap')}
                             />
                         </div>
                         <div style={{display: 'flex'}}>
@@ -369,6 +387,30 @@ export function MapDrawer(props: Props) {
                             </span>
                         </div>
                     </div>
+                    <div style={{display: selectedTab === 'coverage' ? 'block' : 'none'}} className={classes.heading}>
+                        <div style={{display: 'flex'}}>
+                            <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverages</strong>
+                            <Clear
+                                className={classes.clear}
+                                color="primary"
+                                onClick={(event) => setSelectedTab('coverage')}
+                            />
+                        </div>
+                        <div style={{display: 'flex'}}>
+                            <strong style={{margin: 'auto 0'}}>
+                                Select provider coverages to display
+                            </strong>
+                            <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                            <MapDrawerOptions
+                                providers={providers}
+                                setProviders={setFilteredProviders}
+                                onEnabled={(offset: number) => setOffSet(offset)}
+                                onDisabled={() => setOffSet(0)}
+                            />
+                            </span>
+                        </div>
+                    </div>
+
                     <div className={classes.scrollBar} style={areProvidersHidden ? {} : {height: 'calc(100% - 100px)'}}>
                         <CustomScrollbar>
                             <div style={{height: `${offSet}px`}} />
@@ -460,6 +502,7 @@ export function MapDrawer(props: Props) {
                         </div>
                         {areProvidersHidden && <UnavailableFilterPopup/>}
                     </div>
+
                 </Drawer>
             </div>
         </div>
