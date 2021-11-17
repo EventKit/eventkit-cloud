@@ -13,7 +13,7 @@ import {
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
-
+import Checkbox from '@material-ui/core/Checkbox';
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
@@ -323,7 +323,7 @@ export function MapDrawer(props: Props) {
                 >
                     <VerticalTabs
                         className={classes.tabs}
-                        value={(selectedTab) ? selectedTab : ''}
+                        value={(selectedTab) ? selectedTab : false}
                         onChange={handleChange}
                     >
                         <Tab
@@ -364,144 +364,249 @@ export function MapDrawer(props: Props) {
                         />
                     </VerticalTabs>
 
-                    <div style={{display: selectedTab === 'basemap' ? 'block' : 'none'}} className={classes.heading}>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
-                            <Clear
-                                className={classes.clear}
-                                color="primary"
-                                onClick={(event) => setSelectedTab('basemap')}
-                            />
-                        </div>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{margin: 'auto 0'}}>
-                                Select a basemap
-                            </strong>
-                            <span style={{marginLeft: 'auto', marginRight: '3px'}}>
-                            <MapDrawerOptions
-                                providers={providers}
-                                setProviders={setFilteredProviders}
-                                onEnabled={(offset: number) => setOffSet(offset)}
-                                onDisabled={() => setOffSet(0)}
-                            />
-                            </span>
-                        </div>
-                    </div>
-                    <div style={{display: selectedTab === 'coverage' ? 'block' : 'none'}} className={classes.heading}>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverages</strong>
-                            <Clear
-                                className={classes.clear}
-                                color="primary"
-                                onClick={(event) => setSelectedTab('coverage')}
-                            />
-                        </div>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{margin: 'auto 0'}}>
-                                Select provider coverages to display
-                            </strong>
-                            <span style={{marginLeft: 'auto', marginRight: '3px'}}>
-                            <MapDrawerOptions
-                                providers={providers}
-                                setProviders={setFilteredProviders}
-                                onEnabled={(offset: number) => setOffSet(offset)}
-                                onDisabled={() => setOffSet(0)}
-                            />
-                            </span>
-                        </div>
-                    </div>
+                    {selectedTab === 'basemap' &&
+                        <div style={{height: '100%'}}>
+                            <div style={{display: 'block'}} className={classes.heading}>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
+                                    <Clear
+                                        className={classes.clear}
+                                        color="primary"
+                                        onClick={(event) => setSelectedTab('')}
+                                    />
+                                </div>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{margin: 'auto 0'}}>
+                                        Select a basemap
+                                    </strong>
+                                    <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                                    <MapDrawerOptions
+                                        providers={providers}
+                                        setProviders={setFilteredProviders}
+                                        onEnabled={(offset: number) => setOffSet(offset)}
+                                        onDisabled={() => setOffSet(0)}
+                                    />
+                                    </span>
+                                </div>
+                            </div>
 
-                    <div className={classes.scrollBar} style={areProvidersHidden ? {} : {height: 'calc(100% - 100px)'}}>
-                        <CustomScrollbar>
-                            <div style={{height: `${offSet}px`}} />
-                            <List style={{padding: '10px'}}>
-                                {(sources || []).map((source, ix) => (
-                                        <div key={ix}>
-                                            <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
-                                            <span style={{marginRight: '2px'}}>
-                                                <Radio
-                                                    checked={selectedBaseMap === ix}
-                                                    value={ix}
-                                                    classes={{
-                                                        root: classes.checkbox, checked: classes.checked,
-                                                    }}
-                                                    onClick={(e) => handleExpandClick(e, sources)}
-                                                    name="source"
-                                                />
-                                            </span>
-                                                <div>
-                                                    <div style={{display: 'flex'}}>
-                                                        {source.thumbnail_url &&
-                                                        <CardMedia
-                                                            className={classes.thumbnail}
-                                                            image={source.thumbnail_url}
+                            <div className={classes.scrollBar}
+                                 style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
+                                <CustomScrollbar>
+                                    <div style={{height: `${offSet}px`}}/>
+                                    <List style={{padding: '10px'}}>
+                                        {(sources || []).map((source, ix) => (
+                                                <div key={ix}>
+                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{marginRight: '2px'}}>
+                                                        <Radio
+                                                            checked={selectedBaseMap === ix}
+                                                            value={ix}
+                                                            classes={{
+                                                                root: classes.checkbox, checked: classes.checked,
+                                                            }}
+                                                            onClick={(e) => handleExpandClick(e, sources)}
+                                                            name="source"
                                                         />
-                                                        }
-                                                        <ListItemText
-                                                            className={classes.noPadding}
-                                                            disableTypography
-                                                            primary={
-                                                                <Typography
-                                                                    className={classes.buttonLabel}
-                                                                >
-                                                                    {source.name}
-                                                                </Typography>
-                                                            }
-                                                        />
-                                                    </div>
-                                                    <div className={classes.buttonLabelSecondary}>
-                                                        {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                    </span>
+                                                        <div>
+                                                            <div style={{display: 'flex'}}>
+                                                                {source.thumbnail_url &&
+                                                                <CardMedia
+                                                                    className={classes.thumbnail}
+                                                                    image={source.thumbnail_url}
+                                                                />
+                                                                }
+                                                                <ListItemText
+                                                                    className={classes.noPadding}
+                                                                    disableTypography
+                                                                    primary={
+                                                                        <Typography
+                                                                            className={classes.buttonLabel}
+                                                                        >
+                                                                            {source.name}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                            </div>
+                                                        </div>
+                                                    </ListItem>
+                                                    <div
+                                                        className={classes.footprint_options}
+                                                    >
+                                                        {showFootprintData(ix, sources)}
                                                     </div>
                                                 </div>
-                                            </ListItem>
-                                            <div
-                                                className={classes.footprint_options}
-                                            >
-                                                {showFootprintData(ix, sources)}
-                                            </div>
-                                        </div>
-                                    )
-                                )}
-                            </List>
-                        </CustomScrollbar>
-                    </div>
-                    <Divider style={{margin: '0 5px 0 5px'}}/>
-
-                    <div
-                        className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
-                    >
-                        <div
-                            className={classes.stickyRowItems}
-                            style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
-                        >
-                            <div style={{marginRight: '8px'}}>
-                                <RequestDataSource open={requestDataSourceOpen}
-                                                   onClose={() => setRequestDataSourceOpen(false)}/>
-                                <div>
-                                    Data Source Missing?
-                                </div>
-                                <Link onClick={() => setRequestDataSourceOpen(true)}
-                                      style={{fontSize: '12px', cursor: 'pointer'}}>
-                                    Request New Data Source
-                                </Link>
+                                            )
+                                        )}
+                                    </List>
+                                </CustomScrollbar>
                             </div>
-                            <div>
-                                <Button
-                                    className={`${classes.button} ${classes.stickRowyItems}`}
-                                    color="primary"
-                                    variant="contained"
-                                    disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                                    // -1 clear the map
-                                    onClick={() => {
-                                        updateBaseMap(-1, sources);
-                                    }}
+                            <Divider style={{margin: '0 5px 0 5px'}}/>
+
+                            <div
+                                className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                            >
+                                <div
+                                    className={classes.stickyRowItems}
+                                    style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
                                 >
-                                    Reset
-                                </Button>
+                                    <div style={{marginRight: '8px'}}>
+                                        <RequestDataSource open={requestDataSourceOpen}
+                                                           onClose={() => setRequestDataSourceOpen(false)}/>
+                                        <div>
+                                            Data Source Missing?
+                                        </div>
+                                        <Link onClick={() => setRequestDataSourceOpen(true)}
+                                              style={{fontSize: '12px', cursor: 'pointer'}}>
+                                            Request New Data Source
+                                        </Link>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            className={`${classes.button} ${classes.stickRowyItems}`}
+                                            color="primary"
+                                            variant="contained"
+                                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                                            // -1 clear the map
+                                            onClick={() => {
+                                                updateBaseMap(-1, sources);
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+                                {areProvidersHidden && <UnavailableFilterPopup/>}
                             </div>
                         </div>
-                        {areProvidersHidden && <UnavailableFilterPopup/>}
-                    </div>
+                    }
+
+                    {selectedTab === 'coverage' &&
+                        <div style={{height: '100%'}}>
+                            <div style={{display: 'block'}} className={classes.heading}>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverages</strong>
+                                    <Clear
+                                        className={classes.clear}
+                                        color="primary"
+                                        onClick={(event) => setSelectedTab('')}
+                                    />
+                                </div>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{margin: 'auto 0'}}>
+                                        Select coverage footprints
+                                    </strong>
+                                    <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                                    <MapDrawerOptions
+                                        providers={providers}
+                                        setProviders={setFilteredProviders}
+                                        onEnabled={(offset: number) => setOffSet(offset)}
+                                        onDisabled={() => setOffSet(0)}
+                                    />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className={classes.scrollBar}
+                                 style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
+                                <CustomScrollbar>
+                                    <div style={{height: `${offSet}px`}}/>
+                                    <List style={{padding: '10px'}}>
+                                        {(sources || []).map((source, ix) => (
+                                                <div key={ix}>
+                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{marginRight: '2px'}}>
+
+                                                        <Checkbox
+                                                            checked={selectedBaseMap === ix}
+                                                            value={ix}
+                                                            classes={{
+                                                                root: classes.checkbox, checked: classes.checked,
+                                                            }}
+                                                            onClick={(e) => handleExpandClick(e, sources)}
+                                                            name="source"
+                                                        />
+
+                                                    </span>
+                                                        <div>
+                                                            <div style={{display: 'flex'}}>
+                                                                {source.thumbnail_url &&
+                                                                <CardMedia
+                                                                    className={classes.thumbnail}
+                                                                    image={source.thumbnail_url}
+                                                                />
+                                                                }
+                                                                <ListItemText
+                                                                    className={classes.noPadding}
+                                                                    disableTypography
+                                                                    primary={
+                                                                        <Typography
+                                                                            className={classes.buttonLabel}
+                                                                        >
+                                                                            {source.name}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                            </div>
+                                                        </div>
+                                                    </ListItem>
+                                                    <div
+                                                        className={classes.footprint_options}
+                                                    >
+                                                        {showFootprintData(ix, sources)}
+                                                    </div>
+                                                </div>
+                                            )
+                                        )}
+                                    </List>
+                                </CustomScrollbar>
+                            </div>
+                            <Divider style={{margin: '0 5px 0 5px'}}/>
+
+                            <div
+                                className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                            >
+                                <div
+                                    className={classes.stickyRowItems}
+                                    style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
+                                >
+                                    <div style={{marginRight: '8px'}}>
+                                        <RequestDataSource open={requestDataSourceOpen}
+                                                           onClose={() => setRequestDataSourceOpen(false)}/>
+                                        <div>
+                                            Data Source Missing?
+                                        </div>
+                                        <Link onClick={() => setRequestDataSourceOpen(true)}
+                                              style={{fontSize: '12px', cursor: 'pointer'}}>
+                                            Request New Data Source
+                                        </Link>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            className={`${classes.button} ${classes.stickRowyItems}`}
+                                            color="primary"
+                                            variant="contained"
+                                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                                            // -1 clear the map
+                                            onClick={() => {
+                                                updateBaseMap(-1, sources);
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+                                {areProvidersHidden && <UnavailableFilterPopup/>}
+                            </div>
+                        </div>
+                    }
 
                 </Drawer>
             </div>
