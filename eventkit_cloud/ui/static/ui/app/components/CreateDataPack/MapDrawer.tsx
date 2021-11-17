@@ -188,9 +188,22 @@ export interface BaseMapSource {
     data_type: string;
 }
 
+export interface CoveragePoly {
+    type: string;
+    coordinates: any[];
+}
+
+export interface Coverage {
+    geo: CoveragePoly;
+    name: string;
+    slug: string;
+    color: string;
+}
+
 export interface Props {
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
+    coverages: Coverage[];
     updateBaseMap: (mapLayer: MapLayer) => void;
     addFootprintsLayer: (mapLayer: MapLayer) => void;
     removeFootprintsLayer: (mapLayer: MapLayer) => void;
@@ -205,6 +218,7 @@ export function MapDrawer(props: Props) {
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState('');
     const [selectedBaseMap, setBaseMap] = useState(-1);
+    const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
     function updateBaseMap(newBaseMapId: number, sources) {
@@ -244,6 +258,21 @@ export function MapDrawer(props: Props) {
         updateBaseMap(Number(event.target.value), sources);
     }
 
+    function handleCoverageClick(event, selectedCoverage) {
+        const selected = selectedCoverages;
+        if (event && event.target.checked) {
+            if (selected.indexOf(selectedCoverage) <= 0) {
+                selected.push(selectedCoverage)
+            }
+        } else {
+            let index = selected.indexOf(selectedCoverage);
+            if (index >= 0) {
+                selected.splice(index, 1);
+            }
+        }
+        setSelectedCoverages([...selected]);
+    }
+
     function showFootprintData(ix: number, sources) {
         if (expandedSources && selectedBaseMap === ix) {
             const source = sources[ix];
@@ -274,6 +303,7 @@ export function MapDrawer(props: Props) {
     }, [providers]);
 
     const [sources, setSources] = useState([]);
+    const [coverages, setCoverages] = useState([]);
     useEffect(() => {
         setSources([
             ...filteredProviders.filter(_provider =>
@@ -299,6 +329,18 @@ export function MapDrawer(props: Props) {
                     thumbnail_url: _provider.thumbnail_url,
                 } as BaseMapSource;
             })
+        ]);
+        setCoverages([
+             ...filteredProviders.filter(_provider =>
+                !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
+
+                return {
+                    geo: _provider.the_geom,
+                    name: _provider.name,
+                    slug: _provider.slug,
+                    color: Math.floor(Math.random() * 16777215).toString(16),
+                } as Coverage;
+             })
         ]);
     }, [filteredProviders]);
 
@@ -516,30 +558,26 @@ export function MapDrawer(props: Props) {
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
                                     <List style={{padding: '10px'}}>
-                                        {(sources || []).map((source, ix) => (
-                                                <div key={ix}>
+                                        {(coverages || []).map((coverage) => (
+                                                <div key={coverage.slug}>
                                                     <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
 
                                                         <Checkbox
-                                                            checked={selectedBaseMap === ix}
-                                                            value={ix}
+                                                            checked={arrayHasValue(selectedCoverages, coverage)}
+                                                            value={coverage.slug}
                                                             classes={{
                                                                 root: classes.checkbox, checked: classes.checked,
                                                             }}
-                                                            onClick={(e) => handleExpandClick(e, sources)}
-                                                            name="source"
+
+                                                            // TODO: change click handler, allow multiple to be selected at once
+                                                            onClick={(e) => handleCoverageClick(e, coverage)}
+                                                            name="coverage"
                                                         />
 
                                                     </span>
                                                         <div>
                                                             <div style={{display: 'flex'}}>
-                                                                {source.thumbnail_url &&
-                                                                <CardMedia
-                                                                    className={classes.thumbnail}
-                                                                    image={source.thumbnail_url}
-                                                                />
-                                                                }
                                                                 <ListItemText
                                                                     className={classes.noPadding}
                                                                     disableTypography
@@ -547,21 +585,13 @@ export function MapDrawer(props: Props) {
                                                                         <Typography
                                                                             className={classes.buttonLabel}
                                                                         >
-                                                                            {source.name}
+                                                                            {coverage.name}
                                                                         </Typography>
                                                                     }
                                                                 />
                                                             </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
-                                                            </div>
                                                         </div>
                                                     </ListItem>
-                                                    <div
-                                                        className={classes.footprint_options}
-                                                    >
-                                                        {showFootprintData(ix, sources)}
-                                                    </div>
                                                 </div>
                                             )
                                         )}
@@ -595,6 +625,7 @@ export function MapDrawer(props: Props) {
                                             variant="contained"
                                             disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
                                             // -1 clear the map
+                                            // TODO: change click handler to add coverage layers
                                             onClick={() => {
                                                 updateBaseMap(-1, sources);
                                             }}
@@ -617,6 +648,7 @@ export function MapDrawer(props: Props) {
 function mapStateToProps(state) {
     return {
         providers: state.providers,
+        selectedCoverages: state.selectedCoverages,
     };
 }
 
