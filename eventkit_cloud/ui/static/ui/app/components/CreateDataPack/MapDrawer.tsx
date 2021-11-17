@@ -397,7 +397,7 @@ export function MapDrawer(props: Props) {
                                     <Icon classes={{root: classes.iconRoot}}>
                                         <img
                                             className={classes.imageIcon}
-                                            src={theme.eventkit.images.basemap}
+                                            src={theme.eventkit.images.overlays}
                                             alt="Coverages"
                                             title="Coverages"
                                         />

@@ -2,6 +2,7 @@ import topo_light from '../../images/topoBackground.png';
 import topo_dark from '../../images/ek_topo_pattern.png';
 import logo from '../../images/eventkit-logo.1.png';
 import basemap from '../../images/icn_basemap.svg';
+import overlays from '../../images/icn_overlays.svg';
 import favicon from '../../images/favicon.png';
 import reddotfavicon from '../../images/reddotfavicon.png';
 import map_pin from '../../images/icn_poi_pin.svg';
@@ -46,6 +47,7 @@ export const images = {
     topo_light,
     logo,
     basemap,
+    overlays,
     favicon,
     reddotfavicon,
     map_pin,
