@@ -293,8 +293,13 @@ export function MapDrawer(props: Props) {
         }
     }
 
+    function clearCoverageGeos() {
+        selectedCoverages.forEach((cov) => props.removeCoverageGeos(cov.features));
+        setSelectedCoverages([]);
+    }
+
     function colorWithAlpha(color, alpha) {
-        const [r, g, b] = color
+        const [r, g, b] = color;
         return olColor.asString([r, g, b, alpha]);
     }
 
@@ -308,8 +313,8 @@ export function MapDrawer(props: Props) {
 
     function getFeatureStyle(featureName) {
         let randomColor = getRandomColor()
-        let fillColor = colorWithAlpha(randomColor, 0.2)
-        let strokeColor = colorWithAlpha(randomColor, 0.8)
+        let fillColor = colorWithAlpha(randomColor, 0.1)
+        let strokeColor = colorWithAlpha(randomColor, 0.7)
         let style = new Style({
             stroke: new Stroke({color: strokeColor, width: 2}),
             fill: new Fill({color: fillColor}),
@@ -325,7 +330,6 @@ export function MapDrawer(props: Props) {
 
     const drawerOpen = !!selectedTab;
     const areProvidersHidden = providers.find(provider => provider.hidden === true);
-
 
     const [ offSet, setOffSet ] = useState(0);
 
@@ -667,11 +671,9 @@ export function MapDrawer(props: Props) {
                                             className={`${classes.button} ${classes.stickRowyItems}`}
                                             color="primary"
                                             variant="contained"
-                                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                                            // -1 clear the map
-                                            // TODO: change click handler to clear coverage layers
+                                            disabled={selectedCoverages === undefined || selectedCoverages.length == 0}
                                             onClick={() => {
-                                                updateBaseMap(-1, sources);
+                                                clearCoverageGeos();
                                             }}
                                         >
                                             Reset
