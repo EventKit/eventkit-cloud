@@ -175,6 +175,8 @@ export class ExportAOI extends React.Component<Props, State> {
         this.updateBaseMap = this.updateBaseMap.bind(this);
         this.addFootprintsLayer = this.addFootprintsLayer.bind(this);
         this.removeFootprintsLayer = this.removeFootprintsLayer.bind(this);
+        this.addCoverageGeos = this.addCoverageGeos.bind(this);
+        this.removeCoverageGeos = this.removeCoverageGeos.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -1006,6 +1008,18 @@ export class ExportAOI extends React.Component<Props, State> {
         this.setState({selectedBaseMap: mapLayer});
     }
 
+    private addCoverageGeos(features: Feature[]) {
+        features.forEach(feature => {
+            this.drawLayer.getSource().addFeature(feature);
+        }, this)
+    }
+
+    private removeCoverageGeos(features: Feature[]) {
+        features.forEach(feature => {
+            this.drawLayer.getSource().removeFeature(feature);
+        }, this)
+    }
+
     private addFootprintsLayer(mapLayer: MapLayer) {
         const mapLayers = [...this.state.mapLayers];
         const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
@@ -1098,6 +1112,8 @@ export class ExportAOI extends React.Component<Props, State> {
                             updateBaseMap={this.updateBaseMap}
                             addFootprintsLayer={this.addFootprintsLayer}
                             removeFootprintsLayer={this.removeFootprintsLayer}
+                            addCoverageGeos={this.addCoverageGeos}
+                            removeCoverageGeos={this.removeCoverageGeos}
                         />
                     </div>
                     <MapDisplayBar

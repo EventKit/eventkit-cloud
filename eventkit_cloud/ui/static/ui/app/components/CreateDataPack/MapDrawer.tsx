@@ -23,6 +23,8 @@ import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
 import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
@@ -194,7 +196,8 @@ export interface CoveragePoly {
 }
 
 export interface Coverage {
-    geo: CoveragePoly;
+    geos: CoveragePoly;
+    features: Feature[];
     name: string;
     slug: string;
     color: string;
@@ -207,6 +210,8 @@ export interface Props {
     updateBaseMap: (mapLayer: MapLayer) => void;
     addFootprintsLayer: (mapLayer: MapLayer) => void;
     removeFootprintsLayer: (mapLayer: MapLayer) => void;
+    addCoverageGeos: (features: Feature[]) => void;
+    removeCoverageGeos: (features: Feature[]) => void;
     classes: { [className: string]: string };
 }
 
@@ -263,11 +268,13 @@ export function MapDrawer(props: Props) {
         if (event && event.target.checked) {
             if (selected.indexOf(selectedCoverage) <= 0) {
                 selected.push(selectedCoverage)
+                props.addCoverageGeos(selectedCoverage.features)
             }
         } else {
             let index = selected.indexOf(selectedCoverage);
             if (index >= 0) {
                 selected.splice(index, 1);
+                props.removeCoverageGeos(selectedCoverage.features)
             }
         }
         setSelectedCoverages([...selected]);
@@ -331,11 +338,22 @@ export function MapDrawer(props: Props) {
             })
         ]);
         setCoverages([
-             ...filteredProviders.filter(_provider =>
+            ...filteredProviders.filter(_provider =>
                 !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
 
+                const features = []
+                const geos = _provider.the_geom.coordinates
+                geos.forEach(function(coords) {
+                    const polygon = new Polygon(coords);
+                    const feature = new Feature({
+                        geometry: polygon,
+                    });
+                    features.push(feature)
+                })
+
                 return {
-                    geo: _provider.the_geom,
+                    features: features,
+                    geos: _provider.the_geom,
                     name: _provider.name,
                     slug: _provider.slug,
                     color: Math.floor(Math.random() * 16777215).toString(16),
@@ -570,7 +588,6 @@ export function MapDrawer(props: Props) {
                                                                 root: classes.checkbox, checked: classes.checked,
                                                             }}
 
-                                                            // TODO: change click handler, allow multiple to be selected at once
                                                             onClick={(e) => handleCoverageClick(e, coverage)}
                                                             name="coverage"
                                                         />
@@ -625,7 +642,7 @@ export function MapDrawer(props: Props) {
                                             variant="contained"
                                             disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
                                             // -1 clear the map
-                                            // TODO: change click handler to add coverage layers
+                                            // TODO: change click handler to clear coverage layers
                                             onClick={() => {
                                                 updateBaseMap(-1, sources);
                                             }}
