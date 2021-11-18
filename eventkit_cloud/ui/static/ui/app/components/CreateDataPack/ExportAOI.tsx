@@ -131,6 +131,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private drawFreeInteraction;
     private markerLayer;
     private bufferLayer;
+    private overlayLayer;
     private pinLayer;
     private pointer;
     private feature;
@@ -487,6 +488,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
+        this.overlayLayer = generateDrawLayer();
         this.pinLayer = generateDrawLayer();
 
         this.pinLayer.setStyle(new Style({
@@ -506,6 +508,13 @@ export class ExportAOI extends React.Component<Props, State> {
         }));
 
         this.bufferLayer.setStyle(new Style({
+            stroke: new Stroke({
+                color: this.props.theme.eventkit.colors.primary,
+                width: 3,
+            }),
+        }));
+
+        this.overlayLayer.setStyle(new Style({
             stroke: new Stroke({
                 color: this.props.theme.eventkit.colors.primary,
                 width: 3,
@@ -606,7 +615,9 @@ export class ExportAOI extends React.Component<Props, State> {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+        this.map.addLayer(this.overlayLayer);
         this.map.addLayer(this.pinLayer);
+        this.overlayLayer.setZIndex(96);
         this.drawLayer.setZIndex(97);
         this.markerLayer.setZIndex(98);
         this.bufferLayer.setZIndex(99);
@@ -1010,13 +1021,13 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private addCoverageGeos(features: Feature[]) {
         features.forEach(feature => {
-            this.drawLayer.getSource().addFeature(feature);
+            this.overlayLayer.getSource().addFeature(feature);
         }, this)
     }
 
     private removeCoverageGeos(features: Feature[]) {
         features.forEach(feature => {
-            this.drawLayer.getSource().removeFeature(feature);
+            this.overlayLayer.getSource().removeFeature(feature);
         }, this)
     }
 

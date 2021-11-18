@@ -25,6 +25,11 @@ import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Text from 'ol/style/Text';
+import * as olColor from 'ol/color'
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
@@ -190,17 +195,10 @@ export interface BaseMapSource {
     data_type: string;
 }
 
-export interface CoveragePoly {
-    type: string;
-    coordinates: any[];
-}
-
 export interface Coverage {
-    geos: CoveragePoly;
     features: Feature[];
     name: string;
     slug: string;
-    color: string;
 }
 
 export interface Props {
@@ -295,6 +293,10 @@ export function MapDrawer(props: Props) {
         }
     }
 
+    function colorWithAlpha(color, alpha) {
+        const [r, g, b] = Array.from(olColor.asArray(color));
+        return olColor.asString([r, g, b, alpha]);
+    }
 
     const drawerOpen = !!selectedTab;
     const areProvidersHidden = providers.find(provider => provider.hidden === true);
@@ -341,6 +343,19 @@ export function MapDrawer(props: Props) {
             ...filteredProviders.filter(_provider =>
                 !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
 
+                let color = colorWithAlpha('#' + Math.floor(Math.random() * 16777215).toString(16), 0.25)
+                let style = new Style({
+                    stroke: new Stroke({color: color}),
+                    fill: new Fill({color: color, opacity: 0.9}),
+                    text: new Text({
+                        text: _provider.name,
+                        font: '12px Calibri,sans-serif',
+                        stroke: new Stroke({
+                            color: color, width: 2
+                        })
+                    })
+                });
+
                 const features = []
                 const geos = _provider.the_geom.coordinates
                 geos.forEach(function(coords) {
@@ -348,15 +363,14 @@ export function MapDrawer(props: Props) {
                     const feature = new Feature({
                         geometry: polygon,
                     });
+                    feature.setStyle(style)
                     features.push(feature)
                 })
 
                 return {
                     features: features,
-                    geos: _provider.the_geom,
                     name: _provider.name,
                     slug: _provider.slug,
-                    color: Math.floor(Math.random() * 16777215).toString(16),
                 } as Coverage;
              })
         ]);
@@ -665,7 +679,6 @@ export function MapDrawer(props: Props) {
 function mapStateToProps(state) {
     return {
         providers: state.providers,
-        selectedCoverages: state.selectedCoverages,
     };
 }
 

@@ -139,7 +139,7 @@ declare namespace Eventkit {
         created_at: string;
     }
 
-    interface CoveragePoly {
+    interface Geom {
         type: string;
         coordinates: any[];
     }
@@ -175,7 +175,7 @@ declare namespace Eventkit {
         thumbnail_url: string;
         hidden: boolean;
         data_type: string;
-        the_geom: CoveragePoly;
+        the_geom: Geom;
     }
 
     interface Format {
