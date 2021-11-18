@@ -294,8 +294,33 @@ export function MapDrawer(props: Props) {
     }
 
     function colorWithAlpha(color, alpha) {
-        const [r, g, b] = Array.from(olColor.asArray(color));
+        const [r, g, b] = color
         return olColor.asString([r, g, b, alpha]);
+    }
+
+    function getRandomColor() {
+        var rgb = [];
+
+        for (var i = 0; i < 3; i++)
+            rgb.push(Math.floor(Math.random() * 255));
+        return rgb
+    }
+
+    function getFeatureStyle(featureName) {
+        let randomColor = getRandomColor()
+        let fillColor = colorWithAlpha(randomColor, 0.2)
+        let strokeColor = colorWithAlpha(randomColor, 0.8)
+        let style = new Style({
+            stroke: new Stroke({color: strokeColor, width: 2}),
+            fill: new Fill({color: fillColor}),
+            text: new Text({
+                text: featureName,
+                font: '14px Calibri,sans-serif',
+                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 1}),
+                fill: new Fill({color: theme.eventkit.colors.text_primary}),
+            })
+        });
+        return style
     }
 
     const drawerOpen = !!selectedTab;
@@ -343,21 +368,9 @@ export function MapDrawer(props: Props) {
             ...filteredProviders.filter(_provider =>
                 !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
 
-                let color = colorWithAlpha('#' + Math.floor(Math.random() * 16777215).toString(16), 0.25)
-                let style = new Style({
-                    stroke: new Stroke({color: color}),
-                    fill: new Fill({color: color, opacity: 0.9}),
-                    text: new Text({
-                        text: _provider.name,
-                        font: '12px Calibri,sans-serif',
-                        stroke: new Stroke({
-                            color: color, width: 2
-                        })
-                    })
-                });
-
                 const features = []
                 const geos = _provider.the_geom.coordinates
+                const style = getFeatureStyle(_provider.name)
                 geos.forEach(function(coords) {
                     const polygon = new Polygon(coords);
                     const feature = new Feature({
