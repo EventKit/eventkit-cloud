@@ -36,6 +36,7 @@ and select "Add Data Provider".
 | Service Type | This determines how the system uses the settings to get the data. |
 | Service Layer | The specific layer for the provided Service URL |
 | Max Selection Area | This is the maximum area in square kilometers that can be exported from this provider in a single DataPack. | 
+| Max Data Size | This is the maximum amount of data in MB that can be exported from this provider in a single DataPack. |
 | Seed from level | This determines the starting zoom level the tile export will seed from. | 
 | Seed to Level |  This determines the highest zoom level the tile export will seed to. | 
 | User | UNUSED | 
@@ -80,6 +81,7 @@ WMTS/TMS Full Example:
 <pre>
 concurrency: 12
 max_repeat: 5
+max_data_size: 500
 
 layers:
  - name: default
