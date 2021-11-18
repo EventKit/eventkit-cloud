@@ -7,11 +7,12 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
+import {createStyles, IconButton, Theme, withStyles, withTheme} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
-import {ACTIONS, useAsyncRequest} from "../../utils/hooks/api";
+import {useAsyncRequest} from "../../utils/hooks/api";
+import {connect} from "react-redux";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     iconBtn: {
@@ -76,7 +77,7 @@ export function ProviderStatusCheck(props: Props) {
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
     const makeRequest = async () => {
-        const estimatedSize = providerInfo.estimates.size;
+        const estimatedSize = providerInfo.estimates?.size;
         requestCall({
             url: `/api/providers/requests/size`,
             method: 'post',
@@ -149,15 +150,22 @@ export function ProviderStatusCheck(props: Props) {
         message = makeMessage('');
         title = 'CANNOT SELECT';
     } else {
-        if (props.overSize) {
-            status = STATUS.OVER_DATA_SIZE;
-        } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
-            status = STATUS.SUCCESS;
-            message = makeMessage('No problems: Export should proceed without issues.', false);
-        } else {
-            if (props.overArea) {
-                status = STATUS.OVER_AREA_SIZE;
+        if (!props.isProviderLoading && avail.status) {
+            if (props.overArea && props.overSize) {
+                status = STATUS.OVER_DATA_SIZE
+                // if the selected aoi is over both area limit and data limit
+                // show error and allow user to request larger aoi size limit
+            } else if (props.overArea && !props.provider.max_data_size) {
+                status = STATUS.OVER_AREA_SIZE
+                // if the selected aoi is over area limit, and no max data size is configured
+                // show error and allow user to request larger aoi size limit
+            } else if ((props.overArea || props.overSize) && STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
+                status = STATUS.SUCCESS
+                message = makeMessage('No problems: Export should proceed without issues.', false);
+                // if only over size or over area, and availability check returns 'warning: selection too large'
+                // disregard availability check and show success message. If only over one check export can proceed.
             }
+            // all other cases, proceed with the status returned from the availability check.
         }
         switch (status) {
             case STATUS.SUCCESS:
@@ -347,4 +355,12 @@ export function ProviderStatusCheck(props: Props) {
     );
 }
 
-export default withStyles(jss)(ProviderStatusCheck);
+function mapStateToProps(state, ownProps) {
+    return {
+        providerInfo: state.exportInfo.providerInfo[ownProps.provider.slug] || {} as Eventkit.Store.ProviderInfo,
+    };
+}
+
+export default withTheme(withStyles(jss)(connect(
+    mapStateToProps,
+)(ProviderStatusCheck)));

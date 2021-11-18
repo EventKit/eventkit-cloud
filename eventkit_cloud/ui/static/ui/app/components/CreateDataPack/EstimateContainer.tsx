@@ -280,7 +280,7 @@ function EstimateContainer(props: Props) {
             const haveAvailableEstimates = providerSlugs.filter((slug) => {
                 // Filter out providers that DO NOT have a size estimate
                 const estimate = providerEstimates[slug];
-                return estimate && estimate.size;
+                return estimate;
             });
             // Providers without a max data size will fall back to AoI.
             const noMaxDataSize = [...providerLimits.filter(limits => !limits.maxDataSize).map(limits => limits.slug)];
