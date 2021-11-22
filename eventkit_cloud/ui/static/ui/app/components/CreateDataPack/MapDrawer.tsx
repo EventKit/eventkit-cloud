@@ -35,6 +35,7 @@ import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
 import {arrayHasValue} from "../../utils/generic";
+import isEqual from 'lodash.isequal';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -188,6 +189,7 @@ export const VerticalTabs = withStyles(theme => ({
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
 export interface BaseMapSource {
+    footprintsLayer: MapLayer;
     mapLayer: MapLayer;
     name: string;
     type: string;
@@ -197,8 +199,7 @@ export interface BaseMapSource {
 
 export interface Coverage {
     features: Feature[];
-    name: string;
-    slug: string;
+    provider: Eventkit.Provider;
 }
 
 export interface Props {
@@ -220,17 +221,21 @@ export function MapDrawer(props: Props) {
 
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState('');
-    const [selectedBaseMap, setBaseMap] = useState(-1);
+    const [selectedBaseMap, setBaseMap] = useState(null);
     const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
-    function updateBaseMap(newBaseMapId: number, sources) {
-        setBaseMap(newBaseMapId);
+    function updateBaseMap(newBaseMapSource: BaseMapSource) {
+        setBaseMap(newBaseMapSource);
         let mapLayer = {} as MapLayer;
-        if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
-            mapLayer = {...sources[newBaseMapId]}.mapLayer;
+        if (newBaseMapSource && newBaseMapSource.mapLayer) {
+            mapLayer = newBaseMapSource.mapLayer;
         }
         props.updateBaseMap(mapLayer);
+    }
+
+    function getSourceProvider(source: BaseMapSource) {
+        return (source && source.mapLayer) ? providers.find(prov => prov.slug === source.mapLayer.slug) : null
     }
 
     function handleChange(event, newValue) {
@@ -241,15 +246,14 @@ export function MapDrawer(props: Props) {
         }
     }
 
-    function handleExpandClick(event, sources) {
+    function handleExpandClick(event, selectedSource: BaseMapSource) {
         const selectedSources = [...props.sources] || [];
-        let index;
         if (event && event.target.checked) {
-            let selectedSource = event;
-            if (selectedSources.indexOf(selectedSource) <= 0) {
+            let index;
+            if (selectedSources.findIndex(isEqual, selectedSource) <= 0) {
                 selectedSources.push(selectedSource)
             } else {
-                index = selectedSources.indexOf(selectedSource);
+                index = selectedSources.findIndex(isEqual, selectedSource)
                 if (index >= 0) {
                     selectedSources.splice(index, 1);
                 }
@@ -258,29 +262,29 @@ export function MapDrawer(props: Props) {
             return null
         }
         setExpandedSources(selectedSources);
-        updateBaseMap(Number(event.target.value), sources);
+        updateBaseMap(selectedSource);
     }
 
     function handleCoverageClick(event, selectedCoverage) {
         const selected = selectedCoverages;
+        const isSelectedCoverage = (cov) => cov.provider.slug === selectedCoverage.provider.slug
         if (event && event.target.checked) {
-            if (selected.indexOf(selectedCoverage) <= 0) {
+            if (selected.findIndex(isSelectedCoverage) <= 0) {
                 selected.push(selectedCoverage)
                 props.addCoverageGeos(selectedCoverage.features)
             }
         } else {
-            let index = selected.indexOf(selectedCoverage);
+            let index = selected.findIndex(isSelectedCoverage);
             if (index >= 0) {
+                props.removeCoverageGeos(selected[index].features)
                 selected.splice(index, 1);
-                props.removeCoverageGeos(selectedCoverage.features)
             }
         }
         setSelectedCoverages([...selected]);
     }
 
-    function showFootprintData(ix: number, sources) {
-        if (expandedSources && selectedBaseMap === ix) {
-            const source = sources[ix];
+    function showFootprintData(source: BaseMapSource) {
+        if (expandedSources && isEqual(selectedBaseMap, source)) {
             if (!!source.footprintsLayer) {
                 return (
                     <FootprintDisplay
@@ -334,9 +338,14 @@ export function MapDrawer(props: Props) {
     const [ offSet, setOffSet ] = useState(0);
 
     const [ filteredProviders, setFilteredProviders ] = useState(() => providers || null);
+    const [ filteredCoverageProviders, setFilteredCoverageProviders ] = useState(() => providers || null);
+
     useEffect(() => {
         if (filteredProviders === null) {
             setFilteredProviders(providers || null);
+        }
+        if (filteredCoverageProviders === null) {
+            setFilteredCoverageProviders(providers || null);
         }
     }, [providers]);
 
@@ -345,7 +354,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setSources([
             ...filteredProviders.filter(_provider =>
-                !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
+                !!_provider && !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
                 let footprintsLayer;
                 if (!!_provider.footprint_url) {
                     footprintsLayer = {
@@ -368,14 +377,17 @@ export function MapDrawer(props: Props) {
                 } as BaseMapSource;
             })
         ]);
+    }, [filteredProviders]);
+
+    useEffect(() => {
         setCoverages([
-            ...filteredProviders.filter(_provider =>
-                !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
+            ...filteredCoverageProviders.filter(_provider =>
+                !!_provider && !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
 
                 const features = []
                 const geos = _provider.the_geom.coordinates
                 const style = getFeatureStyle(_provider.name)
-                geos.forEach(function(coords) {
+                geos.forEach(function (coords) {
                     const polygon = new Polygon(coords);
                     const feature = new Feature({
                         geometry: polygon,
@@ -386,12 +398,11 @@ export function MapDrawer(props: Props) {
 
                 return {
                     features: features,
-                    name: _provider.name,
-                    slug: _provider.slug,
+                    provider: _provider,
                 } as Coverage;
-             })
+            })
         ]);
-    }, [filteredProviders]);
+    }, [filteredCoverageProviders]);
 
     return (
         <div
@@ -473,6 +484,7 @@ export function MapDrawer(props: Props) {
                                     <span style={{marginLeft: 'auto', marginRight: '3px'}}>
                                     <MapDrawerOptions
                                         providers={providers}
+                                        selected={[getSourceProvider(selectedBaseMap)]}
                                         setProviders={setFilteredProviders}
                                         onEnabled={(offset: number) => setOffSet(offset)}
                                         onDisabled={() => setOffSet(0)}
@@ -486,17 +498,17 @@ export function MapDrawer(props: Props) {
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
                                     <List style={{padding: '10px'}}>
-                                        {(sources || []).map((source, ix) => (
-                                                <div key={ix}>
+                                        {(sources || []).map((source) => (
+                                                <div key={source.mapLayer.slug}>
                                                     <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
                                                         <Radio
-                                                            checked={selectedBaseMap === ix}
-                                                            value={ix}
+                                                            checked={isEqual(selectedBaseMap, source)}
+                                                            value={source.mapLayer.slug}
                                                             classes={{
                                                                 root: classes.checkbox, checked: classes.checked,
                                                             }}
-                                                            onClick={(e) => handleExpandClick(e, sources)}
+                                                            onClick={(e) => handleExpandClick(e, source)}
                                                             name="source"
                                                         />
                                                     </span>
@@ -528,7 +540,7 @@ export function MapDrawer(props: Props) {
                                                     <div
                                                         className={classes.footprint_options}
                                                     >
-                                                        {showFootprintData(ix, sources)}
+                                                        {showFootprintData(source)}
                                                     </div>
                                                 </div>
                                             )
@@ -561,10 +573,10 @@ export function MapDrawer(props: Props) {
                                             className={`${classes.button} ${classes.stickRowyItems}`}
                                             color="primary"
                                             variant="contained"
-                                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                                            disabled={!selectedBaseMap}
                                             // -1 clear the map
                                             onClick={() => {
-                                                updateBaseMap(-1, sources);
+                                                updateBaseMap(null);
                                             }}
                                         >
                                             Reset
@@ -594,7 +606,8 @@ export function MapDrawer(props: Props) {
                                     <span style={{marginLeft: 'auto', marginRight: '3px'}}>
                                     <MapDrawerOptions
                                         providers={providers}
-                                        setProviders={setFilteredProviders}
+                                        selected={selectedCoverages.map((cov) => cov.provider)}
+                                        setProviders={setFilteredCoverageProviders}
                                         onEnabled={(offset: number) => setOffSet(offset)}
                                         onDisabled={() => setOffSet(0)}
                                     />
@@ -608,17 +621,16 @@ export function MapDrawer(props: Props) {
                                     <div style={{height: `${offSet}px`}}/>
                                     <List style={{padding: '10px'}}>
                                         {(coverages || []).map((coverage) => (
-                                                <div key={coverage.slug}>
+                                                <div key={coverage.provider.slug}>
                                                     <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
 
                                                         <Checkbox
-                                                            checked={arrayHasValue(selectedCoverages, coverage)}
-                                                            value={coverage.slug}
+                                                            checked={selectedCoverages.some((cov) => cov.provider.slug === coverage.provider.slug)}
+                                                            value={coverage.provider.slug}
                                                             classes={{
                                                                 root: classes.checkbox, checked: classes.checked,
                                                             }}
-
                                                             onClick={(e) => handleCoverageClick(e, coverage)}
                                                             name="coverage"
                                                         />
@@ -633,7 +645,7 @@ export function MapDrawer(props: Props) {
                                                                         <Typography
                                                                             className={classes.buttonLabel}
                                                                         >
-                                                                            {coverage.name}
+                                                                            {coverage.provider.name}
                                                                         </Typography>
                                                                     }
                                                                 />
@@ -671,7 +683,7 @@ export function MapDrawer(props: Props) {
                                             className={`${classes.button} ${classes.stickRowyItems}`}
                                             color="primary"
                                             variant="contained"
-                                            disabled={selectedCoverages === undefined || selectedCoverages.length == 0}
+                                            disabled={selectedCoverages === undefined || selectedCoverages.length === 0}
                                             onClick={() => {
                                                 clearCoverageGeos();
                                             }}
