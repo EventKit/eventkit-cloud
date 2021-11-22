@@ -46,7 +46,16 @@ describe('FilterDrawer component', () => {
             display: true,
             export_provider_type: 2,
             supported_formats: ['fmt1'],
-            preview_url: 'url/path/1'
+            preview_url: 'url/path/1',
+            the_geom: {
+                coordinates: [
+                    [
+                        [
+                            [-111, 45], [-103, 45], [-104, 41], [-111, 41], [-111, 45]
+                        ]
+                    ]
+                ]
+            }
         },
         {
             id: 3,
@@ -61,7 +70,8 @@ describe('FilterDrawer component', () => {
             display: false,
             export_provider_type: 2,
             supported_formats: ['fmt1'],
-            preview_url: 'url/path/2'
+            preview_url: 'url/path/2',
+            the_geom: null
         },
         {
             id: 1337,
@@ -76,6 +86,23 @@ describe('FilterDrawer component', () => {
             display: true,
             export_provider_type: 2,
             supported_formats: ['fmt1'],
+            the_geom: {
+                coordinates: [
+                    [
+                        [
+                            [40, 40], [20, 45], [45, 30], [40, 40]
+                        ]
+                    ],
+                    [
+                        [
+                            [20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]
+                        ],
+                        [
+                            [30, 20], [20, 25], [20, 15], [30, 20]
+                        ]
+                    ]
+                ]
+            }
         },
     ];
 
@@ -84,13 +111,15 @@ describe('FilterDrawer component', () => {
             url: '/url/path/1',
             name: 'source a',
             type: 'type a',
-            thumbnail_url: '/thumbnail/url/path/1'
+            thumbnail_url: '/thumbnail/url/path/1',
+            footprint_url: '/thumbnail/url/path/1'
         },
         {
             url: '/url/path/2',
             name: 'source b',
             type: 'type b',
-            thumbnail_url: '/thumbnail/url/path/2'
+            thumbnail_url: '/thumbnail/url/path/2',
+            footprint_url: '/thumbnail/url/path/2'
         }
     ];
 
@@ -113,22 +142,12 @@ describe('FilterDrawer component', () => {
 
     beforeEach(setup);
 
-    it('should render all the basic components', () => {
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(VerticalTabs)).toHaveLength(1);
-        expect(wrapper.find(Tab)).toHaveLength(1);
-        expect(wrapper.find(Drawer)).toHaveLength(wrapper.find(Tab).length);
-        // Of the 3 providers, only one should be displayed
-        // BaseMaps are only added when a preview_url exists AND the provider should be displayed.
-        expect(wrapper.find(ListItem)).toHaveLength(1);
-        expect(wrapper.find('#dataSource-dialog')).toHaveLength(1);
-    });
+    // TESTS FOR OVERALL COMPONENT FUNCTIONALITY
 
     it('tab should have appropriate values', () => {
         // The drawer opens and closes based on the selected tab value, these need to stay in sync.
-        wrapper.find(Tab).forEach(node => {
-            expect(node.props().value).toBe("basemap");
-        });
+        expect(wrapper.find(Tab).at(0).props().value).toBe('basemap');
+        expect(wrapper.find(Tab).at(1).props().value).toBe('coverage');
     });
 
     it('should start with the basemap drawer closed', () => {
@@ -136,18 +155,75 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find(Drawer).get(0).props.open).toBe(false);
     });
 
+    // TESTS FOR BASEMAP TAB FUNCTIONALITY
+
+    it('should render all the basic components', () => {
+        // open/render the basemap tab first
+        wrapper.find(Tab).at(0).simulate('click');
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(VerticalTabs)).toHaveLength(1);
+        expect(wrapper.find(Tab)).toHaveLength(2);
+        expect(wrapper.find(Drawer)).toHaveLength(1);
+        // Of the 3 providers, only one should be displayed
+        // BaseMaps are only added when a preview_url exists AND the provider should be displayed.
+        expect(wrapper.find(ListItem)).toHaveLength(1);
+        expect(wrapper.find('#dataSource-dialog')).toHaveLength(1);
+    });
+
     it('should start with the data source dialog closed', () => {
         act(() => wrapper.update());
+        // open/render the basemap tab first
+        wrapper.find(Tab).at(0).simulate('click');
         expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
     });
 
     it('should fire the handleExpandClick function when source checkbox is clicked', () => {
+        act(() => wrapper.update());
         const mockedEvent = sinon.spy();
         const mockCallBack = sinon.spy();
 
         mockCallBack(mockedEvent, sources);
 
+        // open/render the basemap tab first
+        wrapper.find(Tab).at(0).simulate('click');
+
         wrapper.find(Radio).at(0).simulate('click');
         expect(mockCallBack.calledOnce).toBe(true);
     });
+
+    // TESTS FOR COVERAGE TAB FUNCTIONALITY
+
+    it('should render all the basic components', () => {
+        // open/render the coverage tab first
+        wrapper.find(Tab).at(1).simulate('click');
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(VerticalTabs)).toHaveLength(1);
+        expect(wrapper.find(Tab)).toHaveLength(2);
+        expect(wrapper.find(Drawer)).toHaveLength(1);
+        // Of the 3 providers, 2 should be displayed
+        // Coverages are only added when 'the_geom' exists AND the provider should be displayed.
+        expect(wrapper.find(ListItem)).toHaveLength(2);
+        expect(wrapper.find('#dataSource-dialog')).toHaveLength(1);
+    });
+
+    it('should start with the data source dialog closed', () => {
+        act(() => wrapper.update());
+        // open/render the coverage tab first
+        wrapper.find(Tab).at(1).simulate('click');
+        expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
+    });
+
+    it('should fire the handleCoverageClick function when source checkbox is clicked', () => {
+        const mockedEvent = sinon.spy();
+        const mockCallBack = sinon.spy();
+
+        mockCallBack(mockedEvent, sources);
+
+        // open/render the basemap tab first
+        wrapper.find(Tab).at(0).simulate('click');
+
+        wrapper.find(Radio).at(0).simulate('click');
+        expect(mockCallBack.calledOnce).toBe(true);
+    });
+
 });
