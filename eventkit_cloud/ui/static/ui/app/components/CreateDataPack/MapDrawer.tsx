@@ -8,7 +8,7 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, Link, Menu, MenuItem
+    Divider, Link,
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
@@ -34,7 +34,6 @@ import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
-import {arrayHasValue} from "../../utils/generic";
 import isEqual from 'lodash.isequal';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -309,7 +308,6 @@ export function MapDrawer(props: Props) {
 
     function getRandomColor() {
         var rgb = [];
-
         for (var i = 0; i < 3; i++)
             rgb.push(Math.floor(Math.random() * 255));
         return rgb
@@ -458,8 +456,8 @@ export function MapDrawer(props: Props) {
                                         <img
                                             className={classes.imageIcon}
                                             src={theme.eventkit.images.overlays}
-                                            alt="Coverages"
-                                            title="Coverages"
+                                            alt="Coverage"
+                                            title="Coverage"
                                         />
                                     </Icon>
                                 </Card>)}
@@ -592,7 +590,7 @@ export function MapDrawer(props: Props) {
                         <div style={{height: '100%'}}>
                             <div style={{display: 'block'}} className={classes.heading}>
                                 <div style={{display: 'flex'}}>
-                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverages</strong>
+                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverage</strong>
                                     <Clear
                                         className={classes.clear}
                                         color="primary"
@@ -601,7 +599,7 @@ export function MapDrawer(props: Props) {
                                 </div>
                                 <div style={{display: 'flex'}}>
                                     <strong style={{margin: 'auto 0'}}>
-                                        Select coverage footprints
+                                        Select footprints
                                     </strong>
                                     <span style={{marginLeft: 'auto', marginRight: '3px'}}>
                                     <MapDrawerOptions

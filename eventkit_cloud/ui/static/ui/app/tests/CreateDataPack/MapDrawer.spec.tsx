@@ -7,7 +7,11 @@ import CustomScrollbar from "../../components/common/CustomScrollbar";
 import Tab from "@material-ui/core/Tab";
 import ListItem from '@material-ui/core/ListItem';
 import Radio from "@material-ui/core/Radio";
+import Checkbox from '@material-ui/core/Checkbox';
 import {act} from "react-dom/test-utils";
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
+import {ExportAOI} from "../../components/CreateDataPack/ExportAOI";
 
 jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
@@ -90,11 +94,6 @@ describe('FilterDrawer component', () => {
                 coordinates: [
                     [
                         [
-                            [40, 40], [20, 45], [45, 30], [40, 40]
-                        ]
-                    ],
-                    [
-                        [
                             [20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]
                         ],
                         [
@@ -123,10 +122,50 @@ describe('FilterDrawer component', () => {
         }
     ];
 
+    const coverages = [
+        {
+            features: [
+                new Feature({
+                    geometry: new Polygon(
+                        [
+                            [
+                                [-111, 45], [-103, 45], [-104, 41], [-111, 41], [-111, 45]
+                            ]
+                        ]
+                    )
+                })],
+            provider: {
+                slug: 'osm',
+            }
+        },
+        {
+            features: [
+                new Feature({
+                    geometry: new Polygon(
+                        [
+                            [
+                                [20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]
+                            ],
+                            [
+                                [30, 20], [20, 25], [20, 15], [30, 20]
+                            ]
+                        ]
+                    )
+                })],
+            provider: {
+                slug: 'osm5',
+            }
+        },
+    ]
+
+    const addCoverageGeosSpy = jest.fn()
+    const removeCoverageGeosSpy = jest.fn()
+    const updateBaseMapSpy = jest.fn()
     const getProps = () => ({
         providers,
-        updateBaseMap: (mapUrl: string) => {
-        },
+        updateBaseMap: updateBaseMapSpy,
+        addCoverageGeos: addCoverageGeosSpy,
+        removeCoverageGeos: removeCoverageGeosSpy,
         classes: {},
         ...(global as any).eventkit_test_props
     });
@@ -177,20 +216,13 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
     });
 
-    it('should fire the handleExpandClick function when source checkbox is clicked', () => {
-        act(() => wrapper.update());
-        const mockedEvent = sinon.spy();
-        const mockCallBack = sinon.spy();
-
-        mockCallBack(mockedEvent, sources);
-
+    it('should call updateBaseMap function when source checkbox is clicked', () => {
         // open/render the basemap tab first
         wrapper.find(Tab).at(0).simulate('click');
-
-        wrapper.find(Radio).at(0).simulate('click');
-        expect(mockCallBack.calledOnce).toBe(true);
+        wrapper.find(Radio).at(0).simulate('click', { target: {checked: true}});
+        expect(wrapper.find(Radio).at(0).props().checked).toBe(true);
+        expect(updateBaseMapSpy).toHaveBeenCalledTimes(1);
     });
-
     // TESTS FOR COVERAGE TAB FUNCTIONALITY
 
     it('should render all the basic components', () => {
@@ -213,17 +245,23 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
     });
 
-    it('should fire the handleCoverageClick function when source checkbox is clicked', () => {
-        const mockedEvent = sinon.spy();
-        const mockCallBack = sinon.spy();
+    it('should call addCoverageGeos when coverage checked', () => {
+        // open/render the coverage tab first
+        wrapper.find(Tab).at(1).simulate('click');
+        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: true}});
+        expect(wrapper.find(Checkbox).at(0).props().value).toBe(coverages[0].provider.slug);
+        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(true);
+        expect(addCoverageGeosSpy).toHaveBeenCalledTimes(1);
+    });
 
-        mockCallBack(mockedEvent, sources);
-
-        // open/render the basemap tab first
-        wrapper.find(Tab).at(0).simulate('click');
-
-        wrapper.find(Radio).at(0).simulate('click');
-        expect(mockCallBack.calledOnce).toBe(true);
+    it('should call removeCoverageGeos when coverage unchecked', () => {
+        // open/render the coverage tab first
+        wrapper.find(Tab).at(1).simulate('click');
+        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: true}});
+        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: false}});
+        expect(wrapper.find(Checkbox).at(0).props().value).toBe(coverages[0].provider.slug);
+        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(false);
+        expect(removeCoverageGeosSpy).toHaveBeenCalledTimes(1);
     });
 
 });
