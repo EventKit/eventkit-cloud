@@ -52,7 +52,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: 'auto',
         width: '250px',
         height: 'calc(100vh - 180px)',
-        boxShadow: '0px 1px 5px 0px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 3px 1px -2px rgba(0,0,0,0.12)',
     },
     drawerHeader: {
         width: '100%',
@@ -81,8 +80,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomRightRadius: '0px',
         height: 'auto',
         marginTop: '14px',
-        backgroundColor: theme.eventkit.colors.secondary,
-        boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2) ',
     },
     tab: {
         opacity: 1,
@@ -91,13 +88,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderTopLeftRadius: '2px',
         borderBottomLeftRadius: '2px',
         borderBottomRightRadius: '0px',
-        backgroundColor: 'lightgrey',
         '& img': {
-            boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 2px 1px -1px rgba(0,0,0,0.12)',
+            backgroundColor: theme.eventkit.colors.secondary,
         },
         '&$selected': {
             '& img': {
-                backgroundColor: theme.eventkit.colors.secondary,
+                backgroundColor: 'white',
             }
         }
     },
@@ -323,8 +319,8 @@ export function MapDrawer(props: Props) {
             text: new Text({
                 text: featureName,
                 font: '14px Calibri,sans-serif',
-                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 1}),
-                fill: new Fill({color: theme.eventkit.colors.text_primary}),
+                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 3}),
+                fill: new Fill({color: theme.eventkit.colors.white}),
             })
         });
         return style
