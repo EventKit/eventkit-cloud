@@ -7,7 +7,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase, override_settings
 
-from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox
+from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox, Nominatim
 
 logger = logging.getLogger(__name__)
 
@@ -408,24 +408,37 @@ class TestGeoCode(TestCase):
         result = geocode.search("test")
         self.assertEqual(result.get("features")[0].get("geometry").get("coordinates"), polygonCoordinates)
 
-        @override_settings(GEOCODING_API_URL="mock://nominatim.url/", GEOCODING_API_TYPE="nominatim")
-        def test_nominatim_success(self):
-            nominatim_response = [
-                {
-                    "place_id": 235668418,
-                    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
-                    "osm_type": "relation",
-                    "osm_id": 2315704,
-                    "boundingbox": ["42.2279112", "42.3969775", "-71.1912491", "-70.8044881"],
-                    "lat": "42.3602534",
-                    "lon": "-71.0582912",
-                    "display_name": "Boston, Suffolk County, Massachusetts, United States of America",
-                    "class": "boundary",
-                    "type": "administrative",
-                    "importance": 0.8202507899404512,
-                    "icon": "https://nominatim.openstreetmap.org/images/mapicons/poi_boundary_administrative.p.20.png",
-                    "geojson": {"type": "Polygon", "coordinates": [[]]},
-                }
-            ]
+    @override_settings(GEOCODING_API_URL="mock://nominatim.url/", GEOCODING_API_TYPE="nominatim")
+    def test_nominatim_payload(self):
+        nominatim = Nominatim(settings.GEOCODING_API_URL)
+        expected_payload = {
+            "q": "test",
+            "format": "json",
+            "polygon_geojson": 1,
+            "addressdetails": 1,
+            "accept-language": "en",
+        }
+        payload = nominatim.get_payload(query="test")
+        self.assertEqual(payload, expected_payload)
 
-            self.geocode_test(nominatim_response)
+    @override_settings(GEOCODING_API_URL="mock://nominatim.url/", GEOCODING_API_TYPE="nominatim")
+    def test_nominatim_success(self):
+        nominatim_response = [
+            {
+                "place_id": 235668418,
+                "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
+                "osm_type": "relation",
+                "osm_id": 2315704,
+                "boundingbox": ["42.2279112", "42.3969775", "-71.1912491", "-70.8044881"],
+                "lat": "42.3602534",
+                "lon": "-71.0582912",
+                "display_name": "Boston, Suffolk County, Massachusetts, United States of America",
+                "class": "boundary",
+                "type": "administrative",
+                "importance": 0.8202507899404512,
+                "icon": "https://nominatim.openstreetmap.org/images/mapicons/poi_boundary_administrative.p.20.png",
+                "geojson": {"type": "Polygon", "coordinates": [[]]},
+            }
+        ]
+
+        self.geocode_test(nominatim_response)
