@@ -95,7 +95,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
             '& img': {
                 backgroundColor: 'white',
             }
-        }
+        },
     },
     scrollBar: {
         height: 'calc(100% - 125px)',

@@ -124,34 +124,13 @@ describe('FilterDrawer component', () => {
 
     const coverages = [
         {
-            features: [
-                new Feature({
-                    geometry: new Polygon(
-                        [
-                            [
-                                [-111, 45], [-103, 45], [-104, 41], [-111, 41], [-111, 45]
-                            ]
-                        ]
-                    )
-                })],
+            features: [],
             provider: {
                 slug: 'osm',
             }
         },
         {
-            features: [
-                new Feature({
-                    geometry: new Polygon(
-                        [
-                            [
-                                [20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]
-                            ],
-                            [
-                                [30, 20], [20, 25], [20, 15], [30, 20]
-                            ]
-                        ]
-                    )
-                })],
+            features: [],
             provider: {
                 slug: 'osm5',
             }
