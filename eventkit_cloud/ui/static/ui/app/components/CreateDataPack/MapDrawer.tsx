@@ -644,6 +644,9 @@ export function MapDrawer(props: Props) {
                                                                     }
                                                                 />
                                                             </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
+                                                            </div>
                                                         </div>
                                                     </ListItem>
                                                 </div>

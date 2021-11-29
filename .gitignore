@@ -117,12 +117,11 @@ venv/
 
 #mkdocs staticfiles
 site
-eventkit_cloud/docker-compose.yml
-eventkit_cloud/docker-compose.yml
+
+#necessary for pycharm debugging
 .eslintignore
 .eslintrc.json
 babel.config.js
-eventkit_cloud/dataproviders.json
 nightwatch.json
 setupFile.js
 tsconfig.json
