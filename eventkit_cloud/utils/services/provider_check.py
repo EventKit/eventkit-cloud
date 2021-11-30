@@ -537,37 +537,33 @@ class OGCProviderCheck(ProviderCheck):
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
     def has_valid_process_inputs(self) -> bool:
+        """
+        Checks if the configured process is valid based on the allowed inputs of the provider.
+        """
         url = (
             f"{self.client.service_url.rstrip('/')}/processes/{self.client.config['ogcapi_process']['id']}?format=json"
         )
         response = self.client.session.get(url=url, timeout=self.client.timeout)
 
+        if response.status_code != 200:
+            return False
+
         data = response.json()
-        if not data:
+        expected_keys = ["version", "id", "title", "description", "inputs"]
+        if any(key not in data for key in expected_keys):
             return False
 
-        process_id = self.client.config["ogcapi_process"]["id"]
-        if process_id not in data.values():
+        if self.client.config["ogcapi_process"]["id"] != data["id"]:
             return False
 
-        # Loop through inputs and check if the input is allowed.
         allowed_inputs = data["inputs"]
         configured_inputs = self.client.config["ogcapi_process"]["inputs"].items()
 
-        allowed_input_ids = [allowed_input["id"] for allowed_input in allowed_inputs]
         for configured_input_key, configured_input_value in configured_inputs:
-            # For every config_input, check to see if it matches an allowed_inputs id.  If not, throw an error.
-            if configured_input_key not in allowed_input_ids:
+            if configured_input_key not in allowed_inputs.keys():
                 return False
 
-            # Get input dict based on id.
-            current_input = next(
-                iter(allowed_input for allowed_input in allowed_inputs if allowed_input["id"] == configured_input_key),
-                None,
-            )
-
-            # Check that the allowed values are correct.  (e.g. example-product and example-file-format)
-            if configured_input_value["value"] not in current_input["input"]["allowedValues"]:
+            if configured_input_value["value"] not in allowed_inputs[configured_input_key]["schema"]["enum"]:
                 return False
 
         return True

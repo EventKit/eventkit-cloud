@@ -286,33 +286,35 @@ F                                <EX_GeographicBoundingBox>
             "id": "export-example-bundle",
             "title": "Example Bundle",
             "description": "Example Bundle",
-            "inputs": [
-                {
-                    "id": "product",
+            "inputs": {
+                "product": {
                     "title": "Product ID",
                     "description": "The short name of the product type to export.",
                     "keywords": [],
                     "metadata": [],
-                    "input": {"allowedValues": ["example-product"]},
+                    "schema": {"type": "string", "enum": ["example-product"]},
                 },
-                {
-                    "id": "file_format",
+                "file_format": {
                     "title": "File Format",
                     "description": "The file format to export in.",
                     "keywords": [],
                     "metadata": [],
-                    "input": {"allowedValues": ["example-file-format"]},
+                    "schema": {"type": "string", "enum": ["example-file-format"]},
                 },
-            ],
+            },
         }
 
         mock_session = Mock()
         pc.client.session = mock_session
 
         response = Mock()
-        response.status_code = 200
+
+        # Test bad response.
+        response.status_code = 404
+        self.assertFalse(pc.has_valid_process_inputs())
 
         # Test empty response.
+        response.status_code = 200
         response.json.return_value = empty_content
         mock_session.get.return_value = response
         self.assertFalse(pc.has_valid_process_inputs())
@@ -326,14 +328,14 @@ F                                <EX_GeographicBoundingBox>
 
         # Test invalid inputs.
         content_invalid_inputs = copy.deepcopy(valid_content)
-        content_invalid_inputs["inputs"][0]["id"] = "invalid-input"
+        content_invalid_inputs["inputs"] = {"invalid-input": {}}
         response.json.return_value = content_invalid_inputs
         mock_session.get.return_value = response
         self.assertFalse(pc.has_valid_process_inputs())
 
         # Test no matching input values.
         content_invalid_input_values = copy.deepcopy(valid_content)
-        content_invalid_input_values["inputs"][0]["input"]["allowedValues"] = ["invalid-value"]
+        content_invalid_input_values["inputs"]["product"]["schema"]["enum"] = ["invalid-value"]
         response.json.return_value = content_invalid_input_values
         mock_session.get.return_value = response
         self.assertFalse(pc.has_valid_process_inputs())
