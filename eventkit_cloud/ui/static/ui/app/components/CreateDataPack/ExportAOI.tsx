@@ -131,6 +131,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private drawFreeInteraction;
     private markerLayer;
     private bufferLayer;
+    private overlayLayer;
     private pinLayer;
     private pointer;
     private feature;
@@ -175,6 +176,8 @@ export class ExportAOI extends React.Component<Props, State> {
         this.updateBaseMap = this.updateBaseMap.bind(this);
         this.addFootprintsLayer = this.addFootprintsLayer.bind(this);
         this.removeFootprintsLayer = this.removeFootprintsLayer.bind(this);
+        this.addCoverageGeos = this.addCoverageGeos.bind(this);
+        this.removeCoverageGeos = this.removeCoverageGeos.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -485,6 +488,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
+        this.overlayLayer = generateDrawLayer();
         this.pinLayer = generateDrawLayer();
 
         this.pinLayer.setStyle(new Style({
@@ -504,6 +508,13 @@ export class ExportAOI extends React.Component<Props, State> {
         }));
 
         this.bufferLayer.setStyle(new Style({
+            stroke: new Stroke({
+                color: this.props.theme.eventkit.colors.primary,
+                width: 3,
+            }),
+        }));
+
+        this.overlayLayer.setStyle(new Style({
             stroke: new Stroke({
                 color: this.props.theme.eventkit.colors.primary,
                 width: 3,
@@ -604,7 +615,9 @@ export class ExportAOI extends React.Component<Props, State> {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+        this.map.addLayer(this.overlayLayer);
         this.map.addLayer(this.pinLayer);
+        this.overlayLayer.setZIndex(96);
         this.drawLayer.setZIndex(97);
         this.markerLayer.setZIndex(98);
         this.bufferLayer.setZIndex(99);
@@ -1006,6 +1019,18 @@ export class ExportAOI extends React.Component<Props, State> {
         this.setState({selectedBaseMap: mapLayer});
     }
 
+    private addCoverageGeos(features: Feature[]) {
+        features.forEach(feature => {
+            this.overlayLayer.getSource().addFeature(feature);
+        }, this)
+    }
+
+    private removeCoverageGeos(features: Feature[]) {
+        features.forEach(feature => {
+            this.overlayLayer.getSource().removeFeature(feature);
+        }, this)
+    }
+
     private addFootprintsLayer(mapLayer: MapLayer) {
         const mapLayers = [...this.state.mapLayers];
         const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
@@ -1098,6 +1123,8 @@ export class ExportAOI extends React.Component<Props, State> {
                             updateBaseMap={this.updateBaseMap}
                             addFootprintsLayer={this.addFootprintsLayer}
                             removeFootprintsLayer={this.removeFootprintsLayer}
+                            addCoverageGeos={this.addCoverageGeos}
+                            removeCoverageGeos={this.removeCoverageGeos}
                         />
                     </div>
                     <MapDisplayBar
