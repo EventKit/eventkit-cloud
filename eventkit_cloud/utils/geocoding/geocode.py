@@ -60,7 +60,7 @@ class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
         This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api
         will expect.
         :param query: A string
-        :return: A dict of API specific query paramters.
+        :return: A dict of API specific query parameters.
             Input:
                 "Something"
             Output:
@@ -155,7 +155,8 @@ class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
 
 class Nominatim(GeocodeAdapter):
     def get_payload(self, query):
-        return {"q": query, "format": "json", "polygon_geojson": 1, "addressdetails": 1}
+        # accept-language must be set to 'en' so that the results are always returned in English.
+        return {"q": query, "format": "json", "polygon_geojson": 1, "addressdetails": 1, "accept-language": "en"}
 
     def create_geojson(self, response):
         if response is None:

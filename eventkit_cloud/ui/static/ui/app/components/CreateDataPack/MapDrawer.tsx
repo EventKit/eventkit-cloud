@@ -8,12 +8,12 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, Link, Menu, MenuItem
+    Divider, Link,
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
-
+import Checkbox from '@material-ui/core/Checkbox';
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
@@ -23,11 +23,18 @@ import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
 import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Text from 'ol/style/Text';
+import * as olColor from 'ol/color'
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
-import {arrayHasValue} from "../../utils/generic";
+import isEqual from 'lodash.isequal';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -45,7 +52,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: 'auto',
         width: '250px',
         height: 'calc(100vh - 180px)',
-        boxShadow: '0px 1px 5px 0px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 3px 1px -2px rgba(0,0,0,0.12)',
     },
     drawerHeader: {
         width: '100%',
@@ -74,8 +80,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomRightRadius: '0px',
         height: 'auto',
         marginTop: '14px',
-        backgroundColor: theme.eventkit.colors.secondary,
-        boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2) ',
     },
     tab: {
         opacity: 1,
@@ -84,15 +88,14 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderTopLeftRadius: '2px',
         borderBottomLeftRadius: '2px',
         borderBottomRightRadius: '0px',
-        backgroundColor: 'lightgrey',
         '& img': {
-            boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 2px 1px -1px rgba(0,0,0,0.12)',
+            backgroundColor: theme.eventkit.colors.secondary,
         },
         '&$selected': {
             '& img': {
-                backgroundColor: theme.eventkit.colors.secondary,
+                backgroundColor: 'white',
             }
-        }
+        },
     },
     scrollBar: {
         height: 'calc(100% - 125px)',
@@ -181,6 +184,7 @@ export const VerticalTabs = withStyles(theme => ({
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
 export interface BaseMapSource {
+    footprintsLayer: MapLayer;
     mapLayer: MapLayer;
     name: string;
     type: string;
@@ -188,12 +192,20 @@ export interface BaseMapSource {
     data_type: string;
 }
 
+export interface Coverage {
+    features: Feature[];
+    provider: Eventkit.Provider;
+}
+
 export interface Props {
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
+    coverages: Coverage[];
     updateBaseMap: (mapLayer: MapLayer) => void;
     addFootprintsLayer: (mapLayer: MapLayer) => void;
     removeFootprintsLayer: (mapLayer: MapLayer) => void;
+    addCoverageGeos: (features: Feature[]) => void;
+    removeCoverageGeos: (features: Feature[]) => void;
     classes: { [className: string]: string };
 }
 
@@ -203,36 +215,40 @@ export function MapDrawer(props: Props) {
     const {providers, classes} = props;
 
     const [expandedSources, setExpandedSources] = useState([]);
-    const [selectedTab, setSelectedTab] = useState(false);
-    const [selectedBaseMap, setBaseMap] = useState(-1);
+    const [selectedTab, setSelectedTab] = useState('');
+    const [selectedBaseMap, setBaseMap] = useState(null);
+    const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
-    function updateBaseMap(newBaseMapId: number, sources) {
-        setBaseMap(newBaseMapId);
+    function updateBaseMap(newBaseMapSource: BaseMapSource) {
+        setBaseMap(newBaseMapSource);
         let mapLayer = {} as MapLayer;
-        if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
-            mapLayer = {...sources[newBaseMapId]}.mapLayer;
+        if (newBaseMapSource && newBaseMapSource.mapLayer) {
+            mapLayer = newBaseMapSource.mapLayer;
         }
         props.updateBaseMap(mapLayer);
     }
 
+    function getSourceProvider(source: BaseMapSource) {
+        return (source && source.mapLayer) ? providers.find(prov => prov.slug === source.mapLayer.slug) : null
+    }
+
     function handleChange(event, newValue) {
         if (selectedTab === newValue) {
-            setSelectedTab(false);
+            setSelectedTab('');
         } else {
             setSelectedTab(newValue);
         }
     }
 
-    function handleExpandClick(event, sources) {
+    function handleExpandClick(event, selectedSource: BaseMapSource) {
         const selectedSources = [...props.sources] || [];
-        let index;
         if (event && event.target.checked) {
-            let selectedSource = event;
-            if (selectedSources.indexOf(selectedSource) <= 0) {
+            let index;
+            if (selectedSources.findIndex(isEqual, selectedSource) <= 0) {
                 selectedSources.push(selectedSource)
             } else {
-                index = selectedSources.indexOf(selectedSource);
+                index = selectedSources.findIndex(isEqual, selectedSource)
                 if (index >= 0) {
                     selectedSources.splice(index, 1);
                 }
@@ -241,12 +257,29 @@ export function MapDrawer(props: Props) {
             return null
         }
         setExpandedSources(selectedSources);
-        updateBaseMap(Number(event.target.value), sources);
+        updateBaseMap(selectedSource);
     }
 
-    function showFootprintData(ix: number, sources) {
-        if (expandedSources && selectedBaseMap === ix) {
-            const source = sources[ix];
+    function handleCoverageClick(event, selectedCoverage) {
+        const selected = selectedCoverages;
+        const isSelectedCoverage = (cov) => cov.provider.slug === selectedCoverage.provider.slug
+        if (event && event.target.checked) {
+            if (selected.findIndex(isSelectedCoverage) <= 0) {
+                selected.push(selectedCoverage)
+                props.addCoverageGeos(selectedCoverage.features)
+            }
+        } else {
+            let index = selected.findIndex(isSelectedCoverage);
+            if (index >= 0) {
+                props.removeCoverageGeos(selected[index].features)
+                selected.splice(index, 1);
+            }
+        }
+        setSelectedCoverages([...selected]);
+    }
+
+    function showFootprintData(source: BaseMapSource) {
+        if (expandedSources && isEqual(selectedBaseMap, source)) {
             if (!!source.footprintsLayer) {
                 return (
                     <FootprintDisplay
@@ -259,25 +292,63 @@ export function MapDrawer(props: Props) {
         }
     }
 
+    function clearCoverageGeos() {
+        selectedCoverages.forEach((cov) => props.removeCoverageGeos(cov.features));
+        setSelectedCoverages([]);
+    }
+
+    function colorWithAlpha(color, alpha) {
+        const [r, g, b] = color;
+        return olColor.asString([r, g, b, alpha]);
+    }
+
+    function getRandomColor() {
+        var rgb = [];
+        for (var i = 0; i < 3; i++)
+            rgb.push(Math.floor(Math.random() * 255));
+        return rgb
+    }
+
+    function getFeatureStyle(featureName) {
+        let randomColor = getRandomColor()
+        let fillColor = colorWithAlpha(randomColor, 0.1)
+        let strokeColor = colorWithAlpha(randomColor, 0.7)
+        let style = new Style({
+            stroke: new Stroke({color: strokeColor, width: 2}),
+            fill: new Fill({color: fillColor}),
+            text: new Text({
+                text: featureName,
+                font: '14px Calibri,sans-serif',
+                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 3}),
+                fill: new Fill({color: theme.eventkit.colors.white}),
+            })
+        });
+        return style
+    }
 
     const drawerOpen = !!selectedTab;
     const areProvidersHidden = providers.find(provider => provider.hidden === true);
 
-
     const [ offSet, setOffSet ] = useState(0);
 
     const [ filteredProviders, setFilteredProviders ] = useState(() => providers || null);
+    const [ filteredCoverageProviders, setFilteredCoverageProviders ] = useState(() => providers || null);
+
     useEffect(() => {
         if (filteredProviders === null) {
             setFilteredProviders(providers || null);
         }
+        if (filteredCoverageProviders === null) {
+            setFilteredCoverageProviders(providers || null);
+        }
     }, [providers]);
 
     const [sources, setSources] = useState([]);
+    const [coverages, setCoverages] = useState([]);
     useEffect(() => {
         setSources([
             ...filteredProviders.filter(_provider =>
-                !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
+                !!_provider && !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
                 let footprintsLayer;
                 if (!!_provider.footprint_url) {
                     footprintsLayer = {
@@ -301,6 +372,31 @@ export function MapDrawer(props: Props) {
             })
         ]);
     }, [filteredProviders]);
+
+    useEffect(() => {
+        setCoverages([
+            ...filteredCoverageProviders.filter(_provider =>
+                !!_provider && !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
+
+                const features = []
+                const geos = _provider.the_geom.coordinates
+                const style = getFeatureStyle(_provider.name)
+                geos.forEach(function (coords) {
+                    const polygon = new Polygon(coords);
+                    const feature = new Feature({
+                        geometry: polygon,
+                    });
+                    feature.setStyle(style)
+                    features.push(feature)
+                })
+
+                return {
+                    features: features,
+                    provider: _provider,
+                } as Coverage;
+            })
+        ]);
+    }, [filteredCoverageProviders]);
 
     return (
         <div
@@ -344,122 +440,260 @@ export function MapDrawer(props: Props) {
                                     </Icon>
                                 </Card>)}
                         />
+                        <Tab
+                            value="coverage"
+                            classes={{
+                                root: classes.tab,
+                                selected: classes.selected,
+                            }}
+                            label={(
+                                <Card className={classes.tabHeader}>
+                                    <Icon classes={{root: classes.iconRoot}}>
+                                        <img
+                                            className={classes.imageIcon}
+                                            src={theme.eventkit.images.overlays}
+                                            alt="Coverage"
+                                            title="Coverage"
+                                        />
+                                    </Icon>
+                                </Card>)}
+                        />
                     </VerticalTabs>
-                    <div style={{display: 'block'}} className={classes.heading}>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
-                            <Clear
-                                className={classes.clear}
-                                color="primary"
-                                onClick={(event) => setSelectedTab(false)}
 
-                            />
-                        </div>
-                        <div style={{display: 'flex'}}>
-                            <strong style={{margin: 'auto 0'}}>
-                                Select a basemap
-                            </strong>
-                            <span style={{marginLeft: 'auto', marginRight: '3px'}}>
-                            <MapDrawerOptions
-                                providers={providers}
-                                setProviders={setFilteredProviders}
-                                onEnabled={(offset: number) => setOffSet(offset)}
-                                onDisabled={() => setOffSet(0)}
-                            />
-                            </span>
-                        </div>
-                    </div>
-                    <div className={classes.scrollBar} style={areProvidersHidden ? {} : {height: 'calc(100% - 100px)'}}>
-                        <CustomScrollbar>
-                            <div style={{height: `${offSet}px`}} />
-                            <List style={{padding: '10px'}}>
-                                {(sources || []).map((source, ix) => (
-                                        <div key={ix}>
-                                            <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
-                                            <span style={{marginRight: '2px'}}>
-                                                <Radio
-                                                    checked={selectedBaseMap === ix}
-                                                    value={ix}
-                                                    classes={{
-                                                        root: classes.checkbox, checked: classes.checked,
-                                                    }}
-                                                    onClick={(e) => handleExpandClick(e, sources)}
-                                                    name="source"
-                                                />
-                                            </span>
-                                                <div>
-                                                    <div style={{display: 'flex'}}>
-                                                        {source.thumbnail_url &&
-                                                        <CardMedia
-                                                            className={classes.thumbnail}
-                                                            image={source.thumbnail_url}
+                    {selectedTab === 'basemap' &&
+                        <div style={{height: '100%'}}>
+                            <div style={{display: 'block'}} className={classes.heading}>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Basemaps</strong>
+                                    <Clear
+                                        className={classes.clear}
+                                        color="primary"
+                                        onClick={(event) => setSelectedTab('')}
+                                    />
+                                </div>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{margin: 'auto 0'}}>
+                                        Select a basemap
+                                    </strong>
+                                    <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                                    <MapDrawerOptions
+                                        providers={providers}
+                                        selected={[getSourceProvider(selectedBaseMap)]}
+                                        setProviders={setFilteredProviders}
+                                        onEnabled={(offset: number) => setOffSet(offset)}
+                                        onDisabled={() => setOffSet(0)}
+                                    />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className={classes.scrollBar}
+                                 style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
+                                <CustomScrollbar>
+                                    <div style={{height: `${offSet}px`}}/>
+                                    <List style={{padding: '10px'}}>
+                                        {(sources || []).map((source) => (
+                                                <div key={source.mapLayer.slug}>
+                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{marginRight: '2px'}}>
+                                                        <Radio
+                                                            checked={isEqual(selectedBaseMap, source)}
+                                                            value={source.mapLayer.slug}
+                                                            classes={{
+                                                                root: classes.checkbox, checked: classes.checked,
+                                                            }}
+                                                            onClick={(e) => handleExpandClick(e, source)}
+                                                            name="source"
                                                         />
-                                                        }
-                                                        <ListItemText
-                                                            className={classes.noPadding}
-                                                            disableTypography
-                                                            primary={
-                                                                <Typography
-                                                                    className={classes.buttonLabel}
-                                                                >
-                                                                    {source.name}
-                                                                </Typography>
-                                                            }
-                                                        />
-                                                    </div>
-                                                    <div className={classes.buttonLabelSecondary}>
-                                                        {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                    </span>
+                                                        <div>
+                                                            <div style={{display: 'flex'}}>
+                                                                {source.thumbnail_url &&
+                                                                <CardMedia
+                                                                    className={classes.thumbnail}
+                                                                    image={source.thumbnail_url}
+                                                                />
+                                                                }
+                                                                <ListItemText
+                                                                    className={classes.noPadding}
+                                                                    disableTypography
+                                                                    primary={
+                                                                        <Typography
+                                                                            className={classes.buttonLabel}
+                                                                        >
+                                                                            {source.name}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                            </div>
+                                                        </div>
+                                                    </ListItem>
+                                                    <div
+                                                        className={classes.footprint_options}
+                                                    >
+                                                        {showFootprintData(source)}
                                                     </div>
                                                 </div>
-                                            </ListItem>
-                                            <div
-                                                className={classes.footprint_options}
-                                            >
-                                                {showFootprintData(ix, sources)}
-                                            </div>
-                                        </div>
-                                    )
-                                )}
-                            </List>
-                        </CustomScrollbar>
-                    </div>
-                    <Divider style={{margin: '0 5px 0 5px'}}/>
-
-                    <div
-                        className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
-                    >
-                        <div
-                            className={classes.stickyRowItems}
-                            style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
-                        >
-                            <div style={{marginRight: '8px'}}>
-                                <RequestDataSource open={requestDataSourceOpen}
-                                                   onClose={() => setRequestDataSourceOpen(false)}/>
-                                <div>
-                                    Data Source Missing?
-                                </div>
-                                <Link onClick={() => setRequestDataSourceOpen(true)}
-                                      style={{fontSize: '12px', cursor: 'pointer'}}>
-                                    Request New Data Source
-                                </Link>
+                                            )
+                                        )}
+                                    </List>
+                                </CustomScrollbar>
                             </div>
-                            <div>
-                                <Button
-                                    className={`${classes.button} ${classes.stickRowyItems}`}
-                                    color="primary"
-                                    variant="contained"
-                                    disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                                    // -1 clear the map
-                                    onClick={() => {
-                                        updateBaseMap(-1, sources);
-                                    }}
+                            <Divider style={{margin: '0 5px 0 5px'}}/>
+
+                            <div
+                                className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                            >
+                                <div
+                                    className={classes.stickyRowItems}
+                                    style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
                                 >
-                                    Reset
-                                </Button>
+                                    <div style={{marginRight: '8px'}}>
+                                        <RequestDataSource open={requestDataSourceOpen}
+                                                           onClose={() => setRequestDataSourceOpen(false)}/>
+                                        <div>
+                                            Data Source Missing?
+                                        </div>
+                                        <Link onClick={() => setRequestDataSourceOpen(true)}
+                                              style={{fontSize: '12px', cursor: 'pointer'}}>
+                                            Request New Data Source
+                                        </Link>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            className={`${classes.button} ${classes.stickRowyItems}`}
+                                            color="primary"
+                                            variant="contained"
+                                            disabled={!selectedBaseMap}
+                                            // -1 clear the map
+                                            onClick={() => {
+                                                updateBaseMap(null);
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+                                {areProvidersHidden && <UnavailableFilterPopup/>}
                             </div>
                         </div>
-                        {areProvidersHidden && <UnavailableFilterPopup/>}
-                    </div>
+                    }
+
+                    {selectedTab === 'coverage' &&
+                        <div style={{height: '100%'}}>
+                            <div style={{display: 'block'}} className={classes.heading}>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{fontSize: '18px', margin: 'auto 0'}}>Coverage</strong>
+                                    <Clear
+                                        className={classes.clear}
+                                        color="primary"
+                                        onClick={(event) => setSelectedTab('')}
+                                    />
+                                </div>
+                                <div style={{display: 'flex'}}>
+                                    <strong style={{margin: 'auto 0'}}>
+                                        Select footprints
+                                    </strong>
+                                    <span style={{marginLeft: 'auto', marginRight: '3px'}}>
+                                    <MapDrawerOptions
+                                        providers={providers}
+                                        selected={selectedCoverages.map((cov) => cov.provider)}
+                                        setProviders={setFilteredCoverageProviders}
+                                        onEnabled={(offset: number) => setOffSet(offset)}
+                                        onDisabled={() => setOffSet(0)}
+                                    />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className={classes.scrollBar}
+                                 style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
+                                <CustomScrollbar>
+                                    <div style={{height: `${offSet}px`}}/>
+                                    <List style={{padding: '10px'}}>
+                                        {(coverages || []).map((coverage) => (
+                                                <div key={coverage.provider.slug}>
+                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{marginRight: '2px'}}>
+
+                                                        <Checkbox
+                                                            checked={selectedCoverages.some((cov) => cov.provider.slug === coverage.provider.slug)}
+                                                            value={coverage.provider.slug}
+                                                            classes={{
+                                                                root: classes.checkbox, checked: classes.checked,
+                                                            }}
+                                                            onClick={(e) => handleCoverageClick(e, coverage)}
+                                                            name="coverage"
+                                                        />
+
+                                                    </span>
+                                                        <div>
+                                                            <div style={{display: 'flex'}}>
+                                                                <ListItemText
+                                                                    className={classes.noPadding}
+                                                                    disableTypography
+                                                                    primary={
+                                                                        <Typography
+                                                                            className={classes.buttonLabel}
+                                                                        >
+                                                                            {coverage.provider.name}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
+                                                            </div>
+                                                        </div>
+                                                    </ListItem>
+                                                </div>
+                                            )
+                                        )}
+                                    </List>
+                                </CustomScrollbar>
+                            </div>
+                            <Divider style={{margin: '0 5px 0 5px'}}/>
+
+                            <div
+                                className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                            >
+                                <div
+                                    className={classes.stickyRowItems}
+                                    style={{paddingLeft: '8px', paddingTop: '8px', display: 'flex',}}
+                                >
+                                    <div style={{marginRight: '8px'}}>
+                                        <RequestDataSource open={requestDataSourceOpen}
+                                                           onClose={() => setRequestDataSourceOpen(false)}/>
+                                        <div>
+                                            Data Source Missing?
+                                        </div>
+                                        <Link onClick={() => setRequestDataSourceOpen(true)}
+                                              style={{fontSize: '12px', cursor: 'pointer'}}>
+                                            Request New Data Source
+                                        </Link>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            className={`${classes.button} ${classes.stickRowyItems}`}
+                                            color="primary"
+                                            variant="contained"
+                                            disabled={selectedCoverages === undefined || selectedCoverages.length === 0}
+                                            onClick={() => {
+                                                clearCoverageGeos();
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
+                                {areProvidersHidden && <UnavailableFilterPopup/>}
+                            </div>
+                        </div>
+                    }
+
                 </Drawer>
             </div>
         </div>

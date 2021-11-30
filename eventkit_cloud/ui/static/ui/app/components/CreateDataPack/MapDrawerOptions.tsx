@@ -7,6 +7,7 @@ import {renderIf} from "../../utils/renderIf";
 import Radio from "@material-ui/core/Radio";
 import {useDebouncedState, useProviderIdentity} from "../../utils/hooks/hooks";
 import {arrayHasValue, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import {unionBy} from 'lodash';
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -115,6 +116,7 @@ export interface Filter {
 interface Props {
     // filter name, number of sources relevant, whether it's enabled
     providers: Eventkit.Provider[];
+    selected: Eventkit.Provider[];
     setProviders: (providers: Eventkit.Provider[]) => void;
     onEnabled: (offset: number) => void;
     onDisabled: () => void;
@@ -215,9 +217,11 @@ export function MapDrawerOptions(props: Props) {
                 _sourceName => _sourceName.toLowerCase().includes(filterNameValue.toLowerCase())
             );
         }
-        props.setProviders(providerNames.map(
+        let filteredProviders = providerNames.map(
             _sourceName => props.providers.find(_source => _sourceName === _source.name) || []
-        ));
+        )
+        let filteredWithSelected = unionBy(filteredProviders, props.selected || [], 'slug')
+        props.setProviders([...filteredWithSelected]);
     }, [filterNameValue, _filters]);
 
 
