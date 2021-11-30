@@ -127,6 +127,12 @@ class CheckResult(Enum):
         "message": _("An error has occurred, please contact an administrator."),
     }
 
+    INVALID_CONFIGURATION = {
+        "status": "ERR",
+        "type": "INVALID_CONFIGURATION",
+        "message": _("The data provider configuration is invalid."),
+    }
+
     SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
@@ -509,6 +515,9 @@ class OGCProviderCheck(ProviderCheck):
             if not response.ok:
                 raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
 
+            if not self.has_valid_process_inputs():
+                raise ProviderCheckError(CheckResult.INVALID_CONFIGURATION)
+
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
@@ -527,6 +536,42 @@ class OGCProviderCheck(ProviderCheck):
             logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
+    def has_valid_process_inputs(self) -> bool:
+        url = (
+            f"{self.client.service_url.rstrip('/')}/processes/{self.client.config['ogcapi_process']['id']}?format=json"
+        )
+        response = self.client.session.get(url=url, timeout=self.client.timeout)
+
+        data = response.json()
+        if not data:
+            return False
+
+        process_id = self.client.config["ogcapi_process"]["id"]
+        if process_id not in data.values():
+            return False
+
+        # Loop through inputs and check if the input is allowed.
+        allowed_inputs = data["inputs"]
+        configured_inputs = self.client.config["ogcapi_process"]["inputs"].items()
+
+        allowed_input_ids = [allowed_input["id"] for allowed_input in allowed_inputs]
+        for configured_input_key, configured_input_value in configured_inputs:
+            # For every config_input, check to see if it matches an allowed_inputs id.  If not, throw an error.
+            if configured_input_key not in allowed_input_ids:
+                return False
+
+            # Get input dict based on id.
+            current_input = next(
+                iter(allowed_input for allowed_input in allowed_inputs if allowed_input["id"] == configured_input_key),
+                None,
+            )
+
+            # Check that the allowed values are correct.  (e.g. example-product and example-file-format)
+            if configured_input_value["value"] not in current_input["input"]["allowedValues"]:
+                return False
+
+        return True
+
 
 PROVIDER_CHECK_MAP = {
     "wfs": WFSProviderCheck,
@@ -541,6 +586,9 @@ PROVIDER_CHECK_MAP = {
     "vector-file": FileProviderCheck,
     "raster-file": FileProviderCheck,
     "ogcapi-process": OGCProviderCheck,
+    "ogcapi-process-elevation": OGCProviderCheck,
+    "ogcapi-process-raster": OGCProviderCheck,
+    "ogcapi-process-vector": OGCProviderCheck,
 }
 
 
@@ -592,4 +640,4 @@ class ProviderCheckError(Exception):
         if check_result:
             self.status_result = ProviderCheck.get_status_result(check_result=check_result, **kwargs)
             self.message = self.status_result["message"]
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
