@@ -6,7 +6,7 @@ import {Chip, Grow, Link, Paper, TextField, withStyles} from "@material-ui/core"
 import {renderIf} from "../../utils/renderIf";
 import Radio from "@material-ui/core/Radio";
 import {useDebouncedState, useProviderIdentity} from "../../utils/hooks/hooks";
-import {arrayHasValue, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import {arrayHasValue} from "../../utils/generic";
 import {unionBy} from 'lodash';
 
 
@@ -118,6 +118,7 @@ interface Props {
     providers: Eventkit.Provider[];
     selected: Eventkit.Provider[];
     setProviders: (providers: Eventkit.Provider[]) => void;
+    providerShouldDisplay: (provider: Eventkit.Provider) => boolean;
     onEnabled: (offset: number) => void;
     onDisabled: () => void;
     classes: { [className: string]: string };
@@ -130,7 +131,7 @@ export function MapDrawerOptions(props: Props) {
     const [ visibleProviders, setVisibleProviders ] = useState([]);
     useProviderIdentity(() => {
         setVisibleProviders(props.providers.filter(
-            _provider => providerShouldDisplay(_provider) && _provider.preview_url)
+            _provider => props.providerShouldDisplay(_provider))
         );
     }, props.providers);
 

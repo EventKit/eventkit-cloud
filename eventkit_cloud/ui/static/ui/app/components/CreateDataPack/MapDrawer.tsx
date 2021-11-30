@@ -35,6 +35,7 @@ import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
 import isEqual from 'lodash.isequal';
+import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -219,6 +220,14 @@ export function MapDrawer(props: Props) {
     const [selectedBaseMap, setBaseMap] = useState(null);
     const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
+
+    const shouldDisplayBasemapProvider = (provider: Eventkit.Provider) => {
+        return !!(providerShouldDisplay(provider) && provider.preview_url)
+    }
+
+    const shouldDisplayCoverageProvider = (provider: Eventkit.Provider) => {
+        return !!(providerShouldDisplay(provider) && provider.the_geom)
+    }
 
     function updateBaseMap(newBaseMapSource: BaseMapSource) {
         setBaseMap(newBaseMapSource);
@@ -479,6 +488,7 @@ export function MapDrawer(props: Props) {
                                     <MapDrawerOptions
                                         providers={providers}
                                         selected={[getSourceProvider(selectedBaseMap)]}
+                                        providerShouldDisplay={shouldDisplayBasemapProvider}
                                         setProviders={setFilteredProviders}
                                         onEnabled={(offset: number) => setOffSet(offset)}
                                         onDisabled={() => setOffSet(0)}
@@ -601,6 +611,7 @@ export function MapDrawer(props: Props) {
                                     <MapDrawerOptions
                                         providers={providers}
                                         selected={selectedCoverages.map((cov) => cov.provider)}
+                                        providerShouldDisplay={shouldDisplayCoverageProvider}
                                         setProviders={setFilteredCoverageProviders}
                                         onEnabled={(offset: number) => setOffSet(offset)}
                                         onDisabled={() => setOffSet(0)}
