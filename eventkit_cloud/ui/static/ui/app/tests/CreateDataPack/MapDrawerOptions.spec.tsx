@@ -2,6 +2,7 @@ import * as React from 'react';
 import {render, screen, getByText, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {MapDrawerOptions} from "../../components/CreateDataPack/MapDrawerOptions";
+import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
 
 jest.mock("@material-ui/core/Grow", () => {
     const React = require('react');
@@ -122,6 +123,9 @@ describe('FilterDrawer component', () => {
     const getProps = () => ({
         providers,
         setProviders: jest.fn(),
+        providerShouldDisplay: (provider: Eventkit.Provider) => {
+            return !!(providerShouldDisplay(provider) && provider.preview_url)
+        },
         onEnabled: jest.fn(),
         onDisabled: jest.fn(),
         classes: {},
@@ -176,6 +180,16 @@ describe('FilterDrawer component', () => {
         expect(screen.queryByText('Raster (2)')).toBeInTheDocument();
         expect(screen.queryByText('Vector (1)')).toBeInTheDocument();
         expect(screen.getByText('Other (1)')).toBeInTheDocument();
+    });
+
+    it('should render the zero providers for each filter when display function always returns false', () => {
+        setup({ providerShouldDisplay: (provider: Eventkit.Provider) => {return false;}});
+        const filterLink = screen.getByText('Filter');
+        fireEvent.click(filterLink);
+        expect(screen.queryByText('Filter by Name:')).toBeInTheDocument();
+        expect(screen.queryByText('Raster (0)')).toBeInTheDocument();
+        expect(screen.queryByText('Vector (0)')).toBeInTheDocument();
+        expect(screen.getByText('Other (0)')).toBeInTheDocument();
     });
 
     it('should render appropriate chips when filter option is clicked', () => {
