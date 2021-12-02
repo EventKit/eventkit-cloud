@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import logging
 from unittest.mock import patch, Mock
 
@@ -13,6 +14,7 @@ from eventkit_cloud.utils.services.provider_check import (
     WMSProviderCheck,
     WMTSProviderCheck,
     CheckResult,
+    OGCProviderCheck,
 )
 
 logger = logging.getLogger(__name__)
@@ -267,3 +269,78 @@ F                                <EX_GeographicBoundingBox>
                            </Capabilities>""".encode()
 
         self.check_ows("wmts", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+
+    def test_has_valid_process_inputs(self):
+        url = "http://example.com/ogcapi"
+        layer = "exampleLayer"
+        config = {
+            "ogcapi_process": {
+                "id": "export-example-bundle",
+                "inputs": {"product": {"value": "example-product"}, "file_format": {"value": "example-file-format"}},
+            }
+        }
+        pc = OGCProviderCheck(url, layer, self.aoi_geojson, config=config)
+        empty_content = {}
+        valid_content = {
+            "version": "1.0.0",
+            "id": "export-example-bundle",
+            "title": "Example Bundle",
+            "description": "Example Bundle",
+            "inputs": {
+                "product": {
+                    "title": "Product ID",
+                    "description": "The short name of the product type to export.",
+                    "keywords": [],
+                    "metadata": [],
+                    "schema": {"type": "string", "enum": ["example-product"]},
+                },
+                "file_format": {
+                    "title": "File Format",
+                    "description": "The file format to export in.",
+                    "keywords": [],
+                    "metadata": [],
+                    "schema": {"type": "string", "enum": ["example-file-format"]},
+                },
+            },
+        }
+
+        mock_session = Mock()
+        pc.client.session = mock_session
+
+        response = Mock()
+
+        # Test bad response.
+        response.status_code = 404
+        self.assertFalse(pc.has_valid_process_inputs())
+
+        # Test empty response.
+        response.status_code = 200
+        response.json.return_value = empty_content
+        mock_session.get.return_value = response
+        self.assertFalse(pc.has_valid_process_inputs())
+
+        # Test no matching id.
+        content_no_id = copy.deepcopy(valid_content)
+        content_no_id.pop("id")
+        response.json.return_value = content_no_id
+        mock_session.get.return_value = response
+        self.assertFalse(pc.has_valid_process_inputs())
+
+        # Test invalid inputs.
+        content_invalid_inputs = copy.deepcopy(valid_content)
+        content_invalid_inputs["inputs"] = {"invalid-input": {}}
+        response.json.return_value = content_invalid_inputs
+        mock_session.get.return_value = response
+        self.assertFalse(pc.has_valid_process_inputs())
+
+        # Test no matching input values.
+        content_invalid_input_values = copy.deepcopy(valid_content)
+        content_invalid_input_values["inputs"]["product"]["schema"]["enum"] = ["invalid-value"]
+        response.json.return_value = content_invalid_input_values
+        mock_session.get.return_value = response
+        self.assertFalse(pc.has_valid_process_inputs())
+
+        # Test valid response.
+        response.json.return_value = valid_content
+        mock_session.get.return_value = response
+        self.assertTrue(pc.has_valid_process_inputs())
