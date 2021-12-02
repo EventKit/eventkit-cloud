@@ -76,11 +76,16 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     searchFilterContainer: {
         alignItems: 'stretch',
-        padding: '20px',
-        marginBottom: '20px'
+        padding: '15px',
     },
     searchBarContainer: {
-        display: 'inline'
+        display: 'flex',
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        '& .qa-ExportInfo-searchBarTextField': {
+            flex: '0 0 100%',
+            margin: '0px 0px 10px'
+        }
     },
     searchLabel: {
         fontSize: '15px',
@@ -88,7 +93,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         verticalAlign: 'top',
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
-        float: 'left',
+        margin: '0px 15px',
     },
     filterLabel: {
         fontSize: '15px',
@@ -96,7 +101,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         verticalAlign: 'top',
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
-        float: 'right',
+        margin: '0px 15px',
     },
     filterLabelDropdown: {
         fontSize: '15px',
@@ -120,7 +125,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         zIndex: 1,
         border: '1px solid black',
         backgroundColor: '#F9F9F9',
-        marginTop: '30px',
         padding: '20px',
         borderRadius: '4px',
         borderTopRightRadius: '0'
@@ -1001,7 +1005,7 @@ export function ExportInfo(props: Props) {
                             </div>
                         </div>
 
-                        <div className={classes.searchFilterContainer}>
+                        <div id="SearchFilter" className={`qa-ExportInfo-searchFilterContainer ${classes.searchFilterContainer}`}>
                             <div className={classes.searchBarContainer}>
                                     <span
                                         role="button"
@@ -1012,19 +1016,20 @@ export function ExportInfo(props: Props) {
                                     > Search
                                     </span>
                                 {renderIf(() => (
-                                    <div>
+                                    <div style={{width: '100%'}}>
                                         <TextField
                                             id="searchByName"
                                             name="searchByName"
                                             autoComplete="off"
                                             fullWidth
-                                            className={classes.textField}
+                                            className={`qa-ExportInfo-searchBarTextField ${classes.textField}`}
                                             onChange={e => setProviderSearch(e.target.value)}
                                             value={providerSearch}
                                             InputProps={{
                                                 endAdornment: renderIf(() => (
                                                     <InputAdornment className={classes.searchFieldClear} position="end"
-                                                                    onClick={() => setProviderSearch("")}>Clear</InputAdornment>), providerSearch.length > 0),
+                                                                    onClick={() => setProviderSearch("")}>Clear</InputAdornment>),
+                                                           providerSearch.length > 0),
                                             }}
                                         />
                                     </div>
@@ -1274,7 +1279,8 @@ export function ExportInfo(props: Props) {
                                                 onChange={onSelectProjection}
                                                 data-testid={'projection-checkbox-' + ix}
                                             />}
-                                            label={<Typography style={{fontSize: '15px'}}>EPSG:{projection.srid} - {projection.name}</Typography>}
+                                            label={<Typography
+                                                style={{fontSize: '15px'}}>EPSG:{projection.srid} - {projection.name}</Typography>}
                                         />
                                         {projectionHasErrors(projection.srid) &&
                                         <AlertWarning
@@ -1346,7 +1352,7 @@ export function ExportInfo(props: Props) {
                                 </MapCard>
                             </div>
                         </div>
-                    </Paper>p
+                    </Paper>
                 </form>
             </CustomScrollbar>
         </div>
