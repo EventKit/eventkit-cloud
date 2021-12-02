@@ -127,6 +127,12 @@ class CheckResult(Enum):
         "message": _("An error has occurred, please contact an administrator."),
     }
 
+    INVALID_CONFIGURATION = {
+        "status": "ERR",
+        "type": "INVALID_CONFIGURATION",
+        "message": _("The data provider configuration is invalid."),
+    }
+
     SUCCESS = {"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")}
 
 
@@ -509,6 +515,9 @@ class OGCProviderCheck(ProviderCheck):
             if not response.ok:
                 raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
 
+            if not self.has_valid_process_inputs():
+                raise ProviderCheckError(CheckResult.INVALID_CONFIGURATION)
+
             return response
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
@@ -527,6 +536,38 @@ class OGCProviderCheck(ProviderCheck):
             logger.error("An unknown error has occurred for URL {}: {}".format(self.client.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
+    def has_valid_process_inputs(self) -> bool:
+        """
+        Checks if the configured process is valid based on the allowed inputs of the provider.
+        """
+        url = (
+            f"{self.client.service_url.rstrip('/')}/processes/{self.client.config['ogcapi_process']['id']}?format=json"
+        )
+        response = self.client.session.get(url=url, timeout=self.client.timeout)
+
+        if response.status_code != 200:
+            return False
+
+        data = response.json()
+        expected_keys = ["version", "id", "title", "description", "inputs"]
+        if any(key not in data for key in expected_keys):
+            return False
+
+        if self.client.config["ogcapi_process"]["id"] != data["id"]:
+            return False
+
+        allowed_inputs = data["inputs"]
+        configured_inputs = self.client.config["ogcapi_process"]["inputs"].items()
+
+        for configured_input_key, configured_input_value in configured_inputs:
+            if configured_input_key not in allowed_inputs.keys():
+                return False
+
+            if configured_input_value["value"] not in allowed_inputs[configured_input_key]["schema"]["enum"]:
+                return False
+
+        return True
+
 
 PROVIDER_CHECK_MAP = {
     "wfs": WFSProviderCheck,
@@ -541,6 +582,9 @@ PROVIDER_CHECK_MAP = {
     "vector-file": FileProviderCheck,
     "raster-file": FileProviderCheck,
     "ogcapi-process": OGCProviderCheck,
+    "ogcapi-process-elevation": OGCProviderCheck,
+    "ogcapi-process-raster": OGCProviderCheck,
+    "ogcapi-process-vector": OGCProviderCheck,
 }
 
 
@@ -592,4 +636,4 @@ class ProviderCheckError(Exception):
         if check_result:
             self.status_result = ProviderCheck.get_status_result(check_result=check_result, **kwargs)
             self.message = self.status_result["message"]
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
