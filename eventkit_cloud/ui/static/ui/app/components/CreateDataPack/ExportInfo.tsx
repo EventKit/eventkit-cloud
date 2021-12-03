@@ -43,6 +43,8 @@ import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
 import {unionBy} from 'lodash';
 import {joyride} from '../../joyride.config';
+import ExpandLess from "@material-ui/icons/ExpandLess";
+import ExpandMore from "@material-ui/icons/ExpandMore";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -74,38 +76,33 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         width: '100%',
         maxWidth: '700px',
     },
-    searchFilterContainer: {
+    sortFilterContainer: {
         alignItems: 'stretch',
-        padding: '15px',
+        padding: '5px 0px 15px',
     },
-    searchBarContainer: {
+    filterDropdownContainer: {
         display: 'flex',
-        justifyContent: 'center',
+        justifyContent: 'left',
         flexWrap: 'wrap',
-        '& .qa-ExportInfo-searchBarTextField': {
-            flex: '0 0 100%',
-            margin: '0px 0px 10px'
-        }
-    },
-    searchLabel: {
-        fontSize: '15px',
-        fontWeight: 'normal',
-        verticalAlign: 'top',
-        cursor: 'pointer',
-        color: theme.eventkit.colors.primary,
-        margin: '0px 15px',
     },
     filterLabel: {
         fontSize: '15px',
-        fontWeight: 'normal',
+        fontWeight: 'bold',
         verticalAlign: 'top',
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
-        margin: '0px 15px',
+        border: '1px solid black',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        padding: '0.3em 0.75em',
+        borderRadius: '4px',
+    },
+    expandIcon: {
+        verticalAlign: 'bottom',
     },
     filterLabelDropdown: {
         fontSize: '15px',
-        fontWeight: 'normal',
+        fontWeight: 'bold',
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
         float: 'right',
@@ -117,6 +114,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         padding: '0.3em 0.75em',
         borderTopLeftRadius: '4px',
         borderTopRightRadius: '4px',
+        marginBottom: '-1px'
     },
     filterContainer: {
         display: 'block',
@@ -127,7 +125,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         backgroundColor: '#F9F9F9',
         padding: '20px',
         borderRadius: '4px',
-        borderTopRightRadius: '0'
+        borderTopLeftRadius: '0'
     },
     heading: {
         fontSize: '18px',
@@ -140,6 +138,10 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     textField: {
         marginTop: '15px',
         backgroundColor: theme.eventkit.colors.secondary,
+    },
+    filterTextField: {
+        backgroundColor: 'aliceblue',
+        marginBottom: '15px',
     },
     input: {
         fontSize: '16px',
@@ -324,7 +326,6 @@ export function ExportInfo(props: Props) {
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
-    const [showProviderSearch, setShowProviderSearch] = useState(false);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
@@ -483,6 +484,29 @@ export function ExportInfo(props: Props) {
             visibility: 'PRIVATE'
         });
     };
+
+    const getExpandIcon = () => {
+        return (
+            <span style={{margin: 'auto'}}>
+                {renderIf(() => (
+                    <ExpandLess
+                        id="ExpandButton"
+                        className={classes.expandIcon}
+                        onClick={() => setShowProviderFilter(!showProviderFilter)}
+                        color="primary"
+                    />
+                ), !!showProviderFilter)}
+                {renderIf(() => (
+                    <ExpandMore
+                        id="ExpandButton"
+                        className={classes.expandIcon}
+                        onClick={() => setShowProviderFilter(!showProviderFilter)}
+                        color="primary"
+                    />
+                ), !showProviderFilter)}
+            </span>
+        );
+    }
 
     const updateSelectedFormats = () => {
         // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
@@ -1005,43 +1029,15 @@ export function ExportInfo(props: Props) {
                             </div>
                         </div>
 
-                        <div id="SearchFilter" className={`qa-ExportInfo-searchFilterContainer ${classes.searchFilterContainer}`}>
-                            <div className={classes.searchBarContainer}>
-                                    <span
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => setShowProviderSearch(!showProviderSearch)}
-                                        onKeyPress={() => setShowProviderSearch(!showProviderSearch)}
-                                        className={classes.searchLabel}
-                                    > Search
-                                    </span>
-                                {renderIf(() => (
-                                    <div style={{width: '100%'}}>
-                                        <TextField
-                                            id="searchByName"
-                                            name="searchByName"
-                                            autoComplete="off"
-                                            fullWidth
-                                            className={`qa-ExportInfo-searchBarTextField ${classes.textField}`}
-                                            onChange={e => setProviderSearch(e.target.value)}
-                                            value={providerSearch}
-                                            InputProps={{
-                                                endAdornment: renderIf(() => (
-                                                    <InputAdornment className={classes.searchFieldClear} position="end"
-                                                                    onClick={() => setProviderSearch("")}>Clear</InputAdornment>),
-                                                           providerSearch.length > 0),
-                                            }}
-                                        />
-                                    </div>
-
-                                ), showProviderSearch)}
+                        <div id="SortFilter" className={`qa-ExportInfo-sortFilterContainer ${classes.sortFilterContainer}`}>
+                            <div className={classes.filterDropdownContainer}>
                                 <span
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => setShowProviderFilter(!showProviderFilter)}
                                     onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
                                     className={showProviderFilter || providerFilterList.length ? classes.filterLabelDropdown : classes.filterLabel}
-                                >Sort / Filter</span>
+                                >Sort / Filter {getExpandIcon()}</span>
                             </div>
                             {renderIf(() => (
                                 <div className={classes.filterLabelDropdownChip}>
@@ -1062,6 +1058,29 @@ export function ExportInfo(props: Props) {
                                         renderIf(() => (
                                             <div>
                                                 <FormGroup className={classes.formControlLabelContainer}>
+                                                    <div style={{width: '100%'}}>
+                                                        <FormLabel component="legend"
+                                                               style={{
+                                                                   fontSize: "16px",
+                                                                   fontWeight: 'bold'
+                                                               }}>Name: </FormLabel>
+                                                        <TextField
+                                                            id="searchByName"
+                                                            name="searchByName"
+                                                            autoComplete="off"
+                                                            fullWidth
+                                                            className={`qa-ExportInfo-searchBarTextField ${classes.filterTextField}`}
+                                                            onChange={e => setProviderSearch(e.target.value)}
+                                                            value={providerSearch}
+                                                            InputProps={{
+                                                                endAdornment: renderIf(() => (
+                                                                        <InputAdornment className={classes.searchFieldClear}
+                                                                                        position="end"
+                                                                                        onClick={() => setProviderSearch("")}>Clear</InputAdornment>),
+                                                                    providerSearch.length > 0),
+                                                            }}
+                                                        />
+                                                    </div>
                                                     <FormLabel component="legend"
                                                                style={{
                                                                    fontSize: "16px",

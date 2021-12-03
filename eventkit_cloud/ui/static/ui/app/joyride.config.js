@@ -225,14 +225,13 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Search, Sort, and Filter Providers',
-            content: `Use the search and filter buttons to: 
-                Search for data providers by provider name, 
-                sort data providers alphabetically or reverse alphabetically by provider name, 
-                or filter data providers by data type.`,
-            target: '.qa-ExportInfo-searchFilterContainer',
+            title: 'Sort and Filter Data Providers',
+            content: `Click the Sort/Filter dropdown to show a form in which you can filter data providers
+                by their name or data type, or sort data providers alphabetically or reverse alphabetically. Clicking the 
+                dropdown again will hide it.`,
+            target: '.qa-ExportInfo-sortFilterContainer',
             placement: 'bottom',
-            scrollToId: 'SearchFilter',
+            scrollToId: 'SortFilter',
             style: JoyRideStyles.tooltipStyle,
         },
         {
