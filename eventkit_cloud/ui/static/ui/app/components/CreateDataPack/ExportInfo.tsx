@@ -1063,10 +1063,11 @@ export function ExportInfo(props: Props) {
                                                                style={{
                                                                    fontSize: "16px",
                                                                    fontWeight: 'bold'
-                                                               }}>Name: </FormLabel>
+                                                               }}>Name</FormLabel>
                                                         <TextField
                                                             id="searchByName"
                                                             name="searchByName"
+                                                            inputProps={{ "data-testid": "filter-text-field" }}
                                                             autoComplete="off"
                                                             fullWidth
                                                             className={`qa-ExportInfo-searchBarTextField ${classes.filterTextField}`}

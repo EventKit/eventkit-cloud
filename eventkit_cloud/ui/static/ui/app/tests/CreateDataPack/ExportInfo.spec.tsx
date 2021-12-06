@@ -248,12 +248,6 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Selected Area of Interest')).toBeInTheDocument();
     });
 
-    it('should have a search button', () => {
-        const component = renderComponent();
-
-        expect(component.getByText('Search')).toBeInTheDocument();
-    });
-
     it('should have a sort / filter button', () => {
         const component = renderComponent();
 
@@ -272,6 +266,7 @@ describe('ExportInfo component', () => {
         const component = renderComponent();
 
         expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Name')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
         expect(component.queryByText('Vector')).toBeNull();
         expect(component.queryByText('Elevation')).toBeNull();
@@ -290,6 +285,7 @@ describe('ExportInfo component', () => {
         fireEvent.click(sortFilter);
         expect(component.getByText('Filter By')).toBeInTheDocument();
         expect(component.getByText('Raster')).toBeInTheDocument();
+        expect(component.getByText('Name')).toBeInTheDocument();
         expect(component.getByText('Vector')).toBeInTheDocument();
         expect(component.getByText('Elevation')).toBeInTheDocument();
         expect(component.getByText('Sort By')).toBeInTheDocument();
@@ -317,6 +313,19 @@ describe('ExportInfo component', () => {
         const providers = component.getAllByTestId('DataProvider');
         expect(providers[0]).toHaveTextContent('USGS');
     });
+
+    it('should show only the providers that match the name filter', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const textField = component.getByTestId('filter-text-field') as HTMLInputElement;
+        fireEvent.change(textField, {target: {value: 'Open'}})
+        const providers = component.getAllByTestId('DataProvider');
+        expect(providers).toHaveLength(2);
+        expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
+    });
+
 
     it('should display the correct checked value of a projection checkbox', () => {
         const component = renderComponent();
