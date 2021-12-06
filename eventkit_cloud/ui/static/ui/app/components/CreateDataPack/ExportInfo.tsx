@@ -250,8 +250,8 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         border: '1px solid black',
         padding: '0.3em 0.75em',
         borderRadius: '4px',
-        borderTopRightRadius: '0',
-        marginTop: '30px',
+        borderTopLeftRadius: '0',
+        marginTop: '0px',
     }
 });
 
@@ -1036,7 +1036,7 @@ export function ExportInfo(props: Props) {
                                     tabIndex={0}
                                     onClick={() => setShowProviderFilter(!showProviderFilter)}
                                     onKeyPress={() => setShowProviderFilter(!showProviderFilter)}
-                                    className={showProviderFilter || providerFilterList.length ? classes.filterLabelDropdown : classes.filterLabel}
+                                    className={showProviderFilter || providerFilterList.length || providerSearch ? classes.filterLabelDropdown : classes.filterLabel}
                                 >Sort / Filter {getExpandIcon()}</span>
                             </div>
                             {renderIf(() => (
@@ -1048,8 +1048,15 @@ export function ExportInfo(props: Props) {
                                             onDelete={() => removeProviderFilter(filter)}
                                         />
                                     )))}
+                                    {renderIf(() => (
+                                        <Chip
+                                            className={classes.filterChip}
+                                            label={`Name: ${providerSearch}`}
+                                            onDelete={() => setProviderSearch("")}
+                                        />
+                                    ), !!providerSearch)}
                                 </div>
-                            ), providerFilterList.length && !showProviderFilter)}
+                            ), (providerFilterList.length || providerSearch) && !showProviderFilter)}
                             {renderIf(() => (
                                 <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
                                     <FormLabel component="legend" style={{fontSize: '18px', fontWeight: 'bold'}}>Filter
