@@ -263,10 +263,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         (GeospatialDataType.VECTOR.value, ("Vector")),
         (GeospatialDataType.RASTER.value, ("Raster")),
         (GeospatialDataType.ELEVATION.value, ("Elevation")),
+        (GeospatialDataType.MESH.value, ("Mesh")),
+        (GeospatialDataType.POINT_CLOUD.value, ("Point Cloud")),
     ]
     data_type = models.CharField(
         choices=DATA_TYPES,
-        max_length=10,
+        max_length=15,
         verbose_name="Data Type",
         null=True,
         default="",

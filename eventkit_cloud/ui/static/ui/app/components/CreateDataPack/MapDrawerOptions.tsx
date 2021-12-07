@@ -93,9 +93,17 @@ function buildFilters() {
             expression: filterType('vector'),
         },
         {
+            name: 'Mesh',
+            expression: filterType('mesh'),
+        },
+        {
+            name: 'Point Cloud',
+            expression: filterType('point cloud'),
+        },
+        {
             name: 'Other',
             expression: (provider: Eventkit.Provider) => !arrayHasValue(
-                ['elevation', 'raster', 'vector'], (provider?.data_type || 'Unknown').toLowerCase(),
+                ['elevation', 'raster', 'vector', 'mesh', 'point cloud'], (provider?.data_type || 'Unknown').toLowerCase(),
             ),
         },
     ] as Partial<Filter>[];

@@ -432,6 +432,18 @@ export function ExportInfo(props: Props) {
                     filterType: "type",
                     slug: "elevation",
                     isChecked: false
+                },
+                {
+                    name: "Mesh",
+                    filterType: "type",
+                    slug: "mesh",
+                    isChecked: false
+                },
+                {
+                    name: "Point Cloud",
+                    filterType: "type",
+                    slug: "point cloud",
+                    isChecked: false
                 }
             ]
         }
