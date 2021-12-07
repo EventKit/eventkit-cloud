@@ -1052,7 +1052,7 @@ export function ExportInfo(props: Props) {
                                     {renderIf(() => (
                                         <Chip
                                             className={classes.filterChip}
-                                            label={`Name: ${providerSearch}`}
+                                            label={`Contains: ${providerSearch}`}
                                             onDelete={() => setProviderSearch("")}
                                         />
                                     ), !!providerSearch)}
