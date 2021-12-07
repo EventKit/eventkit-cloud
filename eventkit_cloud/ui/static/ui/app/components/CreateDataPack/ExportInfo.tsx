@@ -923,6 +923,7 @@ export function ExportInfo(props: Props) {
     const clearAllFilterSort = () => {
         setProviderFilterList([]);
         setProviderSortOption("");
+        setProviderSearch("");
         clearFilterOptions();
         clearSortOptions();
     };
