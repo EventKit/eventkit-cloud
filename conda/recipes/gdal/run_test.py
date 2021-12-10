@@ -30,7 +30,7 @@ for driver in drivers:
     print(driver)
     assert gdal.GetDriverByName(driver)
 
-drivers = ["GML", "XLS", "KML", "SQLite", "PostgreSQL"]
+drivers = ["GML", "XLS", "KML", "LIBKML", "SQLite", "PostgreSQL"]
 for driver in drivers:
     print(driver)
     assert ogr.GetDriverByName(driver)

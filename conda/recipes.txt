@@ -6,6 +6,7 @@ swapper
 django-notifications-hq
 django-storages
 django-timezone-field
+gdal
 mapproxy
 memcached
 eventkit-cloud

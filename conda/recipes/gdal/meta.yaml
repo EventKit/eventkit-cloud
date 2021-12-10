@@ -1,4 +1,4 @@
-{% set version = "3.2.2" %}
+{% set version = "3.3.3" %}
 
 package:
   name: gdal-split
@@ -6,16 +6,13 @@ package:
 
 source:
   url: http://download.osgeo.org/gdal/{{ version }}/gdal-{{ version }}.tar.xz
-  sha256: a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57
+  sha256: 1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76
   patches:
     # disable 12 bit jpeg on Windows as we aren't using internal jpeg
     - disable_jpeg12.patch  # [win]
 
 build:
-  number: 11
-  # skip due to latest setuptools not working with Python 2.x code in setup.py
-  # - earlier steuptools causes conflicts on these platforms...
-  skip: True  # [ppc64le or aarch64]
+  number: 12
 
 requirements:
   build:
@@ -158,8 +155,9 @@ outputs:
         # having not been migrated yet causing conflicts with the "libgdal" output
         # See: https://github.com/conda-forge/gdal-feedstock/pull/415
         - hdf5
-        # Removed support for use_2to3, see https://setuptools.readthedocs.io/en/latest/history.html#v58-0-0
-        - setuptools <58
+        # Workaround to prevent conflicts seen in 
+        #  https://github.com/conda-forge/gdal-feedstock/pull/543
+        - openssl
       run:
         - python
         - {{ pin_compatible('numpy') }}
@@ -192,6 +190,7 @@ about:
 
 extra:
   recipe-maintainers:
+    - akrherz
     - gillins
     - kmuehlbauer
     - mingwandroid

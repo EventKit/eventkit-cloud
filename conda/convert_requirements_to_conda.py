@@ -4,7 +4,7 @@ import re
 
 def convert_requirements_to_conda():
     base_path = path.dirname(__file__)
-    requirements_file = path.abspath(path.join(base_path, "..", "eventkit-cloud", "requirements.txt"))
+    requirements_file = path.abspath(path.join(base_path, "..", "conda", "eventkit-cloud", "requirements.txt"))
     with open(requirements_file) as file:
         requirements_list = file.read().splitlines()
     conda_requirements = []

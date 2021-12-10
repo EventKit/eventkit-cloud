@@ -1,18 +1,18 @@
 version: '3'
 services:
   conda:
-    working_dir: /root/
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./repo:/root/repo
-      - ./recipes:/root/recipes
-      - ./build.sh:/root/build.sh
-      - ./download_packages.py:/root/download_packages.py
-      - ./convert_requirements_to_conda.py:/root/convert_requirements_to_conda.py
-      - ./recipes.txt:/root/recipes.txt
-      - ../:/eventkit-cloud
+      - ./repo:/home/conda/repo
+      - ./recipes:/home/conda/recipes
+      - ./build.sh:/home/conda/build.sh
+      - ./download_packages.py:/home/conda/download_packages.py
+      - ./convert_requirements_to_conda.py:/home/conda/convert_requirements_to_conda.py
+      - ./recipes.txt:/home/conda/recipes.txt
+      - ../:/home/conda/eventkit-cloud
     environment:
       version:
       branch:
+      HOST_USER_ID: 1000 # TODO: Don't hard code this.
