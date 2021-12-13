@@ -1075,27 +1075,38 @@ def get_last_update_cache_key(task_uid: str):
 
 
 def find_in_zip(
-    zip_filepath: str, extension: str, stage_dir: str, archive_extension: str = "zip", matched_files: list = list()
+    zip_filepath: str,
+    extension: str,
+    stage_dir: str,
+    archive_extension: str = "zip",
+    matched_files: list = list(),
+    extract: bool = False,
 ):
     """
     Function finds files within archives and returns their vsi path.
     """
-    zip_file = ZipFile(zip_filepath)
-    files_in_zip = zip_file.namelist()
-    extension = extension.lower()
+    with ZipFile(zip_filepath) as zip_file:
+        files_in_zip = zip_file.namelist()
+        extension = extension.lower()
 
-    for filepath in files_in_zip:
-        file_path = Path(filepath)
-        if extension in file_path.suffix.lower() and file_path not in matched_files:
-            return f"/vsizip/{zip_filepath}/{filepath}"
+        for filepath in files_in_zip:
+            file_path = Path(filepath)
+            if extension in file_path.suffix.lower() and file_path not in matched_files:
+                if extract:
+                    output_dest = Path(stage_dir).joinpath(file_path.name)
+                    zip_file.extract(member=filepath, path=stage_dir)
+                    os.rename(Path(stage_dir).joinpath(file_path), output_dest)
+                    return str(output_dest)
+                else:
+                    return f"/vsizip/{zip_filepath}/{filepath}"
 
-        if archive_extension in file_path.suffix:
-            nested = Path(f"{stage_dir}/{filepath}")
-            nested.parent.mkdir(parents=True, exist_ok=True)
-            with open(nested, "wb") as f:
-                f.write(zip_file.read(filepath))
+            if archive_extension in file_path.suffix:
+                nested = Path(f"{stage_dir}/{filepath}")
+                nested.parent.mkdir(parents=True, exist_ok=True)
+                with open(nested, "wb") as f:
+                    f.write(zip_file.read(filepath))
 
-            return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
+                return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
 
 
 def extract_metadata_files(

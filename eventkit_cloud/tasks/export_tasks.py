@@ -726,6 +726,12 @@ def ogcapi_process_export_task(
     if export_task_record.export_provider_task.provider.data_type == GeospatialDataType.ELEVATION.value:
         output_file = get_export_filepath(stage_dir, export_task_record, projection, "tif")
         driver = "gtiff"
+    elif export_task_record.export_provider_task.provider.data_type in [
+        GeospatialDataType.MESH.value,
+        GeospatialDataType.POINT_CLOUD.value,
+    ]:
+        # TODO support converting point cloud and mesh data
+        driver = None
     else:
         output_file = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
         driver = "gpkg"
@@ -747,15 +753,18 @@ def ogcapi_process_export_task(
     logger.error(f"OGC Download Path: {download_path}")
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
-        source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir)
-        out = gdalutils.convert(
-            driver=driver,
-            input_file=source_data,
-            output_file=output_file,
-            task_uid=task_uid,
-            projection=projection,
-            boundary=bbox,
-        )
+        source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir, extract=not bool(driver))
+        if driver:
+            out = gdalutils.convert(
+                driver=driver,
+                input_file=source_data,
+                output_file=output_file,
+                task_uid=task_uid,
+                projection=projection,
+                boundary=bbox,
+            )
+        else:
+            out = source_data
 
         result["driver"] = driver
         result["file_extension"] = ogc_config.get("output_file_ext")
