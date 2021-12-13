@@ -225,6 +225,16 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
+            title: 'Sort and Filter Data Providers',
+            content: `Click the Sort/Filter dropdown to show a form in which you can filter data providers
+                by their name or data type, or sort data providers alphabetically or reverse alphabetically. Clicking the 
+                dropdown again will hide it.`,
+            target: '.qa-ExportInfo-sortFilterContainer',
+            placement: 'bottom',
+            scrollToId: 'SortFilter',
+            style: JoyRideStyles.tooltipStyle,
+        },
+        {
             title: 'Select Data Sources',
             content: `Select the individual data sources to be included in the DataPack.
                 For each data source, additional information can be found by clicking the dropdown arrow on the right.`,
