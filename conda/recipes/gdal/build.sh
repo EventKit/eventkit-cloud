@@ -25,6 +25,24 @@ if [[ $target_platform =~ linux.* ]]; then
   cp ${RECIPE_DIR}/userfaultfd.h ${PREFIX}/include/linux/userfaultfd.h
 fi
 
+# Install MrSID SDK
+mkdir mrsid \
+    && wget -q https://bin.extensis.com/download/developer/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531.tar.gz -O - \
+      | tar xz -C mrsid --strip-components=1 \
+    && cp -rp mrsid/Raster_DSDK/include/* ${PREFIX}/include \
+    && cp -rp mrsid/Raster_DSDK/lib/* ${PREFIX}/lib \
+    && cp -rp mrsid/Lidar_DSDK/include/* ${PREFIX}/include \
+    && cp -rp mrsid/Lidar_DSDK/lib/* ${PREFIX}/lib \
+    && sed -i "s/__GNUC__ <= 5/__GNUC__ <= 99/" ${PREFIX}/include/lt_platform.h
+
+echo "Printing lib....."
+ls -la ${PREFIX}/lib
+echo "Lib was printed above."
+
+echo "Printing include....."
+ls -la ${PREFIX}/include
+echo "Include was printed above."
+
 # `--without-pam` was removed.
 # See https://github.com/conda-forge/gdal-feedstock/pull/47 for the discussion.
 
@@ -48,6 +66,9 @@ fi
                --with-liblzma=yes \
                --with-libtiff=${PREFIX} \
                --with-libz=${PREFIX} \
+               --with-mrsid=${PREFIX} \
+               --with-mrsid_lidar=${PREFIX} \
+               --with-jp2mrsid \
                --with-netcdf=${PREFIX} \
                --with-openjpeg=${PREFIX} \
                --with-pcre \
@@ -71,3 +92,9 @@ make -j $CPU_COUNT ${VERBOSE_AT}
 if [[ $target_platform =~ linux.* ]]; then
   rm ${PREFIX}/include/linux/userfaultfd.h
 fi
+
+echo "Printing working dir"
+pwd
+
+echo "ls in current dir"
+ls -la
