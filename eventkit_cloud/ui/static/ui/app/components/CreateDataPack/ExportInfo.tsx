@@ -442,7 +442,7 @@ export function ExportInfo(props: Props) {
                 {
                     name: "Point Cloud",
                     filterType: "type",
-                    slug: "point cloud",
+                    slug: "point_cloud",
                     isChecked: false
                 }
             ]

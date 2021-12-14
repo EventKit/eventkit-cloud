@@ -7,4 +7,4 @@ class GeospatialDataType(Enum):
     RASTER = "raster"
     ELEVATION = "elevation"
     MESH = "mesh"
-    POINT_CLOUD = "point cloud"
+    POINT_CLOUD = "point_cloud"
