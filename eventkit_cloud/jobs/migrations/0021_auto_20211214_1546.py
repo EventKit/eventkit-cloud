@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
 
         DataProvider = apps.get_model('jobs', 'DataProvider')
         # Data types to remove
-        remove_types = ['mesh', 'point cloud']
+        remove_types = ['mesh', 'point_cloud']
         # Delete providers that have the mesh or point cloud data types
         DataProvider.objects.filter(data_type__in=remove_types).delete()
 
