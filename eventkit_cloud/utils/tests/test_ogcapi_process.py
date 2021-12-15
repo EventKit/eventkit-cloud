@@ -19,7 +19,7 @@ class TestOgcApiProcess(TestCase):
         self.config = {
             "ogcapi_process": {
                 "id": "export-eventkit-bundle",
-                "inputs": {self.format_field: {"value": "gpkg"}},
+                "inputs": {"products": {self.format_field: "gpkg"}},
                 "outputs": {"output_name": {"format": {"mediaType": "application/zip"}}},
                 "area": {"name": "geojson", "type": "geojson"},
                 "output_file_ext": ".gpkg",
@@ -28,4 +28,6 @@ class TestOgcApiProcess(TestCase):
         }
 
     def test_get_format_field_from_config(self):
-        self.assertEqual(self.format_field, get_format_field_from_config(self.config.get("ogcapi_process")))
+        self.assertEqual(
+            ("products", self.format_field), get_format_field_from_config(self.config.get("ogcapi_process"))
+        )

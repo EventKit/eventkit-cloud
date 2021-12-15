@@ -991,16 +991,14 @@ def get_file_name_from_response(response: Response) -> str:
 
 
 @handle_auth
-def download_data(
-    task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, cookie=None, *args, **kwargs
-):
+def download_data(task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, *args, **kwargs):
     """
     Function for downloading data, optionally using a certificate.
     """
 
     response = None
     try:
-        session = get_or_update_session(session=session, cookie=cookie, *args, **kwargs)
+        session = get_or_update_session(session=session, *args, **kwargs)
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 

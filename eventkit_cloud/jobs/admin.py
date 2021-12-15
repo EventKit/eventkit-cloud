@@ -240,7 +240,7 @@ class DataProviderAdmin(admin.ModelAdmin):
         if provider_caches:
             cache.delete_many(provider_caches.keys())
         process_formats = get_process_formats(obj, request)
-        logger.error(f"Process_formats: {process_formats}")
+        logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
