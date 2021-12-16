@@ -88,9 +88,9 @@ export function NotificationPopover(props: Props) {
 
     const getMessage = useCallback(() => {
         if (props.someProvidersAvailable) {
-            return 'Some source are unavailable due to user permissions.';
+            return 'Some products are unavailable due to user permissions.';
         }
-        return 'No sources are available due to user permissions.';
+        return 'No products are available due to user permissions.';
     }, [props.someProvidersAvailable]);
 
     const openEl = Boolean(anchorElement);
