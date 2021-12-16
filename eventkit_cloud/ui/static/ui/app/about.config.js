@@ -38,7 +38,7 @@ export const about = [
     },
     {
         type: 'InfoGrid',
-        title: 'Data Providers & Formats',
+        title: 'Data Products & Formats',
         items: [
             {
                 title: 'OSM Data',
@@ -88,7 +88,7 @@ export const about = [
             },
             {
                 title: 'Data Availablity Check',
-                body: `EventKit is at the mercy of its external data providers.
+                body: `EventKit is at the mercy of its external data products.
                     This check pings the external service to let you know if it is available.`,
             },
             {
@@ -106,7 +106,7 @@ export const about = [
                     The EventKit roadmap outlines the development of new features,
                     and our next few releases include improvements across a range of topics.
                     In general these include more datasets, formats, and projections,
-                    the ability to preview data sources, ways to pre-build,
+                    the ability to preview data products, ways to pre-build,
                     recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
                 </p>
                 <p>

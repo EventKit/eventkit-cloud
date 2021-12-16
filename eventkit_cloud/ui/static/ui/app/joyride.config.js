@@ -81,7 +81,7 @@ export const joyride = {
             content: `This page contains Licenses and Terms of Use along with some personal information.
                 On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.
                 You will only be required to re-visit this page in the future if new Licenses and
-                Terms of Use are introduced with a new data provider.`,
+                Terms of Use are introduced with a new data product.`,
             target: '.qa-PageHeader',
             placement: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -136,7 +136,7 @@ export const joyride = {
             disableBeacon: true,
             title: 'Welcome to the Create DataPack Page',
             content: `Creating DataPacks is the core function of EventKit.
-                The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.`,
+                The process begins with defining an Area of Interest (AOI), then selecting Data Products and output formats.`,
             target: '.qa-BreadcrumbStepper-div-stepLabel',
             placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -167,7 +167,7 @@ export const joyride = {
             title: 'Area of Interest (AOI) Info',
             content: `This dialog box displays information about your current Area of Interest (AOI),
                 including the size (in square kilometers), and the maximum allowable AOI size.
-                Note, there may be multiple maximum AOI sizes, as they can vary between individual data sources.
+                Note, there may be multiple maximum AOI sizes, as they can vary between individual data products.
                 Finally, this dialog contains the Buffer button, which is described in the next step.`,
             target: '.qa-AoiInfoBar-container ',
             placement: 'top',
@@ -207,7 +207,7 @@ export const joyride = {
             title: '',
             content: `On the Select Data & Formats page, two basic steps must be accomplished.
                 First, text information about the DataPack will be entered by the user,
-                and second, selecting the data sources to be included in the DataPack.`,
+                and second, selecting the data products to be included in the DataPack.`,
             target: '.qa-BreadcrumbStepper-div-stepLabel',
             placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -225,9 +225,9 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Sort and Filter Data Providers',
-            content: `Click the Sort/Filter dropdown to show a form in which you can filter data providers
-                by their name or data type, or sort data providers alphabetically or reverse alphabetically. Clicking the 
+            title: 'Sort and Filter Data Products',
+            content: `Click the Sort/Filter dropdown to show a form in which you can filter data products
+                by their name or data type, or sort data products alphabetically or reverse alphabetically. Clicking the 
                 dropdown again will hide it.`,
             target: '.qa-ExportInfo-sortFilterContainer',
             placement: 'bottom',
@@ -235,25 +235,25 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Select Data Sources',
-            content: `Select the individual data sources to be included in the DataPack.
-                For each data source, additional information can be found by clicking the dropdown arrow on the right.`,
+            title: 'Select Data Products',
+            content: `Select the individual data products to be included in the DataPack.
+                For each data product, additional information can be found by clicking the dropdown arrow on the right.`,
             target: '.qa-ExportInfo-List',
             placement: 'top',
             scrollToId: 'ProviderList',
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Data Source Availability',
-            content: `EventKit runs a series of checks on each data source to determine if its underlying web service is available,
+            title: 'Data Product Availability',
+            content: `EventKit runs a series of checks on each data product to determine if its underlying web service is available,
                 and the results are displayed in the Availability column.
-                If a data source is available, a green check mark will be displayed.
-                If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.
+                If a data product is available, a green check mark will be displayed.
+                If the product is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.
                 Additional information about the error can be accessed by clicking on the error icon. 
                 </br>
-                In most cases, EventKit will allow you to keep an unavailable data source in a DataPack.
-                This way if you “Run Export Again” at a later time, the data source may have become available.
-                Exceptions to this include if the selected AOI exceeds the size limit for that data source.`,
+                In most cases, EventKit will allow you to keep an unavailable data product in a DataPack.
+                This way if you “Run Export Again” at a later time, the data product may have become available.
+                Exceptions to this include if the selected AOI exceeds the size limit for that data product.`,
             target: '.qa-ProviderStatusIcon',
             placement: 'left',
             scrollToId: 'ProviderStatus',
@@ -261,7 +261,7 @@ export const joyride = {
         },
         {
             title: 'Additional Options',
-            content: 'Click here for additional information and options for the Data Source.',
+            content: 'Click here for additional information and options for the Data Product.',
             target: '.qa-expandTarget',
             placement: 'left',
             scrollToId: 'ExpandButton',
@@ -278,7 +278,7 @@ export const joyride = {
         },
         {
             title: 'File Format Selection',
-            content: 'Different formats can be selected.  Data source types might have different options depending on if the source is '
+            content: 'Different formats can be selected.  Data product types might have different options depending on if the product is '
                 + 'elevation, raster, or vector data.',
             target: '.qa-DataProvider-ListItem-provFormats',
             placement: 'bottom',
@@ -304,7 +304,7 @@ export const joyride = {
         },
         {
             title: 'Go to Review & Submit',
-            content: `Once all the text is entered and data sources selected,
+            content: `Once all the text is entered and data products selected,
                 move to the next step in the Create DataPack process by clicking the green arrow button.
                 This will take you to the Review & Submit page.`,
             target: '.qa-BreadcrumbStepper-Button-next',
@@ -378,9 +378,9 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Data Source Download Options',
-            content: `Each data source processes independently, and can finish at different times
-                Therefore, each data source has a drop down that provides information on its progress,
+            title: 'Data Product Download Options',
+            content: `Each data product processes independently, and can finish at different times
+                Therefore, each data product has a drop down that provides information on its progress,
                 and links to directly download its data.`,
             target: '.qa-DataPackDetails-providers',
             placement: 'bottom',
@@ -389,7 +389,7 @@ export const joyride = {
         },
         {
             title: 'Download Complete DataPack',
-            content: `For convenience, EventKit bundles all the individual data sources into a single download (formatted as a .zip file).
+            content: `For convenience, EventKit bundles all the individual data products into a single download (formatted as a .zip file).
                 Additionally, this file contains GIS application files (QGIS and ArcMap),
                 cartographic styles, metadata, and associated documents.`,
             target: '.qa-DataPackDetails-Button-zipButton',
@@ -400,8 +400,8 @@ export const joyride = {
         {
             title: 'Other Options',
             content: `EventKit provides three additional DataPack management functions.
-                “Run Export Again” over-writes the existing data with a new copy of the data sources.
-                “Clone” creates a new export that maintains the existing Area of Interest and Data Source selections of the current job,
+                “Run Export Again” over-writes the existing data with a new copy of the data products.
+                “Clone” creates a new export that maintains the existing Area of Interest and Data Product selections of the current job,
                 which can then be customized as needed. “Delete” will delete the entire DataPack.
                 If you created the DataPack or have Admin rights, you can “Run Export Again” or “Delete”, otherwise you can only “Clone”.`,
             target: '.qa-DataCartDetails-div-otherOptionsContainer',
@@ -411,7 +411,7 @@ export const joyride = {
         },
         {
             title: 'General Information',
-            content: 'Here you will find additional information about the DataPack, including its data sources, projection, and formats.',
+            content: 'Here you will find additional information about the DataPack, including its data products, projection, and formats.',
             target: '.qa-DataCartDetails-div-generalInfoContainer',
             placement: 'bottom',
             scrollToId: 'GeneralInfo',
@@ -444,7 +444,7 @@ export const joyride = {
                 title: 'Welcome to the DataPack Library.',
                 content: `DataPacks are the core elements of EventKit.
                     Use the DataPack Library to review existing DataPacks, visualize them on a map,
-                    search based on name, date, and data source, and find “Featured DataPacks”.`,
+                    search based on name, date, and data product, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 placement: 'top',
@@ -468,7 +468,7 @@ export const joyride = {
             },
             {
                 title: 'Filters',
-                content: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                content: `Filter DataPacks based on sharing permissions, date range, job status, and data products.
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 target: '.qa-FilterDrawer-Drawer > div',
@@ -513,7 +513,7 @@ export const joyride = {
                 title: 'Welcome to the DataPack Library.',
                 content: `DataPacks are the core elements of EventKit.
                     Use the DataPack Library to review existing DataPacks, visualize them on a map,
-                    search based on name, date, and data source, and find “Featured DataPacks”.`,
+                    search based on name, date, and data product, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 placement: 'top',
@@ -537,7 +537,7 @@ export const joyride = {
             },
             {
                 title: 'Filters',
-                content: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                content: `Filter DataPacks based on sharing permissions, date range, job status, and data products.
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 target: '.qa-FilterDrawer-Drawer > div',
@@ -582,7 +582,7 @@ export const joyride = {
                 title: 'Welcome to the DataPack Library',
                 content: `DataPacks are the core elements of EventKit.
                     Use the DataPack Library to review existing DataPacks, visualize them on a map,
-                    search based on name, date, and data source, and find “Featured DataPacks”.`,
+                    search based on name, date, and data product, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 placement: 'top',
@@ -607,7 +607,7 @@ export const joyride = {
             },
             {
                 title: 'Filters',
-                content: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                content: `Filter DataPacks based on sharing permissions, date range, job status, and data products.
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 target: '.qa-FilterDrawer-Drawer > div > div > div > .qa-DateFilter-div',

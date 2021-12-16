@@ -240,8 +240,8 @@ describe('ExportInfo component', () => {
         const component = renderComponent();
 
         expect(component.getByText('Enter General Information')).toBeInTheDocument();
-        expect(component.getByText('Select Data Sources')).toBeInTheDocument();
-        expect(component.getByText('Request New Data Source')).toBeInTheDocument();
+        expect(component.getByText('Select Data Products')).toBeInTheDocument();
+        expect(component.getByText('Request New Data Product')).toBeInTheDocument();
         expect(component.getByText('Select Projection')).toBeInTheDocument();
         expect(component.getByText('Share this DataPack')).toBeInTheDocument();
         expect(component.getByText('Area of Interest (AOI)')).toBeInTheDocument();

@@ -45,7 +45,7 @@ describe('ProvidersFilter component', () => {
     beforeEach(setup);
 
     it('should have checkboxes', () => {
-        expect(wrapper.find('p').first().html()).toContain('Sources');
+        expect(wrapper.find('p').first().html()).toContain('Products');
         expect(wrapper.find('.qa-ProvidersFilter-name').at(0).html()).toContain(providers[0].name);
         expect(wrapper.find(Checkbox).at(0).props().checked).toEqual(false);
     });
@@ -62,7 +62,7 @@ describe('ProvidersFilter component', () => {
         expect(props.onChange.calledOnce).toEqual(true);
     });
 
-    it('should set source as checked', () => {
+    it('should set product as checked', () => {
         let input = wrapper.find(Checkbox).at(0);
         expect(input.props().checked).toEqual(false);
         const nextProps = getProps();

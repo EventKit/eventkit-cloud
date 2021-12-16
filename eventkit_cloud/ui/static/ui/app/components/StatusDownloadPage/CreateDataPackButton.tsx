@@ -492,7 +492,7 @@ export function CreateDataPackButton(props: Props) {
                 title="DataPack Information"
             >
                 <div style={{paddingBottom: '10px', wordWrap: 'break-word'}}>
-                    For convenience, EventKit bundles all the individual data sources into a single
+                    For convenience, EventKit bundles all the individual data products into a single
                     download
                     (formatted as a .zip file).
                     Additionally, this file contains GIS application files (QGIS and ArcMap),

@@ -229,7 +229,7 @@ export function AoiInfobar(props: Props) {
                         title="Data sizes exceeded!"
                         body={(
                             <p>
-                                All providers exceed their specified maximum allowable data size with the specified
+                                All products exceed their specified maximum allowable data size with the specified
                                 AOI
                                 and zoom levels. This job cannot be submitted. Please reduce the size of your polygon
                                 and/or buffer. Zoom levels may
@@ -250,7 +250,7 @@ export function AoiInfobar(props: Props) {
                         title="Data sizes exceeded."
                         body={(
                             <p>
-                                One or more providers would exceed their maximum allowable data size with the specified
+                                One or more products would exceed their maximum allowable data size with the specified
                                 AOI
                                 and zoom levels. Please reduce the size of your polygon and/or buffer. Zoom levels may
                                 be
@@ -288,14 +288,14 @@ export function AoiInfobar(props: Props) {
                         className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
                         onClose={closeAlert}
                         orientation="top"
-                        title="Your AOI is too large for some of the data sources."
+                        title="Your AOI is too large for some of the data products."
                         body={(
                             <p>
-                                The current AOI size of {totalArea}, exceeds the limit set for at least one data source.
-                                If you plan to include all available data sources for this area in your DataPack you,
+                                The current AOI size of {totalArea}, exceeds the limit set for at least one data product.
+                                If you plan to include all available data products for this area in your DataPack you,
                                 need to reduce the size of your polygon and/or buffer
                                 to {numeral(highestMaxSelectionArea).format('0,0')} sq km.
-                                Specifics for each Data Provider are on the next page.
+                                Specifics for each Data Product are on the next page.
                             </p>
                         )}
                         style={{ color: colors.black }}
