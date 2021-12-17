@@ -13,8 +13,8 @@ django-storages==1.11.1
 django-timezone-field==4.1.2
 djangorestframework==3.12.4
 djangorestframework-gis==0.17.0
-eventlet==0.30.2
 GDAL==3.2.1
+gevent==21.12.0
 gunicorn==20.1.0
 MapProxy==1.13.2
 numpy==1.21.2
