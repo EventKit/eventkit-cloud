@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dataprovider',
             name='data_type',
-            field=models.CharField(blank=True, choices=[('vector', 'Vector'), ('raster', 'Raster'), ('elevation', 'Elevation'), ('mesh', 'Mesh'), ('point cloud', 'Point Cloud')], default='', help_text='The type of data provided (e.g. elevation, raster, vector)', max_length=15, null=True, verbose_name='Data Type'),
+            field=models.CharField(blank=True, choices=[('vector', 'Vector'), ('raster', 'Raster'), ('elevation', 'Elevation'), ('mesh', 'Mesh'), ('point_cloud', 'Point Cloud')], default='', help_text='The type of data provided (e.g. elevation, raster, vector)', max_length=20, null=True, verbose_name='Data Type'),
         ),
     ]

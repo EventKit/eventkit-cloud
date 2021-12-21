@@ -269,7 +269,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     ]
     data_type = models.CharField(
         choices=DATA_TYPES,
-        max_length=15,
+        max_length=20,
         verbose_name="Data Type",
         null=True,
         default="",
