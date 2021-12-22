@@ -30,11 +30,11 @@ class OgcApiProcess:
         self.task_id = task_id
         self.job_url = None
 
+        logger.error(f"Session: {session_token}, {args}, {kwargs}")
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = get_or_update_session(*args, **kwargs)
-        self.session.headers.update({"Authorization": f"Bearer: {session_token}"})
+        self.session = get_or_update_session(token=session_token, *args, **kwargs)
 
     def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
@@ -42,8 +42,8 @@ class OgcApiProcess:
         jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
-            logger.error(jobs_endpoint)
-            logger.error(payload)
+            logger.debug(jobs_endpoint)
+            logger.debug(json.dumps(payload))
 
             response = self.session.post(jobs_endpoint, json=payload)
             response.raise_for_status()
@@ -189,24 +189,23 @@ def get_process_formats_from_json(process_json: dict, provider_config: dict):
     """Extract format information from a valid JSON object representing an OGC Process."""
     # TODO: Make more flexible to allow other keys
     ogcapi_process_config = load_provider_config(provider_config).get("ogcapi_process")
-    product = ogcapi_process_config.get("inputs", {}).get("product").get("value")
-    inputs = process_json.get("inputs", list())
+    product_slug = ogcapi_process_config.get("inputs", {}).get("product").get("id")
+    if not product_slug:
+        raise Exception("A product name needs to be configured {'inputs':{'product':{'id': <product_name>'}}}")
 
-    formats = (
-        list(filter(lambda input: input.get("id", None) == "product", inputs))[0]
-        .get("input")
-        .get("literalDataDomains")[0]
-        .get("valueDefinition")
-        .get("valuesDescription")
-        .get(product)
-        .get("file_formats")
-    )
+    all_products = process_json["inputs"]["product"]["schema"]["oneOf"]
+    product_data = None
+    for product in all_products:
+        if product["properties"]["id"]["const"] == product_slug:
+            product_data = product
+    file_formats = product_data["properties"]["file_format"]["oneOf"]
     return [
-        dict(
-            slug=str(_format.get("value")),
-            **_format,
-        )
-        for _format in formats
+        {
+            "name": file_format["title"],
+            "slug": file_format["const"],
+            "description": file_format.get("description") or file_format["title"],
+        }
+        for file_format in file_formats
     ]
 
 
@@ -235,11 +234,17 @@ def get_session(request, provider):
     return session
 
 
-def get_format_field_from_config(config: dict):
-    inputs = config.get("inputs", dict())
+def find_format_field(schema):
     format_field = None
-    for input in inputs:
-        if "format" in input:
-            format_field = input
-            break
-    return format_field
+    for input_field, data in schema.items():
+        if "format" in input_field:
+            return None, input_field
+        if isinstance(data, dict):
+            _, format_field = find_format_field(data)
+        if format_field:
+            return input_field, format_field
+    return None, None
+
+
+def get_format_field_from_config(config: dict):
+    return find_format_field(config.get("inputs", dict()))

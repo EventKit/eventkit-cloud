@@ -262,10 +262,10 @@ Below is a sample configuration.
 ogcapi_process:
   id: "example_process_id"
   inputs:
-    input_key_name: 
-      value: "a_value"
+    input_key_name: "a_value"
     another_input_key_name: 
-       value: "a_different_value" 
+       prop_a: "an object property"
+       prop_b: "an object property"
   outputs:
      output_key_name: 
        format:
@@ -279,6 +279,7 @@ ogcapi_process:
       cert_path: /path/to/keystore.pfx
       cert_pass_var: CERT_PASS_ENV_VAR
     cred_var: CRED_ENV_VAR
+    token: TOKEN_VAR
     # FOR DEBUGGING ONLY
     cookie: <A cookie represented in JSON>
 ```
