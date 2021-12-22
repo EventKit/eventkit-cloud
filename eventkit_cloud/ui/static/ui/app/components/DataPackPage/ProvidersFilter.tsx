@@ -53,7 +53,7 @@ export class ProvidersFilter extends React.Component<Props, {}> {
                     className="qa-ProvidersFilter-p"
                     style={styles.title}
                 >
-                    <strong>Sources</strong>
+                    <strong>Products</strong>
                 </p>
                 {providers.map(provider => (
                     <div style={styles.provider} key={provider.slug}>

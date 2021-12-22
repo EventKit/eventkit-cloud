@@ -195,7 +195,7 @@ describe('ProviderRow component', () => {
         );
         expect(screen.getByText('Rerun File(s)')).toBeInTheDocument();
         expect(screen.getByText('Cancel')).toBeInTheDocument();
-        expect(screen.getByText('View Data Source')).toBeInTheDocument();
+        expect(screen.getByText('View Data Product')).toBeInTheDocument();
         expect(screen.getByText('View Data Preview')).toBeInTheDocument();
     });
 
@@ -272,7 +272,7 @@ describe('ProviderRow component', () => {
         expect(screen.queryByText('provider description')).toBe(null);
         // Click data source button
         fireEvent(
-            screen.getByText('View Data Source'),
+            screen.getByText('View Data Product'),
             new MouseEvent('click', {
                 bubbles: true,
                 cancelable: true,

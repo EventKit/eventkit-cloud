@@ -1032,7 +1032,7 @@ export function ExportInfo(props: Props) {
                                 className="qa-ExportInfo-layersHeader"
                                 style={{marginRight: '5px'}}
                             >
-                                Select Data Sources
+                                Select Data Products
                             </div>
                             <div
                                 id="layersSubheader"
@@ -1232,7 +1232,7 @@ export function ExportInfo(props: Props) {
                                     className="qa-ExportInfo-ListHeaderItem"
                                     style={{flex: '1 1 auto'}}
                                 >
-                                    DATA PROVIDERS
+                                    DATA PRODUCTS
                                 </div>
                                 <div
                                     className="qa-ExportInfo-ListHeaderItem"
@@ -1408,7 +1408,7 @@ function AddDataSource() {
             <RequestDataSource open={requestDataSourceOpen}
                                onClose={() => setRequestDataSourceOpen(false)}/>
             <Link onClick={() => setRequestDataSourceOpen(true)} style={{cursor: 'pointer'}}>
-                Request New Data Source
+                Request New Data Product
             </Link>
         </>
     );
