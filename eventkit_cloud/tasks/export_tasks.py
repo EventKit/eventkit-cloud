@@ -720,6 +720,10 @@ def ogcapi_process_export_task(
     supported dataset.
     """
 
+    logger.error("*********OGC API EXPORT TASK**********")
+    logger.error("*********OGC API EXPORT TASK**********")
+    logger.error("*********OGC API EXPORT TASK**********")
+    logger.error("*********OGC API EXPORT TASK**********")
     result = result or {}
     selection = parse_result(result, "selection")
     export_task_record = get_export_task_record(task_uid)

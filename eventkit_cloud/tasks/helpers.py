@@ -3,6 +3,7 @@ import glob
 import json
 import logging
 import os
+import pdb
 import pickle
 import re
 import shutil
@@ -1074,8 +1075,8 @@ def get_last_update_cache_key(task_uid: str):
 
 def find_in_zip(
     zip_filepath: str,
-    extension: str,
     stage_dir: str,
+    extension: str = None,
     archive_extension: str = "zip",
     matched_files: list = list(),
     extract: bool = False,
@@ -1085,11 +1086,10 @@ def find_in_zip(
     """
     with ZipFile(zip_filepath) as zip_file:
         files_in_zip = zip_file.namelist()
-        extension = extension.lower()
-
+        extension = (extension or "").lower()
         for filepath in files_in_zip:
             file_path = Path(filepath)
-            if extension in file_path.suffix.lower() and file_path not in matched_files:
+            if extension and extension in file_path.suffix.lower() and file_path not in matched_files:
                 if extract:
                     output_dest = Path(stage_dir).joinpath(file_path.name)
                     zip_file.extract(member=filepath, path=stage_dir)
@@ -1097,6 +1097,13 @@ def find_in_zip(
                     return str(output_dest)
                 else:
                     return f"/vsizip/{zip_filepath}/{filepath}"
+            elif not extension and file_path.suffix:
+                file = f"/vsizip/{zip_filepath}/{filepath}"
+                meta = gdalutils.get_meta(file)
+                driver = meta["driver"] or None
+                if driver:
+                    logger.error("*********FILE AUTO DETECTED**********")
+                    return file
 
             if archive_extension in file_path.suffix:
                 nested = Path(f"{stage_dir}/{filepath}")
@@ -1104,8 +1111,7 @@ def find_in_zip(
                 with open(nested, "wb") as f:
                     f.write(zip_file.read(filepath))
 
-                return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
-
+                return find_in_zip(nested.absolute(), stage_dir, extension, matched_files=matched_files)
 
 def extract_metadata_files(
     zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]

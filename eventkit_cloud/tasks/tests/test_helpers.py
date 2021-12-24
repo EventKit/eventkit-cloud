@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import signal
+from unittest import mock
 from unittest.mock import patch, call, Mock, MagicMock
 
 import requests
@@ -26,7 +27,7 @@ from eventkit_cloud.tasks.helpers import (
     get_all_rabbitmq_objects,
     delete_rabbit_objects,
     get_data_package_manifest,
-    update_progress,
+    update_progress, find_in_zip,
 )
 from eventkit_cloud.tasks.helpers import progressive_kill
 
@@ -395,3 +396,20 @@ class TestHelpers(TestCase):
                 call(uid=uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated),
             ]
         )
+
+    def test_find_in_zip(self):
+        zip_filepath = os.path.join(os.path.dirname(__file__), 'files/test_zip_1.zip')
+        found_file = find_in_zip(zip_filepath=zip_filepath, stage_dir="example/dir", extension="json", archive_extension="zip", matched_files=[], extract=False)
+        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/test_geojson.json")
+
+    def test_find_in_zip_no_extension(self):
+        zip_filepath = os.path.join(os.path.dirname(__file__), 'files/test_zip_1.zip')
+        found_file = find_in_zip(zip_filepath=zip_filepath, stage_dir="example/dir",
+                                 archive_extension="zip", matched_files=[], extract=False)
+        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/test_csv.csv")
+
+    def test_find_in_zip_no_extension_nested_folder(self):
+        zip_filepath = os.path.join(os.path.dirname(__file__), 'files/test_zip_2.zip')
+        found_file = find_in_zip(zip_filepath=zip_filepath, stage_dir="example/dir",
+                                 archive_extension="zip", matched_files=[], extract=False)
+        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json")
