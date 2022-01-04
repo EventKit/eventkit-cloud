@@ -10,7 +10,7 @@ package:
 
 source:
   fn: '{{ name }}-{{ version }}.{{ file_ext }}'
-  url: https://github.com/venicegeo/{{ name }}/archive/v{{ version }}.tar.gz
+  url: https://github.com/eventkit/{{ name }}/archive/v{{ version }}.tar.gz
   '{{ hash_type }}': '{{ hash_value|lower }}'
 
 build:
@@ -31,14 +31,14 @@ test:
     - audit_logging
 
 about:
-  home: https://github.com/venicegeo/django-audit-logging
+  home: https://github.com/eventkit/django-audit-logging
   license: GPLV2
   license_family: GPL
   license_file: ''
   summary: 'Django-Audit-Logging'
   description: "This tool is adds logging support to a django application."
-  doc_url: 'https://github.com/venicegeo/django-audit-logging/blob/master/README.md'
-  dev_url: 'https://github.com/venicegeo/django-audit-logging'
+  doc_url: 'https://github.com/eventkit/django-audit-logging/blob/master/README.md'
+  dev_url: 'https://github.com/eventkit/django-audit-logging'
 
 extra:
   recipe-maintainers:
