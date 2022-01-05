@@ -599,7 +599,7 @@ export function ProviderRow(props: ProviderRowProps) {
                     style={{fontSize: '12px'}}
                     onClick={handleProviderOpen}
                 >
-                    View Data Source
+                    View Data Product
                 </MenuItem>
             </MatomoClickTracker>
         ), (

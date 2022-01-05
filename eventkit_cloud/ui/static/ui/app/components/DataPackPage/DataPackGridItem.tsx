@@ -346,7 +346,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         style={{fontSize: cardTextFontSize}}
                                         onClick={this.handleProviderOpen}
                                     >
-                                        View Data Sources
+                                        View Data Products
                                     </MenuItem>
                                     {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem

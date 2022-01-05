@@ -153,24 +153,24 @@ export function RequestDataSource(props: Props) {
                 {/*The conditional can be removed here if we want to show a user what data they submitted.*/}
                 {status !== ApiStatuses.hookActions.SUCCESS && (<>
                     <div className={classes.entryRow}>
-                        <strong className={classes.left}>Source Name:</strong>
+                        <strong className={classes.left}>Product Name:</strong>
                         <div className={classes.right}>
                             <CustomTextField
                                 id="name"
                                 name="sourceName"
-                                placeholder="source name"
+                                placeholder="product name"
                                 {...sharedProps}
                                 {...getDisplayProps(fieldMap.name)}
                             />
                         </div>
                     </div>
                     <div className={classes.entryRow}>
-                        <strong className={classes.left}>Source Link:</strong>
+                        <strong className={classes.left}>Product Link:</strong>
                         <div className={classes.right}>
                             <CustomTextField
                                 id="url"
                                 name="sourceUrl"
-                                placeholder="source link"
+                                placeholder="product link"
                                 {...sharedProps}
                                 {...getDisplayProps(fieldMap.url)}
                             />
@@ -282,7 +282,7 @@ export function RequestDataSource(props: Props) {
     return renderIf(() => (
         <BaseDialog
             show
-            title="Request New Data Source"
+            title="Request New Data Product"
             onClose={onClose}
             titleStyle={{ padding: '12px 24px' }}
             {...getDialogProps()}
