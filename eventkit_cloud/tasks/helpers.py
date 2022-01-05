@@ -3,7 +3,6 @@ import glob
 import json
 import logging
 import os
-import pdb
 import pickle
 import re
 import shutil
@@ -1102,7 +1101,6 @@ def find_in_zip(
                 meta = gdalutils.get_meta(file)
                 driver = meta["driver"] or None
                 if driver:
-                    logger.error("*********FILE AUTO DETECTED**********")
                     return file
 
             if archive_extension in file_path.suffix:
@@ -1112,6 +1110,7 @@ def find_in_zip(
                     f.write(zip_file.read(filepath))
 
                 return find_in_zip(nested.absolute(), stage_dir, extension, matched_files=matched_files)
+
 
 def extract_metadata_files(
     zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]

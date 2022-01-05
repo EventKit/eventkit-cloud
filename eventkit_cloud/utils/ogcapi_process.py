@@ -149,17 +149,20 @@ def get_job_payload(config: dict, geometry: GEOSGeometry, file_format: str = Non
 
 
 def convert_geometry(config, geometry):
+    """Converts the user requested geometry into the format supported by the ogcapi process services"""
+    # This is configured for a single implementation to be more flexible would require parsing the process description,
+    # and attempting to map the values to the correct schema type.
     area = config.get("area")
-    config["inputs"][area["name"]] = dict()
+    config["inputs"]["geometry"] = {"format": area["type"]}
     if area["type"] == "wkt":
-        config["inputs"][area["name"]]["value"] = WKTWriter().write(geometry).decode()
+        config["inputs"]["geometry"]["input"] = WKTWriter().write(geometry).decode()
     if area["type"] == "geojson":
-        config["inputs"][area["name"]]["value"] = {
+        config["inputs"]["geometry"]["input"] = {
             "type": "FeatureCollection",
             "features": [{"type": "Feature", "geometry": json.loads(geometry.geojson)}],
         }
     if area["type"] == "bbox":
-        config["inputs"]["boundingBoxInput"]["bbox"] = list(geometry.extent)
+        config["inputs"]["geometry"]["input"] = list(geometry.extent)
     return config
 
 

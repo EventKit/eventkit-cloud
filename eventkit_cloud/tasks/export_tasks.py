@@ -720,10 +720,6 @@ def ogcapi_process_export_task(
     supported dataset.
     """
 
-    logger.error("*********OGC API EXPORT TASK**********")
-    logger.error("*********OGC API EXPORT TASK**********")
-    logger.error("*********OGC API EXPORT TASK**********")
-    logger.error("*********OGC API EXPORT TASK**********")
     result = result or {}
     selection = parse_result(result, "selection")
     export_task_record = get_export_task_record(task_uid)
@@ -757,7 +753,12 @@ def ogcapi_process_export_task(
     logger.error(f"OGC Download Path: {download_path}")
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
-        source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir, extract=not bool(driver))
+        source_data = find_in_zip(
+            zip_filepath=download_path,
+            stage_dir=stage_dir,
+            extension=ogc_config.get("output_file_ext"),
+            extract=not bool(driver),
+        )
         if driver:
             out = gdalutils.convert(
                 driver=driver,
