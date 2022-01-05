@@ -386,13 +386,13 @@ export class ExportSummary extends React.Component<Props, State> {
                                 </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
-                                    title="Data Sources"
+                                    title="Data Products"
                                     dataStyle={{display: 'block'}}
                                 >
                                     {providers.map(provider => this.getExportInfo(provider))}
                                     <div style={{display: 'flex', cursor: 'pointer'}}>
                                         <InfoDialog
-                                            title="Source and Format Details"
+                                            title="Product and Format Details"
                                             style={{marginRight: '5px'}}
                                             iconProps={{style: {width: '24px', marginRight: '5px'}}}
                                             ref={(instance) => {
@@ -401,7 +401,7 @@ export class ExportSummary extends React.Component<Props, State> {
                                         >
                                             <div style={{display: 'grid', fontSize: '14px'}}>
                                                 <strong
-                                                    style={{fontSize: '1.5em', paddingBottom: '5p'}}>Source(s):</strong>
+                                                    style={{fontSize: '1.5em', paddingBottom: '5p'}}>Product(s):</strong>
                                                 {providers.map((provider) => (
                                                         <div style={{padding: '3px'}}>
                                                             <div className={classes.infoItem}>
@@ -435,7 +435,7 @@ export class ExportSummary extends React.Component<Props, State> {
                                                 this.infoDialogRef.openDialog()
                                             }}
                                         >
-                                            Source and Format Details
+                                            Product and Format Details
                                         </Link>
                                     </div>
                                 </CustomTableRow>

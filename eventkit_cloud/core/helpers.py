@@ -165,7 +165,7 @@ def handle_auth(func):
 
 
 @handle_auth
-def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None, **auth_info):
+def get_or_update_session(session=None, max_retries=3, headers=None, token=None, **auth_info):
     username = auth_info.get("username")
     password = auth_info.get("password")
     cert_path = auth_info.get("cert_path")
@@ -192,9 +192,13 @@ def get_or_update_session(session=None, max_retries=3, headers=None, cookie=None
             session.mount("https://", adapter)
         except FileNotFoundError:
             logger.error("No cert found at path {}".format(cert_path))
-
-    if cookie:
-        session.cookies.set(**cookie)
+    elif headers:
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        session.headers.update(headers)
+    if token:
+        session.headers["Authorization"] = f"Bearer {token}"
 
     logger.debug("Using %s for SSL verification.", str(ssl_verify))
     session.verify = ssl_verify
