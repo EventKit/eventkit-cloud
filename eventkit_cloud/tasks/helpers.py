@@ -1109,7 +1109,7 @@ def find_in_zip(
                 with open(nested, "wb") as f:
                     f.write(zip_file.read(filepath))
 
-                return find_in_zip(nested.absolute(), stage_dir, extension, matched_files=matched_files)
+                return find_in_zip(nested.absolute(), stage_dir, extension=extension, matched_files=matched_files)
 
 
 def extract_metadata_files(

@@ -197,11 +197,6 @@ class DataProviderForm(forms.ModelForm):
                 raise forms.ValidationError("OGC API Process requires the name of the field to submit the area.")
             if area.get("type") not in ["geojson", "bbox", "wkt"]:
                 raise forms.ValidationError("OGC API Process requires an area type of geojson, bbox, or wkt.")
-            if not ogcapi_process.get("output_file_ext"):
-                raise forms.ValidationError(
-                    "OGC API Process requires an output_file_ext which is used as the search path for file conversion "
-                    "(e.g. .gpkg)."
-                )
             if not ogcapi_process.get("id"):
                 raise forms.ValidationError("OGC API Process requires a process id.")
 
