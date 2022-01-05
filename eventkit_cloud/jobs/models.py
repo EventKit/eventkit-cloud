@@ -329,7 +329,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             extent_url = config.get("extent_url")
             if extent_url and extent_url != orig_extent_url:
                 random_uuid = uuid.uuid4()
-                session = get_or_update_session(cert_info=config.get("cert_info"), cred_var=config.get("cred_var"))
+                session = get_or_update_session(**config)
                 if not extent_url:
                     return
                 output_file = download_data(task_uid=str(random_uuid), input_url=extent_url, session=session)

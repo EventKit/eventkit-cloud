@@ -396,7 +396,7 @@ def get_metadata_url(url, type):
         return url
 
 
-def get_osm_last_update(url, cert_info=None):
+def get_osm_last_update(url, **kwargs):
     """
     :param url: A path to the overpass api.
     :param cert_info: Optionally cert info if needed
@@ -404,7 +404,7 @@ def get_osm_last_update(url, cert_info=None):
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
-        session = get_or_update_session(cert_info=cert_info)
+        session = get_or_update_session(**kwargs)
         response = session.get(timestamp_url)
         if response:
             return response.content.decode()
