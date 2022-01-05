@@ -5,14 +5,14 @@ package:
   version: {{ version }}
 
 source:
-  url: http://download.osgeo.org/gdal/{{ version }}/gdal-{{ version }}.tar.xz
-  sha256: 1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76
-  patches:
-    # disable 12 bit jpeg on Windows as we aren't using internal jpeg
-    - disable_jpeg12.patch  # [win]
+  - url: http://download.osgeo.org/gdal/{{ version }}/gdal-{{ version }}.tar.xz
+    sha256: 1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76
+    patches:
+      # disable 12 bit jpeg on Windows as we aren't using internal jpeg
+      - disable_jpeg12.patch  # [win]
 
 build:
-  number: 12
+  number: 1
 
 requirements:
   build:
@@ -22,6 +22,7 @@ requirements:
     - gnuconfig  # [unix]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
+    - gcc_linux-64=5
   host:
     - cfitsio
     - curl
@@ -46,6 +47,7 @@ requirements:
     - libuuid  # [linux]
     - libwebp-base
     - libxml2
+    - mrsid_dsdk
     - openjpeg
     - openssl
     - pcre
@@ -75,6 +77,7 @@ outputs:
         - {{ compiler('cxx') }}
         - pkg-config  # [not win]
         - make  # [unix]
+        - gcc_linux-64=5
       host:
         - cfitsio
         - curl
@@ -99,6 +102,7 @@ outputs:
         - libuuid  # [linux]
         - libwebp-base
         - libxml2
+        - mrsid_dsdk
         - openjpeg
         - openssl
         - pcre
@@ -121,6 +125,7 @@ outputs:
         - libspatialite
         - libuuid  # [linux]
         - libwebp-base
+        - mrsid_dsdk
         - poppler
         - postgresql
         - proj
@@ -155,7 +160,7 @@ outputs:
         # having not been migrated yet causing conflicts with the "libgdal" output
         # See: https://github.com/conda-forge/gdal-feedstock/pull/415
         - hdf5
-        # Workaround to prevent conflicts seen in 
+        # Workaround to prevent conflicts seen in
         #  https://github.com/conda-forge/gdal-feedstock/pull/543
         - openssl
       run:

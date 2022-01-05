@@ -1,47 +1,18 @@
 
 package:
-  name: "mrsid-sdk"
+  name: "mrsid_dsdk"
   version: "9.5.4"
 
 source:
-  fn: MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531.tar.gz
-  url: https://bin.extensis.com/download/developer/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531.tar.gz
+  - url: https://bin.extensis.com/download/developer/MrSID_DSDK-9.5.4.4709-rhel6.x86-64.gcc531.tar.gz
+    sha256: ea3866aaaf518426a3a423072540f89a337d6a423feaa8e6cc9ac16906273b84
 
 build:
   number: 0
-  missing_dso_whitelist:
-    - libtbb.so
-    - libltidsdk.so.9
-    - libltidsdk.so
-    - libtbb.so.2
-    - libgeos.so
-    - libgeos-3.5.0.so
-    - libgeos_c.so.1.9.0
-    - libgeos_c.so.1
-    - libgeos_c.so
-    - liblti_lidar_dsdk.so
-    - libtbb.so
-    - liblti_lidar_dsdk.so.1
-    - libtbb.so.2
-    - liblaszip.so.6
-    - libpdal_util.so.3.0.0
-    - libgeos.so
-    - libpdal_util.so
-    - libpdal_base.so.2
-    - libgeos-3.5.0.so
-    - libpdal_base.so
-    - libpdal_base.so.3.0.0
-    - liblaszip.so.6.0.0
-    - liblaslib.so
-    - libgeos_c.so.1.9.0
-    - libgeos_c.so.1
-    - liblaszip.so
-    - libpdal_util.so.2
-    - libgeos_c.so
-requirements:
-  build:
+  detect_binary_files_with_prefix: True
 
 about:
+
   home: https://www.extensis.com/support/developers
   license: Commercial
   license_file: LICENSE.pdf

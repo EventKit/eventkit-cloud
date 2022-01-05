@@ -58,11 +58,11 @@ fi
 echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
-  for i in 1; do # TODO Revert this line after testing.
+  for i in 1 2 3; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --skip-existing --strict-verify \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install -v -v -v $RECIPE \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
