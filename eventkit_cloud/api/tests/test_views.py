@@ -328,7 +328,12 @@ class TestJobViewSet(APITestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
-            expected_user_details = {"user_id": self.user.id, "username": "demo", "is_superuser": False, "is_staff": False}
+            expected_user_details = {
+                "user_id": self.user.id,
+                "username": "demo",
+                "is_superuser": False,
+                "is_staff": False,
+            }
             mock_pickup.assert_called_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
@@ -397,7 +402,12 @@ class TestJobViewSet(APITestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
-            expected_user_details = {"user_id": self.user.id, "username": "demo", "is_superuser": False, "is_staff": False}
+            expected_user_details = {
+                "user_id": self.user.id,
+                "username": "demo",
+                "is_superuser": False,
+                "is_staff": False,
+            }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
@@ -450,7 +460,12 @@ class TestJobViewSet(APITestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
-            expected_user_details = {"user_id": self.user.id, "username": "demo", "is_superuser": False, "is_staff": False}
+            expected_user_details = {
+                "user_id": self.user.id,
+                "username": "demo",
+                "is_superuser": False,
+                "is_staff": False,
+            }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
@@ -502,7 +517,12 @@ class TestJobViewSet(APITestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             self.client.post(url, request_data, format="json")
-            expected_user_details = {"user_id": self.user.id, "username": "demo", "is_superuser": False, "is_staff": False}
+            expected_user_details = {
+                "user_id": self.user.id,
+                "username": "demo",
+                "is_superuser": False,
+                "is_staff": False,
+            }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
             )
@@ -751,7 +771,12 @@ class TestBBoxSearch(APITestCase):
 
             with self.settings(CELERY_SCALE_BY_RUN=False):
                 self.client.post(url, request_data, format="json")
-                expected_user_details = {"user_id": self.user.id, "username": "demo", "is_superuser": True, "is_staff": False}
+                expected_user_details = {
+                    "user_id": self.user.id,
+                    "username": "demo",
+                    "is_superuser": True,
+                    "is_staff": False,
+                }
                 mock_pickup.assert_called_with(
                     run_uid="some_run_uid", user_details=expected_user_details, session_token=None
                 )
