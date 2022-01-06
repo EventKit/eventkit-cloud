@@ -84,7 +84,8 @@ def auth(request):
     elif getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
         if request.method == "POST":
             """Logs out user"""
-            auth_logout(request)
+            if request.user.is_authenticated:
+                auth_logout(request)
             username = request.POST.get("username")
             password = request.POST.get("password")
             user_data = authenticate(username=username, password=password)
