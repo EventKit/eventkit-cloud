@@ -139,13 +139,13 @@ class TaskFactory:
 
         finalized_provider_task_chain_list = []
         # Create a task record which can hold tasks for the run (datapack)
-        run_task_record = DataProviderTaskRecord.objects.create(
-            run=run,
-            name="run",
-            slug="run",
-            status=TaskState.PENDING.value,
-            display=False,
+        run_task_record, created = DataProviderTaskRecord.objects.get_or_create(
+            run=run, name="run", slug="run", defaults={"status": TaskState.PENDING.value, "display": False}
         )
+        if created:
+            logger.info("New data provider task record created")
+            run_task_record.status = TaskState.PENDING.value
+            run_task_record.save()
 
         run_zip_task_chain = get_zip_task_chain(
             data_provider_task_record_uid=run_task_record.uid,
