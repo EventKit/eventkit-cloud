@@ -2468,6 +2468,7 @@ def get_user_details(request):
     """
     logged_in_user = request.user
     return {
+        "user_id": logged_in_user.id,
         "username": logged_in_user.username,
         "is_superuser": logged_in_user.is_superuser,
         "is_staff": logged_in_user.is_staff,
