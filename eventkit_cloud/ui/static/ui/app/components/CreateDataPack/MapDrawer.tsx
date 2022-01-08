@@ -222,11 +222,11 @@ export function MapDrawer(props: Props) {
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
     const shouldDisplayBasemapProvider = (provider: Eventkit.Provider) => {
-        return !!(providerShouldDisplay(provider) && provider.preview_url)
+        return !!(provider && providerShouldDisplay(provider) && provider.preview_url)
     }
 
     const shouldDisplayCoverageProvider = (provider: Eventkit.Provider) => {
-        return !!(providerShouldDisplay(provider) && provider.the_geom)
+        return !!(provider && providerShouldDisplay(provider))
     }
 
     function updateBaseMap(newBaseMapSource: BaseMapSource) {
@@ -275,7 +275,7 @@ export function MapDrawer(props: Props) {
         if (event && event.target.checked) {
             if (selected.findIndex(isSelectedCoverage) <= 0) {
                 selected.push(selectedCoverage)
-                props.addCoverageGeos(selectedCoverage.features)
+                props.addCoverageGeos(getFeatures(selectedCoverage.provider.slug ))
             }
         } else {
             let index = selected.findIndex(isSelectedCoverage);
@@ -311,18 +311,20 @@ export function MapDrawer(props: Props) {
         return olColor.asString([r, g, b, alpha]);
     }
 
-    function getRandomColor() {
-        var rgb = [];
-        for (var i = 0; i < 3; i++)
-            rgb.push(Math.floor(Math.random() * 255));
-        return rgb
+    /* hash feature name to color to get same color every time feature is displayed */
+    function getFeatureColor(featureName) {
+        const hash = featureName.getHashCode();
+        const r = (hash & 0xFF0000) >> 16;
+        const g = (hash & 0x00FF00) >> 8;
+        const b = hash & 0x0000FF;
+        return [r,g,b]
     }
 
     function getFeatureStyle(featureName) {
-        let randomColor = getRandomColor()
-        let fillColor = colorWithAlpha(randomColor, 0.1)
-        let strokeColor = colorWithAlpha(randomColor, 0.7)
-        let style = new Style({
+        const baseColor = getFeatureColor(featureName)
+        const fillColor = colorWithAlpha(baseColor, 0.1)
+        const strokeColor = colorWithAlpha(baseColor, 0.7)
+        return new Style({
             stroke: new Stroke({color: strokeColor, width: 2}),
             fill: new Fill({color: fillColor}),
             text: new Text({
@@ -332,7 +334,6 @@ export function MapDrawer(props: Props) {
                 fill: new Fill({color: theme.eventkit.colors.white}),
             })
         });
-        return style
     }
 
     const drawerOpen = !!selectedTab;
@@ -357,7 +358,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setSources([
             ...filteredProviders.filter(_provider =>
-                !!_provider && !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
+                shouldDisplayBasemapProvider(_provider)).map(_provider => {
                 let footprintsLayer;
                 if (!!_provider.footprint_url) {
                     footprintsLayer = {
@@ -385,8 +386,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setCoverages([
             ...filteredCoverageProviders.filter(_provider =>
-                !!_provider && !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
-
+                shouldDisplayCoverageProvider(_provider)).map(_provider => {
                 const features = []
                 const geos = _provider.the_geom.coordinates
                 const style = getFeatureStyle(_provider.name)
