@@ -35,7 +35,8 @@ import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
 import isEqual from 'lodash.isequal';
-import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import {getCookie, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import axios from "axios";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -221,6 +222,9 @@ export function MapDrawer(props: Props) {
     const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
+    const CancelToken = axios.CancelToken;
+    const source = CancelToken.source();
+
     const shouldDisplayBasemapProvider = (provider: Eventkit.Provider) => {
         return !!(provider && providerShouldDisplay(provider) && provider.preview_url)
     }
@@ -242,68 +246,26 @@ export function MapDrawer(props: Props) {
         return (source && source.mapLayer) ? providers.find(prov => prov.slug === source.mapLayer.slug) : null
     }
 
-    function handleChange(event, newValue) {
-        if (selectedTab === newValue) {
-            setSelectedTab('');
-        } else {
-            setSelectedTab(newValue);
+    function getProviderGeom(provider: Eventkit.Provider) {
+        if (provider.the_geom && provider.the_geom.coordinates) {
+            return provider.the_geom
         }
-    }
-
-    function handleExpandClick(event, selectedSource: BaseMapSource) {
-        const selectedSources = [...props.sources] || [];
-        if (event && event.target.checked) {
-            let index;
-            if (selectedSources.findIndex(isEqual, selectedSource) <= 0) {
-                selectedSources.push(selectedSource)
-            } else {
-                index = selectedSources.findIndex(isEqual, selectedSource)
-                if (index >= 0) {
-                    selectedSources.splice(index, 1);
-                }
-            }
-        } else {
-            return null
-        }
-        setExpandedSources(selectedSources);
-        updateBaseMap(selectedSource);
-    }
-
-    function handleCoverageClick(event, selectedCoverage) {
-        const selected = selectedCoverages;
-        const isSelectedCoverage = (cov) => cov.provider.slug === selectedCoverage.provider.slug
-        if (event && event.target.checked) {
-            if (selected.findIndex(isSelectedCoverage) <= 0) {
-                selected.push(selectedCoverage)
-                props.addCoverageGeos(getFeatures(selectedCoverage.provider.slug ))
-            }
-        } else {
-            let index = selected.findIndex(isSelectedCoverage);
-            if (index >= 0) {
-                props.removeCoverageGeos(selected[index].features)
-                selected.splice(index, 1);
-            }
-        }
-        setSelectedCoverages([...selected]);
-    }
-
-    function showFootprintData(source: BaseMapSource) {
-        if (expandedSources && isEqual(selectedBaseMap, source)) {
-            if (!!source.footprintsLayer) {
-                return (
-                    <FootprintDisplay
-                        footprintsLayer={source.footprintsLayer}
-                        addFootprintsLayer={props.addFootprintsLayer}
-                        removeFootprintsLayer={props.removeFootprintsLayer}
-                    />
-                )
-            }
-        }
-    }
-
-    function clearCoverageGeos() {
-        selectedCoverages.forEach((cov) => props.removeCoverageGeos(cov.features));
-        setSelectedCoverages([]);
+        const csrfmiddlewaretoken = getCookie('csrftoken');
+        return axios({
+            url: `/api/providers/${provider.slug}?format=geojson`,
+            method: 'GET',
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
+            cancelToken: source.token,
+        }).then((response) => {
+            const geom = response.data.geometry as Eventkit.Geom;
+            provider.the_geom = geom;
+            return geom;
+        }).catch(() => {
+            return {
+                type: 'ERROR',
+                coordinates: undefined,
+            } as Eventkit.Geom;
+        });
     }
 
     function colorWithAlpha(color, alpha) {
@@ -334,6 +296,87 @@ export function MapDrawer(props: Props) {
                 fill: new Fill({color: theme.eventkit.colors.white}),
             })
         });
+    }
+
+    async function getFeatures(coverage) {
+        if (!coverage.features || coverage.features.length === 0) {
+            const geom = await getProviderGeom(coverage.provider)
+            const geos = geom.coordinates
+            const style = getFeatureStyle(coverage.provider.name)
+            geos.forEach((coords) => {
+                const polygon = new Polygon(coords);
+                const feature = new Feature({
+                    geometry: polygon,
+                });
+                feature.setStyle(style)
+                coverage.features.push(feature)
+            })
+        }
+        return coverage.features
+    }
+
+    function handleChange(event, newValue) {
+        if (selectedTab === newValue) {
+            setSelectedTab('');
+        } else {
+            setSelectedTab(newValue);
+        }
+    }
+
+    function handleExpandClick(event, selectedSource: BaseMapSource) {
+        const selectedSources = [...props.sources] || [];
+        if (event && event.target.checked) {
+            let index;
+            if (selectedSources.findIndex(isEqual, selectedSource) <= 0) {
+                selectedSources.push(selectedSource)
+            } else {
+                index = selectedSources.findIndex(isEqual, selectedSource)
+                if (index >= 0) {
+                    selectedSources.splice(index, 1);
+                }
+            }
+        } else {
+            return null
+        }
+        setExpandedSources(selectedSources);
+        updateBaseMap(selectedSource);
+    }
+
+    async function handleCoverageClick(event, selectedCoverage) {
+        const selected = selectedCoverages;
+        const isSelectedCoverage = (cov) => cov.provider.slug === selectedCoverage.provider.slug
+        if (event && event.target.checked) {
+            if (selected.findIndex(isSelectedCoverage) <= 0) {
+                selected.push(selectedCoverage)
+                props.addCoverageGeos(await getFeatures(selectedCoverage))
+            }
+        } else {
+            const index = selected.findIndex(isSelectedCoverage);
+            if (index >= 0) {
+                props.removeCoverageGeos(selected[index].features)
+                selected.splice(index, 1);
+            }
+        }
+        setSelectedCoverages([...selected]);
+    }
+
+    function showFootprintData(source: BaseMapSource) {
+        if (expandedSources && isEqual(selectedBaseMap, source)) {
+            if (!!source.footprintsLayer) {
+                return (
+                    <FootprintDisplay
+                        footprintsLayer={source.footprintsLayer}
+                        addFootprintsLayer={props.addFootprintsLayer}
+                        removeFootprintsLayer={props.removeFootprintsLayer}
+                    />
+                )
+            }
+        }
+    }
+
+    function clearCoverageGeos() {
+        selectedCoverages.forEach((cov) => props.removeCoverageGeos(cov.features));
+        setSelectedCoverages([]);
     }
 
     const drawerOpen = !!selectedTab;
@@ -387,20 +430,8 @@ export function MapDrawer(props: Props) {
         setCoverages([
             ...filteredCoverageProviders.filter(_provider =>
                 shouldDisplayCoverageProvider(_provider)).map(_provider => {
-                const features = []
-                const geos = _provider.the_geom.coordinates
-                const style = getFeatureStyle(_provider.name)
-                geos.forEach(function (coords) {
-                    const polygon = new Polygon(coords);
-                    const feature = new Feature({
-                        geometry: polygon,
-                    });
-                    feature.setStyle(style)
-                    features.push(feature)
-                })
-
                 return {
-                    features: features,
+                    features: [],
                     provider: _provider,
                 } as Coverage;
             })
