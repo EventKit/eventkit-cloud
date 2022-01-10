@@ -11,7 +11,7 @@ services:
       - ./download_packages.py:/home/conda/download_packages.py
       - ./convert_requirements_to_conda.py:/home/conda/convert_requirements_to_conda.py
       - ./recipes.txt:/home/conda/recipes.txt
-      - ../:/home/conda/eventkit-cloud
+      - ../:/eventkit-cloud
     environment:
       version:
       branch:
