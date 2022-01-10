@@ -1,6 +1,6 @@
 
 package:
-  name: "mrsid_dsdk"
+  name: "mrsid-dsdk"
   version: "9.5.4"
 
 source:

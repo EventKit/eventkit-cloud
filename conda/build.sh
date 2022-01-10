@@ -2,6 +2,13 @@
 
 set -e
 
+source /opt/conda/etc/profile.d/conda.sh
+conda activate
+conda config --set channel_priority flexible
+conda install python=3.9 --yes
+conda update conda --all --yes
+conda install "conda-build" "mamba"  --yes
+
 echo "Clearing out conda-bld"
 rm -rf /opt/conda/conda-bld
 rm -rf /opt/conda/pkgs
@@ -42,7 +49,7 @@ function create_index {
 
 echo "Converting the requirements.txt to a format compatible with conda."
 python /home/conda/convert_requirements_to_conda.py
-cat /home/conda/recipes/eventkit-cloud/conda-requirements.txt
+cat /eventkit-cloud/conda-requirements.txt
 
 echo "Building recipes"
 cd /home/conda/recipes
@@ -58,11 +65,11 @@ fi
 echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
-  for i in 1 2 3; do
+  for i in 1; do
     echo "Building: ${RECIPE}"
-    $COMMAND build $RECIPE --skip-existing --strict-verify \
+    $COMMAND build $RECIPE --numpy 1.21.2 --skip-existing --strict-verify \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
+    && echo "y" | $COMMAND install $RECIPE && create_index\
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
@@ -71,4 +78,3 @@ create_index
 
 echo "Cleaning up the conda-requirements.txt after the build."
 rm /home/conda/recipes/eventkit-cloud/conda-requirements.txt
-

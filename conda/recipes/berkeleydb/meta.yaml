@@ -9,6 +9,11 @@ source:
 build:
   number: 0
 
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+
 about:
   home: http://download.oracle.com/berkeley-db
 

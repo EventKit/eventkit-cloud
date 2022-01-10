@@ -13,6 +13,10 @@ build:
 requirements:
   build:
     - libevent
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  host:
+    - libevent
 
 about:
   home: https://memcached.org/about

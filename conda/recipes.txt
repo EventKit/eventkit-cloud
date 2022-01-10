@@ -5,8 +5,7 @@ django-auth-ldap
 swapper
 django-notifications-hq
 django-storages
-django-timezone-field
-mrsid_dsdk
+mrsid-dsdk
 gdal
 mapproxy
 memcached
