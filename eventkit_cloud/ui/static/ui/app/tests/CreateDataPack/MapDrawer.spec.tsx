@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as sinon from 'sinon';
 import {mount} from 'enzyme';
 import Drawer from '@material-ui/core/Drawer';
 import {MapDrawer, VerticalTabs} from "../../components/CreateDataPack/MapDrawer";
@@ -9,9 +8,6 @@ import ListItem from '@material-ui/core/ListItem';
 import Radio from "@material-ui/core/Radio";
 import Checkbox from '@material-ui/core/Checkbox';
 import {act} from "react-dom/test-utils";
-import Feature from 'ol/Feature';
-import Polygon from 'ol/geom/Polygon';
-import {ExportAOI} from "../../components/CreateDataPack/ExportAOI";
 
 jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
@@ -222,15 +218,6 @@ describe('FilterDrawer component', () => {
         // open/render the coverage tab first
         wrapper.find(Tab).at(1).simulate('click');
         expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
-    });
-
-    it('should call addCoverageGeos when coverage checked', () => {
-        // open/render the coverage tab first
-        wrapper.find(Tab).at(1).simulate('click');
-        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: true}});
-        expect(wrapper.find(Checkbox).at(0).props().value).toBe(coverages[0].provider.slug);
-        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(true);
-        expect(addCoverageGeosSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should call removeCoverageGeos when coverage unchecked', () => {

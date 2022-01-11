@@ -273,17 +273,15 @@ export function MapDrawer(props: Props) {
         return olColor.asString([r, g, b, alpha]);
     }
 
-    /* hash feature name to color to get same color every time feature is displayed */
-    function getFeatureColor(featureName) {
-        const hash = featureName.getHashCode();
-        const r = (hash & 0xFF0000) >> 16;
-        const g = (hash & 0x00FF00) >> 8;
-        const b = hash & 0x0000FF;
-        return [r,g,b]
+    function getRandomColor() {
+        const rgb = [];
+        for (let i = 0; i < 3; i++)
+            rgb.push(Math.floor(Math.random() * 255));
+        return rgb
     }
 
     function getFeatureStyle(featureName) {
-        const baseColor = getFeatureColor(featureName)
+        const baseColor = getRandomColor()
         const fillColor = colorWithAlpha(baseColor, 0.1)
         const strokeColor = colorWithAlpha(baseColor, 0.7)
         return new Style({
@@ -348,7 +346,7 @@ export function MapDrawer(props: Props) {
         if (event && event.target.checked) {
             if (selected.findIndex(isSelectedCoverage) <= 0) {
                 selected.push(selectedCoverage)
-                props.addCoverageGeos(await getFeatures(selectedCoverage))
+                props.addCoverageGeos(await getFeatures(selectedCoverage));
             }
         } else {
             const index = selected.findIndex(isSelectedCoverage);
