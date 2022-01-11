@@ -301,14 +301,16 @@ export function MapDrawer(props: Props) {
             const geom = await getProviderGeom(coverage.provider)
             const geos = geom.coordinates
             const style = getFeatureStyle(coverage.provider.name)
-            geos.forEach((coords) => {
-                const polygon = new Polygon(coords);
-                const feature = new Feature({
-                    geometry: polygon,
-                });
-                feature.setStyle(style)
-                coverage.features.push(feature)
-            })
+            if (geos) {
+                geos.forEach((coords) => {
+                    const polygon = new Polygon(coords);
+                    const feature = new Feature({
+                        geometry: polygon,
+                    });
+                    feature.setStyle(style)
+                    coverage.features.push(feature)
+                })
+            }
         }
         return coverage.features
     }
