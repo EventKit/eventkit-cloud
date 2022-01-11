@@ -30,13 +30,7 @@ class GisClient(abc.ABC):
         self.max_area = max_area
         self.timeout = 10
         self.config = config or dict()
-        self.session = get_or_update_session(
-            session=None,
-            cert_info=self.config.get("cert_info", None),
-            slug=self.slug,
-            params=self.query,
-            timeout=self.timeout,
-        )
+        self.session = get_or_update_session(session=None, **self.config)
 
         if aoi_geojson is not None and aoi_geojson != "":
             if isinstance(aoi_geojson, str):

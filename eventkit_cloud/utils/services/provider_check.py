@@ -2,24 +2,24 @@
 import base64
 import logging
 import re
-import xml.etree.ElementTree as ET
-from enum import Enum
-from io import StringIO
-from typing import Type
-
 import requests
+import xml.etree.ElementTree as ET
 import yaml
 from django.conf import settings
 from django.contrib.gis.geos import Polygon, GeometryCollection
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
+from enum import Enum
+from io import StringIO
+import json
+from jsonschema import validate, ValidationError
+from typing import Type
 
 from eventkit_cloud.jobs.models import DataProvider
-
 from eventkit_cloud.tasks.helpers import normalize_name
-from eventkit_cloud.utils.services.overpass import Overpass
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
+from eventkit_cloud.utils.services.overpass import Overpass
 from eventkit_cloud.utils.services.ows import OWS
 from eventkit_cloud.utils.services.tms import TMS
 from eventkit_cloud.utils.services.wcs import WCS
@@ -277,6 +277,7 @@ class ProviderCheck:
             return status
 
         except ProviderCheckError as pce:
+            logger.error(pce, exc_info=True)
             #  If checks fail throw that away so that we will check again on the next request.
             cache.delete(status_check_cache_key)
             cache.delete(self.get_cache_key())
@@ -492,7 +493,7 @@ class FileProviderCheck(ProviderCheck):
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
 
-class OGCProviderCheck(ProviderCheck):
+class OGCAPIProcessProviderCheck(ProviderCheck):
     """
     Implementation of ProviderCheck for geospatial file providers.
     """
@@ -540,6 +541,7 @@ class OGCProviderCheck(ProviderCheck):
         """
         Checks if the configured process is valid based on the allowed inputs of the provider.
         """
+
         url = (
             f"{self.client.service_url.rstrip('/')}/processes/{self.client.config['ogcapi_process']['id']}?format=json"
         )
@@ -549,21 +551,25 @@ class OGCProviderCheck(ProviderCheck):
             return False
 
         data = response.json()
-        expected_keys = ["version", "id", "title", "description", "inputs"]
+        expected_keys = ["version", "id", "title", "inputs"]
         if any(key not in data for key in expected_keys):
-            return False
-
-        if self.client.config["ogcapi_process"]["id"] != data["id"]:
+            logger.error("The configured process returned an unexpected result")
+            logger.error(data)
             return False
 
         allowed_inputs = data["inputs"]
         configured_inputs = self.client.config["ogcapi_process"]["inputs"].items()
 
         for configured_input_key, configured_input_value in configured_inputs:
-            if configured_input_key not in allowed_inputs.keys():
+            allowed_keys = allowed_inputs.keys()
+            if configured_input_key not in allowed_keys:
+                logger.error("Provider configured input %s not in allowed keys %s", configured_input_key, allowed_keys)
                 return False
 
-            if configured_input_value["value"] not in allowed_inputs[configured_input_key]["schema"]["enum"]:
+            try:
+                validate(instance=configured_input_value, schema=allowed_inputs[configured_input_key]["schema"])
+            except ValidationError as ve:
+                logger.error(json.dumps({k: str(v) for k, v in vars(ve).items()}))
                 return False
 
         return True
@@ -581,10 +587,10 @@ PROVIDER_CHECK_MAP = {
     "tms": TMSProviderCheck,
     "vector-file": FileProviderCheck,
     "raster-file": FileProviderCheck,
-    "ogcapi-process": OGCProviderCheck,
-    "ogcapi-process-elevation": OGCProviderCheck,
-    "ogcapi-process-raster": OGCProviderCheck,
-    "ogcapi-process-vector": OGCProviderCheck,
+    "ogcapi-process": OGCAPIProcessProviderCheck,
+    "ogcapi-process-elevation": OGCAPIProcessProviderCheck,
+    "ogcapi-process-raster": OGCAPIProcessProviderCheck,
+    "ogcapi-process-vector": OGCAPIProcessProviderCheck,
 }
 
 
@@ -622,7 +628,7 @@ def perform_provider_check(provider: DataProvider, geojson: dict) -> dict:
         response = checker.check()
 
     except Exception as e:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         response = ProviderCheck.get_status_result(CheckResult.UNKNOWN_ERROR)
         if provider:
             logger.error(f"An exception occurred while checking the {provider.name} provider.", exc_info=True)

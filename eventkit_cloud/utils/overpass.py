@@ -115,9 +115,7 @@ class Overpass(object):
                 msg="Querying provider data",
             )
             conf: dict = yaml.safe_load(self.config) or dict()
-            cert_info = conf.get("cert_info")
-
-            session = get_or_update_session(cert_info=cert_info, slug=self.slug)
+            session = get_or_update_session(slug=self.slug, **conf)
             req = session.post(self.url, data=query, stream=True)
             if not req.ok:
                 # Workaround for https://bugs.python.org/issue27777

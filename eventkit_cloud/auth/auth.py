@@ -53,28 +53,28 @@ def auto_logout(get_response):
     return middleware
 
 
-def fetch_user_from_token(access_token):
+def fetch_user_from_token(token):
     """
 
     :param access_token: Uses OAuth token to retrieve user data from the resource server.
     :return: User object.
     """
 
-    logger.debug('Sending request: access_token="{0}"'.format(access_token))
+    logger.debug("Sending request: access_token=%s", token)
     try:
-        session = get_or_update_session(headers={"Authorization": "Bearer {0}".format(access_token)})
+        session = get_or_update_session(token=token)
         response = session.get(settings.OAUTH_PROFILE_URL)
-        logger.debug("Received response: {0}".format(response.text))
+        logger.debug("Received response: %s", response.text)
         response.raise_for_status()
     except requests.ConnectionError as err:
-        logger.error("Could not reach OAuth Resource Server: {0}".format(err))
+        logger.error("Could not reach OAuth Resource Server: %s", err)
         raise OAuthServerUnreachable()
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error("OAuth Resource Server rejected access token: {0}".format(err.response.text))
+            logger.error("OAuth Resource Server rejected access token: %s", err.response.text)
             raise Unauthorized("OAuth Resource Server rejected access token")
-        logger.error("OAuth Resource Server returned HTTP {0} {1}".format(status_code, err.response.text))
+        logger.error("OAuth Resource Server returned HTTP %s %s", status_code, err.response.text)
         raise OAuthError(status_code)
 
     orig_data = response.json()

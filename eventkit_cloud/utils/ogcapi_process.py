@@ -30,11 +30,11 @@ class OgcApiProcess:
         self.task_id = task_id
         self.job_url = None
 
-        logger.error(f"Session: {session_token}, {args}, {kwargs}")
+        logger.info(f"Session: {session_token}, {args}, {kwargs}")
         valid_token = has_valid_access_token(session_token)
         if not valid_token:
             raise Exception("Invalid access token.")
-        self.session = get_or_update_session(token=session_token, *args, **kwargs)
+        self.session = get_or_update_session(*args, **kwargs)
 
     def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
@@ -227,7 +227,7 @@ def get_process_formats(provider, request):
 def get_session(request, provider):
     config = load_provider_config(provider.config)
 
-    session = get_or_update_session(cert_info=config.get("cert_info"), cred_var=config.get("cred_var"))
+    session = get_or_update_session(**config)
 
     session_token = request.session.get("access_token")
     valid_token = has_valid_access_token(session_token)

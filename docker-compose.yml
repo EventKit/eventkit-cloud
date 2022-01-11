@@ -61,7 +61,6 @@ services:
       - REVERSE_GEOCODING_API_URL
       - GEOCODING_UPDATE_URL
       - CONVERT_API_URL
-      - MAX_EXPORTRUN_EXPIRATION_DAYS=30
       - BASEMAP_URL
       - GEOCODING_AUTH_CERT
       - GEOCODING_AUTH_URL
@@ -81,6 +80,7 @@ services:
       - CONDA_REPO
       - EVENTKIT_CRED
       - EVENTKIT_CERT_PASS
+      - DATA_UPLOAD_MAX_MEMORY_SIZE
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -171,6 +171,7 @@ services:
       - DEV_MACHINE_CODE_PATH
       - SECRET_KEY
       - BIND_MOUNT_LOCATION
+      - EVENTKIT_CRED
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh

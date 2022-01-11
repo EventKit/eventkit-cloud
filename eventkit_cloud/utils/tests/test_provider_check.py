@@ -14,7 +14,7 @@ from eventkit_cloud.utils.services.provider_check import (
     WMSProviderCheck,
     WMTSProviderCheck,
     CheckResult,
-    OGCProviderCheck,
+    OGCAPIProcessProviderCheck,
 )
 
 logger = logging.getLogger(__name__)
@@ -276,10 +276,10 @@ F                                <EX_GeographicBoundingBox>
         config = {
             "ogcapi_process": {
                 "id": "export-example-bundle",
-                "inputs": {"product": {"value": "example-product"}, "file_format": {"value": "example-file-format"}},
+                "inputs": {"product": "example-product", "file_format": "example-file-format"},
             }
         }
-        pc = OGCProviderCheck(url, layer, self.aoi_geojson, config=config)
+        pc = OGCAPIProcessProviderCheck(url, layer, self.aoi_geojson, config=config)
         empty_content = {}
         valid_content = {
             "version": "1.0.0",

@@ -68,6 +68,23 @@ def get_cert_info(kwargs_dict):
     return cert_path, cert_pass
 
 
+def get_cred_token(kwargs_dict=None):
+    """
+    Gets and returns the cert info from a kwargs dict if they are present.
+
+    :param kwargs_dict: passed in dict representing kwargs passed to a calling function.
+    :return:tuple (cert_path, cert_pass_var) either may be None
+    """
+    cred_token = kwargs_dict.pop("cred_token", None)
+    if not cred_token:
+        return None
+    token = os.getenv(cred_token)
+    if not token:
+        logger.error("A token credential was configured for %s but the variable is not set.", cred_token)
+        raise Exception("The service token is improperly configured.")
+    return token
+
+
 def get_cred(cred_var=None, url=None, params=None):
     """
     Given a URL with a query string, locates parameters corresponding to username and password, and returns them.
