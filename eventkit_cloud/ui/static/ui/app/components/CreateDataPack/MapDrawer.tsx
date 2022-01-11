@@ -35,7 +35,8 @@ import {useEffect, useState} from "react";
 import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 import MapDrawerOptions from "./MapDrawerOptions";
 import isEqual from 'lodash.isequal';
-import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import {getCookie, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+import axios from "axios";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -221,12 +222,15 @@ export function MapDrawer(props: Props) {
     const [selectedCoverages, setSelectedCoverages] = useState([]);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
+    const CancelToken = axios.CancelToken;
+    const source = CancelToken.source();
+
     const shouldDisplayBasemapProvider = (provider: Eventkit.Provider) => {
-        return !!(providerShouldDisplay(provider) && provider.preview_url)
+        return !!(provider && providerShouldDisplay(provider) && provider.preview_url)
     }
 
     const shouldDisplayCoverageProvider = (provider: Eventkit.Provider) => {
-        return !!(providerShouldDisplay(provider) && provider.the_geom)
+        return !!(provider && providerShouldDisplay(provider))
     }
 
     function updateBaseMap(newBaseMapSource: BaseMapSource) {
@@ -240,6 +244,75 @@ export function MapDrawer(props: Props) {
 
     function getSourceProvider(source: BaseMapSource) {
         return (source && source.mapLayer) ? providers.find(prov => prov.slug === source.mapLayer.slug) : null
+    }
+
+    function getProviderGeom(provider: Eventkit.Provider) {
+        if (provider.the_geom && provider.the_geom.coordinates) {
+            return provider.the_geom
+        }
+        const csrfmiddlewaretoken = getCookie('csrftoken');
+        return axios({
+            url: `/api/providers/${provider.slug}?format=geojson`,
+            method: 'GET',
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
+            cancelToken: source.token,
+        }).then((response) => {
+            const geom = response.data.geometry as Eventkit.Geom;
+            provider.the_geom = geom;
+            return geom;
+        }).catch(() => {
+            return {
+                type: 'ERROR',
+                coordinates: undefined,
+            } as Eventkit.Geom;
+        });
+    }
+
+    function colorWithAlpha(color, alpha) {
+        const [r, g, b] = color;
+        return olColor.asString([r, g, b, alpha]);
+    }
+
+    function getRandomColor() {
+        const rgb = [];
+        for (let i = 0; i < 3; i++)
+            rgb.push(Math.floor(Math.random() * 255));
+        return rgb
+    }
+
+    function getFeatureStyle(featureName) {
+        const baseColor = getRandomColor()
+        const fillColor = colorWithAlpha(baseColor, 0.1)
+        const strokeColor = colorWithAlpha(baseColor, 0.7)
+        return new Style({
+            stroke: new Stroke({color: strokeColor, width: 2}),
+            fill: new Fill({color: fillColor}),
+            text: new Text({
+                text: featureName,
+                font: '14px Calibri,sans-serif',
+                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 3}),
+                fill: new Fill({color: theme.eventkit.colors.white}),
+            })
+        });
+    }
+
+    async function getFeatures(coverage) {
+        if (!coverage.features || coverage.features.length === 0) {
+            const geom = await getProviderGeom(coverage.provider)
+            const geos = geom.coordinates
+            const style = getFeatureStyle(coverage.provider.name)
+            if (geos) {
+                geos.forEach((coords) => {
+                    const polygon = new Polygon(coords);
+                    const feature = new Feature({
+                        geometry: polygon,
+                    });
+                    feature.setStyle(style)
+                    coverage.features.push(feature)
+                })
+            }
+        }
+        return coverage.features
     }
 
     function handleChange(event, newValue) {
@@ -269,16 +342,16 @@ export function MapDrawer(props: Props) {
         updateBaseMap(selectedSource);
     }
 
-    function handleCoverageClick(event, selectedCoverage) {
+    async function handleCoverageClick(event, selectedCoverage) {
         const selected = selectedCoverages;
         const isSelectedCoverage = (cov) => cov.provider.slug === selectedCoverage.provider.slug
         if (event && event.target.checked) {
             if (selected.findIndex(isSelectedCoverage) <= 0) {
                 selected.push(selectedCoverage)
-                props.addCoverageGeos(selectedCoverage.features)
+                props.addCoverageGeos(await getFeatures(selectedCoverage));
             }
         } else {
-            let index = selected.findIndex(isSelectedCoverage);
+            const index = selected.findIndex(isSelectedCoverage);
             if (index >= 0) {
                 props.removeCoverageGeos(selected[index].features)
                 selected.splice(index, 1);
@@ -306,35 +379,6 @@ export function MapDrawer(props: Props) {
         setSelectedCoverages([]);
     }
 
-    function colorWithAlpha(color, alpha) {
-        const [r, g, b] = color;
-        return olColor.asString([r, g, b, alpha]);
-    }
-
-    function getRandomColor() {
-        var rgb = [];
-        for (var i = 0; i < 3; i++)
-            rgb.push(Math.floor(Math.random() * 255));
-        return rgb
-    }
-
-    function getFeatureStyle(featureName) {
-        let randomColor = getRandomColor()
-        let fillColor = colorWithAlpha(randomColor, 0.1)
-        let strokeColor = colorWithAlpha(randomColor, 0.7)
-        let style = new Style({
-            stroke: new Stroke({color: strokeColor, width: 2}),
-            fill: new Fill({color: fillColor}),
-            text: new Text({
-                text: featureName,
-                font: '14px Calibri,sans-serif',
-                stroke: new Stroke({color: theme.eventkit.colors.text_primary, width: 3}),
-                fill: new Fill({color: theme.eventkit.colors.white}),
-            })
-        });
-        return style
-    }
-
     const drawerOpen = !!selectedTab;
     const areProvidersHidden = providers.find(provider => provider.hidden === true);
 
@@ -357,7 +401,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setSources([
             ...filteredProviders.filter(_provider =>
-                !!_provider && !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
+                shouldDisplayBasemapProvider(_provider)).map(_provider => {
                 let footprintsLayer;
                 if (!!_provider.footprint_url) {
                     footprintsLayer = {
@@ -385,22 +429,9 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setCoverages([
             ...filteredCoverageProviders.filter(_provider =>
-                !!_provider && !_provider.hidden && !!_provider.the_geom && !!_provider.display).map(_provider => {
-
-                const features = []
-                const geos = _provider.the_geom.coordinates
-                const style = getFeatureStyle(_provider.name)
-                geos.forEach(function (coords) {
-                    const polygon = new Polygon(coords);
-                    const feature = new Feature({
-                        geometry: polygon,
-                    });
-                    feature.setStyle(style)
-                    features.push(feature)
-                })
-
+                shouldDisplayCoverageProvider(_provider)).map(_provider => {
                 return {
-                    features: features,
+                    features: [],
                     provider: _provider,
                 } as Coverage;
             })

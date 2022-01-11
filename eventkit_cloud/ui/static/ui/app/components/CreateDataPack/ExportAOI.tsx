@@ -1020,15 +1020,19 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private addCoverageGeos(features: Feature[]) {
-        features.forEach(feature => {
-            this.overlayLayer.getSource().addFeature(feature);
-        }, this)
+        if (features) {
+            features.forEach(feature => {
+                this.overlayLayer.getSource().addFeature(feature);
+            }, this)
+        }
     }
 
     private removeCoverageGeos(features: Feature[]) {
-        features.forEach(feature => {
-            this.overlayLayer.getSource().removeFeature(feature);
-        }, this)
+        if (features) {
+            features.forEach(feature => {
+                this.overlayLayer.getSource().removeFeature(feature);
+            }, this)
+        }
     }
 
     private addFootprintsLayer(mapLayer: MapLayer) {
