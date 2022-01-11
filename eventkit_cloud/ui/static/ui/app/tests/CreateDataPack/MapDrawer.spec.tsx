@@ -7,7 +7,9 @@ import Tab from "@material-ui/core/Tab";
 import ListItem from '@material-ui/core/ListItem';
 import Radio from "@material-ui/core/Radio";
 import Checkbox from '@material-ui/core/Checkbox';
-import {act} from "react-dom/test-utils";
+import axios from "axios"
+import MockAdapter from "axios-mock-adapter";
+import { act } from "react-test-renderer"
 
 jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
@@ -48,6 +50,7 @@ describe('FilterDrawer component', () => {
             supported_formats: ['fmt1'],
             preview_url: 'url/path/1',
             the_geom: {
+                type: "MultiPolygon",
                 coordinates: [
                     [
                         [
@@ -87,6 +90,7 @@ describe('FilterDrawer component', () => {
             export_provider_type: 2,
             supported_formats: ['fmt1'],
             the_geom: {
+                type: "MultiPolygon",
                 coordinates: [
                     [
                         [
@@ -133,6 +137,7 @@ describe('FilterDrawer component', () => {
         },
     ]
 
+    const wait = async () => new Promise((resolve) => setTimeout(resolve, 0))
     const addCoverageGeosSpy = jest.fn()
     const removeCoverageGeosSpy = jest.fn()
     const updateBaseMapSpy = jest.fn()
@@ -148,11 +153,20 @@ describe('FilterDrawer component', () => {
     let props;
     let wrapper;
     let instance;
+    let axiosMock;
     const setup = (overrides = {}) => {
         props = {...getProps(), ...overrides};
         wrapper = mount(<MapDrawer {...props} />);
         instance = wrapper.instance();
     };
+
+    beforeAll(() => {
+        axiosMock = new MockAdapter(axios)
+    })
+
+    afterEach(() => {
+        axiosMock.reset();
+    });
 
     beforeEach(setup);
 
@@ -218,6 +232,17 @@ describe('FilterDrawer component', () => {
         // open/render the coverage tab first
         wrapper.find(Tab).at(1).simulate('click');
         expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
+    });
+
+    it('should call addCoverageGeos when coverage checked', async () => {
+        // open/render the coverage tab first
+        wrapper.find(Tab).at(1).simulate('click');
+        await act(async () => {
+            wrapper.find(Checkbox).at(0).simulate('click', {target: {checked: true}});
+            await wait()
+        })
+
+        expect(addCoverageGeosSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should call removeCoverageGeos when coverage unchecked', () => {
