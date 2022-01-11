@@ -147,6 +147,8 @@ def handle_auth(func):
             cert_path, cert_pass = auth_requests.get_cert_info(kwargs)
             kwargs["cert_path"] = cert_path
             kwargs["cert_pass"] = cert_pass
+            cred_token = auth_requests.get_cred_token(kwargs)
+            kwargs["token"] = cred_token
             cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
             url = kwargs.get("url")
             cred = auth_requests.get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
@@ -165,11 +167,21 @@ def handle_auth(func):
 
 
 @handle_auth
-def get_or_update_session(session=None, max_retries=3, headers=None, token=None, **auth_info):
-    username = auth_info.get("username")
-    password = auth_info.get("password")
-    cert_path = auth_info.get("cert_path")
-    cert_pass = auth_info.get("cert_pass")
+def get_or_update_session(**session_info):
+    """
+    :param session_info: kwargs to be passed in arbitrarily from a provider config.
+    :return: A session used to communicate with a specific provider.
+    """
+
+    session = session_info.get("session")
+    max_retries = session_info.get("max_retries")
+    username = session_info.get("username")
+    password = session_info.get("password")
+    cert_path = session_info.get("cert_path")
+    cert_pass = session_info.get("cert_pass")
+    headers = session_info.get("headers")
+    token = session_info.get("token")
+
     ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
 
     if not session:

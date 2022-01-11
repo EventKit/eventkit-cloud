@@ -165,9 +165,7 @@ class WCSConverter(object):
         tile_bboxes = gdalutils.get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
-        session = get_or_update_session(
-            cert_info=self.config.get("cert_info"), slug=self.slug, headers=self.config.get("headers")
-        )
+        session = get_or_update_session(slug=self.slug, **self.config)
         for idx, coverage in enumerate(coverages):
             params["COVERAGE"] = coverage
             file_path, ext = os.path.splitext(self.out)
