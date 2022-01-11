@@ -81,7 +81,7 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
                 </CustomTableRow>
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
-                    title="Data Sources"
+                    title="Data Products"
                     dataStyle={{flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid'}}
                 >
                     {providerTasks.map(providerTask => (

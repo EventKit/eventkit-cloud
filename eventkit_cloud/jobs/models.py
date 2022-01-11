@@ -18,6 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
+from eventkit_cloud.core.helpers import get_or_update_session
 
 from eventkit_cloud.core.models import (
     CachedModelMixin,
@@ -157,7 +158,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
         for _key in blacklisted_keys:
             del kwargs[_key]
         try:
-            format = cls.objects.get(**kwargs)
+            format = cls.objects.get(slug=kwargs.get("slug").lower())
         except ObjectDoesNotExist:
             format = cls.objects.create(**kwargs)
             created = True
@@ -324,16 +325,20 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if self.config != self.__config:
             orig_extent_url = load_provider_config(self.__config).get("extent_url")
-            extent_url = load_provider_config(self.config).get("extent_url")
-            if extent_url != orig_extent_url:
+            config = load_provider_config(self.config)
+            extent_url = config.get("extent_url")
+            if extent_url and extent_url != orig_extent_url:
                 random_uuid = uuid.uuid4()
-                output_file = download_data(task_uid=str(random_uuid), input_url=extent_url)
+                session = get_or_update_session(**config)
+                if not extent_url:
+                    return
+                output_file = download_data(task_uid=str(random_uuid), input_url=extent_url, session=session)
                 geojson = file_to_geojson(output_file)
                 geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
                 if geometry:
                     self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
 
-    def save(self, *args, **kwargs):
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
         # Using a separate process allows the connection to be closed in separate process while leaving it open.
         proc = multiprocessing.dummy.Process(target=self.update_geom)
@@ -346,7 +351,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
-        super(DataProvider, self).save(*args, **kwargs)
+        super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
 
     def __str__(self):
         return "{0}".format(self.name)

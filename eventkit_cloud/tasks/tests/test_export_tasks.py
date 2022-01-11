@@ -2038,11 +2038,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_ogc_api_process().create_job.called_once_with(mock_geometry, file_format=example_format_slug)
         mock_download_data.assert_called_once_with(
-            task_uid,
-            example_download_url,
-            example_download_path,
-            session=None,
-            cookie=None,
+            task_uid, example_download_url, example_download_path, session=None, headers=None, token=None
         )
         mock_extract_metadata_files.assert_called_once_with(example_download_path, self.stage_dir)
 

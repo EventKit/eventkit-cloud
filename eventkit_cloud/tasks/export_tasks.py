@@ -753,7 +753,12 @@ def ogcapi_process_export_task(
     logger.error(f"OGC Download Path: {download_path}")
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
-        source_data = find_in_zip(download_path, ogc_config.get("output_file_ext"), stage_dir, extract=not bool(driver))
+        source_data = find_in_zip(
+            zip_filepath=download_path,
+            stage_dir=stage_dir,
+            extension=ogc_config.get("output_file_ext"),
+            extract=not bool(driver),
+        )
         if driver:
             out = gdalutils.convert(
                 driver=driver,
@@ -802,12 +807,15 @@ def ogc_result_task(
     data_provider: DataProvider = export_task_record.export_provider_task.provider
     ogcapi_config = load_provider_config(data_provider.config).get("ogcapi_process")
     if ogcapi_config:
-        format_field = get_format_field_from_config(ogcapi_config)
+        format_field, format_prop = get_format_field_from_config(ogcapi_config)
         if format_field:
-            if ogcapi_config["inputs"][format_field]["value"] == export_format_slug:
-                logger.error(f"OGC DATA RESULT: {result}")
-                result["result"] = result["ogcapi_process"]
-                return result
+            export_format = ogcapi_config["inputs"][format_field]
+        if format_prop:
+            export_format = ogcapi_config["inputs"][format_field][format_prop]
+        if export_format == export_format_slug:
+            logger.error(f"OGC DATA RESULT: {result}")
+            result["result"] = result["ogcapi_process"]
+            return result
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
     download_path = get_ogcapi_data(
         config=data_provider.config,
@@ -2345,6 +2353,7 @@ def get_ogcapi_data(
             task_id=task_uid,
             cred_var=configuration.get("cred_var"),
             cert_info=configuration.get("cert_info"),
+            cred_token=configuration.get("cred_token"),
         )
         ogc_process.create_job(geom, file_format=export_format_slug)
         download_url = ogc_process.get_job_results()
@@ -2357,7 +2366,7 @@ def get_ogcapi_data(
 
     download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
     basic_auth = download_credentials.get("cred_var")
-    username = password = session = cookie = None
+    username = password = session = headers = None
     if basic_auth:
         username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
@@ -2368,10 +2377,11 @@ def get_ogcapi_data(
         )
         session = session.client
     else:
-        cookie = download_credentials.get("cookie")
-        cookie = json.loads(cookie) if cookie else None
+        headers = download_credentials.get("headers")
+        headers = json.loads(headers) if headers else None
+    token = download_credentials.get("token")
 
-    download_path = download_data(task_uid, download_url, download_path, session=session, cookie=cookie)
+    download_path = download_data(task_uid, download_url, download_path, session=session, headers=headers, token=token)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path

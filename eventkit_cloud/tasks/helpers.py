@@ -396,7 +396,7 @@ def get_metadata_url(url, type):
         return url
 
 
-def get_osm_last_update(url, cert_info=None):
+def get_osm_last_update(url, **kwargs):
     """
     :param url: A path to the overpass api.
     :param cert_info: Optionally cert info if needed
@@ -404,7 +404,7 @@ def get_osm_last_update(url, cert_info=None):
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
-        session = get_or_update_session(cert_info=cert_info)
+        session = get_or_update_session(**kwargs)
         response = session.get(timestamp_url)
         if response:
             return response.content.decode()
@@ -991,16 +991,14 @@ def get_file_name_from_response(response: Response) -> str:
 
 
 @handle_auth
-def download_data(
-    task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, cookie=None, *args, **kwargs
-):
+def download_data(task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, *args, **kwargs):
     """
     Function for downloading data, optionally using a certificate.
     """
 
     response = None
     try:
-        session = get_or_update_session(session=session, cookie=cookie, *args, **kwargs)
+        session = get_or_update_session(session=session, *args, **kwargs)
         response = session.get(input_url, stream=True)
         response.raise_for_status()
 
@@ -1076,8 +1074,8 @@ def get_last_update_cache_key(task_uid: str):
 
 def find_in_zip(
     zip_filepath: str,
-    extension: str,
     stage_dir: str,
+    extension: str = None,
     archive_extension: str = "zip",
     matched_files: list = list(),
     extract: bool = False,
@@ -1087,11 +1085,10 @@ def find_in_zip(
     """
     with ZipFile(zip_filepath) as zip_file:
         files_in_zip = zip_file.namelist()
-        extension = extension.lower()
-
+        extension = (extension or "").lower()
         for filepath in files_in_zip:
             file_path = Path(filepath)
-            if extension in file_path.suffix.lower() and file_path not in matched_files:
+            if extension and extension in file_path.suffix.lower() and file_path not in matched_files:
                 if extract:
                     output_dest = Path(stage_dir).joinpath(file_path.name)
                     zip_file.extract(member=filepath, path=stage_dir)
@@ -1099,6 +1096,12 @@ def find_in_zip(
                     return str(output_dest)
                 else:
                     return f"/vsizip/{zip_filepath}/{filepath}"
+            elif not extension and file_path.suffix:
+                file = f"/vsizip/{zip_filepath}/{filepath}"
+                meta = gdalutils.get_meta(file)
+                driver = meta["driver"] or None
+                if driver:
+                    return file
 
             if archive_extension in file_path.suffix:
                 nested = Path(f"{stage_dir}/{filepath}")
@@ -1106,7 +1109,7 @@ def find_in_zip(
                 with open(nested, "wb") as f:
                     f.write(zip_file.read(filepath))
 
-                return find_in_zip(nested.absolute(), extension, stage_dir, matched_files=matched_files)
+                return find_in_zip(nested.absolute(), stage_dir, extension=extension, matched_files=matched_files)
 
 
 def extract_metadata_files(
