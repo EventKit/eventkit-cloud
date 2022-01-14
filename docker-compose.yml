@@ -18,7 +18,7 @@ services:
       - memcached
     expose:
       - "6080"
-    command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
+    command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -100,7 +100,7 @@ services:
       - memcached
     expose:
       - "6080"
-    command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
+    command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
