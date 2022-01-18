@@ -147,8 +147,9 @@ def handle_auth(func):
             cert_path, cert_pass = auth_requests.get_cert_info(kwargs)
             kwargs["cert_path"] = cert_path
             kwargs["cert_pass"] = cert_pass
-            cred_token = auth_requests.get_cred_token(kwargs)
-            kwargs["token"] = cred_token
+            # If token is passed in use that, otherwise check user provided token.
+            if not kwargs.get("token"):
+                kwargs["token"] = auth_requests.get_cred_token(kwargs)
             cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
             url = kwargs.get("url")
             cred = auth_requests.get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
@@ -167,12 +168,12 @@ def handle_auth(func):
 
 
 @handle_auth
-def get_or_update_session(**session_info):
+def get_or_update_session(*args, **session_info):
     """
     :param session_info: kwargs to be passed in arbitrarily from a provider config.
     :return: A session used to communicate with a specific provider.
     """
-
+    logger.debug("session info: %s", session_info)
     session = session_info.get("session")
     max_retries = session_info.get("max_retries")
     username = session_info.get("username")
@@ -204,7 +205,7 @@ def get_or_update_session(**session_info):
             session.mount("https://", adapter)
         except FileNotFoundError:
             logger.error("No cert found at path {}".format(cert_path))
-    elif headers:
+    if headers:
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
@@ -214,8 +215,6 @@ def get_or_update_session(**session_info):
 
     logger.debug("Using %s for SSL verification.", str(ssl_verify))
     session.verify = ssl_verify
-    if headers:
-        session.headers.update(headers)
 
     return session
 
