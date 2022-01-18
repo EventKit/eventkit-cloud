@@ -56,13 +56,14 @@ def auto_logout(get_response):
 def fetch_user_from_token(token):
     """
 
-    :param access_token: Uses OAuth token to retrieve user data from the resource server.
+    :param token: Uses OAuth token to retrieve user data from the resource server.
     :return: User object.
     """
 
     logger.debug("Sending request: access_token=%s", token)
     try:
         session = get_or_update_session(token=token)
+        logger.debug("Session headers: %s", session.headers)
         response = session.get(settings.OAUTH_PROFILE_URL)
         logger.debug("Received response: %s", response.text)
         response.raise_for_status()
