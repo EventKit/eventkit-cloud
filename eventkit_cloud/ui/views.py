@@ -109,7 +109,9 @@ def auth(request):
 
 def logout(request):
     """Logs out user"""
-    auth_logout(request)
+    # TODO: Deduplicate this with auth module.
+    if request.user.is_authenticated:
+        auth_logout(request)
     response = redirect("login")
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]

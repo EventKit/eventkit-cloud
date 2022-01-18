@@ -1,8 +1,8 @@
 {% set name = "django-audit-logging" %}
-{% set version = "0.2.3" %}
+{% set version = "0.2.4" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "60322bf894f9d8c433c1f30990160ac9b440772609c58de497d4449d58b3b393" %}
+{% set hash_value = "c5c08669f57dcb18b121de1b3fe97fd01cb7c33c8f6a7112d87e5715c86694da" %}
 
 package:
   name: '{{ name|lower }}'

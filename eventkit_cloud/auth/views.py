@@ -97,7 +97,8 @@ def logout(request):
     If user is an Oauth user it will pass back an OAuth redirect to be handled by UI.
     """
     is_oauth = hasattr(request.user, "oauth")
-    auth_logout(request)
+    if request.user.is_authenticated:
+        auth_logout(request)
     response = redirect("login")
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
         if is_oauth:
