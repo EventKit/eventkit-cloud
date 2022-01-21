@@ -34,7 +34,7 @@ PyYAML==5.4.1
 requests==2.26.0
 requests-pkcs12==1.10  # conda: requests_pkcs12
 Shapely==1.7.1
-sqlparse==0.4.1
+sqlparse==0.4.2
 swapper==1.1.2.post1
 uritemplate==3.0.1
 webtest==3.0.0
