@@ -20,7 +20,7 @@ describe('mapUtils', () => {
     it('jstsGeomToOlGeom should convert JSTS to Ol', () => {
         const Reader = new WKTReader();
         const jstsGeom = Reader.read('POINT (-20 0)');
-        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: NaN });
         const olGeom = utils.jstsGeomToOlGeom(jstsGeom);
         expect(olGeom instanceof Point).toBe(true);
         const expected = [-20, 0];
@@ -30,15 +30,15 @@ describe('mapUtils', () => {
     it('convertJSTSGeometry should covert a JSTS from one SRS to another', () => {
         const Reader = new WKTReader();
         const jstsGeom = Reader.read('POINT (-20 0)');
-        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: NaN });
         const newGeom = utils.transformJSTSGeometry(jstsGeom, 'EPSG:4326', 'EPSG:3857');
         expect(newGeom.getCoordinate()).toEqual({
             x: -2226389.8158654715,
             y: -7.081154551613622e-10,
-            z: undefined,
+            z: NaN,
         });
         const newerGeom = utils.transformJSTSGeometry(newGeom, 'EPSG:3857', 'EPSG:4326');
-        expect(newerGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(newerGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: NaN }); // TODO: Should this actually be NaN?
         expect(newerGeom).toEqual(jstsGeom);
     });
 
