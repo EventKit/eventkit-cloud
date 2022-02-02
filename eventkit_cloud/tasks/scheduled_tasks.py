@@ -31,6 +31,8 @@ from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
+from audit_logging.utils import get_user_crud_details
+
 logger = get_task_logger(__name__)
 
 
@@ -162,7 +164,8 @@ def scale_by_runs(max_tasks_memory):
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
 
-        pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token).apply_async(
+        user_details = get_user_crud_details(run.user)
+        pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token, user_details=user_details).apply_async(
             queue=str(task_name), routing_key=str(task_name)
         )
         task = copy.deepcopy(celery_tasks)

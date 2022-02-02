@@ -492,9 +492,6 @@ def osm_data_collection_task(
 
         result = result or {}
 
-        if user_details is None:
-            user_details = {"username": "username not set in osm_data_collection_task"}
-
         selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
             task_uid,
@@ -1597,9 +1594,6 @@ def bounds_export_task(
     Function defining geopackage export function.
     """
     user_details = kwargs.get("user_details")
-    # This is just to make it easier to trace when user_details haven't been sent
-    if user_details is None:
-        user_details = {"username": "unknown-bounds_export_task"}
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -1689,9 +1683,6 @@ def pick_up_run_task(
     worker = socket.gethostname()
     queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
 
-    if user_details is None:
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
     started_providers = run.data_provider_task_records.exclude(status=TaskState.PENDING.value)
     try:

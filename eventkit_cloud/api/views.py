@@ -6,6 +6,7 @@ import logging
 from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
+from audit_logging.utils import get_user_crud_details
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -510,7 +511,7 @@ class JobViewSet(EventkitViewSet):
 
             # run the tasks
             # run needs to be created so that the UI can be updated with the task list.
-            user_details = get_user_details(request)
+            user_details = get_user_crud_details(request.user)
             try:
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job=job, user=request.user)
@@ -547,10 +548,8 @@ class JobViewSet(EventkitViewSet):
         *Returns:*
             - the serialized run data.
         """
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = get_user_details(request)
-        if user_details is None:
-            user_details = {"username": "unknown-JobViewSet.run"}
+
+        user_details = get_user_crud_details(request.user)
 
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
@@ -1364,9 +1363,7 @@ class ExportRunViewSet(EventkitViewSet):
 
         if check_job_permissions(run.job):
             # This is just to make it easier to trace when user_details haven't been sent
-            user_details = get_user_details(request)
-            if user_details is None:
-                user_details = {"username": "unknown-JobViewSet.run"}
+            user_details = get_user_crud_details(request.user)
 
             running = ExportRunSerializer(run, context={"request": request})
             rerun_data_provider_records(run.uid, request.user.id, data_provider_slugs)
@@ -2458,21 +2455,6 @@ def get_provider_task(export_provider, export_formats):
         provider_task.formats.add(*supported_formats)
     provider_task.save()
     return provider_task
-
-
-def get_user_details(request):
-    """
-    Gets user data from a request.
-    :param request: View request.
-    :return: A dict with user data.
-    """
-    logged_in_user = request.user
-    return {
-        "user_id": logged_in_user.id,
-        "username": logged_in_user.username,
-        "is_superuser": logged_in_user.is_superuser,
-        "is_staff": logged_in_user.is_staff,
-    }
 
 
 def geojson_to_geos(geojson_geom, srid=None):

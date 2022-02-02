@@ -16,6 +16,8 @@ from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, Use
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 
+from audit_logging.utils import get_user_crud_details
+
 logger = getLogger(__name__)
 
 
@@ -72,6 +74,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
     run_zip_file.status = TaskState.RUNNING.value
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_download_path(run.uid)
+    user_details = get_user_crud_details(run.user)
 
     if getattr(settings, "USE_S3", False):
         download_folder_from_s3(str(run.uid))
@@ -85,6 +88,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
         stage_dir=stage_dir,
+        user_details=user_details,
     )
 
 
