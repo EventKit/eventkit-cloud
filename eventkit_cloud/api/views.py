@@ -6,7 +6,6 @@ import logging
 from datetime import date, datetime, timedelta
 
 from audit_logging.models import AuditEvent
-from audit_logging.utils import get_user_crud_details
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -192,9 +191,6 @@ class JobViewSet(EventkitViewSet):
         "user__username",
         "region__name",
     )
-
-    def dispatch(self, request, *args, **kwargs):
-        return EventkitViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -511,7 +507,9 @@ class JobViewSet(EventkitViewSet):
 
             # run the tasks
             # run needs to be created so that the UI can be updated with the task list.
-            user_details = get_user_crud_details(request.user)
+            from audit_logging.utils import get_user_details
+
+            user_details = get_user_details(request.user)
             try:
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job=job, user=request.user)
@@ -548,8 +546,9 @@ class JobViewSet(EventkitViewSet):
         *Returns:*
             - the serialized run data.
         """
+        from audit_logging.utils import get_user_details
 
-        user_details = get_user_crud_details(request.user)
+        user_details = get_user_details(request.user)
 
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
@@ -1362,9 +1361,6 @@ class ExportRunViewSet(EventkitViewSet):
                 return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
 
         if check_job_permissions(run.job):
-            # This is just to make it easier to trace when user_details haven't been sent
-            user_details = get_user_crud_details(request.user)
-
             running = ExportRunSerializer(run, context={"request": request})
             rerun_data_provider_records(run.uid, request.user.id, data_provider_slugs)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)

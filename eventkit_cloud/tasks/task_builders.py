@@ -18,7 +18,6 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
-from audit_logging.utils import get_user_crud_details
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +84,8 @@ class TaskChainBuilder(object):
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get("user_details")
         if user_details is None:
-            user_details = get_user_crud_details(user)
+            from audit_logging.utils import get_user_details
+            user_details = get_user_details(user)
 
         job_name = normalize_name(job.name)
         # get the formats to export

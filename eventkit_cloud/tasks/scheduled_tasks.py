@@ -27,11 +27,9 @@ from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
-from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
+from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
-
-from audit_logging.utils import get_user_crud_details
 
 logger = get_task_logger(__name__)
 
@@ -114,6 +112,8 @@ def scale_by_runs(max_tasks_memory):
     @param max_tasks_memory: The amount of memory in MB to allow for all of the tasks.
     @type max_tasks_memory: int
     """
+    from audit_logging.utils import get_user_details
+
     client, app_name = get_scale_client()
 
     celery_task_details = get_celery_task_details(client, app_name)
@@ -164,7 +164,7 @@ def scale_by_runs(max_tasks_memory):
             session = Session.objects.get(session_key=user_session.session_id)
             session_token = session.get_decoded().get("session_token")
 
-        user_details = get_user_crud_details(run.user)
+        user_details = get_user_details(run.user)
         pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token, user_details=user_details).apply_async(
             queue=str(task_name), routing_key=str(task_name)
         )

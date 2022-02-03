@@ -13,10 +13,10 @@ from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-INSTALLED_APPS += ("django_celery_beat", "django_filters")
-
 # Project apps
 INSTALLED_APPS += (
+    "django_celery_beat",
+    "django_filters",
     "eventkit_cloud.core",
     "eventkit_cloud.auth",
     "eventkit_cloud.jobs",
@@ -27,6 +27,8 @@ INSTALLED_APPS += (
     "eventkit_cloud.utils",
     "eventkit_cloud",
     "notifications",
+    "audit_logging",
+    "django_extensions",
 )
 
 LOGIN_URL = "/login"
@@ -213,10 +215,7 @@ ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
-INSTALLED_APPS += (
-    "django_extensions",
-    "audit_logging",
-)
+
 
 MIDDLEWARE += ["audit_logging.middleware.UserDetailsMiddleware"]
 

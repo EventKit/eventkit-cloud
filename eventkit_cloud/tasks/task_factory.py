@@ -35,7 +35,6 @@ from eventkit_cloud.tasks.helpers import (
 )
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
-from audit_logging.utils import get_user_crud_details
 
 User = get_user_model()
 
@@ -122,7 +121,7 @@ class TaskFactory:
         run_dir = get_run_staging_dir(run.uid)
 
         if user_details is None:
-            user_details = get_user_crud_details(job.user)
+            user_details = get_user_details(job.user)
 
         wait_for_providers_settings = {
             "queue": f"{queue_group}.priority",
