@@ -4,7 +4,7 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {Step} from 'react-joyride';
-import { Virtuoso } from 'react-virtuoso';
+import {Virtuoso} from 'react-virtuoso';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -16,6 +16,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
+import {getProviders} from '../../actions/providerActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
@@ -326,6 +327,7 @@ export function ExportInfo(props: Props) {
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
+    const [providerGeometryFilter, setProviderGeometryFilter] = useState(true);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
@@ -799,7 +801,7 @@ export function ExportInfo(props: Props) {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
     };
 
-    const getProviders = () => {
+    const getCurrentProviders = () => {
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = filterProviders(currentProviders);
 
@@ -811,7 +813,7 @@ export function ExportInfo(props: Props) {
         return currentProviders;
     };
 
-    const dataProviders = getProviders().map((provider, ix) => (
+    const dataProviders = getCurrentProviders().map((provider, ix) => (
         <DataProvider
             key={provider.slug + "-DataProviderList"}
             geojson={geojson}
@@ -945,6 +947,17 @@ export function ExportInfo(props: Props) {
         setShowProviderFilter(!showProviderFilter)
     };
 
+    const onGeometryFilterCheckboxChanged = () => {
+        // Have to use a local variable because the state is not updated quickly enough.
+        let newProviderGeometryFilter = !providerGeometryFilter;
+        setProviderGeometryFilter(newProviderGeometryFilter);
+        if (newProviderGeometryFilter) {
+            dispatch(getProviders(geojson));
+        } else {
+            dispatch(getProviders(null));
+        }
+    }
+
     return (
         <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
             {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
@@ -1042,7 +1055,8 @@ export function ExportInfo(props: Props) {
                             </div>
                         </div>
 
-                        <div id="SortFilter" className={`qa-ExportInfo-sortFilterContainer ${classes.sortFilterContainer}`}>
+                        <div id="SortFilter"
+                             className={`qa-ExportInfo-sortFilterContainer ${classes.sortFilterContainer}`}>
                             <div className={classes.filterDropdownContainer}>
                                 <span
                                     role="button"
@@ -1080,14 +1094,14 @@ export function ExportInfo(props: Props) {
                                                 <FormGroup className={classes.formControlLabelContainer}>
                                                     <div style={{width: '100%'}}>
                                                         <FormLabel component="legend"
-                                                               style={{
-                                                                   fontSize: "16px",
-                                                                   fontWeight: 'bold'
-                                                               }}>Name</FormLabel>
+                                                                   style={{
+                                                                       fontSize: "16px",
+                                                                       fontWeight: 'bold'
+                                                                   }}>Name</FormLabel>
                                                         <TextField
                                                             id="searchByName"
                                                             name="searchByName"
-                                                            inputProps={{ "data-testid": "filter-text-field" }}
+                                                            inputProps={{"data-testid": "filter-text-field"}}
                                                             autoComplete="off"
                                                             fullWidth
                                                             className={`qa-ExportInfo-searchBarTextField ${classes.filterTextField}`}
@@ -1124,6 +1138,26 @@ export function ExportInfo(props: Props) {
                                                             />
                                                         </div>
                                                     )}
+                                                    <FormLabel component="legend"
+                                                               style={{
+                                                                   fontSize: "16px",
+                                                                   fontWeight: 'bold'
+                                                               }}>Geometry</FormLabel>
+                                                    <div>
+                                                            <FormControlLabel
+                                                                control={<Checkbox
+                                                                    className="qa-ExportInfo-CheckBox-filter"
+                                                                    classes={{
+                                                                        root: classes.checkbox,
+                                                                        checked: classes.checked
+                                                                    }}
+                                                                    checked={providerGeometryFilter}
+                                                                    onChange={() => onGeometryFilterCheckboxChanged()}
+                                                                />}
+                                                                label={<Typography
+                                                                    className={classes.checkboxLabel}>Selected Area</Typography>}
+                                                            />
+                                                        </div>
                                                 </FormGroup>
                                             </div>
                                         ), 'options' in filterType)
@@ -1278,7 +1312,7 @@ export function ExportInfo(props: Props) {
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
-                                    totalCount={getProviders().length}
+                                    totalCount={getCurrentProviders().length}
                                     initialItemCount={10}
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"

@@ -2,6 +2,7 @@
 
 """Provides classes for handling API requests."""
 import itertools
+import json
 import logging
 from datetime import date, datetime, timedelta
 
@@ -952,6 +953,43 @@ class DataProviderViewSet(EventkitViewSet):
             return Response(serializer(providers.get(slug=slug), context={"request": request}).data)
         elif filtered_providers:
             return Response(filtered_serializer(providers.get(slug=slug)).data)
+
+    @action(methods=["post"], detail=False)
+    def filter(self, request, *args, **kwargs):
+        """
+        Lists the DataProviders and provides advanced filtering options like geojson geometry.
+        POST is required if you want to filter by a geojson geometry contained in the request data.
+        :param request: the http request
+        :param args:
+        :param kwargs:
+        :return: the serialized data providers
+        """
+        status_code = status.HTTP_200_OK
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_geojson = self.request.data.get("geojson", None)
+        if search_geojson is not None:
+            geometry = (
+                search_geojson.get("geometry")
+                or search_geojson.get("features", [{}])[0].get("geometry")
+                or search_geojson
+            )
+            try:
+                geom = geojson_to_geos(json.dumps(geometry), 4326)
+                queryset = queryset.filter(the_geom__intersects=geom)
+            except ValidationError as e:
+                logger.debug(e.detail)
+                raise ValidationError(code="validation_error", detail=e.detail)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request, "no_license": True})
+            response = self.get_paginated_response(serializer.data)
+            response.status_code = status_code
+            return response
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={"request": request, "no_license": True})
+            return Response(serializer.data, status=status_code)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
