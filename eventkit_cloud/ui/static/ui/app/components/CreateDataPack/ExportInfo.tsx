@@ -327,7 +327,7 @@ export function ExportInfo(props: Props) {
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
-    const [providerGeometryFilter, setProviderGeometryFilter] = useState(true);
+    const [isFilteringByProviderGeometry, setIsFilteringByProviderGeometry] = useState(true);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
@@ -947,11 +947,11 @@ export function ExportInfo(props: Props) {
         setShowProviderFilter(!showProviderFilter)
     };
 
-    const onGeometryFilterCheckboxChanged = () => {
+    const onProviderGeometryFilterCheckboxChanged = () => {
         // Have to use a local variable because the state is not updated quickly enough.
-        let newProviderGeometryFilter = !providerGeometryFilter;
-        setProviderGeometryFilter(newProviderGeometryFilter);
-        if (newProviderGeometryFilter) {
+        let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
+        setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
+        if (newIsFilteringByProviderGeometry) {
             dispatch(getProviders(geojson));
         } else {
             dispatch(getProviders(null));
@@ -1151,8 +1151,8 @@ export function ExportInfo(props: Props) {
                                                                         root: classes.checkbox,
                                                                         checked: classes.checked
                                                                     }}
-                                                                    checked={providerGeometryFilter}
-                                                                    onChange={() => onGeometryFilterCheckboxChanged()}
+                                                                    checked={isFilteringByProviderGeometry}
+                                                                    onChange={() => onProviderGeometryFilterCheckboxChanged()}
                                                                 />}
                                                                 label={<Typography
                                                                     className={classes.checkboxLabel}>Selected Area</Typography>}

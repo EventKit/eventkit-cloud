@@ -235,7 +235,7 @@ export class ExportAOI extends React.Component<Props, State> {
             this.handleGeoJSONUpload(this.props.importGeom);
         }
 
-        if (Object.keys(this.props.aoiInfo.geojson).length !== 0) {
+        if (Object.keys(this.props.aoiInfo.geojson).length !== 0 && this.props.aoiInfo.geojson !== prevProps.aoiInfo.geojson) {
             this.props.getProviders(this.props.aoiInfo.geojson);
         }
 
