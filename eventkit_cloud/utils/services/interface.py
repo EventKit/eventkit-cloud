@@ -25,3 +25,11 @@ class IGisClient(abc.ABC):
     @abc.abstractmethod
     def get_response(self) -> requests.Response:
         pass
+
+    @abc.abstractmethod
+    def get_layer_geometry(self, element) -> dict:
+        pass
+
+    @abc.abstractmethod
+    def get_response(self) -> requests.Response:
+        pass

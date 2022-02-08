@@ -33,7 +33,7 @@ class OWS(GisClient):
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to provider type")
 
-    def get_provider_response(self, url=None) -> requests.Response:
+    def get_response(self, url=None) -> requests.Response:
         url = url or self.service_url
         service_url = url.rstrip("/\\")
         processes_endpoint = urljoin(service_url, "processes/")
