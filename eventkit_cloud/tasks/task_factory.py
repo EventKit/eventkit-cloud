@@ -121,6 +121,8 @@ class TaskFactory:
         run_dir = get_run_staging_dir(run.uid)
 
         if user_details is None:
+            from audit_logging.utils import get_user_details
+
             user_details = get_user_details(job.user)
 
         wait_for_providers_settings = {
@@ -378,7 +380,7 @@ def get_zip_task_chain(
     data_provider_task_record_uids=None,
     run_zip_file_uid=None,
     worker=None,
-    user_details=None
+    user_details=None,
 ):
     return chain(
         create_task(

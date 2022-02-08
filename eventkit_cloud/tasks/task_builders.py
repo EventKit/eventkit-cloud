@@ -85,6 +85,7 @@ class TaskChainBuilder(object):
         user_details = kwargs.get("user_details")
         if user_details is None:
             from audit_logging.utils import get_user_details
+
             user_details = get_user_details(user)
 
         job_name = normalize_name(job.name)
