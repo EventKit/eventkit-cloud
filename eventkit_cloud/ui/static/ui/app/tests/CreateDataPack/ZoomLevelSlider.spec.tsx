@@ -12,6 +12,10 @@ describe('ZoomLevelSlider component', () => {
         shallow = createShallow();
     });
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     const updateZoomSpy = jest.fn()
 
     const getProps = () => ({
@@ -58,7 +62,6 @@ describe('ZoomLevelSlider component', () => {
         const wrapper = getWrapper(getProps());
         const event = {target: {value: '13'}} as React.ChangeEvent<HTMLInputElement>;
         wrapper.find(TextField).at(1).simulate('change', event);
-        // called twice - once for entry of '1' and once for entry of '3' to make '13'
-        expect(updateZoomSpy).toBeCalledTimes(2);
+        expect(updateZoomSpy).toBeCalledTimes(1);
     });
 });
