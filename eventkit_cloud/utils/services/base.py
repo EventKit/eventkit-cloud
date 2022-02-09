@@ -1,9 +1,10 @@
 import abc
 import json
 import logging
+from typing import Optional
 
 import requests
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon
 
 from eventkit_cloud.core.helpers import get_or_update_session
 
@@ -66,3 +67,6 @@ class GisClient(abc.ABC):
 
     def get_response(self) -> requests.Response:
         return self.session.get(self.service_url, params=self.query, timeout=self.timeout)
+
+    def download_product_geometry(self) -> Optional[Polygon]:
+        raise NotImplementedError("Method is specific to service type")

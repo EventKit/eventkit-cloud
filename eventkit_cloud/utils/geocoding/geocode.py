@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 from django.conf import settings
 
 from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.utils.gdalutils import is_valid_bbox, expand_bbox, bbox2polygon
 from eventkit_cloud.utils.geocoding.geocode_auth import get_geocode_cert_info
 from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
 
@@ -118,7 +119,7 @@ class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
             feature["bbox"] = bbox
             geometry = feature.get("geometry", {})
             if not geometry or geometry.get("type") == "Point":
-                feature["geometry"] = self.bbox2polygon(bbox)
+                feature["geometry"] = bbox2polygon(bbox)
         self.map_properties(feature, properties=properties)
         self.add_name(feature)
         self.add_context_name(feature)
@@ -136,15 +137,6 @@ class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
         if is_valid_bbox(max_bbox):
             feature_collection["bbox"] = max_bbox
         return feature_collection
-
-    @staticmethod
-    def bbox2polygon(bbox):
-        try:
-            (w, s, e, n) = bbox
-        except KeyError:
-            return
-        coordinates = [[[w, s], [e, s], [e, n], [w, n], [w, s]]]
-        return {"type": "Polygon", "coordinates": coordinates}
 
     def map_properties(self, feature, properties=None):
         props = properties or feature.get("properties")
@@ -337,29 +329,3 @@ class Geocode(object):
 
     def search(self, query):
         return self.geocoder.get_data(query)
-
-
-def is_valid_bbox(bbox):
-    if not isinstance(bbox, list) or len(bbox) != 4:
-        return False
-    if bbox[0] < bbox[2] and bbox[1] < bbox[3]:
-        return True
-    else:
-        return False
-
-
-def expand_bbox(original_bbox, new_bbox):
-    """
-    Takes two bboxes and returns a new bbox containing the original two.
-    :param original_bbox: A list representing [west, south, east, north]
-    :param new_bbox: A list representing [west, south, east, north]
-    :return: A list containing the two original lists.
-    """
-    if not original_bbox:
-        original_bbox = list(new_bbox)
-        return original_bbox
-    original_bbox[0] = min(new_bbox[0], original_bbox[0])
-    original_bbox[1] = min(new_bbox[1], original_bbox[1])
-    original_bbox[2] = max(new_bbox[2], original_bbox[2])
-    original_bbox[3] = max(new_bbox[3], original_bbox[3])
-    return original_bbox

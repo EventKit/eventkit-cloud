@@ -1,6 +1,8 @@
 import abc
+from typing import Optional
 
 import requests
+from django.contrib.gis.geos import Polygon
 
 
 class IGisClient(abc.ABC):
@@ -31,5 +33,5 @@ class IGisClient(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_response(self) -> requests.Response:
+    def download_product_geometry(self) -> Optional[Polygon]:
         pass
