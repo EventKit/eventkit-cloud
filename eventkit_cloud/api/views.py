@@ -964,7 +964,6 @@ class DataProviderViewSet(EventkitViewSet):
         :param kwargs:
         :return: the serialized data providers
         """
-        status_code = status.HTTP_200_OK
         queryset = self.filter_queryset(self.get_queryset())
 
         search_geojson = self.request.data.get("geojson", None)
@@ -981,15 +980,18 @@ class DataProviderViewSet(EventkitViewSet):
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context={"request": request, "no_license": True})
-            response = self.get_paginated_response(serializer.data)
-            response.status_code = status_code
-            return response
-        else:
-            serializer = self.get_serializer(queryset, many=True, context={"request": request, "no_license": True})
-            return Response(serializer.data, status=status_code)
+            serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+            providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+            data = serializer(providers, many=True, context={"request": request}).data
+            filtered_data = filtered_serializer(filtered_providers, many=True).data
+            if isinstance(data, list):
+                data += filtered_data
+            else:
+                filtered_data.update(data)
+                data = filtered_data
+
+            return Response(data)
+        return Response(queryset)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
