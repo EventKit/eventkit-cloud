@@ -77,8 +77,7 @@ IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, "images")
 EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
 
 # url to overpass api endpoint
-# OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
+OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
 GEOCODING_API_TYPE = os.getenv("GEOCODING_API_TYPE", "GEONAMES")
 REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
