@@ -331,7 +331,7 @@ function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         exportInfo: state.exportInfo,
-        providers: state.providers,
+        providers: state.providers.providers,
     };
 }
 

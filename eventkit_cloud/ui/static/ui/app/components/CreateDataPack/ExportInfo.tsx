@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import {useDispatch, useSelector} from 'react-redux';
+import {connect, useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {Step} from 'react-joyride';
 import {Virtuoso} from 'react-virtuoso';
@@ -16,7 +16,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
-import {getProviders} from '../../actions/providerActions';
+import {getProviders, getProviderTask} from '../../actions/providerActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
@@ -283,7 +283,12 @@ export interface Props {
 export interface State {
     steps: Step[];
     isRunning: boolean;
-    providers: Eventkit.Provider[];
+    providers: {
+        providers: any;
+        error: any;
+        fetched: boolean;
+        fetching: boolean;
+    };
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
@@ -320,7 +325,8 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const geojson = useSelector((store: any) => store.aoiInfo.geojson);
     const exportInfo = useSelector((store: any) => store.exportInfo);
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.providers);
+    const loadingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
 
@@ -350,6 +356,9 @@ export function ExportInfo(props: Props) {
     useEffect(() => {
         setIncompatibilityInfo(checkCompatibility());
     }, [exportInfo.projections]);
+    useEffect( () => {
+        console.log("LOADING PROVIDERS: " + loadingProviders);
+    }, [loadingProviders])
 
     const dispatch = useDispatch();
     // Call this anytime we need to update providers, instead of setProviders.
@@ -952,9 +961,9 @@ export function ExportInfo(props: Props) {
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
         if (newIsFilteringByProviderGeometry) {
-            dispatch(getProviders(geojson));
+            getProviders(geojson)
         } else {
-            dispatch(getProviders(null));
+            getProviders(null);
         }
     }
 
@@ -1467,4 +1476,21 @@ function DebouncedTextField(props: any) {
     )
 }
 
-export default withTheme(withStyles(jss)(ExportInfo));
+const mapStateToProps = (state) => (
+    {
+        providers: state.providers.providers,
+    }
+);
+
+const mapDispatchToProps = (dispatch) => (
+    {
+        getProviders: (geojson) => (
+            dispatch(getProviders(geojson))
+        ),
+    }
+);
+
+export default withTheme(withStyles(jss)(connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(ExportInfo)));

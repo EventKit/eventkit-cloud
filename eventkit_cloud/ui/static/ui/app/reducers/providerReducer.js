@@ -1,13 +1,32 @@
 import { types } from '../actions/providerActions';
 
-export const initialState = [];
+export const initialStateProviders = {
+    fetching: false,
+    fetched: false,
+    error: null,
+    providers: [],
+};
 
-export function getProvidersReducer(state = initialState, action) {
+export function getProvidersReducer(state = initialStateProviders, action) {
     switch (action.type) {
         case types.GETTING_PROVIDERS:
-            return [];
+            return { fetching: true, fetched: false, providers: [], error: null};
         case types.PROVIDERS_RECEIVED:
-            return action.providers;
+            return {
+                ...state,
+                fetching: false,
+                fetched: true,
+                providers: action.data,
+                error: null,
+            };
+        case types.GETTING_PROVIDERS_ERROR:
+            return {
+                ...state,
+                fetching: false,
+                fetched: false,
+                error: action.error,
+                providers: [],
+            };
         default:
             return state;
     }
