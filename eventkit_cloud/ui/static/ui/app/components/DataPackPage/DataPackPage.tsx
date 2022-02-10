@@ -780,7 +780,7 @@ function mapStateToProps(state) {
         user: state.user,
         runDeletion: state.runDeletion,
         drawer: state.drawer,
-        providers: state.providers,
+        providers: state.providers.objects,
         formats: state.formats,
         projections: state.projections,
         importGeom: state.importGeom,

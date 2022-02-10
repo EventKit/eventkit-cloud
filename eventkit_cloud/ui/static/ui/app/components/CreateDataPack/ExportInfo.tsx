@@ -16,7 +16,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
-import {getProviders, getProviderTask} from '../../actions/providerActions';
+import {getProviders} from '../../actions/providerActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
@@ -26,6 +26,7 @@ import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
     Chip,
+    CircularProgress,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -278,17 +279,16 @@ export interface Props {
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
     checkProvider: any;
+    getProviders: (geojson: string) => void;
+    providers: any;
+    providerError: any;
+    fetchedProviders: boolean;
+    fetchingProviders: boolean;
 }
 
 export interface State {
     steps: Step[];
     isRunning: boolean;
-    providers: {
-        providers: any;
-        error: any;
-        fetched: boolean;
-        fetching: boolean;
-    };
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
@@ -325,8 +325,6 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const geojson = useSelector((store: any) => store.aoiInfo.geojson);
     const exportInfo = useSelector((store: any) => store.exportInfo);
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.providers);
-    const loadingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
 
@@ -349,16 +347,12 @@ export function ExportInfo(props: Props) {
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
     const [displayDummy, setDisplayDummy] = useState(false);
 
-
     useEffect(() => {
         updateSelectedFormats();
     }, [selectedFormats]);
     useEffect(() => {
         setIncompatibilityInfo(checkCompatibility());
     }, [exportInfo.projections]);
-    useEffect( () => {
-        console.log("LOADING PROVIDERS: " + loadingProviders);
-    }, [loadingProviders])
 
     const dispatch = useDispatch();
     // Call this anytime we need to update providers, instead of setProviders.
@@ -595,12 +589,11 @@ export function ExportInfo(props: Props) {
     const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
             // add the provider to the array
-            for (const provider of providers) {
+            for (const provider of props.providers) {
                 if (provider.name === e.target.name) {
                     selectedProviders.push(provider);
                     break;
@@ -609,7 +602,7 @@ export function ExportInfo(props: Props) {
         } else {
             // or remove the value from the unchecked checkbox from the array
             index = selectedProviders.map(x => x.name).indexOf(e.target.name);
-            for (const provider of providers) {
+            for (const provider of props.providers) {
                 if (provider.name === e.target.name) {
                     selectedProviders.splice(index, 1);
                 }
@@ -624,10 +617,9 @@ export function ExportInfo(props: Props) {
 
     const deselect = (provider: Eventkit.Provider) => {
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         index = selectedProviders.map(x => x.name).indexOf(provider.name);
-        for (const _provider of providers) {
+        for (const _provider of props.providers) {
             if (provider.name === provider.name) {
                 selectedProviders.splice(index, 1);
             }
@@ -644,7 +636,7 @@ export function ExportInfo(props: Props) {
         let selectedProviders = [];
         if (e.target.checked) {
             // set providers to the list of ALL providers
-            selectedProviders = [...providers.filter(provider => provider.display)];
+            selectedProviders = [...props.providers.filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
@@ -681,7 +673,7 @@ export function ExportInfo(props: Props) {
 
     const onRefresh = () => {
         // make a copy of providers and set availability to empty json
-        providers.forEach(provider => props.checkProvider(provider));
+        props.providers.forEach(provider => props.checkProvider(provider));
     };
 
     const clearEstimate = (provider: Eventkit.Provider) => {
@@ -811,7 +803,7 @@ export function ExportInfo(props: Props) {
     };
 
     const getCurrentProviders = () => {
-        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
+        let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = filterProviders(currentProviders);
 
         // Merge the filtered results and currently selected providers for display.
@@ -961,9 +953,9 @@ export function ExportInfo(props: Props) {
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
         if (newIsFilteringByProviderGeometry) {
-            getProviders(geojson)
+            props.getProviders(geojson)
         } else {
-            getProviders(null);
+            props.getProviders(null);
         }
     }
 
@@ -1255,7 +1247,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={exportInfo.providers && exportInfo.providers.length === providers.filter(
+                                checked={exportInfo.providers && exportInfo.providers.length === props.providers.filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
@@ -1318,6 +1310,7 @@ export function ExportInfo(props: Props) {
                                 </div>
                             </div>
                             <div>
+                                {props.fetchingProviders && <CircularProgress size={50}/>}
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
@@ -1478,7 +1471,10 @@ function DebouncedTextField(props: any) {
 
 const mapStateToProps = (state) => (
     {
-        providers: state.providers.providers,
+        providers: state.providers.objects,
+        providerError: state.providers.error,
+        fetchedProviders: state.providers.fetched,
+        fetchingProviders: state.providers.fetching,
     }
 );
 

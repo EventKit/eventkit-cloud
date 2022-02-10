@@ -1,23 +1,30 @@
 import * as reducers from '../../reducers/providerReducer';
-import { types } from '../../actions/providerActions';
+import {types} from '../../actions/providerActions';
 
 describe('getProvidersReducer', () => {
     it('should return initial state', () => {
-        expect(reducers.getProvidersReducer(undefined, {})).toEqual([]);
+        expect(reducers.getProvidersReducer(undefined, {})).toEqual(
+            {
+                error: null,
+                fetched: false,
+                fetching: false,
+                objects: [],
+            }
+        );
     });
 
     it('should handle GETTING_PROVIDERS', () => {
         expect(reducers.getProvidersReducer(
             ['one', 'two', 'three'],
-            { type: types.GETTING_PROVIDERS },
-        )).toEqual([]);
+            {type: types.GETTING_PROVIDERS},
+        )).toEqual({error: null, fetched: false, fetching: true, objects: []});
     });
 
     it('should handle PROVIDERS RECEIVED', () => {
         expect(reducers.getProvidersReducer(
             [],
-            { type: types.PROVIDERS_RECEIVED, providers: ['one', 'two', 'three'] },
-        )).toEqual(['one', 'two', 'three']);
+            {type: types.PROVIDERS_RECEIVED, providers: ['one', 'two', 'three']},
+        )).toEqual({error: null, fetched: true, fetching: false, objects: ['one', 'two', 'three']});
     });
 });
 
@@ -90,7 +97,7 @@ describe('providerTasks Reducer', () => {
 
     it('should handle GETTING', () => {
         expect(reducers.providerTasksReducer(
-            { ...reducers.initialStateProviderTasks },
+            {...reducers.initialStateProviderTasks},
             {
                 type: types.GETTING_PROVIDER_TASK,
             },
@@ -101,9 +108,9 @@ describe('providerTasks Reducer', () => {
     });
 
     it('should handle RECEIVED', () => {
-        const data = { key: 'value' };
+        const data = {key: 'value'};
         expect(reducers.providerTasksReducer(
-            { ...reducers.initialStateProviderTasks, fetching: true },
+            {...reducers.initialStateProviderTasks, fetching: true},
             {
                 type: types.RECEIVED_PROVIDER_TASK,
                 uid: 'id',
@@ -112,14 +119,14 @@ describe('providerTasks Reducer', () => {
         )).toEqual({
             ...reducers.initialStateProviderTasks,
             fetched: true,
-            data: { id: data },
+            data: {id: data},
         });
     });
 
     it('should handle ERROR', () => {
         const error = 'oh no an error';
         expect(reducers.providerTasksReducer(
-            { ...reducers.initialStateProviderTasks, fetching: true },
+            {...reducers.initialStateProviderTasks, fetching: true},
             {
                 type: types.GETTING_PROVIDER_TASK_ERROR,
                 error,

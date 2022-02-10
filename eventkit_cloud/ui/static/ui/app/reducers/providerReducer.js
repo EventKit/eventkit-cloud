@@ -4,19 +4,23 @@ export const initialStateProviders = {
     fetching: false,
     fetched: false,
     error: null,
-    providers: [],
+    objects: [],
 };
 
 export function getProvidersReducer(state = initialStateProviders, action) {
     switch (action.type) {
         case types.GETTING_PROVIDERS:
-            return { fetching: true, fetched: false, providers: [], error: null};
+            return {
+                fetching: true,
+                fetched: false,
+                error: null,
+                objects: [],
+            };
         case types.PROVIDERS_RECEIVED:
             return {
-                ...state,
                 fetching: false,
                 fetched: true,
-                providers: action.data,
+                objects: action.providers,
                 error: null,
             };
         case types.GETTING_PROVIDERS_ERROR:
@@ -25,7 +29,7 @@ export function getProvidersReducer(state = initialStateProviders, action) {
                 fetching: false,
                 fetched: false,
                 error: action.error,
-                providers: [],
+                objects: action.providers,
             };
         default:
             return state;

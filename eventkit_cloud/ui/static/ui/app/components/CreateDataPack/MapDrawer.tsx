@@ -744,7 +744,10 @@ export function MapDrawer(props: Props) {
 
 function mapStateToProps(state) {
     return {
-        providers: state.providers,
+        providers: state.providers.objects,
+        providerError: state.providers.error,
+        fetchedProviders: state.providers.fetched,
+        fetchingProviders: state.providers.fetching,
     };
 }
 

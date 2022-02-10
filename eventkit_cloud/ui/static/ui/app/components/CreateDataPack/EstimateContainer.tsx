@@ -20,10 +20,13 @@ export interface ProviderLimits {
 export interface Props {
     aoiInfo: any;
     exportInfo: Eventkit.Store.ExportInfo;
-    providers: Eventkit.Provider[];
     updateExportInfo: (args: any) => void;
     breadcrumbStepperProps: any;
     getProviders: () => void;
+    providers: Eventkit.Provider[];
+    providerError: any;
+    fetchedProviders: boolean;
+    fetchingProviders: boolean;
 }
 
 const CancelToken = axios.CancelToken;
@@ -331,7 +334,10 @@ function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         exportInfo: state.exportInfo,
-        providers: state.providers.providers,
+        providers: state.providers.objects,
+        providerError: state.providers.error,
+        fetchedProviders: state.providers.fetched,
+        fetchingProviders: state.providers.fetching,
     };
 }
 
