@@ -8,7 +8,7 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, Link,
+    Divider, Link, CircularProgress,
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
@@ -201,6 +201,9 @@ export interface Coverage {
 
 export interface Props {
     providers: Eventkit.Provider[];
+    providerError: any;
+    fetchedProviders: boolean;
+    fetchingProviders: boolean;
     sources: BaseMapSource[];
     coverages: Coverage[];
     updateBaseMap: (mapLayer: MapLayer) => void;
@@ -532,10 +535,17 @@ export function MapDrawer(props: Props) {
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
-                                    <List style={{padding: '10px'}}>
-                                        {(sources || []).map((source) => (
-                                                <div key={source.mapLayer.slug}>
-                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                    {props.fetchingProviders ? <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            width: '100%',
+                                            height: 500,
+                                            zIndex: 99
+                                        }}><CircularProgress size={50}/></div> :
+                                        <List style={{padding: '10px'}}>
+                                            {(sources || []).map((source) => (
+                                                    <div key={source.mapLayer.slug}>
+                                                        <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
                                                         <Radio
                                                             checked={isEqual(selectedBaseMap, source)}
@@ -547,40 +557,41 @@ export function MapDrawer(props: Props) {
                                                             name="source"
                                                         />
                                                     </span>
-                                                        <div>
-                                                            <div style={{display: 'flex'}}>
-                                                                {source.thumbnail_url &&
-                                                                <CardMedia
-                                                                    className={classes.thumbnail}
-                                                                    image={source.thumbnail_url}
-                                                                />
-                                                                }
-                                                                <ListItemText
-                                                                    className={classes.noPadding}
-                                                                    disableTypography
-                                                                    primary={
-                                                                        <Typography
-                                                                            className={classes.buttonLabel}
-                                                                        >
-                                                                            {source.name}
-                                                                        </Typography>
+                                                            <div>
+                                                                <div style={{display: 'flex'}}>
+                                                                    {source.thumbnail_url &&
+                                                                    <CardMedia
+                                                                        className={classes.thumbnail}
+                                                                        image={source.thumbnail_url}
+                                                                    />
                                                                     }
-                                                                />
+                                                                    <ListItemText
+                                                                        className={classes.noPadding}
+                                                                        disableTypography
+                                                                        primary={
+                                                                            <Typography
+                                                                                className={classes.buttonLabel}
+                                                                            >
+                                                                                {source.name}
+                                                                            </Typography>
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className={classes.buttonLabelSecondary}>
+                                                                    {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                                </div>
                                                             </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
-                                                            </div>
+                                                        </ListItem>
+                                                        <div
+                                                            className={classes.footprint_options}
+                                                        >
+                                                            {showFootprintData(source)}
                                                         </div>
-                                                    </ListItem>
-                                                    <div
-                                                        className={classes.footprint_options}
-                                                    >
-                                                        {showFootprintData(source)}
                                                     </div>
-                                                </div>
-                                            )
-                                        )}
-                                    </List>
+                                                )
+                                            )}
+                                        </List>
+                                    }
                                 </CustomScrollbar>
                             </div>
                             <Divider style={{margin: '0 5px 0 5px'}}/>

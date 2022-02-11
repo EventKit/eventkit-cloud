@@ -280,7 +280,7 @@ export interface Props {
     onUpdateEstimate?: () => void;
     checkProvider: any;
     getProviders: (geojson: string) => void;
-    providers: any;
+    providers: Eventkit.Provider[];
     providerError: any;
     fetchedProviders: boolean;
     fetchingProviders: boolean;
@@ -1309,8 +1309,8 @@ export function ExportInfo(props: Props) {
                                     </Popover>
                                 </div>
                             </div>
-                            <div>
-                                {props.fetchingProviders && <CircularProgress size={50}/>}
+
+                                {props.fetchingProviders ? <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500, zIndex: 99}}><CircularProgress size={50}/></div> :
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
@@ -1318,8 +1318,8 @@ export function ExportInfo(props: Props) {
                                     initialItemCount={10}
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                />
-                            </div>
+                                />}
+
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}
                                      style={{paddingLeft: '5px', paddingTop: '15px'}}>
