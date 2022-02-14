@@ -538,8 +538,8 @@ export function MapDrawer(props: Props) {
                                     {props.fetchingProviders ? <div style={{
                                             display: 'flex',
                                             justifyContent: 'center',
+                                            height: 50,
                                             width: '100%',
-                                            height: 500,
                                             zIndex: 99
                                         }}><CircularProgress size={50}/></div> :
                                         <List style={{padding: '10px'}}>
@@ -666,10 +666,17 @@ export function MapDrawer(props: Props) {
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
-                                    <List style={{padding: '10px'}}>
-                                        {(coverages || []).map((coverage) => (
-                                                <div key={coverage.provider.slug}>
-                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                    {props.fetchingProviders ? <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            height: 50,
+                                            width: '100%',
+                                            zIndex: 99
+                                        }}><CircularProgress size={50}/></div> :
+                                        <List style={{padding: '10px'}}>
+                                            {(coverages || []).map((coverage) => (
+                                                    <div key={coverage.provider.slug}>
+                                                        <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
 
                                                         <Checkbox
@@ -683,29 +690,30 @@ export function MapDrawer(props: Props) {
                                                         />
 
                                                     </span>
-                                                        <div>
-                                                            <div style={{display: 'flex'}}>
-                                                                <ListItemText
-                                                                    className={classes.noPadding}
-                                                                    disableTypography
-                                                                    primary={
-                                                                        <Typography
-                                                                            className={classes.buttonLabel}
-                                                                        >
-                                                                            {coverage.provider.name}
-                                                                        </Typography>
-                                                                    }
-                                                                />
+                                                            <div>
+                                                                <div style={{display: 'flex'}}>
+                                                                    <ListItemText
+                                                                        className={classes.noPadding}
+                                                                        disableTypography
+                                                                        primary={
+                                                                            <Typography
+                                                                                className={classes.buttonLabel}
+                                                                            >
+                                                                                {coverage.provider.name}
+                                                                            </Typography>
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className={classes.buttonLabelSecondary}>
+                                                                    {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
+                                                                </div>
                                                             </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
-                                                            </div>
-                                                        </div>
-                                                    </ListItem>
-                                                </div>
-                                            )
-                                        )}
-                                    </List>
+                                                        </ListItem>
+                                                    </div>
+                                                )
+                                            )}
+                                        </List>
+                                    }
                                 </CustomScrollbar>
                             </div>
                             <Divider style={{margin: '0 5px 0 5px'}}/>

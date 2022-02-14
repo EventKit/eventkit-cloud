@@ -1310,7 +1310,10 @@ export function ExportInfo(props: Props) {
                                 </div>
                             </div>
 
-                                {props.fetchingProviders ? <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500, zIndex: 99}}><CircularProgress size={50}/></div> :
+                                {props.fetchingProviders ?
+                                <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
+                                    <CircularProgress disableShrink={true} size={50}/>
+                                </div> :
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
