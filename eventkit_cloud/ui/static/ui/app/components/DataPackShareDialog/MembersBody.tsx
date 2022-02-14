@@ -11,8 +11,6 @@ import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
 import {getPermissionUsers} from '../../actions/usersActions';
-import Divider from "@material-ui/core/Divider";
-import Warning from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     public: boolean;

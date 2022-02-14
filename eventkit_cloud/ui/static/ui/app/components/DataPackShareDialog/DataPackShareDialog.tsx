@@ -8,8 +8,6 @@ import MembersBody from './MembersBody';
 import ShareInfoBody from './ShareInfoBody';
 import BaseDialog from '../Dialog/BaseDialog';
 import {Permissions, Levels} from '../../utils/permissions';
-import PermissionsFilterGroupsBody from "./PermissionsFilterGroupsBody";
-import PermissionsFilterMembersBody from "./PermissionsFilterMembersBody";
 
 export interface Props {
     job?: Eventkit.Job;
@@ -67,8 +65,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
-        this.renderSharedPermissionsWithJob = this.renderSharedPermissionsWithJob.bind(this);
-        this.renderSharedPermissionsWithoutJob = this.renderSharedPermissionsWithoutJob.bind(this);
+        this.renderSharedPermissions = this.renderSharedPermissions.bind(this);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
@@ -231,8 +228,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         }
     }
 
-    // new functionality where members/groups are saving and needs reference to a job
-    private renderSharedPermissionsWithJob() {
+    private renderSharedPermissions() {
         if (this.state.view === 'groups') {
             return (
                 <GroupsBody
@@ -253,41 +249,6 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                 <MembersBody
                     view={this.state.view}
                     job={this.props.job}
-                    public={this.state.permissions.value === 'PUBLIC'}
-                    selectedMembers={this.state.permissions.members}
-                    membersText={this.props.membersText}
-                    onMemberCheck={this.handleUserCheck}
-                    onAdminCheck={this.handleAdminCheck}
-                    onCheckCurrent={this.handleCurrentCheck}
-                    onCheckAll={this.handlePublicCheck}
-                    onUncheckAll={this.handleUncheckAll}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
-                />
-            );
-        }
-    }
-
-    // old functionality where members/groups are not saving and needs no reference to a job
-    private renderSharedPermissionsWithoutJob() {
-        if (this.state.view === 'groups') {
-            return (
-                <PermissionsFilterGroupsBody
-                    view={this.state.view}
-                    selectedGroups={this.state.permissions.groups}
-                    groupsText={this.props.groupsText}
-                    onGroupCheck={this.handleGroupCheck}
-                    onAdminCheck={this.handleAdminGroupCheck}
-                    onCheckAll={this.handleGroupCheckAll}
-                    onUncheckAll={this.handleGroupUncheckAll}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
-                />
-            );
-        } else {
-            return (
-                <PermissionsFilterMembersBody
-                    view={this.state.view}
                     public={this.state.permissions.value === 'PUBLIC'}
                     selectedMembers={this.state.permissions.members}
                     membersText={this.props.membersText}
@@ -400,8 +361,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                         />
                     </div>
                 </div>
-                {this.props.job && this.renderSharedPermissionsWithJob()}
-                {!this.props.job && this.renderSharedPermissionsWithoutJob()}
+                {this.props.job && this.renderSharedPermissions()}
                 <BaseDialog
                     show={this.state.showPublicWarning}
                     onClose={this.hidePublicWarning}
