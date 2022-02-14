@@ -69,7 +69,6 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         this.toggleView = this.toggleView.bind(this);
         this.renderSharedPermissionsWithJob = this.renderSharedPermissionsWithJob.bind(this);
         this.renderSharedPermissionsWithoutJob = this.renderSharedPermissionsWithoutJob.bind(this);
-        // this.permissions = new Permissions(this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
@@ -184,7 +183,13 @@ export class DataPackShareDialog extends React.Component<Props, State> {
     }
 
     private handleUncheckAll() {
-        this.permissions.setMembers({});
+        // Retain permissions for users with administrative privileges.
+        this.props.users.forEach((user) => {
+            const {username} = user.user;
+            if (!this.permissions.userHasPermission(username, Levels.ADMIN)) {
+                this.permissions.removeMemberPermission(username);
+            }
+        });
         if (this.permissions.isPublic()) {
             this.permissions.makeShared();
         }
@@ -192,7 +197,13 @@ export class DataPackShareDialog extends React.Component<Props, State> {
     }
 
     private handleGroupUncheckAll() {
-        this.permissions.setGroups({});
+        // Retain permissions for groups with administrative privileges.
+        this.props.groups.forEach((group) => {
+            const {name} = group;
+            if (!this.permissions.groupHasPermission(name, Levels.ADMIN)) {
+                this.permissions.removeGroupPermissions(name);
+            }
+        });
         this.setState({permissions: this.permissions.getPermissions()});
     }
 
