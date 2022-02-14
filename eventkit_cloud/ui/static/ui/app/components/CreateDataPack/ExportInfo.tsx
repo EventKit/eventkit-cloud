@@ -281,8 +281,6 @@ export interface Props {
     checkProvider: any;
     getProviders: (geojson: string) => void;
     providers: Eventkit.Provider[];
-    providerError: any;
-    fetchedProviders: boolean;
     fetchingProviders: boolean;
 }
 
@@ -1475,8 +1473,6 @@ function DebouncedTextField(props: any) {
 const mapStateToProps = (state) => (
     {
         providers: state.providers.objects,
-        providerError: state.providers.error,
-        fetchedProviders: state.providers.fetched,
         fetchingProviders: state.providers.fetching,
     }
 );

@@ -24,8 +24,6 @@ export interface Props {
     breadcrumbStepperProps: any;
     getProviders: () => void;
     providers: Eventkit.Provider[];
-    providerError: any;
-    fetchedProviders: boolean;
     fetchingProviders: boolean;
 }
 
@@ -335,8 +333,6 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         exportInfo: state.exportInfo,
         providers: state.providers.objects,
-        providerError: state.providers.error,
-        fetchedProviders: state.providers.fetched,
         fetchingProviders: state.providers.fetching,
     };
 }
