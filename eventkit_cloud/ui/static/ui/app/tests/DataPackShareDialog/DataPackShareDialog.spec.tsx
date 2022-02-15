@@ -421,9 +421,9 @@ describe('DataPackPage component', () => {
         stateStub.restore();
     });
 
-    it('renderSharedPermissionsWithJob should render GroupsBody component if there is a job', () => {
+    it('renderSharedPermissions should render GroupsBody component if there is a job', () => {
         setup({ job: {uid: 'xx222'}, groups: { group_one: Levels.READ } });
-        instance.renderSharedPermissionsWithJob();
+        instance.renderSharedPermissions();
         expect(wrapper.find(GroupsBody)).toHaveLength(1);
         wrapper.unmount();
     });
