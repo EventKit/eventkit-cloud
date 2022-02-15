@@ -75,6 +75,7 @@ from eventkit_cloud.api.utils import (
     get_binned_groups,
     get_download_counts_by_area,
     get_logins_per_day,
+    get_download_counts_by_product,
 )
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
@@ -2460,6 +2461,10 @@ class MetricsView(views.APIView):
 
         payload["Downloads by Area"] = get_download_counts_by_area(
             region_filter=area_props, users=users, count=area_count, start_date=start_date
+        )
+
+        payload["Downloads by Product"] = get_download_counts_by_product(
+            users=users, count=area_count, start_date=start_date
         )
         return Response(data=payload, status=status.HTTP_200_OK)
 
