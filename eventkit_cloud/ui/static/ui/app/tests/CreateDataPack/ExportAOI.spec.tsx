@@ -78,6 +78,7 @@ describe('ExportAOI component', () => {
         updateAoiInfo: sinon.spy(),
         clearAoiInfo: sinon.spy(),
         clearExportInfo: sinon.spy(),
+        getProviders: sinon.spy(),
         setNextDisabled: sinon.spy(),
         setNextEnabled: sinon.spy(),
         getGeocode: sinon.spy(),

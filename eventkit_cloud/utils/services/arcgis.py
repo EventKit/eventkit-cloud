@@ -12,7 +12,7 @@ logger = getLogger(__name__)
 class ArcGIS(GisClient):
     def __init__(self, *args, **kwargs):
         """
-        Initialize this OWSProviderCheck object with a service URL and layer.
+        Initialize this ArcGIS object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection

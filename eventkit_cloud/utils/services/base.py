@@ -3,7 +3,8 @@ import base64
 import copy
 import json
 import logging
-from typing import Optional, Dict
+from typing import Dict
+from typing import Optional
 
 import requests
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon

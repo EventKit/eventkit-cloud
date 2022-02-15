@@ -2,6 +2,7 @@
 
 """Provides classes for handling API requests."""
 import itertools
+import json
 import logging
 from datetime import date, datetime, timedelta
 
@@ -74,6 +75,7 @@ from eventkit_cloud.api.utils import (
     get_binned_groups,
     get_download_counts_by_area,
     get_logins_per_day,
+    get_download_counts_by_product,
 )
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
@@ -951,6 +953,45 @@ class DataProviderViewSet(EventkitViewSet):
             return Response(serializer(providers.get(slug=slug), context={"request": request}).data)
         elif filtered_providers:
             return Response(filtered_serializer(providers.get(slug=slug)).data)
+
+    @action(methods=["post"], detail=False)
+    def filter(self, request, *args, **kwargs):
+        """
+        Lists the DataProviders and provides advanced filtering options like geojson geometry.
+        POST is required if you want to filter by a geojson geometry contained in the request data.
+        :param request: the http request
+        :param args:
+        :param kwargs:
+        :return: the serialized data providers
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_geojson = self.request.data.get("geojson", None)
+        if search_geojson is not None:
+            geometry = (
+                search_geojson.get("geometry")
+                or search_geojson.get("features", [{}])[0].get("geometry")
+                or search_geojson
+            )
+            try:
+                geom = geojson_to_geos(json.dumps(geometry), 4326)
+                queryset = queryset.filter(the_geom__intersects=geom)
+            except ValidationError as e:
+                logger.debug(e.detail)
+                raise ValidationError(code="validation_error", detail=e.detail)
+
+            serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+            providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+            data = serializer(providers, many=True, context={"request": request}).data
+            filtered_data = filtered_serializer(filtered_providers, many=True).data
+            if isinstance(data, list):
+                data += filtered_data
+            else:
+                filtered_data.update(data)
+                data = filtered_data
+
+            return Response(data)
+        return Response(queryset)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -2419,6 +2460,10 @@ class MetricsView(views.APIView):
 
         payload["Downloads by Area"] = get_download_counts_by_area(
             region_filter=area_props, users=users, count=area_count, start_date=start_date
+        )
+
+        payload["Downloads by Product"] = get_download_counts_by_product(
+            users=users, count=area_count, start_date=start_date
         )
         return Response(data=payload, status=status.HTTP_200_OK)
 

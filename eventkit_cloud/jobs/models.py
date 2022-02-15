@@ -6,7 +6,8 @@ import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import Union, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import Union, List
 
 import yaml
 from django.contrib.auth.models import Group, User

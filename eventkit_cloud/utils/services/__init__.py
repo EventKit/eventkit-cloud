@@ -9,8 +9,6 @@ client_type_map = {
     "osm": "eventkit_cloud.utils.services.overpass.Overpass",
     "osm-generic": "eventkit_cloud.utils.services.overpass.Overpass",
     "wmts": "eventkit_cloud.utils.services.wmts.WMTS",
-    "arcgis-raster": "eventkit_cloud.utils.services.arcgis.ArcGIS",
-    "arcgis-feature": "eventkit_cloud.utils.services.arcgis.ArcGIS",
     "tms": "eventkit_cloud.utils.services.tms.TMS",
     "vector-file": "eventkit_cloud.utils.services.file.FileClient",
     "raster-file": "eventkit_cloud.utils.services.file.FileClient",
@@ -20,7 +18,6 @@ client_type_map = {
     "ogcapi-process-vector": "eventkit_cloud.utils.services.OGCAPIProcess.OGCAPIProcess",
     "default": "eventkit_cloud.utils.services.base.GisClient",
 }
-
 
 DEFAULT_CACHE_TIMEOUT = 60 * 30  # 30 minutes
 
