@@ -29,4 +29,4 @@ class ArcGIS(GisClient):
         return get_polygon_from_arcgis_extent(extent)
 
     def find_layers(self, root):
-        pass
+        raise NotImplementedError("Method is specific to service type")

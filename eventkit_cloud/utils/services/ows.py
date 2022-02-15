@@ -36,7 +36,7 @@ class OWS(GisClient):
         # If service or version parameters are left in query string, it can lead to a protocol error and false negative
         self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
 
-        self.layer = self.layer.lower()
+        self.layer = self.layer.lower() if self.layer else None
         self.layer_elements = None
 
     def find_layers(self, root):
