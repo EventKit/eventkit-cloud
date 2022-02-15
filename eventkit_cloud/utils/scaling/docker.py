@@ -21,7 +21,7 @@ class Docker(ScaleClient):
         self.client = docker.from_env()
         self.session = requests.Session()
 
-    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name="eventkit/eventkit-base:1.11.0"):
+    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
 
         if not app_name:
             raise Exception("An app_name (docker image) was not provided to run_task.")
