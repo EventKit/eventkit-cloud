@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 from enum import Enum
-from typing import Union, List
+from typing import Union, List, Type, cast
 
 import multiprocessing
 import yaml
@@ -30,6 +30,8 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.utils.services import get_client
+from eventkit_cloud.utils.services.base import GisClient
 
 logger = logging.getLogger(__name__)
 
@@ -314,15 +316,20 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     # Check if config changed to updated geometry
     __config = None
+    __url = None
+    __layer = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__config = self.config
+        self.__url = self.url
+        self.__layer = self.layer
 
     def update_geom(self):
         from eventkit_cloud.tasks.helpers import download_data
         from eventkit_cloud.ui.helpers import file_to_geojson
 
+        geometry = None
         if self.config != self.__config:
             orig_extent_url = load_provider_config(self.__config).get("extent_url")
             config = load_provider_config(self.config)
@@ -334,9 +341,19 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                     return
                 output_file = download_data(task_uid=str(random_uuid), input_url=extent_url, session=session)
                 geojson = file_to_geojson(output_file)
-                geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
-                if geometry:
-                    self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
+                geojson_geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
+                geometry = GEOSGeometry(json.dumps(geojson_geometry), srid=4326)
+        elif (self.url != self.__url) or (self.layer != self.__layer):
+            Client = self.get_service_client()
+            client: GisClient = Client(
+                self.url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config)
+            )
+            geometry = client.download_product_geometry()
+        if geometry:
+            self.the_geom = convert_polygon(geometry)
+
+    def get_service_client(self) -> Type[GisClient]:
+        return cast(Type[GisClient], get_client(self.export_provider_type.type_name))
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
