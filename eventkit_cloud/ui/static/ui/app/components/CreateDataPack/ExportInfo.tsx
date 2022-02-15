@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import {connect, useDispatch, useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {Step} from 'react-joyride';
 import {Virtuoso} from 'react-virtuoso';
@@ -279,14 +279,13 @@ export interface Props {
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
     checkProvider: any;
-    getProviders: (geojson: string) => void;
-    providers: Eventkit.Provider[];
-    fetchingProviders: boolean;
 }
 
 export interface State {
     steps: Step[];
     isRunning: boolean;
+    providers: Eventkit.Provider[];
+    fetchingProviders: boolean;
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
@@ -323,9 +322,10 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const geojson = useSelector((store: any) => store.aoiInfo.geojson);
     const exportInfo = useSelector((store: any) => store.exportInfo);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
-
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
@@ -591,7 +591,7 @@ export function ExportInfo(props: Props) {
         // check if the check box is checked or unchecked
         if (e.target.checked) {
             // add the provider to the array
-            for (const provider of props.providers) {
+            for (const provider of providers) {
                 if (provider.name === e.target.name) {
                     selectedProviders.push(provider);
                     break;
@@ -600,7 +600,7 @@ export function ExportInfo(props: Props) {
         } else {
             // or remove the value from the unchecked checkbox from the array
             index = selectedProviders.map(x => x.name).indexOf(e.target.name);
-            for (const provider of props.providers) {
+            for (const provider of providers) {
                 if (provider.name === e.target.name) {
                     selectedProviders.splice(index, 1);
                 }
@@ -617,7 +617,7 @@ export function ExportInfo(props: Props) {
         const selectedProviders = [...exportInfo.providers];
         let index;
         index = selectedProviders.map(x => x.name).indexOf(provider.name);
-        for (const _provider of props.providers) {
+        for (const _provider of providers) {
             if (provider.name === provider.name) {
                 selectedProviders.splice(index, 1);
             }
@@ -634,7 +634,7 @@ export function ExportInfo(props: Props) {
         let selectedProviders = [];
         if (e.target.checked) {
             // set providers to the list of ALL providers
-            selectedProviders = [...props.providers.filter(provider => provider.display)];
+            selectedProviders = [...providers.filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
@@ -671,7 +671,7 @@ export function ExportInfo(props: Props) {
 
     const onRefresh = () => {
         // make a copy of providers and set availability to empty json
-        props.providers.forEach(provider => props.checkProvider(provider));
+        providers.forEach(provider => props.checkProvider(provider));
     };
 
     const clearEstimate = (provider: Eventkit.Provider) => {
@@ -801,7 +801,7 @@ export function ExportInfo(props: Props) {
     };
 
     const getCurrentProviders = () => {
-        let currentProviders = props.providers.filter(provider => (!provider.hidden && provider.display));
+        let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = filterProviders(currentProviders);
 
         // Merge the filtered results and currently selected providers for display.
@@ -951,9 +951,9 @@ export function ExportInfo(props: Props) {
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
         if (newIsFilteringByProviderGeometry) {
-            props.getProviders(geojson)
+            dispatch(getProviders(geojson));
         } else {
-            props.getProviders(null);
+            dispatch(getProviders(null));
         }
     }
 
@@ -1245,7 +1245,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={exportInfo.providers && exportInfo.providers.length === props.providers.filter(
+                                checked={exportInfo.providers && exportInfo.providers.length === providers.filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
@@ -1308,7 +1308,7 @@ export function ExportInfo(props: Props) {
                                 </div>
                             </div>
 
-                                {props.fetchingProviders ?
+                                {fetchingProviders ?
                                 <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
                                     <CircularProgress disableShrink={true} size={50}/>
                                 </div> :
@@ -1470,22 +1470,4 @@ function DebouncedTextField(props: any) {
     )
 }
 
-const mapStateToProps = (state) => (
-    {
-        providers: state.providers.objects,
-        fetchingProviders: state.providers.fetching,
-    }
-);
-
-const mapDispatchToProps = (dispatch) => (
-    {
-        getProviders: (geojson) => (
-            dispatch(getProviders(geojson))
-        ),
-    }
-);
-
-export default withTheme(withStyles(jss)(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ExportInfo)));
+export default withTheme(withStyles(jss)(ExportInfo));

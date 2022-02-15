@@ -5,8 +5,6 @@ describe('getProvidersReducer', () => {
     it('should return initial state', () => {
         expect(reducers.getProvidersReducer(undefined, {})).toEqual(
             {
-                error: null,
-                fetched: false,
                 fetching: false,
                 objects: [],
             },
@@ -18,7 +16,7 @@ describe('getProvidersReducer', () => {
             ['one', 'two', 'three'],
             { type: types.GETTING_PROVIDERS },
         )).toEqual({
-            error: null, fetched: false, fetching: true, objects: [],
+            fetching: true, objects: [],
         });
     });
 
@@ -27,7 +25,7 @@ describe('getProvidersReducer', () => {
             [],
             { type: types.PROVIDERS_RECEIVED, providers: ['one', 'two', 'three'] },
         )).toEqual({
-            error: null, fetched: true, fetching: false, objects: ['one', 'two', 'three'],
+            fetching: false, objects: ['one', 'two', 'three'],
         });
     });
 });
