@@ -347,6 +347,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
         clearDraw(this.drawLayer);
         this.props.clearAoiInfo();
+        this.props.getProviders(null);
     }
 
     private handleResetMap() {

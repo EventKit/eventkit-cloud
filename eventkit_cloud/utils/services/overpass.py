@@ -15,7 +15,7 @@ class Overpass(GisClient):
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to service type")
 
-    def get_provider_response(self) -> requests.Response:
+    def get_response(self) -> requests.Response:
         query = "out meta;"
 
         response = self.client.session.post(url=self.client.service_url, data=query, timeout=self.client.timeout)

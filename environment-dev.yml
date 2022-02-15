@@ -1,6 +1,6 @@
 name: eventkit-cloud
 dependencies:
-  - eventkit-cloud=1.11.0
+  - eventkit-cloud=1.12.0
   - memcached=1.6.9
   - postgresql=12.3
   - pip:

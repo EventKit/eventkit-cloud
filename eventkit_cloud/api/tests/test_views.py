@@ -2205,7 +2205,13 @@ class TestMetricsViewSet(APITestCase):
         url = reverse("api:metrics")
         response = self.client.get(url, content_type="application/json; version=1.0")
         response_data = response.json()
-        expected_keys = ["Total Users", "Average Users Per Day", "Top User Groups", "Downloads by Area"]
+        expected_keys = [
+            "Total Users",
+            "Average Users Per Day",
+            "Top User Groups",
+            "Downloads by Area",
+            "Downloads by Product",
+        ]
         self.assertEqual(expected_keys, list(response_data.keys()))
 
         # TODO: Add example users, groups, and UserDownloads to ensure filters work correctly.
