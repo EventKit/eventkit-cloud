@@ -1,3 +1,6 @@
+from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
+
+
 class ServiceError(Exception):
     """Base class for exceptions in this module."""
 
@@ -15,3 +18,11 @@ class MissingLayerError(ServiceError):
 
     def __init__(self, message):
         self.message = message
+
+
+class ProviderCheckError(Exception):
+    def __init__(self, check_result: CheckResult = None, *args, **kwargs):
+        if check_result:
+            self.status_result = get_status_result(check_result=check_result, **kwargs)
+            self.message = self.status_result["message"]
+        super().__init__(*args)

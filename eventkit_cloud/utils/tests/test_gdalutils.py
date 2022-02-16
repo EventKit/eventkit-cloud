@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch, call, MagicMock, ANY
 from uuid import uuid4
 
 from django.test import TestCase
+from mapproxy.cache.geopackage import is_close
 from osgeo import gdal, ogr
 
 from eventkit_cloud.utils import gdalutils
@@ -22,6 +23,7 @@ from eventkit_cloud.utils.gdalutils import (
     progress_callback,
     polygonize,
     get_chunked_bbox,
+    get_polygon_from_arcgis_extent,
 )
 
 logger = logging.getLogger(__name__)
@@ -532,3 +534,25 @@ class TestGdalUtils(TestCase):
         bboxes = get_chunked_bbox(bbox)
         self.assertEqual(len(bboxes), 6)
         self.assertEqual(bboxes[0], (-77.26290092220698, 38.76408745791032, -77.08063209861098, 38.94635628150632))
+
+    def test_get_polygon_from_arcgis_extent(self):
+        def validate_bbox(expected_bbox, srid):
+            extent = {
+                "xmin": bbox[0],
+                "ymin": bbox[1],
+                "xmax": bbox[2],
+                "ymax": bbox[3],
+                "spatialReference": {"wkid": srid},
+            }
+            # Use an arcgis extent to get a poly, then convert that poly back to a bbox to compare to the initial input.
+            returned_poly = get_polygon_from_arcgis_extent(extent)
+            returned_poly.transform(srid)
+            returned_bbox = returned_poly.extent
+
+            for expected, returned in zip(expected_bbox, returned_bbox):
+                self.assertTrue(is_close(expected, returned))
+
+        bbox = [-138.24815647439425, 20.23250782245401, -34.23950766959813, 51.815148559931345]
+        validate_bbox(bbox, 4326)
+        bbox = [-15389714.381838376, 2300595.107222556, -3811524.558792049, 6766770.706240426]
+        validate_bbox(bbox, 3857)

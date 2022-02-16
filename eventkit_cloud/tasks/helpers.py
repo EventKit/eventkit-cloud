@@ -34,7 +34,6 @@ from requests import Response
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import ExportFormat, get_data_type_from_provider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
@@ -144,11 +143,6 @@ def get_export_task_record(export_task_record_uid: str) -> ExportTaskRecord:
     return ExportTaskRecord.objects.select_related(
         "export_provider_task__provider", "export_provider_task__run__job"
     ).get(uid=export_task_record_uid)
-
-
-def get_supported_projections(export_format: ExportFormat) -> List[int]:
-    supported_projections = export_format.supported_projections.all().values_list("srid", flat=True)
-    return supported_projections
 
 
 def get_default_projection(supported_projections: List[int], selected_projections: List[int]) -> Optional[int]:
@@ -539,7 +533,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "slug": data_provider_task_record.provider.slug,
             "name": data_provider_task_record.name,
             "files": [],
-            "type": get_data_type_from_provider(data_provider_task_record.provider),
+            "type": data_provider_task_record.provider.get_data_type(),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
