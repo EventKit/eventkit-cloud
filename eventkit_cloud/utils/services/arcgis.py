@@ -21,12 +21,12 @@ class ArcGIS(GisClient):
 
         self.layer = self.layer.lower() if self.layer else None
 
-    def download_product_geometry(self) -> Optional[Polygon]:
+    def download_geometry(self) -> Optional[Polygon]:
         response = self.session.get(self.service_url, params={"f": "json"})
         response.raise_for_status()
         data = response.json()
         extent = data.get("initialExtent") or data.get("fullExtent") or data.get("extent")
         return get_polygon_from_arcgis_extent(extent)
 
-    def find_layer(self, root):
-        raise NotImplementedError("Method is specific to provider type")
+    def find_layers(self, root):
+        raise NotImplementedError("Method is specific to service type")

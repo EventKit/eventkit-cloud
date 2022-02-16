@@ -27,8 +27,8 @@ from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
-from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
+from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
 
 logger = get_task_logger(__name__)
@@ -308,10 +308,9 @@ def list_to_dict(list_to_convert: dict, key_name: str):
 )
 def check_provider_availability_task():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
-    from eventkit_cloud.utils.services.provider_check import perform_provider_check
 
     for provider in DataProvider.objects.all():
-        status = perform_provider_check(provider, None)
+        status = provider.check_status()
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
         try:

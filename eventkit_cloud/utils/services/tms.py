@@ -10,7 +10,7 @@ class TMS(GisClient):
         super(TMS, self).__init__(service_url, *args, **kwargs)
         self.service_url = self.service_url.format(z="0", y="0", x="0")
 
-    def find_layer(self, root):
+    def find_layers(self, root):
         raise NotImplementedError("Method is specific to provider type")
 
     def get_bbox(self, element):
