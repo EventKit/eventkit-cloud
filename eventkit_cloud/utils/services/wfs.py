@@ -11,7 +11,7 @@ class WFS(OWS):
         super(WFS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WFS"
 
-    def find_layer(self, root):
+    def find_layers(self, root):
         """
         :param root: Name of layer to find
         :return: XML 'Layer' Element, or None if not found
@@ -33,8 +33,7 @@ class WFS(OWS):
                 f"{[name.text for feature, name in feature_names if name]}"
             )
 
-        feature = features[0]
-        return feature
+        return features
 
     def get_bbox(self, element):
         bbox_element = element.find("latlongboundingbox")

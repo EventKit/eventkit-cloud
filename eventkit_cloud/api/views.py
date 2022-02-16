@@ -130,7 +130,6 @@ from eventkit_cloud.tasks.task_factory import (
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.services.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 
@@ -905,7 +904,7 @@ class DataProviderViewSet(EventkitViewSet):
             geojson = self.request.data.get("geojson", None)
             providers, filtered_provider = attribute_class_filter(self.get_queryset(), self.request.user)
             provider = providers.get(slug=slug)
-            return JsonResponse(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
+            return JsonResponse(provider.check_status(aoi_geojson=geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist:
             raise NotFound(code="not_found", detail="Could not find the requested provider.")

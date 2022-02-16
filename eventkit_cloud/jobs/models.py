@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 import json
 import logging
+import multiprocessing
 import uuid
 from enum import Enum
-from typing import Union, List, Type, cast
+from typing import TYPE_CHECKING
+from typing import Union, List
 
-import multiprocessing
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -18,8 +20,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
-from eventkit_cloud.core.helpers import get_or_update_session
 
+from eventkit_cloud import settings
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -31,7 +34,10 @@ from eventkit_cloud.core.models import (
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.base import GisClient
+from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+
+if TYPE_CHECKING:
+    from eventkit_cloud.utils.services.base import GisClient
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +171,10 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
             format = cls.objects.create(**kwargs)
             created = True
         return format, created
+
+    def get_supported_projection_list(self) -> List[int]:
+        supported_projections = self.supported_projections.all().values_list("srid", flat=True)
+        return supported_projections
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -344,16 +354,35 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 geojson_geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
                 geometry = GEOSGeometry(json.dumps(geojson_geometry), srid=4326)
         elif (self.url != self.__url) or (self.layer != self.__layer):
-            Client = self.get_service_client()
-            client: GisClient = Client(
-                self.url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config)
-            )
-            geometry = client.download_product_geometry()
+            try:
+                client = self.get_service_client()
+                geometry = client.download_geometry()
+            except AttributeError as e:
+                # TODO: This fails in tests.  How to handle failure to update geometry?
+                logger.info(e, exc_info=True)
         if geometry:
             self.the_geom = convert_polygon(geometry)
 
-    def get_service_client(self) -> Type[GisClient]:
-        return cast(Type[GisClient], get_client(self.export_provider_type.type_name))
+    def get_service_client(self) -> GisClient:
+        url = self.url
+        if not self.url and "osm" in self.export_provider_type.type_name:
+            logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
+            url = settings.OVERPASS_API_URL
+        Client = get_client(self.export_provider_type.type_name)
+        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config))
+
+    def check_status(self, aoi_geojson: dict = None):
+        try:
+            client = self.get_service_client()
+            response = client.check(aoi_geojson=aoi_geojson)
+
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            response = get_status_result(CheckResult.UNKNOWN_ERROR)
+            logger.error(f"An exception occurred while checking the {self.name} provider.", exc_info=True)
+            logger.info(f"Status of provider '{self.name}': {response}")
+
+        return response
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
@@ -466,6 +495,19 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 return user_size_rule[0].max_selection_size
 
         return self.max_selection
+
+    def get_data_type(self) -> str:
+        """
+        This is used to populate the run metadata with special types for OSM and NOME.
+        This is used for custom cartography,
+        and should be removed if custom cartography is made configurable.
+        :param data_provider:
+        :return:
+        """
+        if self.slug.lower() in ["nome", "osm"]:
+            return self.slug.lower()
+        else:
+            return str(self.data_type)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
@@ -1011,16 +1053,3 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
     if return_dict:
         return conf
     return yaml.dump(conf)
-
-
-def get_data_type_from_provider(data_provider: DataProvider) -> str:
-    """
-    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
-    and should be removed if custom cartography is made configurable.
-    :param data_provider:
-    :return:
-    """
-    if data_provider.slug.lower() in ["nome", "osm"]:
-        return data_provider.slug.lower()
-    else:
-        return data_provider.data_type
