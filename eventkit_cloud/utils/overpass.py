@@ -44,7 +44,10 @@ class Overpass(object):
             debug: turn on/off debug logging
         """
 
-        self.url = url or settings.OVERPASS_API_URL or "http://localhost/interpreter"
+        self.url = url
+        if not self.url:
+            logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
+            self.url = settings.OVERPASS_API_URL
 
         self.slug = slug
         self.query = None

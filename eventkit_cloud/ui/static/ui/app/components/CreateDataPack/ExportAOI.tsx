@@ -55,13 +55,11 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
 import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
-import {useJobValidationContext} from "./context/JobValidation";
-import {useEffect} from "react";
-import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {MapZoomLimiter} from "./MapZoomLimiter";
 import {Step1Validator} from "./ExportValidation";
+import {getProviders} from "../../actions/providerActions";
 
 export const WGS84 = 'EPSG:4326';
 
@@ -76,6 +74,7 @@ export interface Props {
     processGeoJSONFile: () => void;
     resetGeoJSONFile: () => void;
     clearExportInfo: () => void;
+    getProviders: (geojson) => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     nextEnabled: boolean;
@@ -224,6 +223,7 @@ export class ExportAOI extends React.Component<Props, State> {
             this.drawLayer.getSource().addFeatures(features);
             this.map.getView().fit(this.drawLayer.getSource().getExtent());
             this.setButtonSelected(this.props.aoiInfo.selectionType);
+            this.props.getProviders(this.props.aoiInfo.geojson);
         }
 
         const steps = joyride.ExportAOI as any[];
@@ -233,6 +233,10 @@ export class ExportAOI extends React.Component<Props, State> {
     componentDidUpdate(prevProps: Props, prevState: State) {
         if (this.props.importGeom.processed && !prevProps.importGeom.processed) {
             this.handleGeoJSONUpload(this.props.importGeom);
+        }
+
+        if (Object.keys(this.props.aoiInfo.geojson).length !== 0 && this.props.aoiInfo.geojson !== prevProps.aoiInfo.geojson) {
+            this.props.getProviders(this.props.aoiInfo.geojson);
         }
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
@@ -343,6 +347,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
         clearDraw(this.drawLayer);
         this.props.clearAoiInfo();
+        this.props.getProviders(null);
     }
 
     private handleResetMap() {
@@ -1237,6 +1242,9 @@ function mapDispatchToProps(dispatch) {
         },
         clearExportInfo: () => {
             dispatch(clearExportInfo());
+        },
+        getProviders: (geojson) => {
+            dispatch(getProviders(geojson));
         },
     };
 }
