@@ -341,26 +341,26 @@ describe('DataPackPage component', () => {
         expect(stateStub.calledWith({ permissions: expected })).toBe(true);
     });
 
-    it('handleUnCheckAll should clear members and makeShare then update state', () => {
+    it.only('handleUnCheckAll should clear members except admins and then update state', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        instance.permissions.makePublic();
+        instance.permissions.setMembers({ user_one: Levels.ADMIN, user_two: Levels.READ });
         instance.handleUncheckAll();
         const expected = {
-            value: 'SHARED',
-            members: {},
+            value: 'PRIVATE',
+            members: {user_one: Levels.ADMIN},
             groups: {},
         };
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ permissions: expected })).toBe(true);
     });
 
-    it('handleGroupUncheckAll should clear group permissions', () => {
+    it('handleGroupUncheckAll should clear group permissions except admins', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        instance.permissions.setGroups({ group_one: Levels.READ });
-        expect(instance.permissions.getGroupCount()).toEqual(1);
+        instance.permissions.setGroups({ group_one: Levels.ADMIN, group_two: Levels.READ });
+        expect(instance.permissions.getGroupCount()).toEqual(2);
         instance.handleGroupUncheckAll();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: getPermissions() })).toBe(true);
+        expect(stateStub.calledWith({permissions: { value: 'PRIVATE', members: {}, groups: { group_one: 'ADMIN' } }})).toBe(true);
     });
 
     it('showShareInfo should set show to true', () => {
