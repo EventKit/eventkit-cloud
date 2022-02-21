@@ -10,7 +10,7 @@ import {
     Icon,
     Divider, Link, CircularProgress,
 } from "@material-ui/core";
-import {connect} from "react-redux";
+import {connect, useSelector} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -200,8 +200,6 @@ export interface Coverage {
 }
 
 export interface Props {
-    providers: Eventkit.Provider[];
-    fetchingProviders: boolean;
     sources: BaseMapSource[];
     coverages: Coverage[];
     updateBaseMap: (mapLayer: MapLayer) => void;
@@ -215,8 +213,10 @@ export interface Props {
 MapDrawer.defaultProps = {sources: []} as Props;
 
 export function MapDrawer(props: Props) {
-    const {providers, classes} = props;
+    const {classes} = props;
 
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState('');
     const [selectedBaseMap, setBaseMap] = useState(null);
@@ -533,7 +533,7 @@ export function MapDrawer(props: Props) {
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
-                                    {props.fetchingProviders ? <div style={{
+                                    {fetchingProviders ? <div style={{
                                             display: 'flex',
                                             justifyContent: 'center',
                                             height: 50,
@@ -542,7 +542,7 @@ export function MapDrawer(props: Props) {
                                         }}><CircularProgress size={50}/></div> :
                                         <List style={{padding: '10px'}}>
                                             {(sources || []).map((source) => (
-                                                    <div key={source.mapLayer.slug}>
+                                                <div key={source.mapLayer.slug}>
                                                         <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
                                                         <Radio
@@ -664,7 +664,7 @@ export function MapDrawer(props: Props) {
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
                                 <CustomScrollbar>
                                     <div style={{height: `${offSet}px`}}/>
-                                    {props.fetchingProviders ? <div style={{
+                                    {fetchingProviders ? <div style={{
                                             display: 'flex',
                                             justifyContent: 'center',
                                             height: 50,
@@ -759,11 +759,4 @@ export function MapDrawer(props: Props) {
     );
 }
 
-function mapStateToProps(state) {
-    return {
-        providers: state.providers.objects,
-        fetchingProviders: state.providers.fetching,
-    };
-}
-
-export default (withStyles<any, any>(jss)(connect(mapStateToProps)(MapDrawer)));
+export default withStyles<any, any>(jss)(MapDrawer);
