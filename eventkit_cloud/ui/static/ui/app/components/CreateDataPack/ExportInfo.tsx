@@ -540,7 +540,6 @@ export function ExportInfo(props: Props) {
                 });
             }
         });
-        console.log("SELECTED FORMATS: ", selectedFormats);
         updateExportInfoCallback({formats: selectedFormats});
     };
 
@@ -633,8 +632,8 @@ export function ExportInfo(props: Props) {
         // current array of providers
         let selectedProviders = [];
         if (e.target.checked) {
-            // set providers to the list of ALL providers
-            selectedProviders = [...providers.filter(provider => provider.display)];
+            // set providers to the list of visible providers
+            selectedProviders = [...getCurrentProviders().filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
@@ -1245,7 +1244,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={exportInfo.providers && exportInfo.providers.length === providers.filter(
+                                checked={exportInfo.providers && exportInfo.providers.length === getCurrentProviders().filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
@@ -1256,7 +1255,7 @@ export function ExportInfo(props: Props) {
                                     flexWrap: 'wrap', fontSize: '16px',
                                 }}
                             >
-                                            Select All
+                                            {(providerFilterList.length || isFilteringByProviderGeometry) ? 'Select Visible': 'Select All'}
                                             </span>
                         </div>
                         <div className={classes.sectionBottom}>
