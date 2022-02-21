@@ -457,11 +457,13 @@ export function MapDrawer(props: Props) {
                         className: classes.drawerPaper,
                         // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
                     }}
+                    data-testid="map-drawer"
                 >
                     <VerticalTabs
                         className={classes.tabs}
                         value={(selectedTab) ? selectedTab : false}
                         onChange={handleChange}
+                        data-testid="vertical-tab"
                     >
                         <Tab
                             value="basemap"
@@ -531,7 +533,7 @@ export function MapDrawer(props: Props) {
 
                             <div className={classes.scrollBar}
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
-                                <CustomScrollbar>
+                                <CustomScrollbar data-testid="custom-scrollbar">
                                     <div style={{height: `${offSet}px`}}/>
                                     {fetchingProviders ? <div style={{
                                             display: 'flex',
@@ -553,6 +555,7 @@ export function MapDrawer(props: Props) {
                                                             }}
                                                             onClick={(e) => handleExpandClick(e, source)}
                                                             name="source"
+                                                            title={source.mapLayer.slug}
                                                         />
                                                     </span>
                                                             <div>
@@ -605,11 +608,11 @@ export function MapDrawer(props: Props) {
                                         <RequestDataSource open={requestDataSourceOpen}
                                                            onClose={() => setRequestDataSourceOpen(false)}/>
                                         <div>
-                                            Data Source Missing?
+                                            Data Product Missing?
                                         </div>
                                         <Link onClick={() => setRequestDataSourceOpen(true)}
                                               style={{fontSize: '12px', cursor: 'pointer'}}>
-                                            Request New Data Source
+                                            Request New Data Product
                                         </Link>
                                     </div>
                                     <div>
@@ -662,7 +665,7 @@ export function MapDrawer(props: Props) {
 
                             <div className={classes.scrollBar}
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
-                                <CustomScrollbar>
+                                <CustomScrollbar  data-testid="custom-scrollbar">
                                     <div style={{height: `${offSet}px`}}/>
                                     {fetchingProviders ? <div style={{
                                             display: 'flex',
@@ -727,11 +730,11 @@ export function MapDrawer(props: Props) {
                                         <RequestDataSource open={requestDataSourceOpen}
                                                            onClose={() => setRequestDataSourceOpen(false)}/>
                                         <div>
-                                            Data Source Missing?
+                                            Data Product Missing?
                                         </div>
                                         <Link onClick={() => setRequestDataSourceOpen(true)}
                                               style={{fontSize: '12px', cursor: 'pointer'}}>
-                                            Request New Data Source
+                                            Request New Data Product
                                         </Link>
                                     </div>
                                     <div>

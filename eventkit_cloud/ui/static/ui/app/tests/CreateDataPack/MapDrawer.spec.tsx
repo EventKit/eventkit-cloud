@@ -8,12 +8,12 @@ import Radio from "@material-ui/core/Radio";
 import Checkbox from '@material-ui/core/Checkbox';
 import axios from "axios"
 import MockAdapter from "axios-mock-adapter";
-import { act } from "react-test-renderer"
+import {act} from "react-test-renderer"
 
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
 import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
-import {fireEvent, render} from "@testing-library/react";
+import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
@@ -204,71 +204,94 @@ describe('FilterDrawer component', () => {
         const basemapTab = component.getByTitle('Basemap') as HTMLInputElement;
         fireEvent.click(basemapTab)
 
-        expect(component.find(CustomScrollbar)).toHaveLength(1);
-        expect(component.find(VerticalTabs)).toHaveLength(1);
-        expect(component.find(Tab)).toHaveLength(2);
-        expect(component.find(Drawer)).toHaveLength(1);
+        expect(component.getAllByTestId('map-drawer')).toHaveLength(1);
+        expect(component.getAllByTestId('vertical-tab')).toHaveLength(1);
+        expect(component.getAllByRole('tab')).toHaveLength(2);
         // Of the 3 providers, only one should be displayed
         // BaseMaps are only added when a preview_url exists AND the provider should be displayed.
-        expect(component.find(ListItem)).toHaveLength(1);
-        expect(component.find('#dataSource-dialog')).toHaveLength(1);
+        expect(component.getAllByRole('listitem')).toHaveLength(1);
     });
 
-    /*
-    it('should start with the data source dialog closed', () => {
-        act(() => wrapper.update());
+
+    it('should start with the data product dialog closed', () => {
+        const component = renderComponent();
         // open/render the basemap tab first
-        wrapper.find(Tab).at(0).simulate('click');
-        expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
+        const basemapTab = component.getByTitle('Basemap')
+        fireEvent.click(basemapTab)
+        expect(screen.queryByTitle('Request New Data Product')).not.toBeInTheDocument();
     });
 
     it('should call updateBaseMap function when source checkbox is clicked', () => {
         // open/render the basemap tab first
-        wrapper.find(Tab).at(0).simulate('click');
-        wrapper.find(Radio).at(0).simulate('click', { target: {checked: true}});
-        expect(wrapper.find(Radio).at(0).props().checked).toBe(true);
+        const component = renderComponent();
+        // open/render the basemap tab first
+        const basemapTab = component.getByTitle('Basemap')
+        fireEvent.click(basemapTab)
+        const radioBtn = component.getByRole('radio')
+        expect(radioBtn).not.toBeChecked();
+        fireEvent.click(radioBtn)
+        expect(radioBtn).toBeChecked();
         expect(updateBaseMapSpy).toHaveBeenCalledTimes(1);
     });
+
     // TESTS FOR COVERAGE TAB FUNCTIONALITY
 
     it('should render all the basic components', () => {
+        const component = renderComponent();
+
         // open/render the coverage tab first
-        wrapper.find(Tab).at(1).simulate('click');
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(VerticalTabs)).toHaveLength(1);
-        expect(wrapper.find(Tab)).toHaveLength(2);
-        expect(wrapper.find(Drawer)).toHaveLength(1);
+        const coverageTab = component.getByTitle('Coverage') as HTMLInputElement;
+        fireEvent.click(coverageTab)
+
+        expect(component.getAllByTestId('custom-scrollbar')).toHaveLength(1);
+        expect(component.getAllByTestId('vertical-tab')).toHaveLength(1);
+        expect(component.getAllByRole('tab')).toHaveLength(2);
+        expect(component.getAllByTestId('map-drawer')).toHaveLength(1);
         // Of the 3 providers, 2 should be displayed
         // Coverages are only added when 'the_geom' exists AND the provider should be displayed.
-        expect(wrapper.find(ListItem)).toHaveLength(2);
-        expect(wrapper.find('#dataSource-dialog')).toHaveLength(1);
+        expect(component.getAllByRole('listitem')).toHaveLength(2);
     });
 
-    it('should start with the data source dialog closed', () => {
-        act(() => wrapper.update());
+    it('should start with the data product dialog closed', () => {
+        const component = renderComponent();
         // open/render the coverage tab first
-        wrapper.find(Tab).at(1).simulate('click');
-        expect(wrapper.find('#dataSource-dialog').html()).toContain('false');
+        const coverageTab = component.getByTitle('Coverage')
+        fireEvent.click(coverageTab)
+        expect(screen.queryByTitle('Request New Data Product')).not.toBeInTheDocument();
     });
 
     it('should call addCoverageGeos when coverage checked', async () => {
+        const component = renderComponent();
         // open/render the coverage tab first
-        wrapper.find(Tab).at(1).simulate('click');
+        const coverageTab = component.getByTitle('Coverage')
+        fireEvent.click(coverageTab)
+
+        const coverageCheckbox = component.getAllByRole('checkbox')[0] as HTMLInputElement
         await act(async () => {
-            wrapper.find(Checkbox).at(0).simulate('click', {target: {checked: true}});
+            fireEvent.click(coverageCheckbox)
             await wait()
         })
 
+        expect(coverageCheckbox).toBeChecked();
         expect(addCoverageGeosSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should call removeCoverageGeos when coverage unchecked', () => {
+    it('should call addCoverageGeos when coverage checked', async () => {
+        const component = renderComponent();
         // open/render the coverage tab first
-        wrapper.find(Tab).at(1).simulate('click');
-        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: true}});
-        wrapper.find(Checkbox).at(0).simulate('click', { target: {checked: false}});
-        expect(wrapper.find(Checkbox).at(0).props().value).toBe(coverages[0].provider.slug);
-        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(false);
+        const coverageTab = component.getByTitle('Coverage')
+        fireEvent.click(coverageTab)
+
+        const coverageCheckbox = component.getAllByRole('checkbox')[0] as HTMLInputElement
+        await act(async () => {
+            fireEvent.click(coverageCheckbox)
+            await wait()
+            fireEvent.click(coverageCheckbox)
+            await wait()
+        })
+
+        expect(coverageCheckbox.value).toBe(coverages[0].provider.slug);
+        expect(coverageCheckbox).not.toBeChecked();
         expect(removeCoverageGeosSpy).toHaveBeenCalledTimes(1);
-    });*/
+    });
 });
