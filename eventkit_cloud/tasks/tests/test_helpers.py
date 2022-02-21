@@ -163,7 +163,7 @@ class TestHelpers(TestCase):
         mocked_data_provider.config = f"cert_var: {expected_provider_slug}"
         mocked_data_provider.service_description = expected_data_provider_desc = "example_description"
         mocked_data_provider.layers = expected_layers
-        mocked_data_provider.data_type = expected_type
+        mocked_data_provider.get_data_type.return_value = expected_type
         mocked_data_provider.level_from = expected_level_from = 0
         mocked_data_provider.level_to = expected_level_to = 12
 

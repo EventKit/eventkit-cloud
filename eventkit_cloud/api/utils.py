@@ -8,12 +8,12 @@ import rest_framework.status
 from audit_logging.models import AuditEvent
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, QuerySet, OuterRef, Subquery
+from django.db.models import Count, QuerySet, OuterRef, Subquery, Func, Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from eventkit_cloud.jobs.models import Region
+from eventkit_cloud.jobs.models import Region, DataProvider
 from eventkit_cloud.tasks.models import RunZipFile, UserDownload
 
 logger = logging.getLogger(__name__)
@@ -194,15 +194,52 @@ def get_download_counts_by_area(
         query["downloaded_at__gte"] = start_date
 
     query["downloadable__export_task__export_provider_task__run__job__the_geom__intersects"] = OuterRef("the_geom")
-    download_subquery = UserDownload.objects.filter(**query).values("uid")
+    download_subquery = (
+        UserDownload.objects.filter(**query).values("uid").annotate(count=Func("uid", function="COUNT")).values("count")
+    )
 
     regions = (
         Region.objects.filter(**region_filter)
-        .annotate(downloads=Count(Subquery(download_subquery)))
+        .annotate(downloads=Subquery(download_subquery))
         .order_by("-downloads")[:count]
     )
 
     return {region.name: region.downloads for region in regions}
+
+
+def get_download_counts_by_product(
+    users: Union[QuerySet, List[User]] = None,
+    count: int = None,
+    start_date: Optional[Union[date, datetime]] = None,
+):
+
+    query = dict()
+    if users:
+        query["user__in"] = users
+    if start_date:
+        query["downloaded_at__gte"] = start_date
+
+    download_subquery = (
+        UserDownload.objects.filter(**query)
+        .filter(
+            Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
+            | (
+                Q(downloadable__export_task__export_provider_task__slug="run")
+                & Q(
+                    downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef(
+                        "pk"
+                    )
+                )
+            )
+        )
+        .values("uid")
+        .annotate(count=Func("uid", function="COUNT"))
+        .values("count")
+    )
+
+    products = DataProvider.objects.all().annotate(downloads=Subquery(download_subquery)).order_by("-downloads")[:count]
+
+    return {product.name: product.downloads for product in products}
 
 
 def get_logins_per_day(users: List[User], events: List[AuditEvent]):

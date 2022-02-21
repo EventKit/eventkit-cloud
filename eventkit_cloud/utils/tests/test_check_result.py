@@ -8,14 +8,12 @@ from django.conf import settings
 from django.core.cache import cache
 from django.test import TransactionTestCase
 
-from eventkit_cloud.utils.services.provider_check import (
-    WCSProviderCheck,
-    WFSProviderCheck,
-    WMSProviderCheck,
-    WMTSProviderCheck,
-    CheckResult,
-    OGCAPIProcessProviderCheck,
-)
+from eventkit_cloud.utils.services.check_result import CheckResult
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
+from eventkit_cloud.utils.services.wcs import WCS
+from eventkit_cloud.utils.services.wfs import WFS
+from eventkit_cloud.utils.services.wms import WMS
+from eventkit_cloud.utils.services.wmts import WMTS
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ def get_status(result):
     return result.value["status"]
 
 
-class TestProviderCheck(TransactionTestCase):
+class TestServiceCheck(TransactionTestCase):
     def setUp(self):
         self.path = settings.ABS_PATH()
         self.aoi_geojson = (
@@ -35,7 +33,7 @@ class TestProviderCheck(TransactionTestCase):
             "[[ [0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0] ]]}}]}"
         )
 
-    def check_ows(self, service_type, pc, invalid_content, empty_content, no_intersect_content, valid_content):
+    def check_ows(self, service_type, service, invalid_content, empty_content, no_intersect_content, valid_content):
         """
         Checks the status of a WFS, WCS, WMS, or WMTS service.
         :param get: Patched requests.get
@@ -47,22 +45,22 @@ class TestProviderCheck(TransactionTestCase):
         """
 
         mock_session = Mock()
-        pc.client.session = mock_session
+        service.session = mock_session
 
-        with patch("eventkit_cloud.utils.services.provider_check.cache") as mock_cache:
+        with patch("eventkit_cloud.utils.services.base.cache") as mock_cache:
 
             mock_cache.get.return_value = None
-            mock_cache.get_or_set = lambda *args, **kwargs: pc.check_provider_response()
+            mock_cache.get_or_set = lambda *args, **kwargs: service.check_response()
 
             # Test: cannot connect to server
             mock_session.get.side_effect = requests.exceptions.ConnectionError()
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.CONNECTION), result_status)
-            cache.delete(pc.get_cache_key())
+            cache.delete(service.get_cache_key())
 
             # Test: server throws SSL exception
             mock_session.get.side_effect = requests.exceptions.SSLError()
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.SSL_EXCEPTION), result_status)
 
             # Test: server returns unauthorized response code
@@ -72,13 +70,13 @@ class TestProviderCheck(TransactionTestCase):
             response.status_code = 403
             response.ok = False
             mock_session.get.return_value = response
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.UNAUTHORIZED), result_status)
 
             # Test: server returns 404 response code
             response.status_code = 404
             mock_session.get.return_value = response
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.NOT_FOUND), result_status)
 
             # Test: server does not return recognizable xml
@@ -86,39 +84,39 @@ class TestProviderCheck(TransactionTestCase):
             response.status_code = 200
             response.ok = True
             mock_session.get.return_value = response
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.UNKNOWN_FORMAT), result_status)
 
             if service_type not in ["wms", "wmts"]:  # TODO: fix layer checks for WMS/WMTS
                 # Test: server does not offer the requested layer/coverage
                 response.content = empty_content
                 mock_session.get.return_value = response
-                result_status = pc.check()["status"]
+                result_status = service.check()["status"]
                 self.assertEqual(get_status(CheckResult.LAYER_NOT_AVAILABLE), result_status)
 
             if service_type not in ["wms", "wmts"]:  # TODO: fix layer checks for WMS/WMTS
                 # Test: requested layer/coverage does not intersect given AOI
                 response.content = no_intersect_content
                 mock_session.get.return_value = response
-                result_status = pc.check()["status"]
+                result_status = service.check()["status"]
                 self.assertEqual(get_status(CheckResult.NO_INTERSECT), result_status)
 
             # Test: success
             response.content = valid_content
             mock_session.get.return_value = response
-            result_status = pc.check()["status"]
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.SUCCESS), result_status)
-            cache.delete(pc.get_cache_key())
+            cache.delete(service.get_cache_key())
 
             # Test: no service_url was provided
-            pc.client.service_url = ""
-            result_status = pc.check()["status"]
+            service.service_url = ""
+            result_status = service.check()["status"]
             self.assertEqual(get_status(CheckResult.NO_URL), result_status)
 
     def test_check_wfs(self):
         url = "http://example.com/wfs?"
         layer = "exampleLayer"
-        pc = WFSProviderCheck(url, layer, self.aoi_geojson)
+        service = WFS(url, layer, self.aoi_geojson)
 
         invalid_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                              </WFS_Capabilities>""".encode()
@@ -143,12 +141,12 @@ class TestProviderCheck(TransactionTestCase):
                                </FeatureTypeList>
                            </WFS_Capabilities>""".encode()
 
-        self.check_ows("wfs", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+        self.check_ows("wfs", service, invalid_content, empty_content, no_intersect_content, valid_content)
 
     def test_check_wcs(self):
         url = "http://example.com/wcs?"
         coverage = "exampleCoverage"
-        pc = WCSProviderCheck(url, coverage, self.aoi_geojson)
+        service = WCS(url, coverage, self.aoi_geojson)
 
         invalid_content = "".encode()
         empty_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
@@ -178,13 +176,13 @@ class TestProviderCheck(TransactionTestCase):
                                </wcs:ContentMetadata>
                            </wcs:WCS_Capabilities>""".encode()
 
-        self.check_ows("wcs", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+        self.check_ows("wcs", service, invalid_content, empty_content, no_intersect_content, valid_content)
 
     def test_check_wms(self):
         url = "http://example.com/wms?"
         layer = "exampleLayer"
         config = {"sources": {"default": {"req": {"layers": layer}}}}
-        pc = WMSProviderCheck(url, layer, self.aoi_geojson, config=config)
+        service = WMS(url, layer, self.aoi_geojson, config=config)
         invalid_content = "".encode()
         empty_content = """<WMT_MS_Capabilities version="1.1.1">
                                <Capability>
@@ -211,9 +209,9 @@ class TestProviderCheck(TransactionTestCase):
                                </Capability>
                            </WMT_MS_Capabilities>""".encode()
 
-        self.check_ows("wms", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+        self.check_ows("wms", service, invalid_content, empty_content, no_intersect_content, valid_content)
 
-        pc = WMSProviderCheck(url, layer, self.aoi_geojson, config=config)
+        service = WMS(url, layer, self.aoi_geojson, config=config)
         valid_content = """<WMT_MS_Capabilities version="1.3.0">
                         <Capability>
                             <Layer>
@@ -228,13 +226,13 @@ F                                <EX_GeographicBoundingBox>
                         </Capability>
                     </WMT_MS_Capabilities>""".encode()
 
-        self.check_ows("wms", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+        self.check_ows("wms", service, invalid_content, empty_content, no_intersect_content, valid_content)
 
     def test_check_wmts(self):
         url = "http://example.com/wmts?"
         layer = "exampleLayer"
         config = {"sources": {"default": {"req": {"layers": layer}}}}
-        pc = WMTSProviderCheck(url, layer, self.aoi_geojson, config=config)
+        service = WMTS(url, layer, self.aoi_geojson, config=config)
 
         invalid_content = "".encode()
         empty_content = """<Capabilities version="1.0.0">
@@ -268,7 +266,7 @@ F                                <EX_GeographicBoundingBox>
                                </Contents>
                            </Capabilities>""".encode()
 
-        self.check_ows("wmts", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+        self.check_ows("wmts", service, invalid_content, empty_content, no_intersect_content, valid_content)
 
     def test_has_valid_process_inputs(self):
         url = "http://example.com/ogcapi"
@@ -279,7 +277,7 @@ F                                <EX_GeographicBoundingBox>
                 "inputs": {"product": "example-product", "file_format": "example-file-format"},
             }
         }
-        pc = OGCAPIProcessProviderCheck(url, layer, self.aoi_geojson, config=config)
+        service = OGCAPIProcess(url, layer, self.aoi_geojson, config=config)
         empty_content = {}
         valid_content = {
             "version": "1.0.0",
@@ -305,42 +303,42 @@ F                                <EX_GeographicBoundingBox>
         }
 
         mock_session = Mock()
-        pc.client.session = mock_session
+        service.session = mock_session
 
         response = Mock()
 
         # Test bad response.
         response.status_code = 404
-        self.assertFalse(pc.has_valid_process_inputs())
+        self.assertFalse(service.has_valid_process_inputs())
 
         # Test empty response.
         response.status_code = 200
         response.json.return_value = empty_content
         mock_session.get.return_value = response
-        self.assertFalse(pc.has_valid_process_inputs())
+        self.assertFalse(service.has_valid_process_inputs())
 
         # Test no matching id.
         content_no_id = copy.deepcopy(valid_content)
         content_no_id.pop("id")
         response.json.return_value = content_no_id
         mock_session.get.return_value = response
-        self.assertFalse(pc.has_valid_process_inputs())
+        self.assertFalse(service.has_valid_process_inputs())
 
         # Test invalid inputs.
         content_invalid_inputs = copy.deepcopy(valid_content)
         content_invalid_inputs["inputs"] = {"invalid-input": {}}
         response.json.return_value = content_invalid_inputs
         mock_session.get.return_value = response
-        self.assertFalse(pc.has_valid_process_inputs())
+        self.assertFalse(service.has_valid_process_inputs())
 
         # Test no matching input values.
         content_invalid_input_values = copy.deepcopy(valid_content)
         content_invalid_input_values["inputs"]["product"]["schema"]["enum"] = ["invalid-value"]
         response.json.return_value = content_invalid_input_values
         mock_session.get.return_value = response
-        self.assertFalse(pc.has_valid_process_inputs())
+        self.assertFalse(service.has_valid_process_inputs())
 
         # Test valid response.
         response.json.return_value = valid_content
         mock_session.get.return_value = response
-        self.assertTrue(pc.has_valid_process_inputs())
+        self.assertTrue(service.has_valid_process_inputs())

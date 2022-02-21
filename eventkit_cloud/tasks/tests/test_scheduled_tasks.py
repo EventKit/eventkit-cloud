@@ -29,7 +29,7 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_runs,
     scale_celery_task,
 )
-from eventkit_cloud.utils.services.provider_check import CheckResult
+from eventkit_cloud.utils.services.check_result import CheckResult
 
 logger = logging.getLogger(__name__)
 
@@ -247,16 +247,18 @@ class TestScaleCeleryTask(TestCase):
 
 
 class TestCheckProviderAvailabilityTask(TestCase):
-    @patch("eventkit_cloud.utils.services.provider_check.perform_provider_check")
-    def test_check_provider_availability(self, perform_provider_check_mock):
+    def test_check_provider_availability(self):
+        perform_provider_check_mock = Mock()
+
         perform_provider_check_mock.return_value = CheckResult.SUCCESS.value
+        DataProvider.check_status = perform_provider_check_mock
         first_provider = DataProvider.objects.create(slug="first_provider", name="first_provider")
-        second_provider = DataProvider.objects.create(slug="second_provider", name="second_provider")
+        DataProvider.objects.create(slug="second_provider", name="second_provider")
         DataProviderStatus.objects.create(related_provider=first_provider)
 
         check_provider_availability_task()
 
-        perform_provider_check_mock.assert_has_calls([call(first_provider, None), call(second_provider, None)])
+        perform_provider_check_mock.assert_has_calls([call(), call()])
         statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
         self.assertEqual(len(statuses), 2)
         most_recent_first_provider_status = statuses.last()
