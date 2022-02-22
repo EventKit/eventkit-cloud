@@ -75,8 +75,6 @@ export class LoginPage extends React.Component<Props, {}> {
             },
         };
 
-        const version = this.context.config && this.context.config.VERSION ? this.context.config.VERSION : '';
-
         return (
             <div style={styles.wholeDiv}>
                 <CustomScrollbar style={{ height: 'calc(100vh - 95px)' }}>

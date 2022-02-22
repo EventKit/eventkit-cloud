@@ -152,6 +152,7 @@ describe('DataPackPage component', () => {
         expect(instance.permissions.isPrivate()).toBe(true);
         instance.permissions.setMembers(members);
         instance.handleSave();
+        // expect(instance.permissions.makeShared.calledOnce).toBe(true);
         expect(props.onSave.calledOnce).toBe(true);
         expect(props.onSave.calledWith(expected)).toBe(true);
     });
@@ -341,7 +342,7 @@ describe('DataPackPage component', () => {
         expect(stateStub.calledWith({ permissions: expected })).toBe(true);
     });
 
-    it.only('handleUnCheckAll should clear members except admins and then update state', () => {
+    it('handleUnCheckAll should clear members except admins and then update state', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.permissions.setMembers({ user_one: Levels.ADMIN, user_two: Levels.READ });
         instance.handleUncheckAll();
