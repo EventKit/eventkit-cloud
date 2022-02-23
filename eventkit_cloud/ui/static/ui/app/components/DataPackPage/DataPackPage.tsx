@@ -392,7 +392,7 @@ export class DataPackPage extends React.Component<Props, State> {
             status: this.state.status,
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,
-            providers: this.state.providers,
+            providers: this.state.providers.objects,
             formats: this.state.formats,
             projections: this.state.projections,
             geojson: this.state.geojson_geometry,

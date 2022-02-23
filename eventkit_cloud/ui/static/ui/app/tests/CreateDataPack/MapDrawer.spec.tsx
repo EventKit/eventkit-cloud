@@ -1,22 +1,10 @@
 import * as React from 'react';
-import Drawer from '@material-ui/core/Drawer';
-import {MapDrawer, VerticalTabs} from "../../components/CreateDataPack/MapDrawer";
-import CustomScrollbar from "../../components/common/CustomScrollbar";
-import Tab from "@material-ui/core/Tab";
-import ListItem from '@material-ui/core/ListItem';
-import Radio from "@material-ui/core/Radio";
-import Checkbox from '@material-ui/core/Checkbox';
-import axios from "axios"
-import MockAdapter from "axios-mock-adapter";
+import {MapDrawer} from "../../components/CreateDataPack/MapDrawer";
 import {act} from "react-test-renderer"
-
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
-import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
-import sinon from "sinon";
-import theme from "../../styles/eventkit_theme";
 import rootReducer from "../../reducers/rootReducer";
 
 jest.mock("../../components/CreateDataPack/RequestDataSource", () => {

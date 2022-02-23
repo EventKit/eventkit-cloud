@@ -614,7 +614,7 @@ function mapStateToProps(state) {
         userData: state.user.data,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,
-        providers: state.providers,
+        providers: state.providers.objects,
         runDeletion: state.runDeletion,
         ownIds: state.exports.ownInfo.ids,
         featuredIds: state.exports.featuredInfo.ids,

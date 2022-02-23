@@ -10,7 +10,7 @@ import {
     Icon,
     Divider, Link, CircularProgress,
 } from "@material-ui/core";
-import {connect, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
 import Checkbox from '@material-ui/core/Checkbox';
