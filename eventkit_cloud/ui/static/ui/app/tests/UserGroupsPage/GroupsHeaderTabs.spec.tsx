@@ -12,12 +12,13 @@ describe('GroupPanelBody component', () => {
         shallow = createShallow();
     });
 
+    const handleChangeSpy = jest.fn()
     const getProps = () => ({
         selectedTab: 'admin',
         totalAdmin: 10,
         totalMember: 1,
         totalOther: 5,
-        handleChange: sinon.spy(),
+        handleChange: handleChangeSpy,
         classes: {},
         ...(global as any).eventkit_test_props,
     });
@@ -50,16 +51,13 @@ describe('GroupPanelBody component', () => {
     it('clicking on "Member" tab should fire handleChange to show Shared Groups', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const mockedEvent = sinon.spy();
-        const mockCallBack = sinon.spy();
-        const value = 'member';
         expect(wrapper
             .find(Tab)
             .at(0)
             .props().value)
             .toBe('admin');
-        mockCallBack(mockedEvent, value);
-        wrapper.find(Tab).at(0).simulate('change');
-        expect(mockCallBack.calledOnce).toBe(true);
+        const event = {target: {value: 'member'}} as React.ChangeEvent<HTMLInputElement>;
+        wrapper.find(Tabs).at(0).simulate('change', event);
+        expect(handleChangeSpy).toBeCalledWith(event);
     });
 });

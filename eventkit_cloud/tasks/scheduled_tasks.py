@@ -311,10 +311,9 @@ def list_to_dict(list_to_convert: dict, key_name: str):
 )
 def check_provider_availability_task():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
-    from eventkit_cloud.utils.services.provider_check import perform_provider_check
 
     for provider in DataProvider.objects.all():
-        status = perform_provider_check(provider, None)
+        status = provider.check_status()
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
         try:

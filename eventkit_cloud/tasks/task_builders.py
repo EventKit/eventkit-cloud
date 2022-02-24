@@ -11,7 +11,6 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
-    get_supported_projections,
     get_default_projection,
     get_celery_queue_group,
 )
@@ -131,7 +130,7 @@ class TaskChainBuilder(object):
                 else export_format.slug
             )
             export_task = create_format_task(export_format_key)
-            default_projection = get_default_projection(get_supported_projections(export_format), projections)
+            default_projection = get_default_projection(export_format.get_supported_projection_list(), projections)
             task_name = export_format.name
             if default_projection:
                 task_name = f"{task_name} - EPSG:{default_projection}"
@@ -161,7 +160,7 @@ class TaskChainBuilder(object):
                 )
 
             for current_format, (export_task_record, export_task) in export_tasks.items():
-                supported_projections = get_supported_projections(current_format)
+                supported_projections = current_format.get_supported_projection_list()
                 default_projection = get_default_projection(supported_projections, selected_projections=projections)
 
                 subtasks.append(
