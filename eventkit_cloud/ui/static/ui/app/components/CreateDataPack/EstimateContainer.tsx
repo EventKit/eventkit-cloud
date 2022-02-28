@@ -5,7 +5,7 @@ import {allHaveArea, featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
-import {connect} from "react-redux";
+import {connect, useSelector} from "react-redux";
 import {DepsHashers, useEffectOnMount, useProviderIdentity, useProvidersLoading} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {JobValidationProvider} from "./context/JobValidation";
@@ -20,7 +20,6 @@ export interface ProviderLimits {
 export interface Props {
     aoiInfo: any;
     exportInfo: Eventkit.Store.ExportInfo;
-    providers: Eventkit.Provider[];
     updateExportInfo: (args: any) => void;
     breadcrumbStepperProps: any;
     getProviders: () => void;
@@ -37,7 +36,8 @@ function EstimateContainer(props: Props) {
     const [totalSize, setSize] = useState(-1);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
-    const [isCollectingEstimates, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const [isCollectingEstimates, setProviderLoading] = useProvidersLoading(providers.filter(provider => provider.display));
 
      const [dataSizeInfo, setDataSizeInfo] = useState({
         haveAvailableEstimates: undefined,
@@ -222,9 +222,9 @@ function EstimateContainer(props: Props) {
     });
 
     useEffect(() => {
-        if (props.providers.length) {
+        if (providers.length) {
             const limits = [];
-            props.providers.forEach((provider) => {
+            providers.forEach((provider) => {
                 if (!provider.display) {
                     return;
                 }
@@ -240,7 +240,7 @@ function EstimateContainer(props: Props) {
             setLimits(limits);
             checkProviders(props.exportInfo.providers);
         }
-    }, [props.providers]);
+    }, [providers]);
 
     useProviderIdentity(() => {
         if (SERVE_ESTIMATES) {
@@ -251,7 +251,7 @@ function EstimateContainer(props: Props) {
     const [ aoiArea, setArea ] = useState(0);
     const [ aoiBboxArea, setBboxArea ] = useState(0);
     useEffect(() => {
-        if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
+        if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && providers.length) {
             props.updateExportInfo({ providerInfo: {} });
             checkProviders(props.exportInfo.providers);
         }
@@ -264,7 +264,7 @@ function EstimateContainer(props: Props) {
             setArea(0);
             setBboxArea(0);
         }
-    }, [aoiInfo.geojson, props.providers]);
+    }, [aoiInfo.geojson, providers]);
 
     const providerEstimates = {};
     const hashes = [];
@@ -276,7 +276,7 @@ function EstimateContainer(props: Props) {
     });
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(providerEstimates).length) {
-            const providerSlugs = props.providers.filter(provider => provider.display).map(provider => provider.slug);
+            const providerSlugs = providers.filter(provider => provider.display).map(provider => provider.slug);
             const haveAvailableEstimates = providerSlugs.filter((slug) => {
                 // Filter out providers that DO NOT have a size estimate
                 const estimate = providerEstimates[slug];
@@ -331,7 +331,6 @@ function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         exportInfo: state.exportInfo,
-        providers: state.providers,
     };
 }
 

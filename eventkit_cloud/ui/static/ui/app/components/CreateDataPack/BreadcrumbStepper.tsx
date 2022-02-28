@@ -585,7 +585,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
-        providers: state.providers,
+        providers: state.providers.objects,
         stepperNextEnabled: state.stepperNextEnabled,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import {withTheme} from '@material-ui/core/styles';
 import {Link} from 'react-router-dom';
 import Joyride, {StoreHelpers} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -614,7 +614,7 @@ function mapStateToProps(state) {
         userData: state.user.data,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,
-        providers: state.providers,
+        providers: state.providers.objects,
         runDeletion: state.runDeletion,
         ownIds: state.exports.ownInfo.ids,
         featuredIds: state.exports.featuredInfo.ids,

@@ -88,44 +88,47 @@ const projections = [
         description: null,
     }
 ];
-const providers = [
-    {
-        display: true,
-        id: 1,
-        model_url: 'http://cloud.eventkit.test/api/providers/1',
-        type: 'osm-generic',
-        created_at: '2017-03-24T17:44:22.940611Z',
-        updated_at: '2017-03-24T17:44:22.940629Z',
-        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-        name: 'OpenStreetMap Data (Generic)',
-        slug: 'osm-generic',
-        preview_url: '',
-        service_copyright: '',
-        service_description: '',
-        layer: null,
-        level_from: 0,
-        level_to: 10,
-        export_provider_type: 1,
-    },
-    {
-        display: true,
-        id: 2,
-        model_url: 'http://cloud.eventkit.test/api/providers/2',
-        type: 'usgs',
-        created_at: '2021-03-24T17:44:22.940611Z',
-        updated_at: '2021-03-24T17:44:22.940629Z',
-        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-        name: 'USGS',
-        slug: 'usgs',
-        preview_url: '',
-        service_copyright: '',
-        service_description: '',
-        layer: null,
-        level_from: 0,
-        level_to: 10,
-        export_provider_type: 1,
-    }
-];
+const providers = {
+    objects: [
+        {
+            display: true,
+            id: 1,
+            model_url: 'http://cloud.eventkit.test/api/providers/1',
+            type: 'osm-generic',
+            created_at: '2017-03-24T17:44:22.940611Z',
+            updated_at: '2017-03-24T17:44:22.940629Z',
+            uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+            name: 'OpenStreetMap Data (Generic)',
+            slug: 'osm-generic',
+            preview_url: '',
+            service_copyright: '',
+            service_description: '',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            export_provider_type: 1,
+        },
+        {
+            display: true,
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/2',
+            type: 'usgs',
+            created_at: '2021-03-24T17:44:22.940611Z',
+            updated_at: '2021-03-24T17:44:22.940629Z',
+            uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+            name: 'USGS',
+            slug: 'usgs',
+            preview_url: '',
+            service_copyright: '',
+            service_description: '',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            export_provider_type: 1,
+        }
+    ],
+    fetching: false,
+};
 
 describe('ExportInfo component', () => {
     const getProps = () => (

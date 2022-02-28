@@ -8,9 +8,9 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, Link,
+    Divider, Link, CircularProgress,
 } from "@material-ui/core";
-import {connect} from "react-redux";
+import {useSelector} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -200,7 +200,6 @@ export interface Coverage {
 }
 
 export interface Props {
-    providers: Eventkit.Provider[];
     sources: BaseMapSource[];
     coverages: Coverage[];
     updateBaseMap: (mapLayer: MapLayer) => void;
@@ -214,8 +213,10 @@ export interface Props {
 MapDrawer.defaultProps = {sources: []} as Props;
 
 export function MapDrawer(props: Props) {
-    const {providers, classes} = props;
+    const {classes} = props;
 
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState('');
     const [selectedBaseMap, setBaseMap] = useState(null);
@@ -456,11 +457,13 @@ export function MapDrawer(props: Props) {
                         className: classes.drawerPaper,
                         // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
                     }}
+                    data-testid="map-drawer"
                 >
                     <VerticalTabs
                         className={classes.tabs}
                         value={(selectedTab) ? selectedTab : false}
                         onChange={handleChange}
+                        data-testid="vertical-tab"
                     >
                         <Tab
                             value="basemap"
@@ -530,12 +533,19 @@ export function MapDrawer(props: Props) {
 
                             <div className={classes.scrollBar}
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
-                                <CustomScrollbar>
+                                <CustomScrollbar data-testid="custom-scrollbar">
                                     <div style={{height: `${offSet}px`}}/>
-                                    <List style={{padding: '10px'}}>
-                                        {(sources || []).map((source) => (
+                                    {fetchingProviders ? <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            height: 50,
+                                            width: '100%',
+                                            zIndex: 99
+                                        }}><CircularProgress size={50}/></div> :
+                                        <List style={{padding: '10px'}}>
+                                            {(sources || []).map((source) => (
                                                 <div key={source.mapLayer.slug}>
-                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                        <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
                                                         <Radio
                                                             checked={isEqual(selectedBaseMap, source)}
@@ -545,42 +555,44 @@ export function MapDrawer(props: Props) {
                                                             }}
                                                             onClick={(e) => handleExpandClick(e, source)}
                                                             name="source"
+                                                            title={source.mapLayer.slug}
                                                         />
                                                     </span>
-                                                        <div>
-                                                            <div style={{display: 'flex'}}>
-                                                                {source.thumbnail_url &&
-                                                                <CardMedia
-                                                                    className={classes.thumbnail}
-                                                                    image={source.thumbnail_url}
-                                                                />
-                                                                }
-                                                                <ListItemText
-                                                                    className={classes.noPadding}
-                                                                    disableTypography
-                                                                    primary={
-                                                                        <Typography
-                                                                            className={classes.buttonLabel}
-                                                                        >
-                                                                            {source.name}
-                                                                        </Typography>
+                                                            <div>
+                                                                <div style={{display: 'flex'}}>
+                                                                    {source.thumbnail_url &&
+                                                                    <CardMedia
+                                                                        className={classes.thumbnail}
+                                                                        image={source.thumbnail_url}
+                                                                    />
                                                                     }
-                                                                />
+                                                                    <ListItemText
+                                                                        className={classes.noPadding}
+                                                                        disableTypography
+                                                                        primary={
+                                                                            <Typography
+                                                                                className={classes.buttonLabel}
+                                                                            >
+                                                                                {source.name}
+                                                                            </Typography>
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className={classes.buttonLabelSecondary}>
+                                                                    {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
+                                                                </div>
                                                             </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
-                                                            </div>
+                                                        </ListItem>
+                                                        <div
+                                                            className={classes.footprint_options}
+                                                        >
+                                                            {showFootprintData(source)}
                                                         </div>
-                                                    </ListItem>
-                                                    <div
-                                                        className={classes.footprint_options}
-                                                    >
-                                                        {showFootprintData(source)}
                                                     </div>
-                                                </div>
-                                            )
-                                        )}
-                                    </List>
+                                                )
+                                            )}
+                                        </List>
+                                    }
                                 </CustomScrollbar>
                             </div>
                             <Divider style={{margin: '0 5px 0 5px'}}/>
@@ -596,11 +608,11 @@ export function MapDrawer(props: Props) {
                                         <RequestDataSource open={requestDataSourceOpen}
                                                            onClose={() => setRequestDataSourceOpen(false)}/>
                                         <div>
-                                            Data Source Missing?
+                                            Data Product Missing?
                                         </div>
                                         <Link onClick={() => setRequestDataSourceOpen(true)}
                                               style={{fontSize: '12px', cursor: 'pointer'}}>
-                                            Request New Data Source
+                                            Request New Data Product
                                         </Link>
                                     </div>
                                     <div>
@@ -653,12 +665,19 @@ export function MapDrawer(props: Props) {
 
                             <div className={classes.scrollBar}
                                  style={areProvidersHidden ? {} : {height: 'calc(100% - 115px)'}}>
-                                <CustomScrollbar>
+                                <CustomScrollbar  data-testid="custom-scrollbar">
                                     <div style={{height: `${offSet}px`}}/>
-                                    <List style={{padding: '10px'}}>
-                                        {(coverages || []).map((coverage) => (
-                                                <div key={coverage.provider.slug}>
-                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                    {fetchingProviders ? <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            height: 50,
+                                            width: '100%',
+                                            zIndex: 99
+                                        }}><CircularProgress size={50}/></div> :
+                                        <List style={{padding: '10px'}}>
+                                            {(coverages || []).map((coverage) => (
+                                                    <div key={coverage.provider.slug}>
+                                                        <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
 
                                                         <Checkbox
@@ -672,29 +691,30 @@ export function MapDrawer(props: Props) {
                                                         />
 
                                                     </span>
-                                                        <div>
-                                                            <div style={{display: 'flex'}}>
-                                                                <ListItemText
-                                                                    className={classes.noPadding}
-                                                                    disableTypography
-                                                                    primary={
-                                                                        <Typography
-                                                                            className={classes.buttonLabel}
-                                                                        >
-                                                                            {coverage.provider.name}
-                                                                        </Typography>
-                                                                    }
-                                                                />
+                                                            <div>
+                                                                <div style={{display: 'flex'}}>
+                                                                    <ListItemText
+                                                                        className={classes.noPadding}
+                                                                        disableTypography
+                                                                        primary={
+                                                                            <Typography
+                                                                                className={classes.buttonLabel}
+                                                                            >
+                                                                                {coverage.provider.name}
+                                                                            </Typography>
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className={classes.buttonLabelSecondary}>
+                                                                    {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
+                                                                </div>
                                                             </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {coverage.provider.data_type && coverage.provider.data_type[0].toUpperCase() + coverage.provider.data_type.substring(1)}
-                                                            </div>
-                                                        </div>
-                                                    </ListItem>
-                                                </div>
-                                            )
-                                        )}
-                                    </List>
+                                                        </ListItem>
+                                                    </div>
+                                                )
+                                            )}
+                                        </List>
+                                    }
                                 </CustomScrollbar>
                             </div>
                             <Divider style={{margin: '0 5px 0 5px'}}/>
@@ -710,11 +730,11 @@ export function MapDrawer(props: Props) {
                                         <RequestDataSource open={requestDataSourceOpen}
                                                            onClose={() => setRequestDataSourceOpen(false)}/>
                                         <div>
-                                            Data Source Missing?
+                                            Data Product Missing?
                                         </div>
                                         <Link onClick={() => setRequestDataSourceOpen(true)}
                                               style={{fontSize: '12px', cursor: 'pointer'}}>
-                                            Request New Data Source
+                                            Request New Data Product
                                         </Link>
                                     </div>
                                     <div>
@@ -742,10 +762,4 @@ export function MapDrawer(props: Props) {
     );
 }
 
-function mapStateToProps(state) {
-    return {
-        providers: state.providers,
-    };
-}
-
-export default (withStyles<any, any>(jss)(connect(mapStateToProps)(MapDrawer)));
+export default withStyles<any, any>(jss)(MapDrawer);
