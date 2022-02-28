@@ -5,18 +5,11 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import ProviderRow from './ProviderRow';
 import BaseDialog from '../Dialog/BaseDialog';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import ProviderPreview from "./ProviderPreview";
 import CreateDataPackButton from "./CreateDataPackButton";
-import {useEffect} from "react";
-import {DepsHashers} from "../../utils/hooks/hooks";
-import {shouldDisplay} from "../../utils/generic";
-import {RegionJustification} from "./RegionJustification";
-import history from "../../utils/history";
 import {renderIf} from "../../utils/renderIf";
-import {MapZoomLimiter} from "../CreateDataPack/MapZoomLimiter";
 import {ProviderRowRegionWrap} from "./ProviderRowRegionWrap";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
@@ -41,13 +34,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
         margin: '10px',
     }
 });
-
-const ZIP_TASK_NAME = 'Project File (.zip)';
-
-interface CalculatorProps {
-    fileSizes?: number[],
-    setFileSize: (value: number) => void
-}
 
 export interface Props {
     providerTasks: Eventkit.ProviderTask[];
@@ -188,7 +174,6 @@ export class DataPackDetails extends React.Component<Props, State> {
         };
 
         const isSmallScreen = () => !isWidthUp('sm', this.props.width);
-        const {classes} = this.props;
         const {selectedProvider} = this.state;
 
         return (

@@ -420,10 +420,6 @@ export class MapView extends React.Component<Props, State> {
         this.props.onMapFilter(geojsonGeometry);
     }
 
-    getScrollbar() {
-        return this.scrollbar;
-    }
-
     updateZoomLevel() {
         const lvl = Math.floor(this.map.getView().getZoom());
         if (lvl !== this.state.zoomLevel) {

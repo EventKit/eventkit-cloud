@@ -7,7 +7,7 @@ import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {binaryPrefixConversion, formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
 import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
-import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
+import {DepsHashers} from "../../utils/hooks/hooks";
 import {CircularProgress, IconButton} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
