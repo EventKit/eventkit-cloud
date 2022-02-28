@@ -4,13 +4,12 @@ import {
 } from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import {Button, CircularProgress, TextField} from '@material-ui/core';
+import {Button, CircularProgress} from '@material-ui/core';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import {useEffect, useState} from 'react';
 import BaseDialog from '../BaseDialog';
 import Collapse from "@material-ui/core/Collapse";
-import CustomTextField from "../../common/CustomTextField";
 import Radio from "@material-ui/core/Radio";
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {getCookie} from "../../../utils/generic";

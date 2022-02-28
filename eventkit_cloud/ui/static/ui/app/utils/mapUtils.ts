@@ -17,7 +17,6 @@ import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
-import ZoomSlider from 'ol/control/ZoomSlider';
 import OverlayOp from 'jsts/org/locationtech/jts/operation/overlay/OverlayOp';
 import { colors } from '../styles/eventkit_theme';
 const icon = require('../../images/ic_room_black_24px.svg');
@@ -576,39 +575,6 @@ export function getDominantGeometry(featureCollection) {
     return null;
 }
 
-export function zoomSliderCreate(options) {
-    const zoomSlider = new ZoomSlider(options);
-
-    // Let the user continue dragging the slider if they drag outside the left and right of the scrollbar.
-    zoomSlider.eventkitZoomSliderDrag = (ev) => {
-        const rect = zoomSlider.element.getBoundingClientRect();
-        if (ev.clientY > rect.top && ev.clientY < rect.bottom) {
-            // eslint-disable-next-line no-underscore-dangle
-            zoomSlider.handleDraggerDrag_(ev);
-        }
-    };
-
-    // Fix issue with zoom slider where dragging doesn't end when mouse up occurs outside of slider.
-    // https://github.com/openlayers/openlayers/issues/7485
-    zoomSlider.eventKitZoomSliderDragEnd = (ev) => {
-        // eslint-disable-next-line no-underscore-dangle
-        zoomSlider.handleDraggerEnd_(ev);
-    };
-
-    window.addEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
-    window.addEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
-
-    return zoomSlider;
-}
-
-export function zoomSliderCleanup(zoomSlider) {
-    if (!zoomSlider) {
-        return;
-    }
-
-    window.removeEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
-    window.removeEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
-}
 
 export function getResolutions(levels, startingResolution) {
     // Default to EPSG:4326 resolution supporting 2 tiles at level 0.

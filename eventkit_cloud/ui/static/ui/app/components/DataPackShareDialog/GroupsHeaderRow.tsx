@@ -118,7 +118,7 @@ export class GroupsHeaderRow extends React.Component<Props, State> {
         const icons = {
             checked: <CheckBox style={styles.check} onClick={this.props.handleUncheckAll} />,
             unchecked: <CheckBoxOutline style={styles.check} onClick={this.props.handleCheckAll} />,
-            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.props.handleUncheckAll} />,
+            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.props.handleCheckAll} />,
         };
 
         // assume no groups are checked by default

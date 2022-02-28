@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
-import PermissionsBanner from "../PermissionsBanner";
 
 export interface Props {
     id?: string;

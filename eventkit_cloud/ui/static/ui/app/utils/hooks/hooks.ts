@@ -1,6 +1,4 @@
-import {useCallback, useEffect, useReducer, useRef, useState} from "react";
-import axios from "axios";
-import set = Reflect.set;
+import {useCallback, useEffect, useRef, useState} from "react";
 
 // Convenience function that acts like componentDidMount.
 // useEffect replaces componentDidMount AND componentDidUpdate
@@ -147,16 +145,6 @@ export function useAccessibleRef<T>(initialValue): [() => T, (value: T) => void]
             forceUpdate();
         }
     ]
-}
-
-export function useEffectOnCondition(effect: () => void, conditional: boolean) {
-    const initializedRef = useRef(false);
-    useEffect(() => {
-        if (conditional && !initializedRef.current) {
-            initializedRef.current = true;
-            effect();
-        }
-    }, [effect, conditional])
 }
 
 export function useBoolean(initialValue: boolean):

@@ -1,7 +1,6 @@
 import * as React from 'react';
-import {useEffectOnCondition} from "../utils/hooks/hooks";
 import {connect} from "react-redux";
-import {createContext, useCallback, useContext, useEffect, useState} from "react";
+import {createContext, useCallback, useContext, useEffect} from "react";
 
 interface MatomoContext {
     pushClick: (event: MatomoEvent) => void;

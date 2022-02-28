@@ -57,10 +57,6 @@ export class DataPackList extends React.Component<Props, {}> {
         return isActive ? { color: this.props.theme.eventkit.colors.black, fontWeight: 'bold' as 'bold' } : { color: 'inherit' };
     }
 
-    private getScrollbar() {
-        return this.scrollbar;
-    }
-
     private isSameOrderType(unknown: Props['order'], known: Props['order']) {
         return unknown.replace(/-/, '') === known.replace(/-/, '');
     }
