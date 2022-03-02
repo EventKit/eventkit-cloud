@@ -214,8 +214,6 @@ ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
-
-
 MIDDLEWARE += ["audit_logging.middleware.UserDetailsMiddleware"]
 
 AUDIT_MODELS = [

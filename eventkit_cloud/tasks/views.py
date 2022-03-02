@@ -57,7 +57,6 @@ def download(request):
 
 
 def generate_zipfile(data_provider_task_record_uids, run_zip_file):
-    from audit_logging.utils import get_user_details
 
     # Check to make sure the UIDs are all from the same ExportRun.
     runs = ExportRun.objects.filter(data_provider_task_records__uid__in=data_provider_task_record_uids).distinct()
@@ -75,8 +74,6 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_download_path(run.uid)
 
-    user_details = get_user_details(run.user)
-
     if getattr(settings, "USE_S3", False):
         download_folder_from_s3(str(run.uid))
     else:
@@ -89,7 +86,6 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
         stage_dir=stage_dir,
-        user_details=user_details,
     )
 
 
