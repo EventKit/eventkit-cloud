@@ -15,7 +15,6 @@ from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import yaml
-from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
@@ -1664,7 +1663,7 @@ def mapproxy_export_task(
         raise e
 
 
-@app.task(name="Pickup Run", bind=True, base=UserDetailsBase, acks_late=True)
+@app.task(name="Pickup Run", bind=True, acks_late=True)
 def pick_up_run_task(
     self,
     result=None,
