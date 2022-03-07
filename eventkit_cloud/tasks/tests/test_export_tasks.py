@@ -145,7 +145,7 @@ class TestExportTasks(ExportTaskBase):
     stage_dir = "/stage"
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_shp_export_task(self, mock_request, mock_convert, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -189,7 +189,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.generate_qgs_style")
     @patch("eventkit_cloud.tasks.export_tasks.convert_qgis_gpkg_to_kml")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_kml_export_task(
         self, mock_request, mock_convert, mock_qgis_convert, mock_generate_qgs_style, mock_get_export_filepath
@@ -238,7 +238,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["source"])
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_sqlite_export_task(self, mock_request, mock_convert, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -281,7 +281,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.helpers.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(
@@ -482,7 +482,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    @patch("eventkit_cloud.utils.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_mbtiles_export_task(self, mock_request, mock_convert, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -528,7 +528,7 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.os.rename")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_gpkg_export_task(self, mock_request, mock_convert, mock_rename, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -590,7 +590,6 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.os")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
     @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.FeatureSelection")
@@ -603,7 +602,6 @@ class TestExportTasks(ExportTaskBase):
         mock_feature_selection,
         mock_geopackage,
         mock_update_progress,
-        mock_gdalutils,
         mock_os,
         mock_get_export_task_record,
         mock_get_export_filepath,
@@ -652,9 +650,9 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_creation_options")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     def test_geotiff_export_task(
-        self, mock_gdalutils, mock_get_export_task_record, mock_get_creation_options, mock_get_export_filepath
+        self, mock_convert, mock_get_export_task_record, mock_get_creation_options, mock_get_export_filepath
     ):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
@@ -667,8 +665,8 @@ class TestExportTasks(ExportTaskBase):
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
-        mock_gdalutils.convert.return_value = expected_outfile
-        mock_gdalutils.convert.assert_called_once_with(
+        mock_convert.return_value = expected_outfile
+        mock_convert.assert_called_once_with(
             boundary=None,
             driver="gtiff",
             input_file=f"GTIFF_RAW:{example_geotiff}",
@@ -678,11 +676,11 @@ class TestExportTasks(ExportTaskBase):
             translate_params=translate_params,
         )
 
-        mock_gdalutils.reset_mock()
+        mock_convert.reset_mock()
         example_result = {"source": example_geotiff, "selection": "selection"}
-        mock_gdalutils.convert.return_value = expected_outfile
+        mock_convert.return_value = expected_outfile
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
-        mock_gdalutils.convert.assert_called_once_with(
+        mock_convert.assert_called_once_with(
             boundary="selection",
             driver="gtiff",
             input_file=f"GTIFF_RAW:{example_geotiff}",
@@ -692,32 +690,32 @@ class TestExportTasks(ExportTaskBase):
             translate_params=translate_params,
         )
 
-        mock_gdalutils.reset_mock()
+        mock_convert.reset_mock()
         example_result = {"gtiff": expected_outfile}
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
-        mock_gdalutils.assert_not_called()
+        mock_convert.assert_not_called()
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
-    def test_nitf_export_task(self, mock_gdalutils, mock_get_export_task_record, mock_get_export_filepath):
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
+    def test_nitf_export_task(self, mock_convert, mock_get_export_task_record, mock_get_export_filepath):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_nitf = "example.nitf"
         example_result = {"source": example_nitf}
         task_uid = "1234"
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
-        mock_gdalutils.convert.return_value = expected_outfile
-        mock_gdalutils.convert.assert_called_once_with(
+        mock_convert.return_value = expected_outfile
+        mock_convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
             driver="nitf",
             input_file=example_nitf,
             output_file=expected_outfile,
             task_uid=task_uid,
         )
-        mock_gdalutils.reset_mock()
+        mock_convert.reset_mock()
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
-        mock_gdalutils.convert.assert_called_once_with(
+        mock_convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
             driver="nitf",
             input_file=example_nitf,
@@ -736,7 +734,7 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_sqlite_export_task(
         self, mock_request, mock_convert, mock_get_export_task_record, mock_get_export_filepath
@@ -791,8 +789,8 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
-    def test_gpx_export_task(self, mock_gdalutils, mock_get_export_task_record, mock_get_export_filepath):
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
+    def test_gpx_export_task(self, mock_convert, mock_get_export_task_record, mock_get_export_filepath):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         expected_provider_slug = "osm-generic"
@@ -811,7 +809,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
-        mock_gdalutils.convert.return_value = expected_output_path
+        mock_convert.return_value = expected_output_path
         expected_result = {
             "pbf": example_source,
             "file_extension": "gpx",
@@ -823,7 +821,7 @@ class TestExportTasks(ExportTaskBase):
         returned_result = gpx_export_task(
             result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job"
         )
-        mock_gdalutils.convert.assert_called_once_with(
+        mock_convert.assert_called_once_with(
             input_file=example_source,
             output_file=expected_output_path,
             driver="GPX",
@@ -838,7 +836,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.helpers.download_feature_data")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
         self,
@@ -1113,7 +1111,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual("some unexpected error", str(msg))
 
     @patch("eventkit_cloud.tasks.export_tasks.get_data_package_manifest")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.retry")
+    @patch("eventkit_cloud.tasks.export_tasks.retry")
     @patch("shutil.copy")
     @patch("os.remove")
     @patch("eventkit_cloud.tasks.export_tasks.ZipFile")
@@ -1564,7 +1562,7 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_vector_file_export_task(self, mock_request, mock_convert, mock_download_data, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -1631,7 +1629,7 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_raster_file_export_task(self, mock_request, mock_convert, mock_download_data, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
@@ -1699,7 +1697,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_metadata")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.mapproxy.MapproxyGeopackage")
     def test_reprojection_task(
         self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os, mock_parse_result
@@ -1819,7 +1817,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_geometry")
     @patch("eventkit_cloud.tasks.export_tasks.os.getenv")
     @patch("eventkit_cloud.tasks.export_tasks.get_ogcapi_data")
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_ogcapi_process_export_task(
         self,

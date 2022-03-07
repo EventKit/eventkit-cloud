@@ -30,6 +30,8 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from gdal_utils.utils.helpers import retry
+from gdal_utils.utils.gdal import convert
 
 from eventkit_cloud.celery import app, TaskPriority
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -76,7 +78,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
-from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, gdalutils, auth_requests
+from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
@@ -342,7 +344,7 @@ class ZipFileTask(FormatTask):
         return retval
 
 
-@gdalutils.retry
+@retry
 def osm_data_collection_pipeline(
     export_task_record_uid,
     stage_dir,
@@ -424,7 +426,7 @@ def osm_data_collection_pipeline(
         port=database["PORT"],
         name=database["NAME"],
     )
-    gdalutils.convert(
+    convert(
         boundary=selection,
         input_file=in_dataset,
         output_file=gpkg_filepath,
@@ -563,7 +565,7 @@ def shp_export_task(
     shp_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "shp")
     selection = parse_result(result, "selection")
 
-    shp = gdalutils.convert(
+    shp = convert(
         driver="ESRI Shapefile",
         input_file=shp_in_dataset,
         output_file=shp_out_dataset,
@@ -609,10 +611,10 @@ def kml_export_task(
         qgs_file = generate_qgs_style(metadata)
         kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
-        logger.info("QGIS is not installed, using gdalutils.convert.")
+        logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
         selection = parse_result(result, "selection")
-        kml = gdalutils.convert(
+        kml = convert(
             driver="libkml",
             input_file=kml_in_dataset,
             output_file=kml_out_dataset,
@@ -655,7 +657,7 @@ def gpx_export_task(
 
     gpx_file = get_export_filepath(stage_dir, export_task_record, projection, "gpx")
     try:
-        out = gdalutils.convert(
+        out = convert(
             input_file=input_file,
             output_file=gpx_file,
             driver="GPX",
@@ -760,7 +762,7 @@ def ogcapi_process_export_task(
             extract=not bool(driver),
         )
         if driver:
-            out = gdalutils.convert(
+            out = convert(
                 driver=driver,
                 input_file=source_data,
                 output_file=output_file,
@@ -859,7 +861,7 @@ def sqlite_export_task(
     sqlite_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "sqlite")
     selection = parse_result(result, "selection")
 
-    sqlite = gdalutils.convert(
+    sqlite = convert(
         driver="SQLite",
         input_file=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
@@ -938,7 +940,7 @@ def geopackage_export_task(
             os.rename(gpkg_in_dataset, gpkg_out_dataset)
             gpkg = gpkg_out_dataset
         else:
-            gpkg = gdalutils.convert(
+            gpkg = convert(
                 driver="gpkg",
                 input_file=gpkg_in_dataset,
                 output_file=gpkg_out_dataset,
@@ -982,7 +984,7 @@ def mbtiles_export_task(
     selection = parse_result(result, "selection")
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
-    mbtiles = gdalutils.convert(
+    mbtiles = convert(
         driver="MBTiles",
         src_srs=4326,
         input_file=source_dataset,
@@ -1018,7 +1020,7 @@ def geotiff_export_task(
         if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
             gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-        gtiff_out_dataset = gdalutils.convert(
+        gtiff_out_dataset = convert(
             driver="gtiff",
             input_file=gtiff_in_dataset,
             output_file=gtiff_out_dataset,
@@ -1059,7 +1061,7 @@ def nitf_export_task(
     nitf_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "nitf")
 
     creation_options = ["ICORDS=G"]
-    nitf = gdalutils.convert(
+    nitf = convert(
         driver="nitf",
         input_file=nitf_in_dataset,
         output_file=nitf_out_dataset,
@@ -1094,7 +1096,7 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
-    hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
+    hfa = convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
 
     result["file_extension"] = "img"
     result["driver"] = "hfa"
@@ -1182,7 +1184,7 @@ def reprojection_task(
             reprojection = mp.convert()
 
         else:
-            reprojection = gdalutils.convert(
+            reprojection = convert(
                 driver=driver,
                 input_file=in_dataset,
                 output_file=out_dataset,
@@ -1248,7 +1250,7 @@ def wfs_export_task(
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
-            out = gdalutils.convert(
+            out = convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
                 output_file=gpkg,
@@ -1433,7 +1435,7 @@ def arcgis_feature_service_export_task(
             raise e
 
         for layer_name, layer in layers.items():
-            out = gdalutils.convert(
+            out = convert(
                 driver="gpkg",
                 input_file=layer.get("path"),
                 output_file=gpkg,
@@ -1523,7 +1525,7 @@ def vector_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
-    out = gdalutils.convert(
+    out = convert(
         driver="gpkg",
         input_file=gpkg,
         output_file=gpkg,
@@ -1571,7 +1573,7 @@ def raster_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
-    out = gdalutils.convert(
+    out = convert(
         driver="gpkg",
         input_file=gpkg,
         output_file=gpkg,
@@ -1871,7 +1873,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-@gdalutils.retry
+@retry
 def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.

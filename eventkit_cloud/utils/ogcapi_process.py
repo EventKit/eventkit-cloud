@@ -7,8 +7,8 @@ import requests
 from django.contrib.gis.geos import WKTWriter, GEOSGeometry
 from django.core.cache import cache
 from urllib.parse import urljoin
+from gdal_utils.utils.helpers import retry
 
-from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.jobs.models import clean_config
 from eventkit_cloud.jobs.models import load_provider_config
@@ -102,7 +102,7 @@ class OgcApiProcess:
 
         return download_url
 
-    @gdalutils.retry
+    @retry
     def wait_for_ogc_process_job(self, job_url, task_id=None, interval=5):
         """
         Function polls an OGC process' job until it is done processing.

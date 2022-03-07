@@ -4,4 +4,5 @@ dependencies:
   - memcached=1.6.9
   - postgresql=12.3
   - pip:
+    - git+https://github.com/EventKit/gdalutils.git@addGdalUtils#egg=gdalutils
     - -r requirements-dev.txt

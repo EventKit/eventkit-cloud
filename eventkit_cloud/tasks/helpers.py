@@ -29,6 +29,8 @@ from django.db import connection
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
+from gdal_utils.utils.helpers import retry
+from gdal_utils.utils.gdal import convert, get_band_statistics, get_chunked_bbox, get_meta
 from numpy import linspace
 from requests import Response
 
@@ -38,9 +40,8 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
-from eventkit_cloud.utils import gdalutils, s3
-from eventkit_cloud.utils.gdalutils import get_band_statistics, get_chunked_bbox
-from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
+from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.helpers import cd, get_file_paths  # NOQA
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 
 logger = logging.getLogger()
@@ -858,7 +859,7 @@ def merge_chunks(
     distinct_field=None,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
-    out = gdalutils.convert(
+    out = convert(
         driver="gpkg",
         input_file=chunks,
         output_file=output_file,
@@ -920,7 +921,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
     return layers
 
 
-@gdalutils.retry
+@retry
 def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
@@ -1092,7 +1093,7 @@ def find_in_zip(
                     return f"/vsizip/{zip_filepath}/{filepath}"
             elif not extension and file_path.suffix:
                 file = f"/vsizip/{zip_filepath}/{filepath}"
-                meta = gdalutils.get_meta(file)
+                meta = get_meta(file)
                 driver = meta["driver"] or None
                 if driver:
                     return file

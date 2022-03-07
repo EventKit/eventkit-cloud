@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import logging
 import os
 
@@ -34,3 +35,25 @@ def get_download_paths(relative_path):
 def clear_mapproxy_config_cache():
     mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
     cache.delete_many(list(mapproxy_config_keys))
+
+@contextmanager
+def cd(newdir):
+    prevdir = os.getcwd()
+    os.chdir(newdir)
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
+
+
+def get_file_paths(directory):
+    """
+    Gets file paths with absolute file paths for copying the files and a relative file path for
+    where the file should be located in the datapack relative to the directory.
+    """
+    paths = {}
+    with cd(directory):
+        for dirpath, _, filenames in os.walk("./"):
+            for f in filenames:
+                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
+    return paths

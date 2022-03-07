@@ -7,11 +7,11 @@ from string import Template
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
+from gdal_utils.utils.gdal import convert
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.tasks.helpers import update_progress
-from eventkit_cloud.utils import gdalutils
 from .artifact import Artifact
 
 logger = logging.getLogger(__name__)
@@ -317,7 +317,7 @@ class Geopackage(object):
             f"Creating OSM gpkg using OSM_MAX_TMPFILE_SIZE {settings.OSM_MAX_TMPFILE_SIZE}"
             f"from {self.input_pbf} to {self.output_gpkg}"
         )
-        gdalutils.convert(
+        convert(
             input_file=self.input_pbf,
             output_file=self.output_gpkg,
             driver="GPKG",
@@ -485,7 +485,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
     with logging_open(geojson_file, "w", user_details=user_details) as open_file:
         open_file.write(geojson)
 
-    gpkg = gdalutils.convert(
+    gpkg = convert(
         driver="gpkg",
         input_file=gpkg,
         output_file=geojson_file,

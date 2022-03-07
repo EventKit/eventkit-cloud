@@ -2,8 +2,8 @@ from logging import getLogger
 from typing import Optional
 
 from django.contrib.gis.geos import Polygon
+from gdal_utils.utils.gdal import get_polygon_from_arcgis_extent
 
-from eventkit_cloud.utils.gdalutils import get_polygon_from_arcgis_extent
 from eventkit_cloud.utils.services.base import GisClient
 
 logger = getLogger(__name__)
