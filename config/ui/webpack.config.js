@@ -7,6 +7,10 @@ var CompressionPlugin = require('compression-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const { DuplicatesPlugin } = require("inspectpack/plugin");
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+
+const smp = new SpeedMeasurePlugin();
 
 var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui');
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -15,14 +19,16 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var PROD = JSON.parse(process.env.PROD || false);
 var plugins = [
     new CleanWebpackPlugin(),
-    new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        reportFilename: 'report.html'
-    }),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
     new webpack.HashedModuleIdsPlugin(),
     new CompressionPlugin({
         exclude: /(\.js$)/
+    }),
+    new DuplicatesPlugin({
+      // Emit compilation warning or error? (Default: `false`)
+      emitErrors: false,
+      // Display full duplicates information? (Default: `false`)
+      verbose: false
     }),
     new ExtractTextPlugin({ filename: '[name].css' })
 ];
@@ -161,9 +167,13 @@ if (!PROD) {
     config.plugins.push(new WriteFilePlugin({
         test: /^(?!.*(hot)).*/, // exclude hot-update files
     }));
+    config.plugins.push(new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        reportFilename: 'report.html'
+    })),
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'eval-cheap-module-source-map';
 }
 
-module.exports = config;
+module.exports = smp.wrap(config);
