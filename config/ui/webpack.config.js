@@ -47,6 +47,8 @@ var config = {
                 test: /\.tsx?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: [
+                    // cache expensive loader operations
+                    { loader: 'cache-loader' },
                     { loader: 'babel-loader' },
                     { loader: 'ts-loader' },
                 ]
@@ -54,9 +56,11 @@ var config = {
             {
                 test: /\.js?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
-                use: {
-                    loader: 'babel-loader',
-                },
+                use: [
+                    // cache expensive loader operations
+                    {loader: 'cache-loader'},
+                    {loader: 'babel-loader'},
+                ],
             },
             {
                 // process all the scoped imports
