@@ -26,6 +26,7 @@ import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
     Chip,
+    CircularProgress,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -284,6 +285,7 @@ export interface State {
     steps: Step[];
     isRunning: boolean;
     providers: Eventkit.Provider[];
+    fetchingProviders: boolean;
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
@@ -320,10 +322,10 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const geojson = useSelector((store: any) => store.aoiInfo.geojson);
     const exportInfo = useSelector((store: any) => store.exportInfo);
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
-
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
@@ -342,7 +344,6 @@ export function ExportInfo(props: Props) {
     } as IncompatibilityInfo));
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
     const [displayDummy, setDisplayDummy] = useState(false);
-
 
     useEffect(() => {
         updateSelectedFormats();
@@ -585,7 +586,6 @@ export function ExportInfo(props: Props) {
     const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
@@ -614,7 +614,6 @@ export function ExportInfo(props: Props) {
 
     const deselect = (provider: Eventkit.Provider) => {
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         index = selectedProviders.map(x => x.name).indexOf(provider.name);
         for (const _provider of providers) {
@@ -1307,7 +1306,11 @@ export function ExportInfo(props: Props) {
                                     </Popover>
                                 </div>
                             </div>
-                            <div>
+
+                                {fetchingProviders ?
+                                <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
+                                    <CircularProgress disableShrink={true} size={50}/>
+                                </div> :
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
@@ -1315,8 +1318,8 @@ export function ExportInfo(props: Props) {
                                     initialItemCount={10}
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                />
-                            </div>
+                                />}
+
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}
                                      style={{paddingLeft: '5px', paddingTop: '15px'}}>

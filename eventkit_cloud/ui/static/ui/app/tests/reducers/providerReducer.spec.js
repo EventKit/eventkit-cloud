@@ -3,21 +3,30 @@ import { types } from '../../actions/providerActions';
 
 describe('getProvidersReducer', () => {
     it('should return initial state', () => {
-        expect(reducers.getProvidersReducer(undefined, {})).toEqual([]);
+        expect(reducers.getProvidersReducer(undefined, {})).toEqual(
+            {
+                fetching: false,
+                objects: [],
+            },
+        );
     });
 
     it('should handle GETTING_PROVIDERS', () => {
         expect(reducers.getProvidersReducer(
             ['one', 'two', 'three'],
             { type: types.GETTING_PROVIDERS },
-        )).toEqual([]);
+        )).toEqual({
+            fetching: true, objects: [],
+        });
     });
 
     it('should handle PROVIDERS RECEIVED', () => {
         expect(reducers.getProvidersReducer(
             [],
             { type: types.PROVIDERS_RECEIVED, providers: ['one', 'two', 'three'] },
-        )).toEqual(['one', 'two', 'three']);
+        )).toEqual({
+            fetching: false, objects: ['one', 'two', 'three'],
+        });
     });
 });
 

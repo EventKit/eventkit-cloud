@@ -1,10 +1,8 @@
 import React, {
-    createContext, useCallback,
-    useContext, useEffect, useState,
+    createContext, useContext, useEffect, useState,
 } from 'react'
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {arrayHasValue, getCookie} from "../../../utils/generic";
-import {getUsers} from '../../../actions/usersActions';
 import {connect} from "react-redux";
 
 export interface RegionContext {
