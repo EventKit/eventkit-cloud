@@ -4,7 +4,7 @@ var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -24,7 +24,7 @@ var plugins = [
     new CompressionPlugin({
         exclude: /(\.js$)/
     }),
-    new ExtractTextPlugin({ filename: '[name].css' })
+    new MiniCssExtractPlugin({filename: '[name].css'})
 ];
 var app = [APP_DIR + '/index.tsx'];
 var config = {
@@ -81,10 +81,10 @@ var config = {
                 // process all the global css imports
                 test: /\.css$/,
                 exclude: /(ol3map.css|typeahead.css$|popup.css$)/,
-                use: ExtractTextPlugin.extract({
-                    fallback: 'style-loader',
-                    use: [{ loader: 'css-loader' }]
-                })
+                use: [
+                    { loader: MiniCssExtractPlugin.loader },
+                    { loader: "css-loader" }
+                ],
             },
             {
                 test: /\.(woff2?|ttf|eot)$/,
