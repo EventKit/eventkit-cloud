@@ -230,7 +230,7 @@ class WCSConverter(object):
                 logger.error(output_file.read())
             raise Exception("The service failed to return a proper response")
 
-    @retry
+    @retry()
     def convert(self):
         """
         Download WCS data and convert to geopackage

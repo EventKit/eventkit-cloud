@@ -344,7 +344,7 @@ class ZipFileTask(FormatTask):
         return retval
 
 
-@retry
+@retry()
 def osm_data_collection_pipeline(
     export_task_record_uid,
     stage_dir,
@@ -428,7 +428,7 @@ def osm_data_collection_pipeline(
     )
     convert(
         boundary=selection,
-        input_file=in_dataset,
+        input_files=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
         driver="gpkg",
@@ -567,7 +567,7 @@ def shp_export_task(
 
     shp = convert(
         driver="ESRI Shapefile",
-        input_file=shp_in_dataset,
+        input_files=shp_in_dataset,
         output_file=shp_out_dataset,
         task_uid=task_uid,
         boundary=selection,
@@ -616,7 +616,7 @@ def kml_export_task(
         selection = parse_result(result, "selection")
         kml = convert(
             driver="libkml",
-            input_file=kml_in_dataset,
+            input_files=kml_in_dataset,
             output_file=kml_out_dataset,
             task_uid=task_uid,
             boundary=selection,
@@ -658,7 +658,7 @@ def gpx_export_task(
     gpx_file = get_export_filepath(stage_dir, export_task_record, projection, "gpx")
     try:
         out = convert(
-            input_file=input_file,
+            input_files=input_file,
             output_file=gpx_file,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
@@ -764,7 +764,7 @@ def ogcapi_process_export_task(
         if driver:
             out = convert(
                 driver=driver,
-                input_file=source_data,
+                input_files=source_data,
                 output_file=output_file,
                 task_uid=task_uid,
                 projection=projection,
@@ -863,7 +863,7 @@ def sqlite_export_task(
 
     sqlite = convert(
         driver="SQLite",
-        input_file=sqlite_in_dataset,
+        input_files=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
         task_uid=task_uid,
         boundary=selection,
@@ -942,7 +942,7 @@ def geopackage_export_task(
         else:
             gpkg = convert(
                 driver="gpkg",
-                input_file=gpkg_in_dataset,
+                input_files=gpkg_in_dataset,
                 output_file=gpkg_out_dataset,
                 task_uid=task_uid,
                 boundary=selection,
@@ -987,7 +987,7 @@ def mbtiles_export_task(
     mbtiles = convert(
         driver="MBTiles",
         src_srs=4326,
-        input_file=source_dataset,
+        input_files=source_dataset,
         output_file=mbtiles_out_dataset,
         task_uid=task_uid,
         boundary=selection,
@@ -1022,7 +1022,7 @@ def geotiff_export_task(
 
         gtiff_out_dataset = convert(
             driver="gtiff",
-            input_file=gtiff_in_dataset,
+            input_files=gtiff_in_dataset,
             output_file=gtiff_out_dataset,
             task_uid=task_uid,
             boundary=selection,
@@ -1063,7 +1063,7 @@ def nitf_export_task(
     creation_options = ["ICORDS=G"]
     nitf = convert(
         driver="nitf",
-        input_file=nitf_in_dataset,
+        input_files=nitf_in_dataset,
         output_file=nitf_out_dataset,
         task_uid=task_uid,
         creation_options=creation_options,
@@ -1096,7 +1096,7 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
-    hfa = convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
+    hfa = convert(driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
 
     result["file_extension"] = "img"
     result["driver"] = "hfa"
@@ -1186,7 +1186,7 @@ def reprojection_task(
         else:
             reprojection = convert(
                 driver=driver,
-                input_file=in_dataset,
+                input_files=in_dataset,
                 output_file=out_dataset,
                 task_uid=task_uid,
                 projection=projection,
@@ -1252,7 +1252,7 @@ def wfs_export_task(
         for layer_name, layer in layers.items():
             out = convert(
                 driver="gpkg",
-                input_file=layer.get("path"),
+                input_files=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 projection=projection,
@@ -1437,7 +1437,7 @@ def arcgis_feature_service_export_task(
         for layer_name, layer in layers.items():
             out = convert(
                 driver="gpkg",
-                input_file=layer.get("path"),
+                input_files=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 boundary=bbox,
@@ -1527,7 +1527,7 @@ def vector_file_export_task(
 
     out = convert(
         driver="gpkg",
-        input_file=gpkg,
+        input_files=gpkg,
         output_file=gpkg,
         task_uid=task_uid,
         projection=projection,
@@ -1575,7 +1575,7 @@ def raster_file_export_task(
 
     out = convert(
         driver="gpkg",
-        input_file=gpkg,
+        input_files=gpkg,
         output_file=gpkg,
         task_uid=task_uid,
         projection=projection,
@@ -1873,7 +1873,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-@retry
+@retry()
 def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.

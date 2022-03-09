@@ -11,7 +11,6 @@ from gdal_utils.utils.gdal import convert
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
-from eventkit_cloud.tasks.helpers import update_progress
 from .artifact import Artifact
 
 logger = logging.getLogger(__name__)
@@ -305,6 +304,9 @@ class Geopackage(object):
         """
         Create the GeoPackage from the osm data.
         """
+
+        from eventkit_cloud.tasks.helpers import update_progress
+
         if self.is_complete:
             logger.debug("Skipping Geopackage, file exists")
             return
