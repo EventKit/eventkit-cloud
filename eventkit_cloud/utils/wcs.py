@@ -7,11 +7,14 @@ from string import Template
 
 import yaml
 
+from gdal_utils.utils.helpers import retry
+from gdal_utils.utils.gdal import get_dimensions, get_meta, merge_geotiffs
+
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from gdal_utils.utils.helpers import retry
-from gdal_utils.utils.gdal import get_chunked_bbox, get_dimensions, get_meta, merge_geotiffs
+from eventkit_cloud.utils.mapproxy import get_chunked_bbox
+
 
 logger = logging.getLogger(__name__)
 

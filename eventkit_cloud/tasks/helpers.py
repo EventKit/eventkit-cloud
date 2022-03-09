@@ -30,7 +30,7 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from gdal_utils.utils.helpers import retry
-from gdal_utils.utils.gdal import convert, get_band_statistics, get_chunked_bbox, get_meta
+from gdal_utils.utils.gdal import convert, get_band_statistics, get_meta
 from numpy import linspace
 from requests import Response
 
@@ -42,6 +42,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.helpers import cd, get_file_paths  # NOQA
+from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 
 logger = logging.getLogger()

@@ -17,6 +17,7 @@ from django.core.cache import cache
 from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
+from mapproxy.grid import tile_grid
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
@@ -33,6 +34,7 @@ from eventkit_cloud.utils.geopackage import (
     get_zoom_levels_table,
     remove_empty_zoom_levels,
 )
+from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
@@ -544,3 +546,28 @@ def add_restricted_regions_to_config(
                 base_config["caches"][current_cache]["disable_storage"] = True
 
     return base_config, config
+
+
+def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
+    """
+    Chunks a bbox into a grid of sub-bboxes.
+    :param bbox: bbox in 4326, representing the area of the world to be chunked
+    :param size: optional image size to use when calculating the resolution.
+    :param level:  The level to use for the affected level.
+    :return: enclosing bbox of the area, dimensions of the grid, bboxes of all tiles.
+    """
+
+    # Calculate the starting res for our custom grid
+    # This is the same method we used when taking snap shots for data packs
+    resolution = get_resolution_for_extent(bbox, size)
+    # Make a subgrid of 4326 that spans the extent of the provided bbox
+    # min res specifies the starting zoom level
+    mapproxy_grid = tile_grid(
+        srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution
+    )
+    # bbox is the bounding box of all tiles affected at the given level, unused here
+    # size is the x, y dimensions of the grid
+    # tiles at level is a generator that returns the tiles in order
+    tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
+    # convert the tiles to bboxes representing the tiles on the map
+    return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]

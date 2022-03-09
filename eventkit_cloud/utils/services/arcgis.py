@@ -1,8 +1,7 @@
 from logging import getLogger
-from typing import Optional
+from typing import Optional, TypedDict
 
 from django.contrib.gis.geos import Polygon
-from gdal_utils.utils.gdal import get_polygon_from_arcgis_extent
 
 from eventkit_cloud.utils.services.base import GisClient
 
@@ -30,3 +29,38 @@ class ArcGIS(GisClient):
 
     def find_layers(self, root):
         raise NotImplementedError("Method is specific to service type")
+
+
+class _ArcGISSpatialReference(TypedDict):
+    wkid: int
+
+
+class ArcGISSpatialReference(_ArcGISSpatialReference, total=False):
+    latestWkid: int
+
+
+class ArcGISExtent(TypedDict):
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
+    spatialReference: ArcGISSpatialReference
+
+
+def get_polygon_from_arcgis_extent(extent: ArcGISExtent):
+    spatial_reference = extent.get("spatialReference", {})
+    bbox = [
+        extent.get("xmin"),
+        extent.get("ymin"),
+        extent.get("xmax"),
+        extent.get("ymax"),
+    ]
+    try:
+        polygon = Polygon.from_bbox(bbox)
+        polygon.srid = (
+            spatial_reference.get("latestWkid") or spatial_reference.get("wkid") or 4326
+        )
+        polygon.transform(4326)
+        return polygon
+    except Exception:
+        return Polygon.from_bbox([-180, -90, 180, 90])
