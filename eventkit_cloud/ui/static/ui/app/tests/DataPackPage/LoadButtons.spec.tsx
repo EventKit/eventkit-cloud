@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import {LoadButtons} from '../../components/common/LoadButtons';
-import {KeyboardArrowDown} from "@material-ui/icons";
+import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
 
 describe('LoadButtons component', () => {
     const getProps = () => ({
