@@ -18,6 +18,8 @@ from eventkit_cloud.tasks.models import RunZipFile, UserDownload
 
 logger = logging.getLogger(__name__)
 
+UNKNOWN_ERROR_MESSAGE = "An unknown error occurred. Please contact an administrator."
+
 
 def eventkit_exception_handler(exc, context):
     """
@@ -45,9 +47,9 @@ def eventkit_exception_handler(exc, context):
         error_class = exc.__class__.__name__
 
         if hasattr(exc, "detail"):
-            detail = exc.detail
+            detail = str(exc.detail)
         else:
-            detail = error
+            detail = str(error)
 
         # If get_codes returns a dict, grab the values and turn them into a string for the title.
         if hasattr(exc, "get_codes"):
@@ -57,16 +59,16 @@ def eventkit_exception_handler(exc, context):
                 for key, value in code.items():
                     title += stringify(value)
             else:
-                title = code
+                title = stringify(code)
         else:
-            title = error_class
+            title = stringify(error_class)
 
-        error_response = {"status": status, "title": stringify(title), "detail": str(detail), "type": error_class}
+        error_response = {"status": status, "title": title, "detail": detail, "type": error_class}
         if isinstance(error, dict) and error.get("id") and error.get("message"):
             # if both id and message are present we can assume that this error was generated from validators.py
             # and use them as the title and detail
-            error_response["title"] = stringify(error.get("id"))
-            error_response["detail"] = stringify(error.get("message"))
+            title = stringify(error.get("id"))
+            detail = stringify(error.get("message"))
 
         elif isinstance(exc, ValidationError):
             # if the error is a ValidationError type and not from validators.py we need to get rid of the wonky format.
@@ -84,15 +86,20 @@ def eventkit_exception_handler(exc, context):
             else:
                 detail = stringify(error)
 
-            error_response["detail"] = detail
-
-        error_response["title"] = error_response["title"].title().replace("_", " ")
+        error_response["detail"] = detail or UNKNOWN_ERROR_MESSAGE
+        error_response["title"] = title.title().replace("_", " ")
         response.data = {"errors": [error_response]}
     # exception_handler doesn't handle generic exceptions, so we need to handle that here.
     else:
         response_status = rest_framework.status.HTTP_500_INTERNAL_SERVER_ERROR
         response = Response(
-            {"errors": {"status": response_status, "title": str(exc.__class__.__name__), "detail": str(exc)}},
+            {
+                "errors": {
+                    "status": response_status,
+                    "title": str(exc.__class__.__name__),
+                    "detail": str(exc) or UNKNOWN_ERROR_MESSAGE,
+                }
+            },
             status=response_status,
         )
     return response
