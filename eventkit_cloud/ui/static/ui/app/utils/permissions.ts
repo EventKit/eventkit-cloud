@@ -1,4 +1,4 @@
-import {cloneDeep} from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 
 export const Levels = {
     ADMIN: 'ADMIN' as Eventkit.Permissions.Level,
