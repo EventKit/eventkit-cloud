@@ -7,7 +7,7 @@ import {renderIf} from "../../utils/renderIf";
 import Radio from "@material-ui/core/Radio";
 import {useDebouncedState, useProviderIdentity} from "../../utils/hooks/hooks";
 import {arrayHasValue} from "../../utils/generic";
-import {unionBy} from 'lodash';
+import unionBy from 'lodash/unionBy';
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
