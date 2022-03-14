@@ -327,9 +327,10 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         managed = True
         db_table = "data_provider_task_records"
         constraints = [
-            models.UniqueConstraint(fields=['run', 'provider'], name='unique_data_provider'),
-            models.UniqueConstraint(fields=['run', 'slug'], condition=Q(slug='run'),
-                                    name='unique_run_data_provider_task_record')
+            models.UniqueConstraint(fields=["run", "provider"], name="unique_data_provider"),
+            models.UniqueConstraint(
+                fields=["run", "slug"], condition=Q(slug="run"), name="unique_run_data_provider_task_record"
+            ),
         ]
 
     def __str__(self):
