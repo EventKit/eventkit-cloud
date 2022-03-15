@@ -94,11 +94,13 @@ def eventkit_exception_handler(exc, context):
         response_status = rest_framework.status.HTTP_500_INTERNAL_SERVER_ERROR
         response = Response(
             {
-                "errors": {
-                    "status": response_status,
-                    "title": str(exc.__class__.__name__),
-                    "detail": str(exc) or UNKNOWN_ERROR_MESSAGE,
-                }
+                "errors": [
+                    {
+                        "status": response_status,
+                        "title": str(exc.__class__.__name__),
+                        "detail": str(exc) or UNKNOWN_ERROR_MESSAGE,
+                    }
+                ]
             },
             status=response_status,
         )
