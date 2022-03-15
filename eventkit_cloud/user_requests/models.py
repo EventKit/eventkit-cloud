@@ -69,7 +69,9 @@ class UserSizeRule(SizeRule):
 
     class Meta:
         indexes = [models.Index(fields=["user", "provider"])]
-        unique_together = ("provider", "user")
+        constraints = [
+            models.UniqueConstraint(fields=["provider", "user"], name="unique_user_size_rule_per_provider"),
+        ]
 
     def __str__(self):
         return f"{self.provider.slug} rules for {self.user.username}"

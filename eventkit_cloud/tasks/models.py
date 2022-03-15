@@ -412,7 +412,9 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         ordering = ["created_at"]
         managed = True
         db_table = "export_task_records"
-        unique_together = ["name", "export_provider_task"]
+        constraints = [
+            models.UniqueConstraint(fields=["name", "export_provider_task"], name="unique_name_export_provider_task"),
+        ]
 
     def __str__(self):
         return "ExportTaskRecord uid: {0}".format(str(self.uid))

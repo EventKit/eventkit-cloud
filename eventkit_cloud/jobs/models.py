@@ -826,7 +826,11 @@ class JobPermission(TimeStampedModelMixin):
     # A user should only have one type of permission per job.
     class Meta:
         db_table = "jobpermission"
-        unique_together = ["job", "content_type", "object_id", "permission"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "content_type", "object_id", "permission"], name="unique_user_permission_per_job"
+            ),
+        ]
 
     @staticmethod
     def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
