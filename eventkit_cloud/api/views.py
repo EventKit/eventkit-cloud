@@ -937,7 +937,7 @@ class DataProviderViewSet(EventkitViewSet):
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 provider_caches = cache.get(DataProvider.provider_caches_key, dict())
                 provider_caches[cache_key] = datetime.now()
-                cache.set(DataProvider.provider_caches_key, provider_caches)
+                cache.set(DataProvider.provider_caches_key, provider_caches, timeout=DEFAULT_TIMEOUT)
 
         return Response(data)
 
@@ -979,7 +979,6 @@ class DataProviderViewSet(EventkitViewSet):
             except ValidationError as e:
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
-
             serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
             data = serializer(providers, many=True, context={"request": request}).data
