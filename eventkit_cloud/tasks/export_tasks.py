@@ -813,7 +813,6 @@ def ogc_result_task(
         if format_prop:
             export_format = ogcapi_config["inputs"][format_field][format_prop]
         if export_format and export_format.lower() == export_format_slug.lower():
-            logger.error(f"OGC DATA RESULT: {result}")
             result["result"] = result["ogcapi_process"]
             return result
         else:

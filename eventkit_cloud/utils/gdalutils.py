@@ -530,7 +530,6 @@ def convert_raster(
     if boundary:
         # Conversion fails if trying to cut down very small files (i.e. 0x1 pixel error).
         dims = list(map(sum, zip(*[get_meta(input_file)["dim"] for input_file in input_files]))) or [0, 0, 0]
-        logger.info("Clipping image with original dimensions of %s", dims)
         if dims[0] > 100 and dims[1] > 100:
             warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
