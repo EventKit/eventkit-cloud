@@ -12,10 +12,10 @@ client_type_map = {
     "tms": "eventkit_cloud.utils.services.tms.TMS",
     "vector-file": "eventkit_cloud.utils.services.file.FileClient",
     "raster-file": "eventkit_cloud.utils.services.file.FileClient",
-    "ogcapi-process": "eventkit_cloud.utils.services.OGCAPIProcess.OGCAPIProcess",
-    "ogcapi-process-elevation": "eventkit_cloud.utils.services.OGCAPIProcess.OGCAPIProcess",
-    "ogcapi-process-raster": "eventkit_cloud.utils.services.OGCAPIProcess.OGCAPIProcess",
-    "ogcapi-process-vector": "eventkit_cloud.utils.services.OGCAPIProcess.OGCAPIProcess",
+    "ogcapi-process": "eventkit_cloud.utils.services.ogcapi_process.OGCAPIProcess",
+    "ogcapi-process-elevation": "eventkit_cloud.utils.services.ogcapi_process.OGCAPIProcess",
+    "ogcapi-process-raster": "eventkit_cloud.utils.services.ogcapi_process.OGCAPIProcess",
+    "ogcapi-process-vector": "eventkit_cloud.utils.services.ogcapi_process.OGCAPIProcess",
     "default": "eventkit_cloud.utils.services.base.GisClient",
 }
 

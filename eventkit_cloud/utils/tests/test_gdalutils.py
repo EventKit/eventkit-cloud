@@ -51,27 +51,29 @@ class TestGdalUtils(TestCase):
 
         mock_open_dataset = Mock(spec=gdal.Dataset)
         mock_open_dataset.RasterCount = 0
-        open_dataset_mock.return_value = mock_open_dataset
         mock_open_dataset.GetDriver.return_value.ShortName = "gtiff"
-        expected_meta = {"driver": "gtiff", "is_raster": True, "nodata": None}
+        open_dataset_mock.return_value = mock_open_dataset
+        expected_meta = {"dim": [0, 0, 0], "driver": "gtiff", "is_raster": True, "nodata": None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
         mock_open_dataset.RasterCount = 2
+        mock_open_dataset.RasterXSize = 4
+        mock_open_dataset.RasterYSize = 5
         mock_open_dataset.GetRasterBand.return_value.GetNoDataValue.return_value = -32768.0
-        expected_meta = {"driver": "gtiff", "is_raster": True, "nodata": -32768.0}
+        expected_meta = {"dim": [4, 5, 1], "driver": "gtiff", "is_raster": True, "nodata": -32768.0}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
         mock_open_dataset = Mock(spec=ogr.DataSource)
         open_dataset_mock.return_value = mock_open_dataset
         mock_open_dataset.GetDriver.return_value.GetName.return_value = "gpkg"
-        expected_meta = {"driver": "gpkg", "is_raster": False, "nodata": None}
+        expected_meta = {"dim": [0, 0, 0], "driver": "gpkg", "is_raster": False, "nodata": None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
         open_dataset_mock.return_value = None
-        expected_meta = {"driver": None, "is_raster": None, "nodata": None}
+        expected_meta = {"dim": [0, 0, 0], "driver": None, "is_raster": None, "nodata": None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
@@ -429,9 +431,10 @@ class TestGdalUtils(TestCase):
             task_uid, progress=10, subtask_percentage=subtask_percentage, msg=example_message
         )
 
+    @patch("eventkit_cloud.utils.gdalutils.get_meta")
     @patch("eventkit_cloud.utils.gdalutils.get_dataset_names")
     @patch("eventkit_cloud.utils.gdalutils.gdal")
-    def test_convert_raster(self, mock_gdal, mock_get_dataset_names):
+    def test_convert_raster(self, mock_gdal, mock_get_dataset_names, mock_get_meta):
         task_uid = "123"
         input_file = "/test/test.gpkg"
         output_file = "/test/test.tif"
@@ -443,13 +446,12 @@ class TestGdalUtils(TestCase):
         convert_raster(
             input_file, output_file, driver=driver, boundary=boundary, src_srs=srs, dst_srs=srs, task_uid=task_uid
         )
+        mock_get_meta.assert_called_once_with(input_file)
         mock_gdal.Warp.assert_called_once_with(
             output_file,
             [input_file],
             callback=progress_callback,
             callback_data={"task_uid": task_uid, "subtask_percentage": 50},
-            cropToCutline=True,
-            cutlineDSName=boundary,
             dstSRS=srs,
             format=driver,
             srcSRS=srs,
@@ -465,6 +467,7 @@ class TestGdalUtils(TestCase):
         mock_gdal.reset_mock()
         warp_params = {"warp": "params"}
         translate_params = {"translate": "params"}
+        mock_get_meta.return_value = {"dim": [200, 200, 1]}
         convert_raster(
             input_file,
             output_file,

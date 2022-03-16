@@ -38,7 +38,6 @@ class OgcApiProcess:
 
     def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
-
         jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
@@ -110,7 +109,9 @@ class OgcApiProcess:
         """
 
         job_status = None
+        counter = 0
         while job_status not in OGC_Status.get_finished_status():
+            counter += interval
             time.sleep(interval)
             try:
                 response = self.session.get(job_url)
@@ -124,6 +125,7 @@ class OgcApiProcess:
                 raise Exception("OGC API Process service did not provide a valid status.")
             if task_id:
                 update_progress(task_id, progress=25, subtask_percentage=response_content.get("progress", 50))
+            logger.info(f"Waiting for {task_id} to finish from {job_url} (total time: %s).", counter)
 
         if job_status in OGC_Status.get_finished_status():
             return response_content
@@ -136,9 +138,12 @@ def get_job_payload(config: dict, geometry: GEOSGeometry, file_format: str = Non
     payload = copy.deepcopy(config)
 
     if file_format:
-        format_field = get_format_field_from_config(payload)
+        input_field, format_field = get_format_field_from_config(payload)
         if format_field:
-            payload["inputs"][format_field]["value"] = file_format
+            if input_field:
+                payload["inputs"][input_field][format_field] = file_format
+            else:
+                payload["inputs"][format_field] = file_format
     payload["mode"] = "async"
     payload["response"] = "document"
     payload["outputs"] = payload["outputs"] or {}

@@ -979,7 +979,6 @@ class DataProviderViewSet(EventkitViewSet):
             except ValidationError as e:
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
-
             serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
             data = serializer(providers, many=True, context={"request": request}).data
