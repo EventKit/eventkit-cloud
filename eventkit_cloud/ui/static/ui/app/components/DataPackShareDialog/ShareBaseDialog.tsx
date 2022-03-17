@@ -13,7 +13,7 @@ import BaseDialog from "../Dialog/BaseDialog";
 import Divider from "@material-ui/core/Divider";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
-import {Warning} from "@material-ui/icons";
+import Warning from "@material-ui/icons/Warning";
 
 export interface Props {
     className?: string;

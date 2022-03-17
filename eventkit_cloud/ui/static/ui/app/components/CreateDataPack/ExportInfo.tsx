@@ -43,7 +43,7 @@ import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
-import {unionBy} from 'lodash';
+import unionBy from 'lodash/unionBy';
 import {joyride} from '../../joyride.config';
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
