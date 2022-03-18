@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import datetime
 import unicodedata
 import uuid
 
@@ -26,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 Notification.old_str_func = Notification.__str__
+
+DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
 
 
 def normalize_unicode_str(self):
@@ -127,7 +128,28 @@ class CachedModelMixin(models.Model):
         cache_key_props = ["pk", "uid", "slug"]
         for cache_key_prop in cache_key_props:
             if hasattr(self, cache_key_prop):
-                cache.set(f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}", self)
+                # TODO: Confirm if this is being used.
+                cache_key = f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}"
+                cache.set(cache_key, self, timeout=DEFAULT_TIMEOUT)
+                self.update_cache_key_list(cache_key)
+
+    @classmethod
+    def get_caches_key(cls):
+        return f"{cls.__name__}_caches_key"
+
+    @classmethod
+    def update_cache_key_list(cls, cache_key):
+        caches_key = cls.get_caches_key()
+        caches = cache.get(caches_key, dict())
+        caches[cache_key] = datetime.datetime.now()
+        cache.set(caches_key, caches, timeout=DEFAULT_TIMEOUT)
+
+    @classmethod
+    def clear_cache_key_list(cls):
+        caches = cache.get(cls.get_caches_key(), dict())
+        if caches:
+            cache.delete_many(caches.keys())
+            cache.delete(cls.get_caches_key())
 
 
 class UIDMixin(models.Model):

@@ -935,9 +935,7 @@ class DataProviderViewSet(EventkitViewSet):
                 data = filtered_data
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
-                provider_caches = cache.get(DataProvider.provider_caches_key, dict())
-                provider_caches[cache_key] = datetime.now()
-                cache.set(DataProvider.provider_caches_key, provider_caches, timeout=DEFAULT_TIMEOUT)
+                DataProvider.update_cache_key_list(cache_key)
 
         return Response(data)
 
