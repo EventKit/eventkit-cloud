@@ -133,6 +133,8 @@ class CachedModelMixin(models.Model):
                 cache.set(cache_key, self, timeout=DEFAULT_TIMEOUT)
                 self.update_cache_key_list(cache_key)
 
+        self.clear_cache_key_list()
+
     @classmethod
     def get_caches_key(cls):
         return f"{cls.__name__}_caches_key"

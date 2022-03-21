@@ -220,7 +220,7 @@ def get_process_formats(provider: DataProvider):
     """Retrieve formats for a given provider if it is an ogc-process type."""
     process_formats = []
 
-    if "ogcapi-process" in provider.export_provider_type.type_name:
+    if provider.export_provider_type and "ogcapi-process" in provider.export_provider_type.type_name:
         client = provider.get_service_client()
         process_json = get_process(provider, client.session)
         if process_json:
