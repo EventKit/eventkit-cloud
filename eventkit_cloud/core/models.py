@@ -13,6 +13,8 @@ from django.db import transaction
 from django.db.models import QuerySet, Case, Value, When, Q, Count
 from django.utils import timezone
 from enum import Enum
+
+from django.utils.text import slugify
 from notifications.models import Notification
 import logging
 from typing import List, Callable, Tuple
@@ -137,7 +139,7 @@ class CachedModelMixin(models.Model):
 
     @classmethod
     def get_caches_key(cls):
-        return f"{cls.__name__}_caches_key"
+        return f"{slugify(cls.__name__)}_caches_key"
 
     @classmethod
     def update_cache_key_list(cls, cache_key):
