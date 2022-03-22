@@ -316,9 +316,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
     )
 
-    # Used to store user list of user caches so that they can be invalidated.
-    provider_caches_key = "data_provider_caches"
-
     class Meta:  # pragma: no cover
 
         managed = True
@@ -397,7 +394,29 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
+        self.update_export_formats()
+
         super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
+
+    def update_export_formats(self):
+        # TODO: Refactor utils/ogc_apiprocess into services.
+        from eventkit_cloud.utils.ogcapi_process import get_process_formats
+
+        process_formats = get_process_formats(self)
+        logger.info(f"Process_formats: {process_formats}")
+        for process_format in process_formats:
+            export_format, created = ExportFormat.get_or_create(**process_format)
+            if created:
+                export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+                export_format.supported_projections.add(Projection.objects.get(srid=4326))
+            else:
+                providers = export_format.options.get("providers")
+                if providers:
+                    providers = list(set(providers + [self.slug]))
+                    export_format.options["providers"] = providers
+                else:
+                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+            export_format.save()
 
     def __str__(self):
         return "{0}".format(self.name)
