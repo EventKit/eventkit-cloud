@@ -413,8 +413,8 @@ class TestDataProvider(TestCase):
         self.data_provider.save()
 
         cache_calls = [
-            call(f"DataProvider-slug-{self.data_provider.slug}", self.data_provider),
-            call(f"DataProvider-uid-{self.data_provider.uid}", self.data_provider),
+            call(f"DataProvider-slug-{self.data_provider.slug}", self.data_provider, timeout=86400),
+            call(f"DataProvider-uid-{self.data_provider.uid}", self.data_provider, timeout=86400),
         ]
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)

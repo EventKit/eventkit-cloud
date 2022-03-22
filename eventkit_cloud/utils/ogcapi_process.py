@@ -1,8 +1,10 @@
+from __future__ import annotations
 import copy
 import json
 import logging
 import time
 import requests
+from typing import TYPE_CHECKING
 
 from django.contrib.gis.geos import WKTWriter, GEOSGeometry
 from django.core.cache import cache
@@ -10,11 +12,13 @@ from urllib.parse import urljoin
 
 from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
-from eventkit_cloud.jobs.models import clean_config
-from eventkit_cloud.jobs.models import load_provider_config
+from eventkit_cloud.jobs.models import clean_config, load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import update_progress
+
+if TYPE_CHECKING:
+    from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 
@@ -212,13 +216,13 @@ def get_process_formats_from_json(process_json: dict, provider_config: dict):
     ]
 
 
-def get_process_formats(provider, request):
+def get_process_formats(provider: DataProvider):
     """Retrieve formats for a given provider if it is an ogc-process type."""
     process_formats = []
 
-    if "ogcapi-process" in provider.export_provider_type.type_name:
-        session = get_session(request, provider)
-        process_json = get_process(provider, session)
+    if provider.export_provider_type and "ogcapi-process" in provider.export_provider_type.type_name:
+        client = provider.get_service_client()
+        process_json = get_process(provider, client.session)
         if process_json:
             process_formats = get_process_formats_from_json(process_json, load_provider_config(provider.config))
     return process_formats
