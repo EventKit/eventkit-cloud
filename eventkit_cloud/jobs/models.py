@@ -828,7 +828,7 @@ class JobPermission(TimeStampedModelMixin):
         db_table = "jobpermission"
         constraints = [
             models.UniqueConstraint(
-                fields=["job", "content_type", "object_id", "permission"], name="unique_user_permission_per_job"
+                fields=["job", "content_type", "object_id", "permission"], name="unique_object_permission_per_job"
             ),
         ]
 

@@ -327,9 +327,9 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         managed = True
         db_table = "data_provider_task_records"
         constraints = [
-            models.UniqueConstraint(fields=["run", "provider"], name="unique_data_provider"),
+            models.UniqueConstraint(fields=["run", "provider"], name="unique_provider_run_per_task_record"),
             models.UniqueConstraint(
-                fields=["run", "slug"], condition=Q(slug="run"), name="unique_run_data_provider_task_record"
+                fields=["run", "slug"], condition=Q(slug="run"), name="unique_run_slug_per_task_record"
             ),
         ]
 
@@ -413,7 +413,9 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         managed = True
         db_table = "export_task_records"
         constraints = [
-            models.UniqueConstraint(fields=["name", "export_provider_task"], name="unique_name_export_provider_task"),
+            models.UniqueConstraint(
+                fields=["name", "export_provider_task"], name="unique_name_per_export_provider_task"
+            ),
         ]
 
     def __str__(self):
