@@ -218,7 +218,9 @@ class GroupPermission(TimeStampedModelMixin):
 
     # A user should only have one type of permission per group.
     class Meta:
-        unique_together = ["user", "group", "permission"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "group", "permission"], name="unique_user_permission_per_group"),
+        ]
 
     def __str__(self):
         return "{0}: {1}: {2}".format(self.user, self.group.name, self.permission)
@@ -262,7 +264,9 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
         self.__original_complex = self.complex
 
     class Meta:
-        unique_together = ("filter", "exclude")
+        constraints = [
+            models.UniqueConstraint(fields=["filter", "exclude"], name="unique_filter_exclude"),
+        ]
         verbose_name_plural = "Attribute Classes"
         verbose_name = "Attribute Class"
 
