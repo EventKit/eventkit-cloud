@@ -1842,7 +1842,7 @@ class TestExportTasks(ExportTaskBase):
         example_format_slug = "fmt"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}})
         self.provider.save()
 
         expected_outfile = "/path/to/file.ext"

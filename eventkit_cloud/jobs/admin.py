@@ -7,7 +7,6 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
-from django.core.cache import cache
 from django.shortcuts import render
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
@@ -29,7 +28,6 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     clean_config,
 )
-from eventkit_cloud.utils.ogcapi_process import get_process_formats
 
 logger = logging.getLogger(__name__)
 
@@ -228,29 +226,6 @@ class DataProviderAdmin(admin.ModelAdmin):
         "license__name",
     ]
     actions = [make_display, make_hidden]
-
-    def save_model(self, request, obj, *args):
-        super().save_model(request, obj, *args)
-        provider_caches = cache.get(DataProvider.provider_caches_key)
-        if provider_caches:
-            cache.delete_many(provider_caches.keys())
-        process_formats = get_process_formats(obj, request)
-        logger.info(f"Process_formats: {process_formats}")
-        for process_format in process_formats:
-            export_format, created = ExportFormat.get_or_create(**process_format)
-            if created:
-                # Use the value from process format which might be case sensitive,
-                # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                export_format.options = {"value": process_format.get("slug"), "providers": [obj.slug], "proxy": True}
-                export_format.supported_projections.add(Projection.objects.get(srid=4326))
-            else:
-                providers = export_format.options.get("providers")
-                if providers:
-                    providers = list(set(providers + [obj.slug]))
-                    export_format.options["providers"] = providers
-                else:
-                    export_format.options = {"value": export_format.slug, "providers": [obj.slug], "proxy": True}
-            export_format.save()
 
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
