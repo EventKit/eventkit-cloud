@@ -35,7 +35,7 @@ from eventkit_cloud.celery import app, TaskPriority
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot
+from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot, ExportFormat
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -750,7 +750,6 @@ def ogcapi_process_export_task(
         selection=selection,
         download_path=download_path,
     )
-    logger.error(f"OGC Download Path: {download_path}")
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
         source_data = find_in_zip(
@@ -800,6 +799,7 @@ def ogc_result_task(
     A helper method to get additional download formats from an ogcapi endpoint that aren't being converted into other
     eventkit supported formats.
     """
+
     result = result or {}
 
     export_task_record = get_export_task_record(task_uid)
@@ -812,10 +812,13 @@ def ogc_result_task(
             export_format = ogcapi_config["inputs"][format_field]
         if format_prop:
             export_format = ogcapi_config["inputs"][format_field][format_prop]
-        if export_format == export_format_slug:
-            logger.error(f"OGC DATA RESULT: {result}")
+        if export_format and export_format.lower() == export_format_slug.lower():
             result["result"] = result["ogcapi_process"]
             return result
+        else:
+            # Workaround for case-sensitivity in upsteam sources.
+            export_format = ExportFormat.objects.get(slug=export_format_slug)
+            export_format_slug = export_format.options.get("value") or export_format_slug
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
     download_path = get_ogcapi_data(
         config=data_provider.config,
@@ -2343,7 +2346,6 @@ def get_ogcapi_data(
     configuration = load_provider_config(config)
 
     geom: GEOSGeometry = get_geometry(bbox, selection)
-    logger.error(geom)
 
     try:
         ogc_process = OgcApiProcess(
@@ -2366,7 +2368,7 @@ def get_ogcapi_data(
 
     download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
     basic_auth = download_credentials.get("cred_var")
-    username = password = session = headers = None
+    username = password = session = None
     if basic_auth:
         username, password = os.getenv(basic_auth).split(":")
     if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
@@ -2376,12 +2378,7 @@ def get_ogcapi_data(
             password=password,
         )
         session = session.client
-    else:
-        headers = download_credentials.get("headers")
-        headers = json.loads(headers) if headers else None
-    token = download_credentials.get("token")
-
-    download_path = download_data(task_uid, download_url, download_path, session=session, headers=headers, token=token)
+    download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path
