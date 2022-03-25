@@ -20,6 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
+from yaml import CLoader, CDumper
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -429,7 +430,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
         type = config.get("sources", {}).get("info", {}).get("type")
         if url:
@@ -441,7 +442,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
 
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
@@ -484,7 +485,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def max_data_size(self):
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
@@ -1077,4 +1078,4 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
         conf.pop(service_key, None)
     if return_dict:
         return conf
-    return yaml.dump(conf)
+    return yaml.dump(conf, Dumper=CDumper)

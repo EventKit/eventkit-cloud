@@ -1020,8 +1020,8 @@ def basic_data_provider_serializer(data_provider: DataProvider, context: dict = 
                                 "thumbnail_url": get_thumbnail_url(data_provider),
                                 "license": basic_license_list_serializer(data_provider.license),
                                 ## Can add these after we convert config to jsonfield.
-                                # "metadata": data_provider.config and data_provider.metadata,
-                                # "footprint_url": data_provider.footprint_url,
+                                "metadata": data_provider.config and data_provider.metadata,
+                                "footprint_url": data_provider.footprint_url,
                                 "max_data_size": data_provider.get_max_data_size(request and request.user),
                                 "max_selection": data_provider.get_max_selection_size(request and request.user),
                                 "use_bbox": data_provider.export_provider_type and data_provider.export_provider_type.use_bbox,
