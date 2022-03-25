@@ -7,7 +7,6 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 """
 import json
 import logging
-
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
@@ -990,16 +989,15 @@ def basic_data_provider_serializer(
     request = context.get("request")
 
     def get_supported_formats(obj):
-        export_formats = sorted(
-            [
-                basic_field_serializer(export_format, format_fields)
-                for export_format in obj.export_provider_type.supported_formats.all()
-            ],
-            key=lambda i: i["name"],
-        )
+        export_formats = [
+            basic_field_serializer(export_format, format_fields)
+            for export_format in obj.export_provider_type.supported_formats.all()
+        ]
         if proxy_formats:
             proxy_format_list = proxy_formats.get(obj.slug) or []
-            export_formats.append(proxy_format_list)
+            export_formats += proxy_format_list
+        export_formats = list({export_format["name"]: export_format for export_format in export_formats}.values())
+        export_formats = sorted(export_formats, key=lambda i: i["name"])
         return export_formats
 
     def get_thumbnail_url(obj):
@@ -1077,10 +1075,11 @@ def basic_data_provider_list_serializer(
     format_fields = ["uid", "name", "slug", "description"]
 
     proxy_formats = {}
-    for export_format in ExportFormat.objects.exclude(options={}).values(*format_fields):
-        for provider_slug in export_format["options"].get("providers"):
+    for export_format in ExportFormat.objects.exclude(options={}).values("options", *format_fields):
+        options = export_format.pop("options")
+        for provider_slug in options.get("providers", []):
             if proxy_formats.get(provider_slug):
-                proxy_formats[provider_slug] += export_format
+                proxy_formats[provider_slug] += [export_format]
             else:
                 proxy_formats[provider_slug] = [export_format]
 
