@@ -24,6 +24,7 @@ from django.db.models import QuerySet
 from django.utils.translation import ugettext as _
 from notifications.models import Notification
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 from rest_framework.serializers import ValidationError
 from rest_framework_gis import serializers as geo_serializers
 from rest_framework_gis.fields import GeometrySerializerMethodField
@@ -971,8 +972,8 @@ class FilteredDataProviderSerializer(serializers.ModelSerializer):
         return False
 
 
-def basic_format_serializer(export_format, fields):
-    return {field: getattr(export_format, field) for field in fields}
+def basic_field_serializer(export_format, fields):
+    return {field: getattr(export_format, field) and str(getattr(export_format, field)) for field in fields}
 
 
 def basic_data_provider_serializer(
@@ -989,10 +990,13 @@ def basic_data_provider_serializer(
     request = context.get("request")
 
     def get_supported_formats(obj):
-        export_formats = [
-            basic_format_serializer(export_format, format_fields)
-            for export_format in obj.export_provider_type.supported_formats.all()
-        ]
+        export_formats = sorted(
+            [
+                basic_field_serializer(export_format, format_fields)
+                for export_format in obj.export_provider_type.supported_formats.all()
+            ],
+            key=lambda i: i["name"],
+        )
         if proxy_formats:
             proxy_format_list = proxy_formats.get(obj.slug) or []
             export_formats.append(proxy_format_list)
@@ -1018,7 +1022,7 @@ def basic_data_provider_serializer(
 
     serialized_data_provider = {
         "id": data_provider.id,
-        "uid": data_provider.uid,
+        "uid": str(data_provider.uid),
         "name": data_provider.name,
         "slug": data_provider.slug,
         "label": data_provider.label,
@@ -1030,6 +1034,7 @@ def basic_data_provider_serializer(
         "thumbnail_url": get_thumbnail_url(data_provider),
         "license": basic_license_list_serializer(data_provider.license),
         "metadata": data_provider.config and data_provider.metadata,
+        "model_url": reverse("api:providers-detail", args=[data_provider.slug], request=request),
         "footprint_url": data_provider.footprint_url,
         "max_data_size": data_provider.get_max_data_size(request and request.user),
         "max_selection": data_provider.get_max_selection_size(request and request.user),
@@ -1059,6 +1064,7 @@ def basic_data_provider_list_serializer(
     **kwargs,
 ):
 
+    context = context or dict()
     if not data_providers:
         return [{}]
 
