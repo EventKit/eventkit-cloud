@@ -68,8 +68,10 @@ from eventkit_cloud.api.serializers import (
     UserJobActivitySerializer,
     ExportRunGeoFeatureSerializer,
     DataProviderGeoFeatureSerializer,
-    FilteredDataProviderGeoFeatureSerializer, basic_data_provider_serializer, filtered_basic_data_provider_serializer,
-    basic_data_provider_list_serializer, basic_geojson_list_serializer,
+    FilteredDataProviderGeoFeatureSerializer,
+    filtered_basic_data_provider_serializer,
+    basic_data_provider_list_serializer,
+    basic_geojson_list_serializer,
 )
 from eventkit_cloud.api.utils import (
     get_run_zip_file,
@@ -889,12 +891,24 @@ class DataProviderViewSet(EventkitViewSet):
             self.request.query_params.get("format", "").lower() == "geojson"
             or self.request.headers.get("content-type") == "application/geo+json"
         ):
-            return (lambda queryset, *args, **kwargs: basic_geojson_list_serializer(basic_data_provider_list_serializer(queryset, include_geometry=True, *args, **kwargs),
-                                                                   "the_geom", *args, **kwargs),
-            lambda queryset, *args, **kwargs: basic_geojson_list_serializer(filtered_basic_data_provider_serializer(queryset, include_geometry=True, *args, **kwargs),
-                                                            "the_geom", *args, **kwargs))
-        return (lambda queryset, *args, **kwargs: basic_data_provider_list_serializer(queryset, *args, **kwargs),
-                lambda queryset, *args, **kwargs: filtered_basic_data_provider_serializer(queryset, *args, **kwargs))
+            return (
+                lambda queryset, *args, **kwargs: basic_geojson_list_serializer(
+                    basic_data_provider_list_serializer(queryset, include_geometry=True, *args, **kwargs),
+                    "the_geom",
+                    *args,
+                    **kwargs,
+                ),
+                lambda queryset, *args, **kwargs: basic_geojson_list_serializer(
+                    filtered_basic_data_provider_serializer(queryset, include_geometry=True, *args, **kwargs),
+                    "the_geom",
+                    *args,
+                    **kwargs,
+                ),
+            )
+        return (
+            lambda queryset, *args, **kwargs: basic_data_provider_list_serializer(queryset, *args, **kwargs),
+            lambda queryset, *args, **kwargs: filtered_basic_data_provider_serializer(queryset, *args, **kwargs),
+        )
 
     def get_queryset(self):
         """
@@ -936,52 +950,26 @@ class DataProviderViewSet(EventkitViewSet):
         * slug: optional lookup field
         * return: A list of data providers.
         """
-        from django.db import connection, reset_queries
-        import time
-        start = time.time()
-        logger.error(f"Getting serializer classes")
+
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
 
-        # serializer, filtered_serializer = self.get_basic_serializer_classes(*args, **kwargs)
         # The cache_key will be different if serializing a geojson or an api json.
         cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)
         data = cache.get(cache_key)
-        reset_queries()
         if not data:
             queryset = self.get_queryset()
-            logger.error(f"Getting attribute_class_filter: {time.time() - start}")
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
-            logger.error(f"finished.: {time.time() - start}")
-            logger.error(f"attribute_class_filter queries: {len(connection.queries)}")
-            reset_queries()
-            logger.error(f"Serializing: {time.time() - start}")
             data = serializer(providers, many=True, context={"request": request})
             filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
-
-            logger.error(f"Serializing queries: {len(connection.queries)}")
-            # logger.error(connection.queries[:10])
-            logger.error(f"Finished: {time.time() - start}")
-            reset_queries()
-            logger.error(f"Type of data: {type(data)}")
             if isinstance(data, list):
                 data += filtered_data
             else:
                 filtered_data.update(data)
                 data = filtered_data
-            logger.error(f"joining data queries: {len(connection.queries)}")
-            reset_queries()
 
-            # logger.error([q.get("time") for q in connection.queries])
-            logger.error(f"updating cache: {time.time() - start}")
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 DataProvider.update_cache_key_list(cache_key)
-                cache.clear()
-            logger.error(f"caching queries: {len(connection.queries)}")
-            reset_queries()
 
-        logger.error(f"total queries: {len(connection.queries)}")
-        logger.error(f"Total Time to respond: {time.time() - start}")
-        # logger.error(connection.queries[1:10])
         return Response(data)
 
     def retrieve(self, request, slug=None, *args, **kwargs):

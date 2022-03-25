@@ -619,7 +619,10 @@ class TestExportTasks(ExportTaskBase):
         example_overpass_query = "some_query; out;"
         example_config = {"overpass_query": example_overpass_query}
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config, Dumper=CDumper)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
         mock_connect.assert_called_once()
         mock_overpass.Overpass.assert_called_once()
@@ -630,7 +633,10 @@ class TestExportTasks(ExportTaskBase):
         # Test canceling the provider task on an empty geopackage.
         mock_geopackage.Geopackage().run.return_value = None
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config, Dumper=CDumper)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
         mock_cancel_provider_task.assert_called_once()
 
@@ -643,7 +649,10 @@ class TestExportTasks(ExportTaskBase):
         example_pbf_file = "test.pbf"
         example_config = {"pbf_file": example_pbf_file}
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config, Dumper=CDumper)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
 
         mock_overpass.Overpass.assert_not_called()

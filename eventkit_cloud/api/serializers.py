@@ -7,10 +7,11 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 """
 import json
 import logging
+
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
-from typing import List, Union, Iterable, Optional
+from typing import List, Union, Optional
 from urllib.parse import urlsplit, ParseResult
 
 from audit_logging.models import AuditEvent
@@ -23,7 +24,6 @@ from django.db.models import QuerySet
 from django.utils.translation import ugettext as _
 from notifications.models import Notification
 from rest_framework import serializers
-from rest_framework.request import Request
 from rest_framework.serializers import ValidationError
 from rest_framework_gis import serializers as geo_serializers
 from rest_framework_gis.fields import GeometrySerializerMethodField
@@ -365,9 +365,7 @@ class SimpleJobSerializer(serializers.Serializer):
 def basic_license_list_serializer(license: Optional[License]):
     """Serialize Licenses."""
     if license:
-        return {"slug": license.slug,
-                "name": license.name,
-                "text": license.text}
+        return {"slug": license.slug, "name": license.name, "text": license.text}
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -937,7 +935,9 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         return obj.supported_projections.all().values("uid", "name", "srid", "description")
 
 
-def filtered_basic_data_provider_serializer(data_providers: Union[DataProvider, List[DataProvider]], many=False, **kwargs):
+def filtered_basic_data_provider_serializer(
+    data_providers: Union[DataProvider, List[DataProvider]], many=False, **kwargs
+):
 
     if not data_providers:
         return [{}]
@@ -948,10 +948,10 @@ def filtered_basic_data_provider_serializer(data_providers: Union[DataProvider, 
     if not many and len(data_providers) > 1:
         raise Exception("Trying to serialize more than one providers without many=True.")
 
-    serialized_data_providers = [{"id": data_provider.id,
-                                  "uid": data_provider.uid,
-                                  "hidden": True,
-                                  "display": False} for data_provider in data_providers]
+    serialized_data_providers = [
+        {"id": data_provider.id, "uid": data_provider.uid, "hidden": True, "display": False}
+        for data_provider in data_providers
+    ]
     if not many:
         serialized_data_providers = serialized_data_providers[0]
     return serialized_data_providers
@@ -970,20 +970,29 @@ class FilteredDataProviderSerializer(serializers.ModelSerializer):
     def get_display(self, obj):
         return False
 
+
 def basic_format_serializer(export_format, fields):
     return {field: getattr(export_format, field) for field in fields}
 
 
-def basic_data_provider_serializer(data_provider: DataProvider, context: dict = None, proxy_formats: dict = None,
-                                   include_geometry: bool = False, format_fields: List[str]=None, **kwargs):
+def basic_data_provider_serializer(
+    data_provider: DataProvider,
+    context: dict = None,
+    proxy_formats: dict = None,
+    include_geometry: bool = False,
+    format_fields: List[str] = None,
+    **kwargs,
+):
 
     format_fields = format_fields or []
 
     request = context.get("request")
 
     def get_supported_formats(obj):
-        export_formats = [basic_format_serializer(export_format, format_fields) for export_format in
-                          obj.export_provider_type.supported_formats.all()]
+        export_formats = [
+            basic_format_serializer(export_format, format_fields)
+            for export_format in obj.export_provider_type.supported_formats.all()
+        ]
         if proxy_formats:
             proxy_format_list = proxy_formats.get(obj.slug) or []
             export_formats.append(proxy_format_list)
@@ -1007,41 +1016,48 @@ def basic_data_provider_serializer(data_provider: DataProvider, context: dict = 
                 ).geturl()
         return ""
 
-    serialized_data_provider = {"id": data_provider.id,
-                                "uid": data_provider.uid,
-                                "name": data_provider.name,
-                                "slug": data_provider.slug,
-                                "label": data_provider.label,
-                                "preview_url": data_provider.preview_url,
-                                "service_copyright": data_provider.service_copyright,
-                                "service_description": data_provider.service_description,
-                                "type": data_provider.export_provider_type and data_provider.export_provider_type.type_name,
-                                "supported_formats": get_supported_formats(data_provider),
-                                "thumbnail_url": get_thumbnail_url(data_provider),
-                                "license": basic_license_list_serializer(data_provider.license),
-                                ## Can add these after we convert config to jsonfield.
-                                "metadata": data_provider.config and data_provider.metadata,
-                                "footprint_url": data_provider.footprint_url,
-                                "max_data_size": data_provider.get_max_data_size(request and request.user),
-                                "max_selection": data_provider.get_max_selection_size(request and request.user),
-                                "use_bbox": data_provider.export_provider_type and data_provider.export_provider_type.use_bbox,
-                                "hidden": False,
-                                "data_type": data_provider.data_type,
-                                "created_at": data_provider.created_at,
-                                "updated_at": data_provider.updated_at,
-                                "layer": data_provider.layer,
-                                "level_from": data_provider.level_from,
-                                "level_to": data_provider.level_to,
-                                "zip": data_provider.zip,
-                                "display": data_provider.display,
-                                "export_provider_type": data_provider.export_provider_type and data_provider.export_provider_type.id,
-                                "attribute_class": data_provider.attribute_class and data_provider.attribute_class.id}
+    serialized_data_provider = {
+        "id": data_provider.id,
+        "uid": data_provider.uid,
+        "name": data_provider.name,
+        "slug": data_provider.slug,
+        "label": data_provider.label,
+        "preview_url": data_provider.preview_url,
+        "service_copyright": data_provider.service_copyright,
+        "service_description": data_provider.service_description,
+        "type": data_provider.export_provider_type and data_provider.export_provider_type.type_name,
+        "supported_formats": get_supported_formats(data_provider),
+        "thumbnail_url": get_thumbnail_url(data_provider),
+        "license": basic_license_list_serializer(data_provider.license),
+        "metadata": data_provider.config and data_provider.metadata,
+        "footprint_url": data_provider.footprint_url,
+        "max_data_size": data_provider.get_max_data_size(request and request.user),
+        "max_selection": data_provider.get_max_selection_size(request and request.user),
+        "use_bbox": data_provider.export_provider_type and data_provider.export_provider_type.use_bbox,
+        "hidden": False,
+        "data_type": data_provider.data_type,
+        "created_at": data_provider.created_at,
+        "updated_at": data_provider.updated_at,
+        "layer": data_provider.layer,
+        "level_from": data_provider.level_from,
+        "level_to": data_provider.level_to,
+        "zip": data_provider.zip,
+        "display": data_provider.display,
+        "export_provider_type": data_provider.export_provider_type and data_provider.export_provider_type.id,
+        "attribute_class": data_provider.attribute_class and data_provider.attribute_class.id,
+    }
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
     return serialized_data_provider
 
-def basic_data_provider_list_serializer(data_providers: List[DataProvider], context: dict = None, many: bool = False,
-                                        include_geometry: bool = False, ** kwargs):
+
+def basic_data_provider_list_serializer(
+    data_providers: List[DataProvider],
+    context: dict = None,
+    many: bool = False,
+    include_geometry: bool = False,
+    **kwargs,
+):
 
     if not data_providers:
         return [{}]
@@ -1062,22 +1078,33 @@ def basic_data_provider_list_serializer(data_providers: List[DataProvider], cont
             else:
                 proxy_formats[provider_slug] = [export_format]
 
-    serialized_providers = [basic_data_provider_serializer(data_provider, context=context, format_fields=format_fields,
-                                           proxy_formats=proxy_formats, include_geometry=include_geometry) for data_provider in data_providers]
+    serialized_providers = [
+        basic_data_provider_serializer(
+            data_provider,
+            context=context,
+            format_fields=format_fields,
+            proxy_formats=proxy_formats,
+            include_geometry=include_geometry,
+        )
+        for data_provider in data_providers
+    ]
     if not many:
         serialized_providers = serialized_providers[0]
 
     return serialized_providers
 
+
 def basic_geojson_serializer(serialized_object: dict, geometry_field: str, *args, **kwargs):
-    return {"id": serialized_object.pop(id, None),
-            "type": "Feature",
-            "geometry": serialized_object.pop(geometry_field, None),
-            "bbox": None, # TODO: Add bbox?
-            "properties": serialized_object
+    return {
+        "id": serialized_object.pop(id, None),
+        "type": "Feature",
+        "geometry": serialized_object.pop(geometry_field, None),
+        "bbox": None,  # TODO: Add bbox?
+        "properties": serialized_object,
     }
 
-def basic_geojson_list_serializer(serialized_objects: List[dict], geometry_field:str, many=False, *args, **kwargs):
+
+def basic_geojson_list_serializer(serialized_objects: List[dict], geometry_field: str, many=False, *args, **kwargs):
     if not isinstance(serialized_objects, (List, QuerySet)):
         serialized_objects = [serialized_objects]
 
@@ -1085,10 +1112,13 @@ def basic_geojson_list_serializer(serialized_objects: List[dict], geometry_field
         raise Exception("Trying to serialize more than one providers without many=True.")
 
     if many:
-        return {"type": "FeatureCollection",
-                "features": [basic_geojson_serializer(feature, geometry_field) for feature in serialized_objects]}
+        return {
+            "type": "FeatureCollection",
+            "features": [basic_geojson_serializer(feature, geometry_field) for feature in serialized_objects],
+        }
     else:
         return basic_geojson_serializer(serialized_objects[0], geometry_field)
+
 
 class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(view_name="api:providers-detail", lookup_field="slug")
@@ -1199,20 +1229,6 @@ class DataProviderGeoFeatureSerializer(DataProviderSerializer, GeoFeatureModelSe
     def get_bbox(self, obj):
         return obj.the_geom.extent
 
-
-class DataProviderGeoFeatureSerializer(DataProviderSerializer, GeoFeatureModelSerializer):
-    data_provider_geom = GeometrySerializerMethodField()
-    bbox = GeometrySerializerMethodField()
-
-    class Meta(DataProviderSerializer.Meta):
-        geo_field = "data_provider_geom"
-        bbox_geo_field = "bbox"
-
-    def get_data_provider_geom(self, obj):
-        return obj.the_geom
-
-    def get_bbox(self, obj):
-        return obj.the_geom.extent
 
 class FilteredDataProviderGeoFeatureSerializer(FilteredDataProviderSerializer, GeoFeatureModelSerializer):
     """
