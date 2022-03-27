@@ -6,7 +6,7 @@ from typing import List
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
+from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import (
@@ -80,7 +80,7 @@ class TaskChainBuilder(object):
             .prefetch_related("formats__supported_projections")
             .get(uid=provider_task_uid)
         )
-        data_provider = data_provider_task.provider
+        data_provider: DataProvider = data_provider_task.provider
         job = run.job
 
         job_name = normalize_name(job.name)
@@ -115,17 +115,24 @@ class TaskChainBuilder(object):
                 "data_provider_task_record_uid": data_provider_task_record.uid,
             },
         )
+        # Export task and format to replace primary export task if source data format is not needed
+        primary_export_task_replacement = None
 
+        # if source data format was explicitly requested, don't replace primary task
+        source_exported = any(map(lambda fmt: fmt.name == "source", formats))
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
             logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
-            export_format_key = (
-                "ogcapi-process"
-                if export_format.options.get("proxy")
-                and (data_provider.slug in export_format.options.get("providers", []))
-                else export_format.slug
-            )
-            export_task = create_format_task(export_format_key)
+            if is_supported_proxy_format(export_format, data_provider):
+                export_task = create_format_task("ogcapi-process")
+                if not primary_export_task_replacement and not source_exported:
+                    logger.error(f"REPLACING PRIMARY EXPORT TASK WITH TASK: {export_task}, FORMAT: {export_format}")
+                    primary_export_task_replacement = export_task
+                    # don't add this to export_tasks or else it will be duplicated when primary task is created
+                    continue
+            else:
+                export_task = create_format_task(export_format.slug)
+
             default_projection = get_default_projection(export_format.get_supported_projection_list(), projections)
             task_name = export_format.name
             if default_projection:
@@ -211,11 +218,22 @@ class TaskChainBuilder(object):
         else:
             format_tasks = None
 
+        # if none of the other export formats are supported then keep PETR the same
+        # if one or more of the other export formats are supported then make one of
+        # the supported formats ETRs the PETR
+        #
+
+        # "ogcapi-process"
+        # if export_format.options.get("proxy")
+        #     and (data_provider.slug in export_format.options.get("providers", []))
+        # else export_format.slug
+
+        # use replacement task if it exists - because default source data is not needed
         primary_export_task_record = create_export_task_record(
-            task_name=primary_export_task.name,
+            task_name=getattr(primary_export_task_replacement, "name", primary_export_task.name),
             export_provider_task=data_provider_task_record,
             worker=worker,
-            display=getattr(primary_export_task, "display", False),
+            display=getattr(primary_export_task_replacement, "display", getattr(primary_export_task, "display", False)),
         )
 
         if "osm" in primary_export_task.name.lower():
@@ -286,6 +304,10 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
         logger.error("Saving task {0} threw: {1}".format(task_name, e))
         raise e
     return export_task
+
+
+def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataProvider):
+    return export_format.options.get("proxy") and (data_provider.slug in export_format.options.get("providers", []))
 
 
 def error_handler(task_id=None):

@@ -814,6 +814,7 @@ def ogc_result_task(
             export_format = ogcapi_config["inputs"][format_field][format_prop]
         if export_format and export_format.lower() == export_format_slug.lower():
             result["result"] = result["ogcapi_process"]
+            logger.error(f'EEERRRROOOORRRRRR, COPYING RESULT FROM OGCAPI_PROCESS: {result["ogcapi_process"]}')
             return result
         else:
             # Workaround for case-sensitivity in upsteam sources.
