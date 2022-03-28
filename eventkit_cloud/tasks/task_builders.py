@@ -115,21 +115,18 @@ class TaskChainBuilder(object):
                 "data_provider_task_record_uid": data_provider_task_record.uid,
             },
         )
-        # Export task and format to replace primary export task if source data format is not needed
-        primary_export_task_replacement = None
 
-        # if source data format was explicitly requested, don't replace primary task
-        source_exported = any(map(lambda fmt: fmt.name == "source", formats))
+        skip_primary_export_task = False
+        if set(item.name.lower() for item in formats).issubset(
+            set(item.name.lower() for item in get_proxy_formats(data_provider))
+        ):
+            skip_primary_export_task = True
+
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
             logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
             if is_supported_proxy_format(export_format, data_provider):
                 export_task = create_format_task("ogcapi-process")
-                if not primary_export_task_replacement and not source_exported:
-                    logger.error(f"REPLACING PRIMARY EXPORT TASK WITH TASK: {export_task}, FORMAT: {export_format}")
-                    primary_export_task_replacement = export_task
-                    # don't add this to export_tasks or else it will be duplicated when primary task is created
-                    continue
             else:
                 export_task = create_format_task(export_format.slug)
 
@@ -218,22 +215,12 @@ class TaskChainBuilder(object):
         else:
             format_tasks = None
 
-        # if none of the other export formats are supported then keep PETR the same
-        # if one or more of the other export formats are supported then make one of
-        # the supported formats ETRs the PETR
-        #
-
-        # "ogcapi-process"
-        # if export_format.options.get("proxy")
-        #     and (data_provider.slug in export_format.options.get("providers", []))
-        # else export_format.slug
-
         # use replacement task if it exists - because default source data is not needed
         primary_export_task_record = create_export_task_record(
-            task_name=getattr(primary_export_task_replacement, "name", primary_export_task.name),
+            task_name=primary_export_task.name,
             export_provider_task=data_provider_task_record,
             worker=worker,
-            display=getattr(primary_export_task_replacement, "display", getattr(primary_export_task, "display", False)),
+            display=getattr(primary_export_task, "display", False),
         )
 
         if "osm" in primary_export_task.name.lower():
@@ -270,10 +257,11 @@ class TaskChainBuilder(object):
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name
         )
-        if format_tasks:
-            tasks = chain(primary_export_task_signature, format_tasks)
+        if skip_primary_export_task:
+            tasks = chain(format_tasks)
+            primary_export_task_record.delete()
         else:
-            tasks = primary_export_task_signature
+            tasks = chain(primary_export_task_signature, format_tasks)
 
         tasks = chain(tasks)
 
@@ -308,6 +296,10 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
 
 def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataProvider):
     return export_format.options.get("proxy") and (data_provider.slug in export_format.options.get("providers", []))
+
+
+def get_proxy_formats(data_provider: DataProvider):
+    return ExportFormat.objects.filter(options__providers__contains=data_provider.slug)
 
 
 def error_handler(task_id=None):
