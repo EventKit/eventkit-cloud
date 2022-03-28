@@ -17,6 +17,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
+from yaml import CLoader, CDumper
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job, DataProviderType
@@ -618,7 +619,10 @@ class TestExportTasks(ExportTaskBase):
         example_overpass_query = "some_query; out;"
         example_config = {"overpass_query": example_overpass_query}
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
         mock_connect.assert_called_once()
         mock_overpass.Overpass.assert_called_once()
@@ -629,7 +633,10 @@ class TestExportTasks(ExportTaskBase):
         # Test canceling the provider task on an empty geopackage.
         mock_geopackage.Geopackage().run.return_value = None
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
         mock_cancel_provider_task.assert_called_once()
 
@@ -642,7 +649,10 @@ class TestExportTasks(ExportTaskBase):
         example_pbf_file = "test.pbf"
         example_config = {"pbf_file": example_pbf_file}
         osm_data_collection_pipeline(
-            example_export_task_record_uid, self.stage_dir, bbox=example_bbox, config=yaml.dump(example_config)
+            example_export_task_record_uid,
+            self.stage_dir,
+            bbox=example_bbox,
+            config=yaml.dump(example_config, Dumper=CDumper),
         )
 
         mock_overpass.Overpass.assert_not_called()
@@ -1842,7 +1852,7 @@ class TestExportTasks(ExportTaskBase):
         example_format_slug = "fmt"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
         self.provider.slug = expected_provider_slug
-        self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}})
+        self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}}, Dumper=CDumper)
         self.provider.save()
 
         expected_outfile = "/path/to/file.ext"
@@ -2008,7 +2018,7 @@ class TestExportTasks(ExportTaskBase):
                           cert_pass: "something"
                         """
 
-        configuration = yaml.load(config)["ogcapi_process"]
+        configuration = yaml.load(config, Loader=CLoader)["ogcapi_process"]
         service_url = "http://example.test/v1/"
         session_token = "_some_token_"
         example_download_url = "https://example.test/path.zip"

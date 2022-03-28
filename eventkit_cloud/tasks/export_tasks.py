@@ -30,6 +30,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from yaml import CLoader
 
 from eventkit_cloud.celery import app, TaskPriority
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -365,7 +366,7 @@ def osm_data_collection_pipeline(
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
-    pbf_file = yaml.load(config).get("pbf_file")
+    pbf_file = yaml.load(config, Loader=CLoader).get("pbf_file")
 
     if pbf_file:
         logger.info(f"Using PBF file: {pbf_file} instead of overpass.")
