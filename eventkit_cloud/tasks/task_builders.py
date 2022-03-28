@@ -215,7 +215,6 @@ class TaskChainBuilder(object):
         else:
             format_tasks = None
 
-        # use replacement task if it exists - because default source data is not needed
         primary_export_task_record = create_export_task_record(
             task_name=primary_export_task.name,
             export_provider_task=data_provider_task_record,
