@@ -182,6 +182,14 @@ export function CreateDataPackButton(props: Props) {
         return run.status === ApiStatuses.files.CANCELED;
     }
 
+    function isRunFailed() {
+        return run.status === ApiStatuses.files.FAILED;
+    }
+
+    function isRunIncomplete() {
+        return run.status === ApiStatuses.files.INCOMPLETE;
+    }
+
     function isZipProcessing() {
         // Return true when the zip is available and in some kind of state that indicates it will be available
         // after a period of processing (pending or running)
@@ -230,6 +238,12 @@ export function CreateDataPackButton(props: Props) {
         }
         if (isRunCanceled()) {
             return 'Zip Canceled';
+        }
+        if (isRunFailed()) {
+            return 'Job Failed';
+        }
+        if (isRunIncomplete()) {
+            return 'Job Incomplete';
         }
         if (!isRunCompleted()) {
             return 'Job Processing...';
