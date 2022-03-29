@@ -11,6 +11,7 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
+from yaml import CDumper
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
@@ -434,7 +435,7 @@ class TestDataProvider(TestCase):
         expected_metadata = {"url": expected_url, "type": "arcgis"}
         mock_get_mapproxy_metadata_url.return_value = expected_url
         config = {"sources": {"info": {"type": "arcgis", "req": {"url": example_url}}}}
-        self.data_provider.config = yaml.dump(config)
+        self.data_provider.config = yaml.dump(config, Dumper=CDumper)
         self.assertEqual(expected_metadata, self.data_provider.metadata)
 
     @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_footprint_url")
@@ -443,7 +444,7 @@ class TestDataProvider(TestCase):
         expected_url = "http://ek.test/footprint/"
         mock_get_mapproxy_footprint_url.return_value = expected_url
         config = {"sources": {"footprint": {"req": {"url": example_url}}}}
-        self.data_provider.config = yaml.dump(config)
+        self.data_provider.config = yaml.dump(config, Dumper=CDumper)
         self.assertEqual(expected_url, self.data_provider.footprint_url)
 
     def test_layers(self):
@@ -466,14 +467,16 @@ class TestDataProvider(TestCase):
         # Test OSM configuration
         expected_layers = ["layer1", "layer2"]
         self.data_provider.type = GeospatialDataType.VECTOR.value
-        self.data_provider.config = yaml.dump({layer: "data" for layer in expected_layers})
+        self.data_provider.config = yaml.dump({layer: "data" for layer in expected_layers}, Dumper=CDumper)
         self.assertEqual(self.data_provider.layers, expected_layers)
 
         # Test multilayer feature service
         expected_layers = ["layer1", "layer2"]
         self.data_provider.export_provider_type.type_name = "wfs"
         self.data_provider.type = GeospatialDataType.VECTOR.value
-        self.data_provider.config = yaml.dump({"vector_layers": [{"name": layer} for layer in expected_layers]})
+        self.data_provider.config = yaml.dump(
+            {"vector_layers": [{"name": layer} for layer in expected_layers]}, Dumper=CDumper
+        )
         self.assertEqual(self.data_provider.layers, expected_layers)
 
     def test_get_use_bbox_no_export_type(self):
