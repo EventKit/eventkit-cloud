@@ -26,7 +26,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.9.2-Linux-x86_
     # Setup channels, only use channels in environment file or built locally.
     conda config --remove channels defaults && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
-    conda config --set channel_priority strict && \
+    conda config --set channel_priority flexible && \
     \
     # Setup certs (might be needed if self-hosting).
     openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out /var/lib/eventkit/conda/cacert.crt && \
