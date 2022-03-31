@@ -239,12 +239,6 @@ export function CreateDataPackButton(props: Props) {
         if (isRunCanceled()) {
             return 'Zip Canceled';
         }
-        if (isRunFailed()) {
-            return 'Job Failed';
-        }
-        if (isRunIncomplete()) {
-            return 'Job Incomplete';
-        }
         if (!isRunCompleted()) {
             return 'Job Processing...';
         }
@@ -255,7 +249,10 @@ export function CreateDataPackButton(props: Props) {
             return 'Zip Error';
         }
         if (!isZipProcessing()) {
-            return (<>CREATE DATAPACK {zipText}</>);
+            if (isRunFailed() || isRunIncomplete()) {
+               return 'Job Failed';
+            }
+            return (<>CREATE DATAPACK</>);
         }
         return 'Processing Zip...';
     }
