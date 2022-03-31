@@ -1,5 +1,5 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.12.0" %}
+{% set version = "1.13.0" %}
 
 {% set run_requirements = load_file_regex(
     load_file="conda-requirements.txt",
@@ -20,7 +20,7 @@ requirements:
     - git
     - pip=21.1
     - python >=3.9,<3.10
-    - nodejs>=10
+    - nodejs =16
     - ruby
   run_constrained:
     - memcached=1.6.9
