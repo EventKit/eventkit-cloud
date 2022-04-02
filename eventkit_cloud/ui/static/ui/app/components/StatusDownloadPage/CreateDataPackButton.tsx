@@ -260,7 +260,7 @@ export function CreateDataPackButton(props: Props) {
             setButtonState(ButtonStates.JOB_PROCESSING)
         } else if (isZipAvailable()) {
             setButtonState(ButtonStates.ZIP_AVAILABLE)
-        }else if (isZipResponseBad()) {
+        } else if (isZipResponseBad()) {
             setButtonState(ButtonStates.ZIP_ERROR)
         } else if (!isZipProcessing()) {
             if (isRunFailed() || isRunIncomplete()) {
