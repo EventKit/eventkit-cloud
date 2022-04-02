@@ -221,8 +221,7 @@ export function CreateDataPackButton(props: Props) {
     }
 
     function isRunCanceled() {
-        return run.status === ApiStatuses.files.CANCELED ||
-            (zipResponseExists() && zipAvailableResponse.data[0].status === ApiStatuses.files.CANCELED);
+        return run.status === ApiStatuses.files.CANCELED;
     }
 
     function isRunFailed() {
