@@ -16,6 +16,7 @@ import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
 import {MatomoClickTracker} from "../MatomoHandler";
 import {renderIf} from "../../utils/renderIf";
+import theme from "../../styles/eventkit_theme";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -78,19 +79,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
         '&:hover': {
             backgroundColor: theme.eventkit.colors.white,
         },
-    },
-    iconButtonEnabled: {
-        fill: theme.eventkit.colors.primary,
-        verticalAlign: 'middle', marginRight: '5px',
-    },
-    iconButtonAlert: {
-        fill: theme.eventkit.colors.warning,
-        verticalAlign: 'middle', marginRight: '5px',
-    },
-    iconButtonDisabled: {
-        fill: theme.eventkit.colors.white,
-        color: theme.eventkit.colors.primary,
-        verticalAlign: 'middle', marginRight: '5px',
     },
 });
 
@@ -292,8 +280,36 @@ export function CreateDataPackButton(props: Props) {
         return `(${sizeText}.ZIP)`
     }
 
+    function getIconProps() {
+        const {colors} = theme.eventkit;
+        let iconProps: any = {
+            style: {
+                fill: colors.primary
+            },
+            className: 'qa-DataPack-button-enabled',
+        };
+        if (!buttonEnabled) {
+            iconProps = {
+                style: {fill: colors.white, color: colors.primary},
+                className: 'qa-DataPack-button-disabled"',
+            };
+        }
+        iconProps.style = {
+            ...iconProps.style,
+            ...{
+                verticalAlign: 'middle', marginRight: '5px',
+            },
+        };
+        return iconProps;
+    }
+
     function updateButtonProperties() {
-         switch (buttonState) {
+        const iconProps = getIconProps();
+        const alertIconProps = {
+            ...iconProps.style,
+            fill: theme.eventkit.colors.warning,
+        };
+        switch (buttonState) {
             case ButtonStates.POLICY_RESTRICTED:
                 setButtonText('Restricted by Policy');
                 setPopoverText(
@@ -302,14 +318,14 @@ export function CreateDataPackButton(props: Props) {
                 );
                 setButtonEnabled(false);
                 setCreatingMessage('')
-                setIconComponent(<AlertError className={classes.iconButtonAlert}/>);
+                setIconComponent(<AlertError {...alertIconProps}/>);
                 break;
             case ButtonStates.RUN_CANCELED:
                 setButtonText('Zip Canceled');
                 setPopoverText(cancelFailurePopoverMsg);
                 setButtonEnabled(false);
                 setCreatingMessage('Unable to create your zipfile at this time, please try again or contact an administrator');
-                setIconComponent(<AlertError className={classes.iconButtonAlert}/>);
+                setIconComponent(<AlertError {...alertIconProps}/>);
                 break;
             case ButtonStates.JOB_PROCESSING:
                 setButtonText('Job Processing...')
@@ -318,14 +334,14 @@ export function CreateDataPackButton(props: Props) {
                 setCreatingMessage(
                     'This DataPack is being processed. We will let you know in the notifications panel when it is ready.'
                 )
-                setIconComponent(<CircularProgress className={classes.iconButtonEnabled} size={18}/>);
+                setIconComponent(<CircularProgress {...iconProps} size={18}/>);
                 break;
             case ButtonStates.ZIP_AVAILABLE:
                 setButtonText(`DOWNLOAD DATAPACK ${getZipText()}`)
                 setPopoverText('')
                 setButtonEnabled(true);
                 setCreatingMessage('DataPack (.ZIP) ready for download')
-                setIconComponent(<CloudDownload className={classes.iconButtonEnabled}/>);
+                setIconComponent(<CloudDownload {...iconProps}/>);
                 break;
             case ButtonStates.ZIP_ERROR:
                 setButtonText('Zip Error')
@@ -334,7 +350,7 @@ export function CreateDataPackButton(props: Props) {
                 setCreatingMessage(
                     'Unable to create your zipfile at this time, please try again or contact an administrator'
                 )
-                setIconComponent(<AlertError className={classes.iconButtonAlert}/>);
+                setIconComponent(<AlertError {...alertIconProps}/>);
                 break;
             case ButtonStates.JOB_FAILED:
                 setButtonText('Job Failed')
@@ -343,7 +359,7 @@ export function CreateDataPackButton(props: Props) {
                 setCreatingMessage(
                     'Unable to create your zipfile at this time, please try again or contact an administrator'
                 )
-                setIconComponent(<AlertError className={classes.iconButtonAlert}/>);
+                setIconComponent(<AlertError {...alertIconProps}/>);
                 break;
              case ButtonStates.ZIP_PROCESSING:
                 setButtonText('Processing Zip...')
@@ -352,22 +368,22 @@ export function CreateDataPackButton(props: Props) {
                 setCreatingMessage(
                     'We are creating your zip file. We will let you know in the notifications panel when it is ready.'
                 )
-                setIconComponent(<CircularProgress className={classes.iconButtonEnabled} size={18}/>);
+                setIconComponent(<CircularProgress {...iconProps} size={18}/>);
                 break;
             case ButtonStates.CREATE_DATAPACK:
                 setButtonText('CREATE DATAPACK')
                 setPopoverText('')
                 setButtonEnabled(true);
                 setCreatingMessage('')
-                setIconComponent(<CloudDownload className={classes.iconButtonEnabled}/>);
+                setIconComponent(<CloudDownload {...iconProps}/>);
                 break;
             default:
                 setButtonText('CREATE DATAPACK')
                 setPopoverText('')
                 setButtonEnabled(false);
                 setCreatingMessage('')
-                setIconComponent(<CloudDownload className={classes.iconButtonEnabled}/>);
-         }
+                setIconComponent(<CloudDownload {...iconProps}/>);
+        }
     }
 
     previousFrameText.current = (<>buttonText</>);
