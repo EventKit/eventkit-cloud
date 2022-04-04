@@ -383,7 +383,9 @@ describe('DataPackPage component', () => {
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const collection = 'test_user';
         const search = 'search_text';
-        const providers = ['test_provider'];
+        const providers = {
+            objects: ['test_provider'],
+        };
         const formats = ['test_format'];
         const projections = [4326];
         const geojson = {data: {}};
@@ -397,7 +399,7 @@ describe('DataPackPage component', () => {
             minDate,
             maxDate,
             search,
-            providers,
+            providers: providers.objects,
             formats,
             projections,
             geojson,
@@ -428,7 +430,7 @@ describe('DataPackPage component', () => {
         const formats = {};
         const page = 1;
         const permissions = {value: '', groups: {}, members: {}};
-        const expectedParams = [{
+        const params = [{
             page_size: 12,
             ordering: '-job__featured',
             ownerFilter: "",
@@ -436,17 +438,18 @@ describe('DataPackPage component', () => {
             minDate: null,
             maxDate: null,
             search,
-            providers: {},
+            providers: undefined,
             formats,
             projections: {},
             geojson: null,
             permissions,
             page,
-            isAuto: false,
         }];
-        props.getRuns();
-        instance.makePartialRunRequest();
-        expect(props.getRuns.called).toBe(true);
+        const isAuto = false
+        const expectedParams = [{...params, isAuto}]
+        props.getRuns.resetHistory();
+        instance.makePartialRunRequest(isAuto, params);
+        expect(props.getRuns.calledOnce).toBe(true);
         expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 

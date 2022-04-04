@@ -9,16 +9,16 @@ from functools import wraps
 from itertools import repeat
 from statistics import mean
 from tempfile import NamedTemporaryFile
-from typing import List, Tuple
+from typing import List, Tuple, TypedDict
 
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from mapproxy.grid import tile_grid
 from osgeo import gdal, ogr, osr
 
 from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
-from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
     """
 
     dataset = None
-    ret = {"driver": None, "is_raster": None, "nodata": None}
+    ret = {"driver": None, "is_raster": None, "nodata": None, "dim": [0, 0, 0]}
 
     try:
         dataset = open_dataset(ds_path, is_raster)
@@ -194,7 +194,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
                 bands = list(set([dataset.GetRasterBand(i + 1).GetNoDataValue() for i in range(dataset.RasterCount)]))
                 if len(bands) == 1:
                     ret["nodata"] = bands[0]
-
+                ret["dim"] = [dataset.RasterXSize, dataset.RasterYSize, len(bands)]
         if ret["driver"]:
             logger.debug("Identified dataset {0} as {1}".format(ds_path, ret["driver"]))
         else:
@@ -364,7 +364,7 @@ def convert(
             if not os.path.isfile(boundary):
                 raise Exception(f"Called convert using a boundary of {boundary} but no such path exists.")
         elif is_valid_bbox(boundary):
-            geojson = GeocodeAdapter.bbox2polygon(boundary)
+            geojson = bbox2polygon(boundary)
             bbox = boundary
         elif isinstance(boundary, dict):
             geojson = boundary
@@ -528,7 +528,10 @@ def convert_raster(
     if not translate_params:
         translate_params = dict()
     if boundary:
-        warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
+        # Conversion fails if trying to cut down very small files (i.e. 0x1 pixel error).
+        dims = list(map(sum, zip(*[get_meta(input_file)["dim"] for input_file in input_files]))) or [0, 0, 0]
+        if dims[0] > 100 and dims[1] > 100:
+            warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
     # Needed because arcpy can't change table names.
     if driver.lower() == "gpkg":
@@ -924,3 +927,66 @@ def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
     tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
     # convert the tiles to bboxes representing the tiles on the map
     return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
+
+
+class _ArcGISSpatialReference(TypedDict):
+    wkid: int
+
+
+class ArcGISSpatialReference(_ArcGISSpatialReference, total=False):
+    latestWkid: int
+
+
+class ArcGISExtent(TypedDict):
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
+    spatialReference: ArcGISSpatialReference
+
+
+def get_polygon_from_arcgis_extent(extent: ArcGISExtent):
+    spatial_reference = extent.get("spatialReference", {})
+    bbox = [extent.get("xmin"), extent.get("ymin"), extent.get("xmax"), extent.get("ymax")]
+    try:
+        polygon = Polygon.from_bbox(bbox)
+        polygon.srid = spatial_reference.get("latestWkid") or spatial_reference.get("wkid") or 4326
+        polygon.transform(4326)
+        return polygon
+    except Exception:
+        return Polygon.from_bbox([-180, -90, 180, 90])
+
+
+def is_valid_bbox(bbox):
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        return False
+    if bbox[0] < bbox[2] and bbox[1] < bbox[3]:
+        return True
+    else:
+        return False
+
+
+def expand_bbox(original_bbox, new_bbox):
+    """
+    Takes two bboxes and returns a new bbox containing the original two.
+    :param original_bbox: A list representing [west, south, east, north]
+    :param new_bbox: A list representing [west, south, east, north]
+    :return: A list containing the two original lists.
+    """
+    if not original_bbox:
+        original_bbox = list(new_bbox)
+        return original_bbox
+    original_bbox[0] = min(new_bbox[0], original_bbox[0])
+    original_bbox[1] = min(new_bbox[1], original_bbox[1])
+    original_bbox[2] = max(new_bbox[2], original_bbox[2])
+    original_bbox[3] = max(new_bbox[3], original_bbox[3])
+    return original_bbox
+
+
+def bbox2polygon(bbox):
+    try:
+        (w, s, e, n) = bbox
+    except KeyError:
+        return
+    coordinates = [[[w, s], [e, s], [e, n], [w, n], [w, s]]]
+    return {"type": "Polygon", "coordinates": coordinates}

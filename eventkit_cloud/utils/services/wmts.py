@@ -12,7 +12,7 @@ class WMTS(OWS):
         super(WMTS, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMTS"
 
-    def find_layer(self, root):
+    def find_layers(self, root):
         """
         :param root: Name of layer to find
         :return: XML 'Layer' Element, or None if not found
@@ -33,12 +33,11 @@ class WMTS(OWS):
         logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
 
         requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
+        layers = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
+        if not layers:
             raise MissingLayerError("Unable to find WMTS layer in layer names list")
 
-        layer = layer[0]
-        return layer
+        return layers
 
     def get_bbox(self, element) -> Optional[List[float]]:
 

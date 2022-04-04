@@ -18,6 +18,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase
+from yaml import CLoader, CDumper
 
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
@@ -54,9 +55,9 @@ logger = logging.getLogger(__name__)
 
 def add_max_data_size(provider, max_data_size):
     config = provider.config
-    config = yaml.load(config)
+    config = yaml.load(config, Loader=CLoader)
     config["max_data_size"] = max_data_size
-    provider.config = yaml.dump(config)
+    provider.config = yaml.dump(config, Dumper=CDumper)
     provider.save()
 
 
@@ -2205,7 +2206,13 @@ class TestMetricsViewSet(APITestCase):
         url = reverse("api:metrics")
         response = self.client.get(url, content_type="application/json; version=1.0")
         response_data = response.json()
-        expected_keys = ["Total Users", "Average Users Per Day", "Top User Groups", "Downloads by Area"]
+        expected_keys = [
+            "Total Users",
+            "Average Users Per Day",
+            "Top User Groups",
+            "Downloads by Area",
+            "Downloads by Product",
+        ]
         self.assertEqual(expected_keys, list(response_data.keys()))
 
         # TODO: Add example users, groups, and UserDownloads to ensure filters work correctly.

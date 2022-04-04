@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 import json
 import logging
+import multiprocessing
 import uuid
 from enum import Enum
+from typing import TYPE_CHECKING
 from typing import Union, List
 
-import multiprocessing
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -18,8 +20,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
-from eventkit_cloud.core.helpers import get_or_update_session
+from yaml import CLoader, CDumper
 
+from eventkit_cloud import settings
+from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
     CachedModelMixin,
     DownloadableMixin,
@@ -30,6 +34,11 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.utils.services import get_client
+from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+
+if TYPE_CHECKING:
+    from eventkit_cloud.utils.services.base import GisClient
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +172,10 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
             format = cls.objects.create(**kwargs)
             created = True
         return format, created
+
+    def get_supported_projection_list(self) -> List[int]:
+        supported_projections = self.supported_projections.all().values_list("srid", flat=True)
+        return supported_projections
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -304,9 +317,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
     )
 
-    # Used to store user list of user caches so that they can be invalidated.
-    provider_caches_key = "data_provider_caches"
-
     class Meta:  # pragma: no cover
 
         managed = True
@@ -314,15 +324,20 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     # Check if config changed to updated geometry
     __config = None
+    __url = None
+    __layer = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__config = self.config
+        self.__url = self.url
+        self.__layer = self.layer
 
     def update_geom(self):
         from eventkit_cloud.tasks.helpers import download_data
         from eventkit_cloud.ui.helpers import file_to_geojson
 
+        geometry = None
         if self.config != self.__config:
             orig_extent_url = load_provider_config(self.__config).get("extent_url")
             config = load_provider_config(self.config)
@@ -334,9 +349,38 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                     return
                 output_file = download_data(task_uid=str(random_uuid), input_url=extent_url, session=session)
                 geojson = file_to_geojson(output_file)
-                geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
-                if geometry:
-                    self.the_geom = convert_polygon(GEOSGeometry(json.dumps(geometry), srid=4326))
+                geojson_geometry = geojson.get("geometry") or geojson.get("features", [{}])[0].get("geometry")
+                geometry = GEOSGeometry(json.dumps(geojson_geometry), srid=4326)
+        elif (self.url != self.__url) or (self.layer != self.__layer):
+            try:
+                client = self.get_service_client()
+                geometry = client.download_geometry()
+            except AttributeError as e:
+                # TODO: This fails in tests.  How to handle failure to update geometry?
+                logger.info(e, exc_info=True)
+        if geometry:
+            self.the_geom = convert_polygon(geometry)
+
+    def get_service_client(self) -> GisClient:
+        url = self.url
+        if not self.url and "osm" in self.export_provider_type.type_name:
+            logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
+            url = settings.OVERPASS_API_URL
+        Client = get_client(self.export_provider_type.type_name)
+        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config))
+
+    def check_status(self, aoi_geojson: dict = None):
+        try:
+            client = self.get_service_client()
+            response = client.check(aoi_geojson=aoi_geojson)
+
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            response = get_status_result(CheckResult.UNKNOWN_ERROR)
+            logger.error(f"An exception occurred while checking the {self.name} provider.", exc_info=True)
+            logger.info(f"Status of provider '{self.name}': {response}")
+
+        return response
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
@@ -351,7 +395,31 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
+        self.update_export_formats()
+
         super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
+
+    def update_export_formats(self):
+        # TODO: Refactor utils/ogc_apiprocess into services.
+        from eventkit_cloud.utils.ogcapi_process import get_process_formats
+
+        process_formats = get_process_formats(self)
+        logger.info(f"Process_formats: {process_formats}")
+        for process_format in process_formats:
+            export_format, created = ExportFormat.get_or_create(**process_format)
+            if created:
+                # Use the value from process format which might be case sensitive,
+                # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
+                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
+                export_format.supported_projections.add(Projection.objects.get(srid=4326))
+            else:
+                providers = export_format.options.get("providers")
+                if providers:
+                    providers = list(set(providers + [self.slug]))
+                    export_format.options["providers"] = providers
+                else:
+                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+            export_format.save()
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -362,7 +430,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
         type = config.get("sources", {}).get("info", {}).get("type")
         if url:
@@ -374,7 +442,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
 
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
@@ -417,7 +485,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def max_data_size(self):
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
@@ -449,6 +517,19 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 return user_size_rule[0].max_selection_size
 
         return self.max_selection
+
+    def get_data_type(self) -> str:
+        """
+        This is used to populate the run metadata with special types for OSM and NOME.
+        This is used for custom cartography,
+        and should be removed if custom cartography is made configurable.
+        :param data_provider:
+        :return:
+        """
+        if self.slug.lower() in ["nome", "osm"]:
+            return self.slug.lower()
+        else:
+            return str(self.data_type)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
@@ -767,7 +848,11 @@ class JobPermission(TimeStampedModelMixin):
     # A user should only have one type of permission per job.
     class Meta:
         db_table = "jobpermission"
-        unique_together = ["job", "content_type", "object_id", "permission"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "content_type", "object_id", "permission"], name="unique_object_permission_per_job"
+            ),
+        ]
 
     @staticmethod
     def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
@@ -993,17 +1078,4 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
         conf.pop(service_key, None)
     if return_dict:
         return conf
-    return yaml.dump(conf)
-
-
-def get_data_type_from_provider(data_provider: DataProvider) -> str:
-    """
-    This is used to populate the run metadata with special types for OSM and NOME.  This is used for custom cartography,
-    and should be removed if custom cartography is made configurable.
-    :param data_provider:
-    :return:
-    """
-    if data_provider.slug.lower() in ["nome", "osm"]:
-        return data_provider.slug.lower()
-    else:
-        return data_provider.data_type
+    return yaml.dump(conf, Dumper=CDumper)

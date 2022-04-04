@@ -1,8 +1,10 @@
+from __future__ import annotations
 import copy
 import json
 import logging
 import time
 import requests
+from typing import TYPE_CHECKING
 
 from django.contrib.gis.geos import WKTWriter, GEOSGeometry
 from django.core.cache import cache
@@ -10,11 +12,13 @@ from urllib.parse import urljoin
 
 from eventkit_cloud.utils import gdalutils
 from eventkit_cloud.auth.views import has_valid_access_token
-from eventkit_cloud.jobs.models import clean_config
-from eventkit_cloud.jobs.models import load_provider_config
+from eventkit_cloud.jobs.models import clean_config, load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import update_progress
+
+if TYPE_CHECKING:
+    from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +42,6 @@ class OgcApiProcess:
 
     def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = get_job_payload(self.config, geometry, file_format=file_format)
-
         jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
@@ -110,7 +113,9 @@ class OgcApiProcess:
         """
 
         job_status = None
+        counter = 0
         while job_status not in OGC_Status.get_finished_status():
+            counter += interval
             time.sleep(interval)
             try:
                 response = self.session.get(job_url)
@@ -124,6 +129,7 @@ class OgcApiProcess:
                 raise Exception("OGC API Process service did not provide a valid status.")
             if task_id:
                 update_progress(task_id, progress=25, subtask_percentage=response_content.get("progress", 50))
+            logger.info(f"Waiting for {task_id} to finish from {job_url} (total time: %s).", counter)
 
         if job_status in OGC_Status.get_finished_status():
             return response_content
@@ -136,9 +142,12 @@ def get_job_payload(config: dict, geometry: GEOSGeometry, file_format: str = Non
     payload = copy.deepcopy(config)
 
     if file_format:
-        format_field = get_format_field_from_config(payload)
+        input_field, format_field = get_format_field_from_config(payload)
         if format_field:
-            payload["inputs"][format_field]["value"] = file_format
+            if input_field:
+                payload["inputs"][input_field][format_field] = file_format
+            else:
+                payload["inputs"][format_field] = file_format
     payload["mode"] = "async"
     payload["response"] = "document"
     payload["outputs"] = payload["outputs"] or {}
@@ -212,13 +221,13 @@ def get_process_formats_from_json(process_json: dict, provider_config: dict):
     ]
 
 
-def get_process_formats(provider, request):
+def get_process_formats(provider: DataProvider):
     """Retrieve formats for a given provider if it is an ogc-process type."""
     process_formats = []
 
-    if "ogcapi-process" in provider.export_provider_type.type_name:
-        session = get_session(request, provider)
-        process_json = get_process(provider, session)
+    if provider.export_provider_type and "ogcapi-process" in provider.export_provider_type.type_name:
+        client = provider.get_service_client()
+        process_json = get_process(provider, client.session)
         if process_json:
             process_formats = get_process_formats_from_json(process_json, load_provider_config(provider.config))
     return process_formats

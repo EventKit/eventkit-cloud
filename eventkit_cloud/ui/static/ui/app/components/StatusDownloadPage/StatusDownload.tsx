@@ -500,7 +500,7 @@ const makeMapStateToProps = () => {
             permissionState: state.updatePermission,
             exportReRun: state.exportReRun,
             cancelProviderTask: state.cancelProviderTask,
-            providers: state.providers,
+            providers: state.providers.objects,
             user: state.user,
             runs: getDatacart(state),
         }

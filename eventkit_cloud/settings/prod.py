@@ -77,8 +77,7 @@ IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, "images")
 EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
 
 # url to overpass api endpoint
-# OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
+OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
 GEOCODING_API_TYPE = os.getenv("GEOCODING_API_TYPE", "GEONAMES")
 REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
@@ -280,9 +279,8 @@ if os.getenv("MEMCACHED"):
     CACHES = {
         "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
         "primary_cache": {
-            "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+            "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
             "LOCATION": os.getenv("MEMCACHED"),
-            "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
         },
         "fallback_cache": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"},
     }
@@ -403,6 +401,6 @@ REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIME
 OSM_MAX_TMPFILE_SIZE = os.getenv("OSM_MAX_TMPFILE_SIZE", "100")
 OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 
-DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.11.0")
+DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.12.0")
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 2621440))

@@ -7,7 +7,8 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase, override_settings
 
-from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox, Nominatim
+from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, Nominatim
+from eventkit_cloud.utils.gdalutils import is_valid_bbox, expand_bbox
 
 logger = logging.getLogger(__name__)
 

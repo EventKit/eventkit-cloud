@@ -152,6 +152,7 @@ describe('DataPackPage component', () => {
         expect(instance.permissions.isPrivate()).toBe(true);
         instance.permissions.setMembers(members);
         instance.handleSave();
+        // expect(instance.permissions.makeShared.calledOnce).toBe(true);
         expect(props.onSave.calledOnce).toBe(true);
         expect(props.onSave.calledWith(expected)).toBe(true);
     });
@@ -341,26 +342,26 @@ describe('DataPackPage component', () => {
         expect(stateStub.calledWith({ permissions: expected })).toBe(true);
     });
 
-    it('handleUnCheckAll should clear members and makeShare then update state', () => {
+    it('handleUnCheckAll should clear members except admins and then update state', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        instance.permissions.makePublic();
+        instance.permissions.setMembers({ user_one: Levels.ADMIN, user_two: Levels.READ });
         instance.handleUncheckAll();
         const expected = {
-            value: 'SHARED',
-            members: {},
+            value: 'PRIVATE',
+            members: {user_one: Levels.ADMIN},
             groups: {},
         };
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ permissions: expected })).toBe(true);
     });
 
-    it('handleGroupUncheckAll should clear group permissions', () => {
+    it('handleGroupUncheckAll should clear group permissions except admins', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        instance.permissions.setGroups({ group_one: Levels.READ });
-        expect(instance.permissions.getGroupCount()).toEqual(1);
+        instance.permissions.setGroups({ group_one: Levels.ADMIN, group_two: Levels.READ });
+        expect(instance.permissions.getGroupCount()).toEqual(2);
         instance.handleGroupUncheckAll();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: getPermissions() })).toBe(true);
+        expect(stateStub.calledWith({permissions: { value: 'PRIVATE', members: {}, groups: { group_one: 'ADMIN' } }})).toBe(true);
     });
 
     it('showShareInfo should set show to true', () => {
@@ -421,9 +422,9 @@ describe('DataPackPage component', () => {
         stateStub.restore();
     });
 
-    it('renderSharedPermissionsWithJob should render GroupsBody component if there is a job', () => {
+    it('renderSharedPermissions should render GroupsBody component if there is a job', () => {
         setup({ job: {uid: 'xx222'}, groups: { group_one: Levels.READ } });
-        instance.renderSharedPermissionsWithJob();
+        instance.renderSharedPermissions();
         expect(wrapper.find(GroupsBody)).toHaveLength(1);
         wrapper.unmount();
     });

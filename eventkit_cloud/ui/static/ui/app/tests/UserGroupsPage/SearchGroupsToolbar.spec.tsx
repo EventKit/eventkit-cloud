@@ -87,4 +87,29 @@ describe('SearchAOIToolbar button', () => {
         wrapper.instance().handleInputChange('e');
         expect(wrapper.state().suggestions.length).toEqual(0);
     });
+
+    it('setAllButtonsDefault should set all toolbarIcons to DEFAULT', () => {
+        const wrapper = getWrapper(getProps());
+        let instance = wrapper.instance();
+        const icons = {
+            box: 'SELECTED',
+            free: 'INACTIVE',
+            mapView: 'INACTIVE',
+            import: 'INACTIVE',
+            search: 'INACTIVE',
+        };
+        const expected = {
+            box: 'DEFAULT',
+            free: 'DEFAULT',
+            mapView: 'DEFAULT',
+            import: 'DEFAULT',
+            search: 'DEFAULT',
+        };
+        wrapper.setState({ toolbarIcons: icons });
+        expect(wrapper.state().toolbarIcons).toEqual(icons);
+        const stateSpy = sinon.spy(instance, 'setState');
+        instance.setAllButtonsDefault();
+        expect(stateSpy.calledOnce);
+        expect(stateSpy.calledWith({ toolbarIcons: expected })).toBe(true);
+    });
 });

@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from notifications.models import Notification
 from storages.backends.s3boto3 import S3Boto3Storage
@@ -325,7 +326,12 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         ordering = ["name"]
         managed = True
         db_table = "data_provider_task_records"
-        unique_together = ["provider", "run"]
+        constraints = [
+            models.UniqueConstraint(fields=["run", "provider"], name="unique_provider_run_per_task_record"),
+            models.UniqueConstraint(
+                fields=["run", "slug"], condition=Q(slug="run"), name="unique_run_slug_per_task_record"
+            ),
+        ]
 
     def __str__(self):
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
@@ -406,7 +412,11 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         ordering = ["created_at"]
         managed = True
         db_table = "export_task_records"
-        unique_together = ["name", "export_provider_task"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "export_provider_task"], name="unique_name_per_export_provider_task"
+            ),
+        ]
 
     def __str__(self):
         return "ExportTaskRecord uid: {0}".format(str(self.uid))

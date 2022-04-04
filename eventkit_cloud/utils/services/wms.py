@@ -14,7 +14,7 @@ class WMS(OWS):
         # 1.3.0 will work as well, if that's returned. 1.0.0 isn't widely supported.
         self.query["VERSION"] = "1.1.1"
 
-    def find_layer(self, root):
+    def find_layers(self, root):
         """
         :param root: Name of layer to find
         :return: XML 'Layer' Element, or None if not found
@@ -35,19 +35,17 @@ class WMS(OWS):
         logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
 
         requested_layer = self.get_layer_name()
-        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
-        if not layer:
+        layers = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
+        if not layers:
             raise MissingLayerError(
                 f"Unable to find requested WMS layer '{requested_layer}'"
                 f" in layer list: {' '.join(str(ln.text) for ln in layer_names)}"
             )
 
-        layer = layer[0]
-        return layer
+        return layers
 
     def get_bbox(self, element):
-
-        bbox_element = element.find("latlonboundingbox")
+        bbox_element = element.find("latlonboundingbox") or element.find("boundingbox")
         if bbox_element is not None:
             bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
             return bbox

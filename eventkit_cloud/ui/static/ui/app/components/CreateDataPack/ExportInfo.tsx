@@ -4,7 +4,7 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {Step} from 'react-joyride';
-import { Virtuoso } from 'react-virtuoso';
+import {Virtuoso} from 'react-virtuoso';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -16,6 +16,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
+import {getProviders} from '../../actions/providerActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
@@ -25,6 +26,7 @@ import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
     Chip,
+    CircularProgress,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -41,7 +43,7 @@ import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
 import Button from "@material-ui/core/Button";
-import {unionBy} from 'lodash';
+import unionBy from 'lodash/unionBy';
 import {joyride} from '../../joyride.config';
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
@@ -283,6 +285,7 @@ export interface State {
     steps: Step[];
     isRunning: boolean;
     providers: Eventkit.Provider[];
+    fetchingProviders: boolean;
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
@@ -319,13 +322,14 @@ const dummyProvider = {
 export function ExportInfo(props: Props) {
     const geojson = useSelector((store: any) => store.aoiInfo.geojson);
     const exportInfo = useSelector((store: any) => store.exportInfo);
-    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers);
+    const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
+    const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
-
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
+    const [isFilteringByProviderGeometry, setIsFilteringByProviderGeometry] = useState(true);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
@@ -340,7 +344,6 @@ export function ExportInfo(props: Props) {
     } as IncompatibilityInfo));
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
     const [displayDummy, setDisplayDummy] = useState(false);
-
 
     useEffect(() => {
         updateSelectedFormats();
@@ -537,7 +540,6 @@ export function ExportInfo(props: Props) {
                 });
             }
         });
-        console.log("SELECTED FORMATS: ", selectedFormats);
         updateExportInfoCallback({formats: selectedFormats});
     };
 
@@ -584,7 +586,6 @@ export function ExportInfo(props: Props) {
     const onChangeCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
         // current array of providers
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
@@ -613,7 +614,6 @@ export function ExportInfo(props: Props) {
 
     const deselect = (provider: Eventkit.Provider) => {
         const selectedProviders = [...exportInfo.providers];
-        // const propsProviders = props.providers;
         let index;
         index = selectedProviders.map(x => x.name).indexOf(provider.name);
         for (const _provider of providers) {
@@ -632,8 +632,8 @@ export function ExportInfo(props: Props) {
         // current array of providers
         let selectedProviders = [];
         if (e.target.checked) {
-            // set providers to the list of ALL providers
-            selectedProviders = [...providers.filter(provider => provider.display)];
+            // set providers to the list of visible providers
+            selectedProviders = [...getCurrentProviders().filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
@@ -799,7 +799,7 @@ export function ExportInfo(props: Props) {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
     };
 
-    const getProviders = () => {
+    const getCurrentProviders = () => {
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
         currentProviders = filterProviders(currentProviders);
 
@@ -811,7 +811,7 @@ export function ExportInfo(props: Props) {
         return currentProviders;
     };
 
-    const dataProviders = getProviders().map((provider, ix) => (
+    const dataProviders = getCurrentProviders().map((provider, ix) => (
         <DataProvider
             key={provider.slug + "-DataProviderList"}
             geojson={geojson}
@@ -945,6 +945,17 @@ export function ExportInfo(props: Props) {
         setShowProviderFilter(!showProviderFilter)
     };
 
+    const onProviderGeometryFilterCheckboxChanged = () => {
+        // Have to use a local variable because the state is not updated quickly enough.
+        let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
+        setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
+        if (newIsFilteringByProviderGeometry) {
+            dispatch(getProviders(geojson));
+        } else {
+            dispatch(getProviders(null));
+        }
+    }
+
     return (
         <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
             {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
@@ -1042,7 +1053,8 @@ export function ExportInfo(props: Props) {
                             </div>
                         </div>
 
-                        <div id="SortFilter" className={`qa-ExportInfo-sortFilterContainer ${classes.sortFilterContainer}`}>
+                        <div id="SortFilter"
+                             className={`qa-ExportInfo-sortFilterContainer ${classes.sortFilterContainer}`}>
                             <div className={classes.filterDropdownContainer}>
                                 <span
                                     role="button"
@@ -1080,14 +1092,14 @@ export function ExportInfo(props: Props) {
                                                 <FormGroup className={classes.formControlLabelContainer}>
                                                     <div style={{width: '100%'}}>
                                                         <FormLabel component="legend"
-                                                               style={{
-                                                                   fontSize: "16px",
-                                                                   fontWeight: 'bold'
-                                                               }}>Name</FormLabel>
+                                                                   style={{
+                                                                       fontSize: "16px",
+                                                                       fontWeight: 'bold'
+                                                                   }}>Name</FormLabel>
                                                         <TextField
                                                             id="searchByName"
                                                             name="searchByName"
-                                                            inputProps={{ "data-testid": "filter-text-field" }}
+                                                            inputProps={{"data-testid": "filter-text-field"}}
                                                             autoComplete="off"
                                                             fullWidth
                                                             className={`qa-ExportInfo-searchBarTextField ${classes.filterTextField}`}
@@ -1124,6 +1136,26 @@ export function ExportInfo(props: Props) {
                                                             />
                                                         </div>
                                                     )}
+                                                    <FormLabel component="legend"
+                                                               style={{
+                                                                   fontSize: "16px",
+                                                                   fontWeight: 'bold'
+                                                               }}>Geometry</FormLabel>
+                                                    <div>
+                                                            <FormControlLabel
+                                                                control={<Checkbox
+                                                                    className="qa-ExportInfo-CheckBox-filter"
+                                                                    classes={{
+                                                                        root: classes.checkbox,
+                                                                        checked: classes.checked
+                                                                    }}
+                                                                    checked={isFilteringByProviderGeometry}
+                                                                    onChange={() => onProviderGeometryFilterCheckboxChanged()}
+                                                                />}
+                                                                label={<Typography
+                                                                    className={classes.checkboxLabel}>Selected Area</Typography>}
+                                                            />
+                                                        </div>
                                                 </FormGroup>
                                             </div>
                                         ), 'options' in filterType)
@@ -1212,7 +1244,7 @@ export function ExportInfo(props: Props) {
                             <Checkbox
                                 classes={{root: classes.checkbox, checked: classes.checked}}
                                 name="SelectAll"
-                                checked={exportInfo.providers && exportInfo.providers.length === providers.filter(
+                                checked={exportInfo.providers && exportInfo.providers.length === getCurrentProviders().filter(
                                     provider => provider.display).length}
                                 onChange={onSelectAll}
                                 style={{width: '24px', height: '24px'}}
@@ -1223,7 +1255,7 @@ export function ExportInfo(props: Props) {
                                     flexWrap: 'wrap', fontSize: '16px',
                                 }}
                             >
-                                            Select All
+                                            {(providerFilterList.length || isFilteringByProviderGeometry) ? 'Select Visible': 'Select All'}
                                             </span>
                         </div>
                         <div className={classes.sectionBottom}>
@@ -1274,16 +1306,20 @@ export function ExportInfo(props: Props) {
                                     </Popover>
                                 </div>
                             </div>
-                            <div>
+
+                                {fetchingProviders ?
+                                <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
+                                    <CircularProgress disableShrink={true} size={50}/>
+                                </div> :
                                 <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
-                                    totalCount={getProviders().length}
+                                    totalCount={getCurrentProviders().length}
                                     initialItemCount={10}
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                />
-                            </div>
+                                />}
+
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}
                                      style={{paddingLeft: '5px', paddingTop: '15px'}}>

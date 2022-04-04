@@ -1,7 +1,7 @@
 name: eventkit-cloud
 channel_priority: strict
 dependencies:
-  - eventkit-cloud=1.11.0
+  - eventkit-cloud=1.12.0
   - memcached=1.6.9
   - pip=22.0.4
   - pip:

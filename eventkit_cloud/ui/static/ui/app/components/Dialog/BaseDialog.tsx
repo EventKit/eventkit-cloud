@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React, {Component} from 'react';
+import React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
