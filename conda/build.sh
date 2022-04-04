@@ -65,7 +65,7 @@ for RECIPE in $RECIPES; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --strict-verify --merge-build-host --skip-existing && create_index \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE -v \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
