@@ -14,17 +14,16 @@ source:
   '{{ hash_type }}': '{{ hash_value|lower }}'
 
 build:
-  number: 0
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - pip
-    - django
+    - django {{ django }}
   run:
-    - python
-    - django
+    - python {{ python }}
+    - django {{ django }}
 
 test:
   imports:

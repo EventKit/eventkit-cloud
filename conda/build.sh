@@ -3,7 +3,8 @@
 set -e
 
 export PATH="$HOME/miniconda3/bin:$PATH"
-
+export CONDA_NPY=$(cat /eventkit-cloud/requirements.txt | grep -e "numpy==" | grep -oEi [0-9].+)
+echo "Building using Numpy ==$CONDA_NPY"
 echo "Clearing out conda-bld"
 rm -rf /root/miniconda3/conda-bld
 rm -rf /root/miniconda3/pkgs
@@ -34,9 +35,9 @@ function create_index {
   find /root/miniconda3/ -type f -name "*.conda" -exec cp {} /root/repo/linux-64/ \; || echo "No .conda files to move"
   echo "Ensuring repo channel is priority"
   conda config --add channels file://root/repo/
-  pushd /root/repo
 
   echo "Creating the repo index..."
+  pushd /root/repo
   conda index .
   popd
   echo "done."
@@ -60,16 +61,22 @@ fi
 echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
-  for i in 1 2 3; do
+  for i in 1; do
     echo "Building: ${RECIPE}"
-    $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
+    $COMMAND build $RECIPE --strict-verify --merge-build-host --skip-existing && create_index \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE && create_index \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE -v \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
 
+echo "Creating a fresh environment to download dependencies."
+conda env create -f /eventkit-cloud/environment-dev.yml
+conda activate eventkit-cloud
 create_index
+
+echo "Updating the conda_build_config.yaml"
+python /root/output_config_yaml.py /root/recipes
 
 echo "Cleaning up the conda-requirements.txt after the build."
 rm /root/recipes/eventkit-cloud/conda-requirements.txt

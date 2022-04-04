@@ -10,19 +10,18 @@ source:
   sha256: b8ca4fa54982f84522f4fe2505d2df23f9a410c70f44a7ffa6663ac66cf40ec0
 
 build:
-  number: 0
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - django
+    - django {{ django }}
     - pip
-    - python-ldap
-    - python
+    - python-ldap {{ python_ldap }}
+    - python {{ python }}
   run:
-    - django
-    - python-ldap
-    - python
+    - django {{ django }}
+    - python-ldap {{ python_ldap }}
+    - python {{ python }}
 
 about:
   home: https://github.com/django-auth-ldap/django-auth-ldap

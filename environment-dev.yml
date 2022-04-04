@@ -1,7 +1,8 @@
 name: eventkit-cloud
+channel_priority: strict
 dependencies:
   - eventkit-cloud=1.11.0
   - memcached=1.6.9
-  - postgresql=12.3
+  - pip=22.0.4
   - pip:
     - -r requirements-dev.txt
