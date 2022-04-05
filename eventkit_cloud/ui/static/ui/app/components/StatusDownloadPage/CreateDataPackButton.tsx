@@ -103,22 +103,19 @@ interface Props {
 
 export function CreateDataPackButton(props: Props) {
     const {fontSize, providerTasks, classes} = props;
-    const {run} = useRunContext();
 
-    const [buttonEnabled, setButtonEnabled] = useState(false);
+    const {run} = useRunContext();
     const [buttonState, setButtonState] = useState(ButtonStates.CREATE_DATAPACK)
-    const [buttonText, setButtonText] = useState('');
-    const [creatingMessage, setCreatingMessage] = useState('');
-    const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
-    const [IconComponent, setIconComponent] = useState(<CloudDownload className={classes.iconButtonEnabled}/>);
-    const [popoverText, setPopoverText] = useState('');
     const [open, setOpen] = useState(true);
     const [dataPackRestricted, setDataPackRestricted] = useState(false);
     const [anchor, setAnchor] = useState(null);
+    const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
 
     const cancelFailurePopoverMsg = "The DataPack was canceled or failed during processing, so no zip is available." +
         "You can Rerun the DataPack, to generate the files. If you don't have permission" +
         "to rerun you can clone this DataPack to generate the files."
+
+    const [buttonTxt, popoverTxt, buttonEnabled, creatingMsg, IconComponent] = getButtonProperties()
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -194,10 +191,6 @@ export function CreateDataPackButton(props: Props) {
     }, [zipAvailableResponse, run.status, dataPackRestricted])
 
     useEffect(() => {
-        updateButtonProperties()
-    }, [buttonState])
-
-    useEffect(() => {
         // Updates the status of the button.
         if (isRequestZipFileStatusBad()) {
             setDisplayCreatingMessage(true);
@@ -249,8 +242,6 @@ export function CreateDataPackButton(props: Props) {
         return requestZipFileStatus === ApiStatuses.hookActions.SUCCESS;
     }
 
-    const previousFrameText = useRef((<></>));
-
     function updateButtonState() {
         if (dataPackRestricted) {
             setButtonState(ButtonStates.POLICY_RESTRICTED)
@@ -280,7 +271,7 @@ export function CreateDataPackButton(props: Props) {
         return `(${sizeText}.ZIP)`
     }
 
-    function getIconProps() {
+    function getIconProps(btnEnabled) {
         const {colors} = theme.eventkit;
         let iconProps: any = {
             style: {
@@ -288,7 +279,7 @@ export function CreateDataPackButton(props: Props) {
             },
             className: 'qa-DataPack-button-enabled',
         };
-        if (!buttonEnabled) {
+        if (!btnEnabled) {
             iconProps = {
                 style: {fill: colors.white, color: colors.primary},
                 className: 'qa-DataPack-button-disabled"',
@@ -303,90 +294,102 @@ export function CreateDataPackButton(props: Props) {
         return iconProps;
     }
 
-    function updateButtonProperties() {
-        const iconProps = getIconProps();
-        const alertIconProps = {
+    function getAlertIconProps(iconProps: any) {
+        return {
             ...iconProps.style,
             fill: theme.eventkit.colors.warning,
         };
-        switch (buttonState) {
-            case ButtonStates.POLICY_RESTRICTED:
-                setButtonText('Restricted by Policy');
-                setPopoverText(
-                        'You do not have access to this datapack due to security policy restrictions.' +
-                        'Please contact an administrator if you believe you should have access to this datapack.'
-                );
-                setButtonEnabled(false);
-                setCreatingMessage('')
-                setIconComponent(<AlertError {...alertIconProps}/>);
-                break;
-            case ButtonStates.RUN_CANCELED:
-                setButtonText('Zip Canceled');
-                setPopoverText(cancelFailurePopoverMsg);
-                setButtonEnabled(false);
-                setCreatingMessage('Unable to create your zipfile at this time, please try again or contact an administrator');
-                setIconComponent(<AlertError {...alertIconProps}/>);
-                break;
-            case ButtonStates.JOB_PROCESSING:
-                setButtonText('Job Processing...')
-                setPopoverText('The DataPack is being built. Downloads will be available for request upon completion.')
-                setButtonEnabled(false);
-                setCreatingMessage(
-                    'This DataPack is being processed. We will let you know in the notifications panel when it is ready.'
-                )
-                setIconComponent(<CircularProgress {...iconProps} size={18}/>);
-                break;
-            case ButtonStates.ZIP_AVAILABLE:
-                setButtonText(`DOWNLOAD DATAPACK ${getZipText()}`)
-                setPopoverText('')
-                setButtonEnabled(true);
-                setCreatingMessage('DataPack (.ZIP) ready for download')
-                setIconComponent(<CloudDownload {...iconProps}/>);
-                break;
-            case ButtonStates.ZIP_ERROR:
-                setButtonText('Zip Error')
-                setPopoverText('Could not retrieve zip information, please try again or contact an administrator.')
-                setButtonEnabled(false);
-                setCreatingMessage(
-                    'Unable to create your zipfile at this time, please try again or contact an administrator'
-                )
-                setIconComponent(<AlertError {...alertIconProps}/>);
-                break;
-            case ButtonStates.JOB_FAILED:
-                setButtonText('Job Failed')
-                setPopoverText(cancelFailurePopoverMsg);
-                setButtonEnabled(false);
-                setCreatingMessage(
-                    'Unable to create your zipfile at this time, please try again or contact an administrator'
-                )
-                setIconComponent(<AlertError {...alertIconProps}/>);
-                break;
-             case ButtonStates.ZIP_PROCESSING:
-                setButtonText('Processing Zip...')
-                setPopoverText(zipAvailableResponse.data[0].message || 'Processing zip file.')
-                setButtonEnabled(false);
-                setCreatingMessage(
-                    'We are creating your zip file. We will let you know in the notifications panel when it is ready.'
-                )
-                setIconComponent(<CircularProgress {...iconProps} size={18}/>);
-                break;
-            case ButtonStates.CREATE_DATAPACK:
-                setButtonText('CREATE DATAPACK')
-                setPopoverText('')
-                setButtonEnabled(true);
-                setCreatingMessage('')
-                setIconComponent(<CloudDownload {...iconProps}/>);
-                break;
-            default:
-                setButtonText('CREATE DATAPACK')
-                setPopoverText('')
-                setButtonEnabled(false);
-                setCreatingMessage('')
-                setIconComponent(<CloudDownload {...iconProps}/>);
-        }
     }
 
-    previousFrameText.current = (<>buttonText</>);
+    function getButtonProperties() {
+        let btnTxt;
+        let popTxt;
+        let btnEnabled;
+        let createMsg;
+        let Icon;
+        switch (buttonState) {
+            case ButtonStates.POLICY_RESTRICTED:
+                btnTxt = 'Restricted by Policy';
+                popTxt = 'You do not have access to this datapack due to security policy restrictions.' +
+                            'Please contact an administrator if you believe you should have access to this datapack.';
+                btnEnabled = false;
+                createMsg = '';
+                Icon = AlertError;
+                break;
+            case ButtonStates.RUN_CANCELED:
+                btnTxt = 'Zip Canceled';
+                popTxt = cancelFailurePopoverMsg;
+                btnEnabled = false;
+                createMsg = 'Unable to create your zipfile at this time, please try again or contact an administrator';
+                Icon = AlertError;
+                break;
+            case ButtonStates.JOB_PROCESSING:
+                btnTxt = 'Job Processing...';
+                popTxt = 'The DataPack is being built. Downloads will be available for request upon completion.';
+                btnEnabled = false;
+                createMsg = 'This DataPack is being processed. We will let you know in the notifications panel when it is ready.';
+                Icon = CircularProgress;
+                break;
+            case ButtonStates.ZIP_AVAILABLE:
+                btnTxt = `DOWNLOAD DATAPACK ${getZipText()}`;
+                popTxt = '';
+                btnEnabled = true;
+                createMsg = 'DataPack (.ZIP) ready for download';
+                Icon = CloudDownload;
+                break;
+            case ButtonStates.ZIP_ERROR:
+                btnTxt = 'Zip Error';
+                popTxt = 'Could not retrieve zip information, please try again or contact an administrator.';
+                btnEnabled = false;
+                createMsg = 'Unable to create your zipfile at this time, please try again or contact an administrator';
+                Icon = AlertError;
+                break;
+            case ButtonStates.JOB_FAILED:
+                btnTxt = 'Job Failed';
+                popTxt = cancelFailurePopoverMsg;
+                btnEnabled = false;
+                createMsg = 'Unable to create your zipfile at this time, please try again or contact an administrator';
+                Icon = AlertError;
+                break;
+             case ButtonStates.ZIP_PROCESSING:
+                btnTxt = 'Processing Zip...';
+                popTxt = zipAvailableResponse.data[0].message || 'Processing zip file.';
+                btnEnabled = false;
+                createMsg = 'We are creating your zip file. We will let you know in the notifications panel when it is ready.';
+                Icon = CircularProgress;
+                break;
+            case ButtonStates.CREATE_DATAPACK:
+                btnTxt = 'CREATE DATAPACK';
+                popTxt = '';
+                btnEnabled = true;
+                createMsg = '';
+                Icon = CloudDownload;
+                break;
+            default:
+                btnTxt = 'CREATE DATAPACK';
+                popTxt = '';
+                btnEnabled = false;
+                createMsg = '';
+                Icon = CloudDownload;
+        }
+        // Icon props depends on the state of the button so we must get the icon props
+        // after we've set the other button properties
+        let iconProps = getIconProps(btnEnabled);
+        if (Icon === AlertError) {
+            iconProps = getAlertIconProps(iconProps)
+        } else if (Icon === CircularProgress) {
+            iconProps.size = 18;
+        }
+        Icon = <Icon {...iconProps}/>
+
+        return [
+            btnTxt,
+            popTxt,
+            btnEnabled,
+            createMsg,
+            Icon,
+        ]
+    }
 
     async function buttonAction(e: React.MouseEvent<HTMLElement>) {
         switch (buttonState) {
@@ -430,7 +433,7 @@ export function CreateDataPackButton(props: Props) {
                          id="qa-CreateDataPackButton-fakeButton"/>
                 )}
                 {IconComponent}
-                <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
+                <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonTxt}</span>
             </Button>
         );
     }
@@ -479,7 +482,7 @@ export function CreateDataPackButton(props: Props) {
                             <CloseIcon/>
                         </IconButton>
                         <div style={{marginTop: '5px', fontSize: '20px'}}>
-                            <>{creatingMessage}</>
+                            <>{creatingMsg}</>
                         </div>
                     </div>
                 </CenteredPopup>
@@ -490,7 +493,7 @@ export function CreateDataPackButton(props: Props) {
                         PaperProps: {
                             style: {padding: '16px', width: '30%'}
                         },
-                        open: !!anchor && !!popoverText,
+                        open: !!anchor && !!popoverTxt,
                         anchorEl: anchor,
                         onClose: handlePopoverClose,
                         anchorOrigin: {
@@ -512,7 +515,7 @@ export function CreateDataPackButton(props: Props) {
                             <CloseIcon/>
                         </IconButton>
                         <div style={{marginTop: '5px'}}>
-                            {popoverText}
+                            {popoverTxt}
                         </div>
                     </div>
                 </Popover>
