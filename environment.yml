@@ -1,5 +1,4 @@
 name: eventkit-cloud
-channel_priority: strict
 dependencies:
   - eventkit-cloud=1.12.0
   - memcached=1.6.9
