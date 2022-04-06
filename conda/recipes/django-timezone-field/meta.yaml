@@ -10,19 +10,18 @@ source:
   sha256: cffac62452d060e365938aa9c9f7b72d70d8b26b9c60243bce227b35abd1b9df
 
 build:
-  number: 0
   script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
 
 requirements:
   host:
-    - django
+    - django {{ django }}
     - pip
-    - python
-    - pytz
+    - python {{ python }}
+    - pytz {{ pytz }}
   run:
-    - django
-    - python
-    - pytz
+    - django {{ django }}
+    - python {{ python }}
+    - pytz {{ pytz }}
 
 test:
   imports:

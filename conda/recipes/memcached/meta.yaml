@@ -12,7 +12,11 @@ build:
 
 requirements:
   build:
+    - libgcc-ng {{ libgcc_ng }}
     - libevent
-
+    - openssl {{ openssl }}
+  run:
+    - libevent
+    - openssl {{ openssl }}
 about:
   home: https://memcached.org/about
