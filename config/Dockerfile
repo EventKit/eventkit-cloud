@@ -27,7 +27,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda config --add channels defaults && \
     conda config --add channels conda-forge && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
-    conda config --set channel_priority strict
+    conda config --set channel_priority strict && \
     \
     # Setup certs (might be needed if self-hosting).
     openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out /var/lib/eventkit/conda/cacert.crt && \
