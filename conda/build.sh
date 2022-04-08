@@ -65,14 +65,15 @@ for RECIPE in $RECIPES; do
     echo "Building: ${RECIPE}"
     $COMMAND build $RECIPE --strict-verify --merge-build-host --skip-existing && create_index \
     && echo "Installing: ${RECIPE}" \
-    && echo "y" | $COMMAND install --no-update-deps $RECIPE \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE && create_index \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
 
 echo "Creating a fresh environment to download dependencies."
-conda env create -f /eventkit-cloud/environment-dev.yml
-conda activate eventkit-cloud
+eval "$(conda shell.bash hook)"
+conda env create -f /eventkit-cloud/environment.yml -n deps
+conda activate deps
 create_index
 
 echo "Updating the conda_build_config.yaml"

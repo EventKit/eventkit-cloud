@@ -12,9 +12,9 @@ build:
 
 requirements:
   build:
-    - libgcc-ng {{ libgcc_ng }}
     - libevent
     - openssl {{ openssl }}
+    - billiard {{ billiard }}
   run:
     - libevent
     - openssl {{ openssl }}

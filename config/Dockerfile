@@ -8,12 +8,9 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
-COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
+COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini /var/lib/eventkit/
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
-COPY --chown=eventkit ./pytest.ini /var/lib/eventkit/pytest.ini
-COPY --chown=eventkit ./config/setup.cfg /var/lib/eventkit/config/setup.cfg
-COPY --chown=eventkit ./config/pyproject.toml /var/lib/eventkit/config/pyproject.toml
+COPY --chown=eventkit ./config /var/lib/eventkit/config
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 ENV CURL_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem"
@@ -28,12 +25,14 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda config --add channels conda-forge && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
     conda config --set channel_priority strict && \
+    conda init bash && \
     \
     # Setup certs (might be needed if self-hosting).
     openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out /var/lib/eventkit/conda/cacert.crt && \
     conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
     # Create the environment
-    conda env create --force --file /var/lib/eventkit/environment-dev.yml python=3.9 && \
+    conda env create --force --file /var/lib/eventkit/environment.yml -n eventkit-cloud python=3.9 && \
+    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/pip install -r requirements-dev.txt && \
     SECRET_KEY=temp_secret_key /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
     \
