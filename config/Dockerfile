@@ -24,7 +24,8 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda config --add channels defaults && \
     conda config --add channels conda-forge && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
-    conda config --set channel_priority strict && \
+    # TODO: get build to work with strict priority
+    conda config --set channel_priority flexible && \
     conda init bash && \
     \
     # Setup certs (might be needed if self-hosting).
