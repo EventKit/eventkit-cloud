@@ -20,6 +20,7 @@ USER eventkit
 WORKDIR /var/lib/eventkit
 
 COPY ./package.json /var/lib/eventkit/
+COPY ./package-lock.json /var/lib/eventkit/
 
 RUN npm install --quiet
 
