@@ -182,6 +182,7 @@ def get_or_update_session(*args, **session_info):
     cert_pass = session_info.get("cert_pass")
     headers = session_info.get("headers")
     token = session_info.get("token")
+    login_url = session_info.get("login_url")
 
     ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
 
@@ -215,6 +216,9 @@ def get_or_update_session(*args, **session_info):
 
     logger.debug("Using %s for SSL verification.", str(ssl_verify))
     session.verify = ssl_verify
+
+    if login_url:
+        session.get(login_url)
 
     return session
 
