@@ -13,6 +13,10 @@ build:
 requirements:
   build:
     - libevent
-
+    - openssl {{ openssl }}
+    - billiard {{ billiard }}
+  run:
+    - libevent
+    - openssl {{ openssl }}
 about:
   home: https://memcached.org/about
