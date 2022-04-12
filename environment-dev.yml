@@ -1,7 +1,0 @@
-name: eventkit-cloud
-dependencies:
-  - eventkit-cloud=1.13.0
-  - memcached=1.6.9
-  - pip=22.0.4
-  - pip:
-    - -r requirements-dev.txt
