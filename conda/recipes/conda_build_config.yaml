@@ -1,0 +1,546 @@
+_libgcc_mutex:
+- '0.1'
+_openmp_mutex:
+- '4.5'
+_sysroot_linux_64_curr_repodata_hack:
+- '3'
+amqp:
+- 5.1.0
+appdirs:
+- 1.4.4
+asgiref:
+- 3.5.0
+attrs:
+- 21.4.0
+autopep8:
+- 1.5.7
+backports:
+- '1.0'
+backports_functools_lru_cache:
+- 1.6.4
+beautifulsoup4:
+- 4.10.0
+berkeleydb:
+- 6.0.19
+billiard:
+- 3.6.4.0
+black:
+- 21.5b1
+boost_cpp:
+- 1.74.0
+boto3:
+- 1.18.36
+botocore:
+- 1.21.65
+brotlipy:
+- 0.7.0
+bzip2:
+- 1.0.8
+c_ares:
+- 1.18.1
+ca_certificates:
+- 2021.10.8
+cairo:
+- 1.16.0
+celery:
+- 5.1.2
+certifi:
+- 2021.10.8
+cffi:
+- 1.15.0
+cfitsio:
+- '3.470'
+chardet:
+- 4.0.0
+charset_normalizer:
+- 2.0.12
+click:
+- 7.1.2
+click_didyoumean:
+- 0.3.0
+click_plugins:
+- 1.1.1
+click_repl:
+- 0.2.0
+colorama:
+- 0.4.4
+conda:
+- 4.12.0
+conda_build:
+- 3.21.8
+conda_package_handling:
+- 1.8.0
+coverage:
+- 5.5
+cryptography:
+- 3.4.8
+curl:
+- 7.82.0
+cyrus_sasl:
+- 2.1.27
+dj_database_url:
+- 0.5.0
+django:
+- 3.2.7
+django_audit_logging:
+- 0.2.4
+django_auth_ldap:
+- 2.2.0
+django_celery_beat:
+- 2.2.1
+django_extensions:
+- 3.1.3
+django_filter:
+- 2.4.0
+django_model_utils:
+- 4.0.0
+django_notifications_hq:
+- 1.6.0
+django_storages:
+- 1.11.1
+django_timezone_field:
+- 4.1.2
+djangorestframework:
+- 3.12.4
+djangorestframework_gis:
+- 0.17.0
+docker:
+- 5.0.0
+eventkit_cloud:
+- 1.11.0
+execnet:
+- 1.9.0
+expat:
+- 2.4.8
+filelock:
+- 3.6.0
+flake8:
+- 3.9.2
+flower:
+- 1.0.1
+fontconfig:
+- 2.13.96
+freetype:
+- 2.10.4
+freexl:
+- 1.0.6
+future:
+- 0.18.2
+gdal:
+- 3.2.1
+gdbm:
+- '1.18'
+geos:
+- 3.8.1
+geotiff:
+- 1.6.0
+gettext:
+- 0.19.8.1
+gevent:
+- 21.12.0
+giflib:
+- 5.2.1
+glob2:
+- '0.7'
+gmp:
+- 6.2.1
+greenlet:
+- 1.1.2
+gunicorn:
+- 20.1.0
+hdf4:
+- 4.2.15
+hdf5:
+- 1.10.6
+humanize:
+- 3.12.0
+icu:
+- '68.2'
+idna:
+- '3.3'
+importlib_metadata:
+- 4.11.3
+importlib_resources:
+- 5.6.0
+iniconfig:
+- 1.1.1
+jinja2:
+- 3.0.3
+jmespath:
+- 0.10.0
+joblib:
+- 1.1.0
+jpeg:
+- 9e
+json_c:
+- 0.13.1
+jsonfield:
+- 3.1.0
+jsonschema:
+- 4.2.1
+kealib:
+- 1.4.14
+kernel_headers_linux_64:
+- 3.10.0
+keyutils:
+- 1.6.1
+kombu:
+- 5.2.4
+krb5:
+- 1.19.3
+lcms2:
+- '2.12'
+ld_impl_linux_64:
+- 2.36.1
+libarchive:
+- 3.5.1
+libblas:
+- 3.9.0
+libcblas:
+- 3.9.0
+libcurl:
+- 7.82.0
+libdap4:
+- 3.20.6
+libdrm_cos7_x86_64:
+- 2.4.97
+libedit:
+- 3.1.20191231
+libev:
+- '4.33'
+libevent:
+- 2.1.10
+libffi:
+- 3.4.2
+libgcc_ng:
+- 11.2.0
+libgdal:
+- 3.2.1
+libgfortran5:
+- 11.2.0
+libgfortran_ng:
+- 11.2.0
+libglib:
+- 2.70.2
+libglvnd_cos7_x86_64:
+- 1.0.1
+libglvnd_glx_cos7_x86_64:
+- 1.0.1
+libgomp:
+- 11.2.0
+libiconv:
+- '1.16'
+libidn2:
+- 2.3.2
+libkml:
+- 1.3.0
+liblapack:
+- 3.9.0
+liblief:
+- 0.11.5
+libmagic:
+- '5.39'
+libmamba:
+- 0.20.0
+libmambapy:
+- 0.20.0
+libnetcdf:
+- 4.7.4
+libnghttp2:
+- 1.47.0
+libnsl:
+- 2.0.0
+libntlm:
+- '1.4'
+libopenblas:
+- 0.3.18
+libpng:
+- 1.6.37
+libpq:
+- '12.9'
+librttopo:
+- 1.1.0
+libsolv:
+- 0.7.19
+libspatialite:
+- 5.0.1
+libssh2:
+- 1.10.0
+libstdcxx_ng:
+- 11.2.0
+libtiff:
+- 4.2.0
+libunistring:
+- 0.9.10
+libuuid:
+- 2.32.1
+libuv:
+- 1.43.0
+libwebp_base:
+- 1.2.2
+libxcb:
+- '1.13'
+libxml2:
+- 2.9.12
+libzlib:
+- 1.2.11
+livereload:
+- 2.6.3
+lunr:
+- 0.5.8
+lz4_c:
+- 1.9.3
+lzo:
+- '2.10'
+mamba:
+- 0.15.3
+mapproxy:
+- 1.13.2
+markdown:
+- 3.3.6
+markupsafe:
+- 2.1.1
+mccabe:
+- 0.6.1
+memcached:
+- 1.6.9
+mesa_libgl_cos7_x86_64:
+- 18.3.4
+mesa_libglapi_cos7_x86_64:
+- 18.3.4
+mkdocs:
+- 1.1.2
+mypy_extensions:
+- 0.4.3
+ncurses:
+- '6.3'
+nltk:
+- 3.6.7
+numpy:
+- 1.21.2
+olefile:
+- '0.46'
+openjpeg:
+- 2.4.0
+openldap:
+- 2.4.59
+openssl:
+- 1.1.1n
+osmctools:
+- 0.9.0
+packaging:
+- 21.3
+patchelf:
+- 0.14.5
+pathspec:
+- 0.9.0
+pcre:
+- '8.45'
+pillow:
+- 8.2.0
+pip:
+- 22.0.4
+pixman:
+- 0.40.0
+pkginfo:
+- 1.8.2
+pluggy:
+- 0.13.1
+poppler:
+- 0.89.0
+poppler_data:
+- 0.4.11
+postgresql:
+- '12.9'
+proj:
+- 7.1.1
+prometheus_client:
+- 0.13.1
+prompt_toolkit:
+- 3.0.27
+psutil:
+- 5.9.0
+psycopg2:
+- 2.8.6
+pthread_stubs:
+- '0.4'
+py:
+- 1.11.0
+py_lief:
+- 0.11.5
+pyasn1:
+- 0.4.8
+pyasn1_modules:
+- 0.2.7
+pybind11_abi:
+- '4'
+pycodestyle:
+- 2.7.0
+pycosat:
+- 0.6.3
+pycparser:
+- '2.21'
+pydevd:
+- 2.4.1
+pyflakes:
+- 2.3.1
+pyjwt:
+- 2.1.0
+pymemcache:
+- 3.5.0
+pyopenssl:
+- 21.0.0
+pyparsing:
+- 2.4.7
+pyproj:
+- 2.6.1.post1
+pyrsistent:
+- 0.18.1
+pysocks:
+- 1.7.1
+pytest:
+- 6.2.4
+pytest_django:
+- 4.3.0
+pytest_forked:
+- 1.3.0
+pytest_xdist:
+- 2.2.1
+python:
+- 3.9.10
+python_abi:
+- '3.9'
+python_crontab:
+- 2.6.0
+python_dateutil:
+- 2.8.2
+python_ldap:
+- 3.3.1
+python_libarchive_c:
+- '4.0'
+python_magic:
+- 0.4.24
+python_memcached:
+- '1.59'
+pytz:
+- '2021.3'
+pyyaml:
+- 5.4.1
+readline:
+- '8.1'
+regex:
+- 2022.1.18
+reproc:
+- 14.2.3
+reproc_cpp:
+- 14.2.3
+requests:
+- 2.26.0
+requests_mock:
+- 1.9.2
+requests_pkcs12:
+- '1.10'
+ripgrep:
+- 13.0.0
+ruamel_yaml:
+- 0.15.80
+ruby:
+- 3.1.1
+s3transfer:
+- 0.5.2
+setuptools:
+- 60.10.0
+shapely:
+- 1.7.1
+simplejson:
+- 3.17.6
+six:
+- 1.16.0
+soupsieve:
+- 2.3.1
+sqlite:
+- 3.37.1
+sqlparse:
+- 0.4.2
+swapper:
+- 1.1.2.post1
+sysroot_linux_64:
+- '2.17'
+tiledb:
+- 2.2.9
+tk:
+- 8.6.12
+toml:
+- 0.10.2
+tornado:
+- 6.1
+tqdm:
+- 4.63.0
+typing_extensions:
+- 4.1.1
+tzcode:
+- 2021e
+tzdata:
+- 2022a
+uritemplate:
+- 3.0.1
+urllib3:
+- 1.26.9
+vine:
+- 5.0.0
+waitress:
+- 2.1.1
+wcwidth:
+- 0.2.5
+webob:
+- 1.8.7
+websocket_client:
+- 1.2.3
+webtest:
+- 3.0.0
+wget:
+- 1.20.3
+wheel:
+- 0.37.1
+whitenoise:
+- 5.3.0
+xerces_c:
+- 3.2.3
+xorg_kbproto:
+- 1.0.7
+xorg_libice:
+- 1.0.10
+xorg_libsm:
+- 1.2.3
+xorg_libx11:
+- 1.7.2
+xorg_libxau:
+- 1.0.9
+xorg_libxdmcp:
+- 1.1.3
+xorg_libxext:
+- 1.3.4
+xorg_libxrender:
+- 0.9.10
+xorg_renderproto:
+- 0.11.1
+xorg_xextproto:
+- 7.3.0
+xorg_xproto:
+- 7.0.31
+xz:
+- 5.2.5
+yaml:
+- 0.2.5
+yaml_cpp:
+- 0.6.3
+zipp:
+- 3.7.0
+zlib:
+- 1.2.11
+zope_event:
+- 4.5.0
+zope_interface:
+- 5.4.0
+zstd:
+- 1.4.9

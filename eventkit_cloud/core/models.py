@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import datetime
 import unicodedata
 import uuid
 
@@ -14,6 +13,8 @@ from django.db import transaction
 from django.db.models import QuerySet, Case, Value, When, Q, Count
 from django.utils import timezone
 from enum import Enum
+
+from django.utils.text import slugify
 from notifications.models import Notification
 import logging
 from typing import List, Callable, Tuple
@@ -26,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 Notification.old_str_func = Notification.__str__
+
+DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
 
 
 def normalize_unicode_str(self):
@@ -127,7 +130,30 @@ class CachedModelMixin(models.Model):
         cache_key_props = ["pk", "uid", "slug"]
         for cache_key_prop in cache_key_props:
             if hasattr(self, cache_key_prop):
-                cache.set(f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}", self)
+                # TODO: Confirm if this is being used.
+                cache_key = f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}"
+                cache.set(cache_key, self, timeout=DEFAULT_TIMEOUT)
+                self.update_cache_key_list(cache_key)
+
+        self.clear_cache_key_list()
+
+    @classmethod
+    def get_caches_key(cls):
+        return f"{slugify(cls.__name__)}_caches_key"
+
+    @classmethod
+    def update_cache_key_list(cls, cache_key):
+        caches_key = cls.get_caches_key()
+        caches = cache.get(caches_key, dict())
+        caches[cache_key] = datetime.datetime.now()
+        cache.set(caches_key, caches, timeout=DEFAULT_TIMEOUT)
+
+    @classmethod
+    def clear_cache_key_list(cls):
+        caches = cache.get(cls.get_caches_key(), dict())
+        if caches:
+            cache.delete_many(caches.keys())
+            cache.delete(cls.get_caches_key())
 
 
 class UIDMixin(models.Model):
@@ -192,7 +218,9 @@ class GroupPermission(TimeStampedModelMixin):
 
     # A user should only have one type of permission per group.
     class Meta:
-        unique_together = ["user", "group", "permission"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "group", "permission"], name="unique_user_permission_per_group"),
+        ]
 
     def __str__(self):
         return "{0}: {1}: {2}".format(self.user, self.group.name, self.permission)
@@ -236,7 +264,9 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
         self.__original_complex = self.complex
 
     class Meta:
-        unique_together = ("filter", "exclude")
+        constraints = [
+            models.UniqueConstraint(fields=["filter", "exclude"], name="unique_filter_exclude"),
+        ]
         verbose_name_plural = "Attribute Classes"
         verbose_name = "Attribute Class"
 

@@ -10,16 +10,15 @@ source:
   sha256: 51651018fb027354dd27ff38d5eb47a225d3e642c99b04cff878ae65b1872f64
 
 build:
-  number: 0
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
   host:
     - pip
-    - python
+    - python {{ python }}
     - setuptools_scm
   run:
-    - python
+    - python  {{ python }}
 
 test:
   imports:

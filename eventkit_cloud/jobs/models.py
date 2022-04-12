@@ -20,6 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Q, QuerySet, Case, Value, When
 from django.utils import timezone
+from yaml import CLoader, CDumper
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -316,9 +317,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
     )
 
-    # Used to store user list of user caches so that they can be invalidated.
-    provider_caches_key = "data_provider_caches"
-
     class Meta:  # pragma: no cover
 
         managed = True
@@ -397,7 +395,31 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
+        self.update_export_formats()
+
         super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
+
+    def update_export_formats(self):
+        # TODO: Refactor utils/ogc_apiprocess into services.
+        from eventkit_cloud.utils.ogcapi_process import get_process_formats
+
+        process_formats = get_process_formats(self)
+        logger.info(f"Process_formats: {process_formats}")
+        for process_format in process_formats:
+            export_format, created = ExportFormat.get_or_create(**process_format)
+            if created:
+                # Use the value from process format which might be case sensitive,
+                # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
+                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
+                export_format.supported_projections.add(Projection.objects.get(srid=4326))
+            else:
+                providers = export_format.options.get("providers")
+                if providers:
+                    providers = list(set(providers + [self.slug]))
+                    export_format.options["providers"] = providers
+                else:
+                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+            export_format.save()
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -408,7 +430,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
         type = config.get("sources", {}).get("info", {}).get("type")
         if url:
@@ -420,7 +442,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
 
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
@@ -463,7 +485,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def max_data_size(self):
-        config = yaml.load(self.config)
+        config = yaml.load(self.config, Loader=CLoader)
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
@@ -826,7 +848,11 @@ class JobPermission(TimeStampedModelMixin):
     # A user should only have one type of permission per job.
     class Meta:
         db_table = "jobpermission"
-        unique_together = ["job", "content_type", "object_id", "permission"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["job", "content_type", "object_id", "permission"], name="unique_object_permission_per_job"
+            ),
+        ]
 
     @staticmethod
     def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
@@ -1052,4 +1078,4 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
         conf.pop(service_key, None)
     if return_dict:
         return conf
-    return yaml.dump(conf)
+    return yaml.dump(conf, Dumper=CDumper)

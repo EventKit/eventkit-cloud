@@ -69,6 +69,9 @@ from eventkit_cloud.api.serializers import (
     ExportRunGeoFeatureSerializer,
     DataProviderGeoFeatureSerializer,
     FilteredDataProviderGeoFeatureSerializer,
+    filtered_basic_data_provider_serializer,
+    basic_data_provider_list_serializer,
+    basic_geojson_list_serializer,
 )
 from eventkit_cloud.api.utils import (
     get_run_zip_file,
@@ -860,6 +863,10 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
+class BasicFilteredDataProviderSerializer:
+    pass
+
+
 class DataProviderViewSet(EventkitViewSet):
     """
     Endpoint exposing the supported data providers.
@@ -878,6 +885,30 @@ class DataProviderViewSet(EventkitViewSet):
         ):
             return DataProviderGeoFeatureSerializer, FilteredDataProviderGeoFeatureSerializer
         return DataProviderSerializer, FilteredDataProviderSerializer
+
+    def get_readonly_serializer_classes(self):
+        if (
+            self.request.query_params.get("format", "").lower() == "geojson"
+            or self.request.headers.get("content-type") == "application/geo+json"
+        ):
+            return (
+                lambda queryset, *args, **kwargs: basic_geojson_list_serializer(
+                    basic_data_provider_list_serializer(queryset, include_geometry=True, *args, **kwargs),
+                    "the_geom",
+                    *args,
+                    **kwargs,
+                ),
+                lambda queryset, *args, **kwargs: basic_geojson_list_serializer(
+                    filtered_basic_data_provider_serializer(queryset, include_geometry=True, *args, **kwargs),
+                    "the_geom",
+                    *args,
+                    **kwargs,
+                ),
+            )
+        return (
+            lambda queryset, *args, **kwargs: basic_data_provider_list_serializer(queryset, *args, **kwargs),
+            lambda queryset, *args, **kwargs: filtered_basic_data_provider_serializer(queryset, *args, **kwargs),
+        )
 
     def get_queryset(self):
         """
@@ -920,14 +951,16 @@ class DataProviderViewSet(EventkitViewSet):
         * return: A list of data providers.
         """
 
-        serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+        serializer, filtered_serializer = self.get_readonly_serializer_classes()
+
         # The cache_key will be different if serializing a geojson or an api json.
         cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)
         data = cache.get(cache_key)
         if not data:
-            providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
-            data = serializer(providers, many=True, context={"request": request}).data
-            filtered_data = filtered_serializer(filtered_providers, many=True).data
+            queryset = self.get_queryset()
+            providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+            data = serializer(providers, many=True, context={"request": request})
+            filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
             if isinstance(data, list):
                 data += filtered_data
             else:
@@ -935,9 +968,7 @@ class DataProviderViewSet(EventkitViewSet):
                 data = filtered_data
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
-                provider_caches = cache.get(DataProvider.provider_caches_key, dict())
-                provider_caches[cache_key] = datetime.now()
-                cache.set(DataProvider.provider_caches_key, provider_caches)
+                DataProvider.update_cache_key_list(cache_key)
 
         return Response(data)
 
@@ -948,11 +979,11 @@ class DataProviderViewSet(EventkitViewSet):
         * return: The data provider with the given slug.
         """
         providers, filtered_providers = attribute_class_filter(self.get_queryset().filter(slug=slug), self.request.user)
-        serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+        serializer, filtered_serializer = self.get_readonly_serializer_classes()
         if providers:
-            return Response(serializer(providers.get(slug=slug), context={"request": request}).data)
+            return Response(serializer(providers.get(slug=slug), context={"request": request}))
         elif filtered_providers:
-            return Response(filtered_serializer(providers.get(slug=slug)).data)
+            return Response(filtered_serializer(providers.get(slug=slug)))
 
     @action(methods=["post"], detail=False)
     def filter(self, request, *args, **kwargs):
@@ -979,11 +1010,10 @@ class DataProviderViewSet(EventkitViewSet):
             except ValidationError as e:
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
-
-            serializer, filtered_serializer = self.get_serializer_classes(*args, **kwargs)
+            serializer, filtered_serializer = self.get_readonly_serializer_classes()
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
-            data = serializer(providers, many=True, context={"request": request}).data
-            filtered_data = filtered_serializer(filtered_providers, many=True).data
+            data = serializer(providers, many=True, context={"request": request})
+            filtered_data = filtered_serializer(filtered_providers, many=True)
             if isinstance(data, list):
                 data += filtered_data
             else:

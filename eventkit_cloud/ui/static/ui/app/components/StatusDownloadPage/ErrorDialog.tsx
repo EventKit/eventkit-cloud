@@ -22,6 +22,7 @@ export function ErrorDialog(props: ErrorDialogProps) {
 
     const {errors} = props;
     const {colors} = props.theme.eventkit;
+    const UNKNOWN_ERROR_MESSAGE = "An unknown error occurred. Please contact an administrator."
 
     const styles = {
         errorText: {
@@ -67,7 +68,7 @@ export function ErrorDialog(props: ErrorDialogProps) {
                         className="qa-ProviderError-Warning-icon"
                         style={styles.warningIcon}
                     />
-                    {error.exception}
+                    {error.exception || UNKNOWN_ERROR_MESSAGE}
                     <Divider
                         className="qa-ProviderError-Divider"
                         style={{marginTop: '15px'}}
