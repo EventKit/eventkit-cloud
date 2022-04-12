@@ -71,8 +71,9 @@ for RECIPE in $RECIPES; do
 done
 
 echo "Creating a fresh environment to download dependencies."
-conda env create -f /eventkit-cloud/environment-dev.yml
-conda activate eventkit-cloud
+eval "$(conda shell.bash hook)"
+conda env create -f /eventkit-cloud/environment.yml -n deps
+conda activate deps
 create_index
 
 echo "Updating the conda_build_config.yaml"

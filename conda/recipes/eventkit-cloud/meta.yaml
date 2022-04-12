@@ -20,7 +20,7 @@ requirements:
     - git
     - pip {{ pip }}
     - python {{ python }}
-    - nodejs 
+    - nodejs
     - ruby
   run_constrained:
     - memcached {{ memcached }}

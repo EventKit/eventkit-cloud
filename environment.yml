@@ -2,4 +2,3 @@ name: eventkit-cloud
 dependencies:
   - eventkit-cloud=1.13.0
   - memcached=1.6.9
-
