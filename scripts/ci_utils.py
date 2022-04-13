@@ -45,6 +45,7 @@ def pull_and_rename_docker_image(image: str):
 
 def setup_eventkit():
     logger.info("Pulling images...")
+    run_subprocess("cp /etc/ssl/certs/cacert.pem ./conda/cacert.pem")
     with open("docker-compose.yml", "r") as _docker_compose_file:
         docker_compose = yaml.safe_load(_docker_compose_file)
     if not docker_compose:
