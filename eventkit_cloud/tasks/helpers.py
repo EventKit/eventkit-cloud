@@ -922,7 +922,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
     return layers
 
 
-@retry()
+@retry
 def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,

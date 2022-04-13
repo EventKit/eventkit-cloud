@@ -345,7 +345,7 @@ class ZipFileTask(FormatTask):
         return retval
 
 
-@retry()
+@retry
 def osm_data_collection_pipeline(
     export_task_record_uid,
     stage_dir,
@@ -1884,7 +1884,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-@retry()
+@retry
 def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.

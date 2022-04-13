@@ -105,7 +105,7 @@ class OgcApiProcess:
 
         return download_url
 
-    @retry()
+    @retry
     def wait_for_ogc_process_job(self, job_url, task_id=None, interval=5):
         """
         Function polls an OGC process' job until it is done processing.
