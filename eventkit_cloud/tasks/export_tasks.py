@@ -809,6 +809,8 @@ def ogc_result_task(
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
     ogcapi_config = load_provider_config(data_provider.config).get("ogcapi_process")
+    # check to see if file format that we're processing is the same one as the
+    # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
         format_field, format_prop = get_format_field_from_config(ogcapi_config)
         if format_field:
@@ -836,6 +838,11 @@ def ogc_result_task(
     )
 
     result["result"] = download_path
+
+    # source may be empty because primary task wasn't run
+    if not result.get("source"):
+        result["source"] = download_path
+
     logger.error(f"OGC DATA RESULT: {result}")
 
     return result
