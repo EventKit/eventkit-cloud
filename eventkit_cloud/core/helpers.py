@@ -212,7 +212,6 @@ def get_or_update_session(*args, **session_info):
         session.headers.update(headers)
     if token:
         session.headers["Authorization"] = f"Bearer {token}"
-
     logger.debug("Using %s for SSL verification.", str(ssl_verify))
     session.verify = ssl_verify
 

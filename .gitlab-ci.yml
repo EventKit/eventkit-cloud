@@ -1,5 +1,6 @@
 stages:
   - pending
+  - lint
   - test
   - results
 
@@ -12,33 +13,79 @@ variables:
   SITE_NAME: "cloud.eventkit.test"
   SITE_IP: "127.0.0.1"
   SECRET_KEY: "TESTING"
+  VERSION: "1.13.0"
 
 image:
   name: $DOCKER_IMAGE
 
-lint:
+.default:
   when: always
-  stage: test
-  tags:
-    - dind
-  script:
-    - python scripts/ci_utils.py
-    - docker-compose up -d webpack eventkit
-    - docker-compose exec -T webpack npm run eslint
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --config /var/lib/eventkit/config/pyproject.toml --check /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/eventkit_cloud'
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud'
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"'
 
-unit-tests:
-  when: always
+.front:
+  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
+  before_script:
+    - cd /var/lib/eventkit
+
+.back:
+  image:
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
+    entrypoint: [ "" ]
+  before_script:
+    - . activate eventkit-cloud
+
+.lint:
+  stage: lint
+  extends: .default
+
+eslint:
+  extends:
+    - .front
+    - .lint
+  script:
+    - npm run eslint
+
+black:
+  extends:
+    - .back
+    - .lint
+  script:
+    - black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
+
+flake8:
+  extends:
+    - .back
+    - .lint
+  script:
+    - flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
+
+migrations:
+  extends:
+    - .back
+    - .lint
+  script:
+    - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
+
+
+.test:
   stage: test
+  extends: .default
+  
+unit-back:
+  extends:
+    - .test
   tags:
     - dind
   script:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
     - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
-    - docker-compose run --rm --user=root -T webpack npm run coverage
+
+unit-front:
+  extends:
+    - .front
+    - .test
+  script:
+    - npm run coverage
 
 # TODO: Add back after debugging connection issues in pipeline.
 #integration-tests:
