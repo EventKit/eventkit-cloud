@@ -23,6 +23,8 @@ image:
 
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
+  before_script:
+    - cd /var/lib/eventkit
 
 .back:
   image:
@@ -72,18 +74,19 @@ unit-back:
   extends:
     - .back
     - .test
-  variables:
-    COVERAGE: "True"
-    COVERAGE_THRESHOLD: 68
+  tags:
+    - dind
   script:
-    - python manage.py test -v=2 --noinput eventkit_cloud
+    - python scripts/ci_utils.py
+    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
 
 unit-front:
   extends:
     - .front
     - .test
   script:
-    - webpack npm run coverage
+    - npm run coverage
 
 # TODO: Add back after debugging connection issues in pipeline.
 #integration-tests:
