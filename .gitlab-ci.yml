@@ -20,15 +20,14 @@ image:
 
 .default:
   when: always
-  before_script:
-    - python scripts/ci_utils.py
-    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
 
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
 
 .back:
-  image: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
+  image:
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
+    entrypoint: [ "" ]
 
 .lint:
   stage: lint
