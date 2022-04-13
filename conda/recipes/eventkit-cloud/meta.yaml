@@ -1,5 +1,5 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.12.0" %}
+{% set version = "1.13.0" %}
 
 {% set run_requirements = load_file_regex(
     load_file="conda-requirements.txt",
@@ -16,26 +16,23 @@ build:
   number: '{{ environ.get("GIT_DESCRIBE_NUMBER", 0) }}'
 
 requirements:
-  host:
+  build:
     - git
-    - pip=21.1
-    - python >=3.9,<3.10
+    - pip {{ pip }}
+    - python {{ python }}
     - nodejs>=10
     - ruby
   run_constrained:
-    - memcached=1.6.9
+    - memcached {{ memcached }}
     - qgis
-    - postgresql=12.3
   run:
-    - python >=3.9,<3.10
+    - python {{ python }}
     - mesa-libgl-cos7-x86_64
-    - osmctools=0.9.0
-    - proj=7.1.1
+    - osmctools {{ osmctools }}
+    - proj {{ proj }}
     {% for req in run_requirements -%}
       - {{ req }}
     {% endfor %}
-    # Forces correct dependency resolution
-    - expat >=2.2.10,<2.3.0a0
 about:
   home: https://github.com/eventkit/eventkit-cloud
   license: BSD 3-Clause

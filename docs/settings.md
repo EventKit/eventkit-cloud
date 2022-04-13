@@ -291,7 +291,7 @@ if `SSL_VERIFICATION` does not point to certificate, then `REQUESTS_CA_BUNDLE` s
 
 #### Version
 The version number will be display on the Login page and the About page.
-<pre>VERSION='1.12.0'</pre>
+<pre>VERSION='1.13.0'</pre>
 #### Contact Url
 The contact url will be displayed as a link on the About page.
 <pre>CONTACT_URL='mailto:my.team@domain.com'</pre>

@@ -29,7 +29,7 @@ python-dateutil==2.8.2
 python-ldap==3.3.1
 python-magic==0.4.24
 python-memcached==1.59
-pytz==2021.1
+pytz==2021.3
 PyYAML==5.4.1
 requests==2.26.0
 requests-pkcs12==1.10  # conda: requests_pkcs12

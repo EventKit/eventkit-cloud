@@ -6,9 +6,6 @@ source:
   fn: db-6.0.19.tar.gz
   url: http://download.oracle.com/berkeley-db/db-6.0.19.tar.gz
 
-build:
-  number: 0
-
 about:
   home: http://download.oracle.com/berkeley-db
 

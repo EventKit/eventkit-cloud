@@ -6,7 +6,7 @@ from typing import List
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
+from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import (
@@ -77,7 +77,7 @@ class TaskChainBuilder(object):
             .prefetch_related("formats__supported_projections")
             .get(uid=provider_task_uid)
         )
-        data_provider = data_provider_task.provider
+        data_provider: DataProvider = data_provider_task.provider
         job = run.job
 
         # This is just to make it easier to trace when user_details haven't been sent
@@ -120,16 +120,20 @@ class TaskChainBuilder(object):
             },
         )
 
+        skip_primary_export_task = False
+        if set(item.name.lower() for item in formats).issubset(
+            set(item.name.lower() for item in get_proxy_formats(data_provider))
+        ):
+            skip_primary_export_task = True
+
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
             logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
-            export_format_key = (
-                "ogcapi-process"
-                if export_format.options.get("proxy")
-                and (data_provider.slug in export_format.options.get("providers", []))
-                else export_format.slug
-            )
-            export_task = create_format_task(export_format_key)
+            if is_supported_proxy_format(export_format, data_provider):
+                export_task = create_format_task("ogcapi-process")
+            else:
+                export_task = create_format_task(export_format.slug)
+
             default_projection = get_default_projection(export_format.get_supported_projection_list(), projections)
             task_name = export_format.name
             if default_projection:
@@ -256,10 +260,11 @@ class TaskChainBuilder(object):
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name
         )
-        if format_tasks:
-            tasks = chain(primary_export_task_signature, format_tasks)
+        if skip_primary_export_task:
+            tasks = chain(format_tasks)
+            primary_export_task_record.delete()
         else:
-            tasks = primary_export_task_signature
+            tasks = chain(primary_export_task_signature, format_tasks)
 
         tasks = chain(tasks)
 
@@ -290,6 +295,14 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
         logger.error("Saving task {0} threw: {1}".format(task_name, e))
         raise e
     return export_task
+
+
+def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataProvider):
+    return export_format.options.get("proxy") and (data_provider.slug in export_format.options.get("providers", []))
+
+
+def get_proxy_formats(data_provider: DataProvider):
+    return ExportFormat.objects.filter(options__providers__contains=data_provider.slug)
 
 
 def error_handler(task_id=None):

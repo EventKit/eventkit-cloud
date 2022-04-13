@@ -179,7 +179,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
     """
 
     dataset = None
-    ret = {"driver": None, "is_raster": None, "nodata": None}
+    ret = {"driver": None, "is_raster": None, "nodata": None, "dim": [0, 0, 0]}
 
     try:
         dataset = open_dataset(ds_path, is_raster)
@@ -194,7 +194,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
                 bands = list(set([dataset.GetRasterBand(i + 1).GetNoDataValue() for i in range(dataset.RasterCount)]))
                 if len(bands) == 1:
                     ret["nodata"] = bands[0]
-
+                ret["dim"] = [dataset.RasterXSize, dataset.RasterYSize, len(bands)]
         if ret["driver"]:
             logger.debug("Identified dataset {0} as {1}".format(ds_path, ret["driver"]))
         else:
@@ -528,7 +528,10 @@ def convert_raster(
     if not translate_params:
         translate_params = dict()
     if boundary:
-        warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
+        # Conversion fails if trying to cut down very small files (i.e. 0x1 pixel error).
+        dims = list(map(sum, zip(*[get_meta(input_file)["dim"] for input_file in input_files]))) or [0, 0, 0]
+        if dims[0] > 100 and dims[1] > 100:
+            warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
     # Needed because arcpy can't change table names.
     if driver.lower() == "gpkg":
