@@ -18,7 +18,6 @@ from eventkit_cloud.jobs.helpers import (
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
 from eventkit_cloud.utils import s3
-from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +37,8 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
     :param bbox: region of the world to get tiles for
     :return: A Pillow Image object built for the collected tiles.
     """
+    from eventkit_cloud.utils.mapproxy import create_mapproxy_app
+
     if bbox is None:
         bbox = copy.copy(WGS84_FULL_WORLD)
     # Creates and returns a TileGrid object, allows us specify min_res instead of supplying the resolution list.
