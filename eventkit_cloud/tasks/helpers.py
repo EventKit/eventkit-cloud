@@ -40,7 +40,8 @@ from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORT
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
 from eventkit_cloud.utils import s3
-from eventkit_cloud.utils.helpers import cd, get_file_paths, retry  # NOQA
+from eventkit_cloud.utils.generic import retry
+from eventkit_cloud.utils.helpers import cd, get_file_paths  # NOQA
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 

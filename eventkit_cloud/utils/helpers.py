@@ -1,6 +1,4 @@
 from contextlib import contextmanager
-
-import logging
 import os
 
 from django.conf import settings
@@ -8,7 +6,6 @@ from django.core.cache import cache
 
 from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
 
-logger = logging.getLogger()
 
 
 def get_relative_path_from_staging(staging_path):
