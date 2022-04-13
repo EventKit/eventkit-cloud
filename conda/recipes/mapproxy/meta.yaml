@@ -10,7 +10,6 @@ source:
   sha256: a2a7c5764ebf952108fe1afa03c4b14d71608fdfb7cc88e80a0a401c48f1c27c
 
 build:
-  number: 0
   entry_points:
     - mapproxy-seed = mapproxy.seed.script:main
     - mapproxy-util = mapproxy.script.util:main
@@ -18,17 +17,17 @@ build:
 
 requirements:
   host:
-    - pip=21.1
-    - python=3.9
+    - pip
+    - python {{ python }}
   run:
-    - pillow
-    - python=3.9
-    - pyyaml
-    - proj
-    - pyproj
-    - gdal
-    - geos
-    - shapely
+    - pillow {{ pillow }}
+    - python {{ python }}
+    - pyyaml {{ pyyaml }}
+    - proj {{ proj }}
+    - pyproj {{ pyproj }}
+    - gdal {{ gdal }}
+    - geos {{ geos }}
+    - shapely {{ shapely }}
 
 test:
   imports:

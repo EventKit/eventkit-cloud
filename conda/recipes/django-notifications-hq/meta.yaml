@@ -10,24 +10,23 @@ source:
   sha256: debeb71b7076b08487b40bf07664d1cc43b9977c4480bbc969b30236dda7a461
 
 build:
-  number: 0
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - django
+    - django {{ django }}
     - django-model-utils
     - jsonfield
     - pip
-    - python
-    - pytz
+    - python {{ python }}
+    - pytz {{ pytz }}
   run:
-    - django
+    - django {{ django }}
     - django-model-utils
     - jsonfield
-    - python
-    - pytz
-    - swapper =1.1.2.post1
+    - python {{ python }}
+    - pytz {{ pytz }}
+    - swapper {{ swapper }}
 
 test:
   imports:

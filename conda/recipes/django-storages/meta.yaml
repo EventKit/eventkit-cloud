@@ -11,16 +11,15 @@ source:
   sha256: "{{ sha256 }}"
 
 build:
-  number: 0
   script: "{{ PYTHON }} -m pip install . --no-deps -vv "
 
 requirements:
   host:
     - pip
-    - python
+    - python {{ python }}
   run:
-    - python
-    - django
+    - python {{ python }}
+    - django {{ django }}
 
 about:
   home: https://github.com/jschneier/django-storages

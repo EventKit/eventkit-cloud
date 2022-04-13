@@ -1,4 +1,4 @@
 channels:
   - conda-forge
-  - defaults
-  - bioconda
+conda_build:
+  config_file: ~/recipes/conda_build_config.yaml
