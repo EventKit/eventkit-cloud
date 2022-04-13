@@ -12,7 +12,7 @@ from gdal_utils import get_dimensions, get_meta, merge_geotiffs
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.helpers import retry
+from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 
 

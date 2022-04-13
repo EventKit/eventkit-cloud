@@ -17,7 +17,6 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_path,
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.tasks.helpers import make_dirs
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 
@@ -128,6 +127,8 @@ def fit_to_area(image, pixels_x=500, pixels_y=250):
 
 
 def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
+    from eventkit_cloud.tasks.helpers import make_dirs
+
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename

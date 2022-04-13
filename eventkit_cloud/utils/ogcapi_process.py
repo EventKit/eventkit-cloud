@@ -15,7 +15,7 @@ from eventkit_cloud.jobs.models import clean_config, load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import update_progress
-from eventkit_cloud.utils.helpers import retry
+from eventkit_cloud.utils.generic import retry
 
 if TYPE_CHECKING:
     from eventkit_cloud.jobs.models import DataProvider
