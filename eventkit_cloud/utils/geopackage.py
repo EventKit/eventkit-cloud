@@ -7,7 +7,7 @@ from string import Template
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
-from gdal_utils.utils.gdal import convert
+from gdal_utils import convert
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify

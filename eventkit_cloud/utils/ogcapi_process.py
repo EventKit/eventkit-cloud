@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING
 from django.contrib.gis.geos import WKTWriter, GEOSGeometry
 from django.core.cache import cache
 from urllib.parse import urljoin
-from gdal_utils.utils.helpers import retry
 
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.jobs.models import clean_config, load_provider_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import update_progress
+from eventkit_cloud.utils.helpers import retry
 
 if TYPE_CHECKING:
     from eventkit_cloud.jobs.models import DataProvider

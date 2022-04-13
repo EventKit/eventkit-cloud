@@ -30,8 +30,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
-from gdal_utils.utils.helpers import retry
-from gdal_utils.utils.gdal import convert
+from gdal_utils import convert
 from yaml import CLoader
 
 from eventkit_cloud.celery import app, TaskPriority
@@ -81,6 +80,7 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
 from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.helpers import retry
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
