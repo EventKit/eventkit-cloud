@@ -24,10 +24,10 @@ image:
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
 
 .front:
-  image: "${CI_REGISTRY}/eventkit-webpack"
+  image: "${CI_REGISTRY_PATH}/eventkit-webpack"
 
 .back:
-  image: "${CI_REGISTRY}/eventkit-base"
+  image: "${CI_REGISTRY_PATH}/eventkit-base"
 
 .lint:
   stage: lint
