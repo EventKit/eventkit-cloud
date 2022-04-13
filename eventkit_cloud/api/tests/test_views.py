@@ -1452,8 +1452,13 @@ class TestLicenseViewSet(APITestCase):
     def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
-        self.licenses = [License.objects.create(slug="test1", name="name1", text="text1")]
+        self.license = License.objects.create(slug="test1", name="name1", text="text1")
+        self.data_provider = DataProvider.objects.create(name="test", slug="test", license=self.license)
+        self.licenses = [self.license]
         self.licenses += [License.objects.create(slug="test0", name="name0", text="text0")]
+        self.attribute_class = AttributeClass.objects.create(
+            name="test", slug="test", exclude={"username__in": self.user.username}
+        )
         token = Token.objects.create(user=self.user)
         self.client.credentials(
             HTTP_AUTHORIZATION="Token " + token.key,
@@ -1473,8 +1478,11 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = response.json()
-        self.assertEqual(expected_data, data)
+        self.assertEqual(expected_data, response.json())
+        # Don't show licenses for data that the user can't see.
+        self.data_provider.attribute_class = self.attribute_class
+        self.data_provider.save()
+        self.assertEqual([{"slug": "test0", "name": "name0", "text": "text0"}], self.client.get(url).json())
 
     def test_get_licenses_detail(self):
         expected_url = "/api/licenses/test1"
@@ -1486,6 +1494,11 @@ class TestLicenseViewSet(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.json()
         self.assertEqual(expected_data, data)
+        # Don't show licenses for data that the user can't see.
+        self.data_provider.attribute_class = self.attribute_class
+        self.data_provider.save()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_licenses_download(self):
         expected_url = "/api/licenses/test1/download"
