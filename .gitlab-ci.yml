@@ -29,7 +29,7 @@ image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
     entrypoint: [ "" ]
   before_script:
-    - conda activate eventkit-cloud
+    - . activate eventkit-cloud
 
 .lint:
   stage: lint
