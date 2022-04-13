@@ -28,25 +28,23 @@ image:
   image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
     entrypoint: [ "" ]
+  before_script:
+    - conda activate eventkit-cloud
 
 .lint:
   stage: lint
   extends: .default
 
-.test:
-  stage: test
-  extends: .default
-
 eslint:
   extends:
-    - .back
+    - .front
     - .lint
   script:
     - npm run eslint
 
 black:
   extends:
-    - .front
+    - .back
     - .lint
   script:
     - black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
@@ -65,6 +63,11 @@ migrations:
   script:
     - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
 
+
+.test:
+  stage: test
+  extends: .default
+  
 unit-back:
   extends:
     - .back
