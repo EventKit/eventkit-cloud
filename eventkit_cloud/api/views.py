@@ -836,7 +836,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             .filter(Q(user=self.request.user) | Q(user=None))
         )
         providers, filtered_provider = attribute_class_filter(provider_queryset, self.request.user)
-        return License.objects.filter(Q(data_providers__in=providers) | Q(data_providers__isnull=True))
+        return License.objects.filter(data_providers__in=providers)
 
     @action(methods=["get"], detail=True, renderer_classes=[PlainTextRenderer])
     def download(self, request, slug=None, *args, **kwargs):
