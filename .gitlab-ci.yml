@@ -1,5 +1,6 @@
 stages:
   - pending
+  - lint
   - test
   - results
 
@@ -16,29 +17,70 @@ variables:
 image:
   name: $DOCKER_IMAGE
 
-lint:
+.default:
   when: always
-  stage: test
-  tags:
-    - dind
-  script:
-    - python scripts/ci_utils.py
-    - docker-compose up -d webpack eventkit
-    - docker-compose exec -T webpack npm run eslint
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud'
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud'
-    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"'
-
-unit-tests:
-  when: always
-  stage: test
-  tags:
-    - dind
-  script:
+  before_script:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
-    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
-    - docker-compose run --rm --user=root -T webpack npm run coverage
+
+.front:
+  image: "${CI_REGISTRY}/eventkit-webpack"
+
+.back:
+  image: "${CI_REGISTRY}/eventkit-base"
+
+.lint:
+  stage: lint
+  extends: .default
+
+.test:
+  stage: test
+  extends: .default
+
+eslint:
+  extends:
+    - .back
+    - .lint
+  script:
+    - npm run eslint
+
+black:
+  extends:
+    - .front
+    - .lint
+  script:
+    - black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
+
+flake8:
+  extends:
+    - .back
+    - .lint
+  script:
+    - flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
+
+migrations:
+  extends:
+    - .back
+    - .lint
+  script:
+    - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
+
+unit-back:
+  extends:
+    - .back
+    - .test
+  variables:
+    COVERAGE: "True"
+    COVERAGE_THRESHOLD: 68
+  script:
+    - python manage.py test -v=2 --noinput eventkit_cloud
+
+unit-front:
+  extends:
+    - .front
+    - .test
+  script:
+    - webpack npm run coverage
 
 # TODO: Add back after debugging connection issues in pipeline.
 #integration-tests:
