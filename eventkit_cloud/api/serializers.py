@@ -454,6 +454,8 @@ class ExportRunSerializer(serializers.ModelSerializer):
         run_zip_file = get_run_zip_file(values=data_provider_task_records).first()
         if run_zip_file:
             data = RunZipFileSerializer(run_zip_file, context=self.context).data
+        elif obj.status == TaskState.FAILED.value:
+            data = {"status": TaskState.FAILED.value}
 
         return data
 
