@@ -359,17 +359,24 @@ MAPPROXY_LOGS = {
     "silent": is_true(os.getenv("MAPPROXY_LOGS_SILENT")),
 }
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOGGING_SINGLE_LINE_OUTPUT = is_true(os.getenv("LOGGING_SINGLE_LINE_OUTPUT", False))
+
+log_formatter = "logging.Formatter"
+if LOGGING_SINGLE_LINE_OUTPUT:
+    log_formatter = "eventkit_cloud.core.log.formatter.SingleLineFormatter"
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
-    "formatters": {"simple": {"format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
+    "formatters": {"simple": {"class": log_formatter,
+                              "format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
     "root": {"handlers": ["console"], "propagate": True, "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
     },
 }
+
 
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
