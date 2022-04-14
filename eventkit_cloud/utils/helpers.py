@@ -7,7 +7,6 @@ from django.core.cache import cache
 from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
 
 
-
 def get_relative_path_from_staging(staging_path):
     """
     Tries to return a relative path from staging
@@ -33,6 +32,7 @@ def get_download_paths(relative_path):
 def clear_mapproxy_config_cache():
     mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
     cache.delete_many(list(mapproxy_config_keys))
+
 
 @contextmanager
 def cd(newdir):

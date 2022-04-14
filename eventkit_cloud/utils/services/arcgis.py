@@ -57,9 +57,7 @@ def get_polygon_from_arcgis_extent(extent: ArcGISExtent):
     ]
     try:
         polygon = Polygon.from_bbox(bbox)
-        polygon.srid = (
-            spatial_reference.get("latestWkid") or spatial_reference.get("wkid") or 4326
-        )
+        polygon.srid = spatial_reference.get("latestWkid") or spatial_reference.get("wkid") or 4326
         polygon.transform(4326)
         return polygon
     except Exception:

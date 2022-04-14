@@ -562,9 +562,7 @@ def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
     resolution = get_resolution_for_extent(bbox, size)
     # Make a subgrid of 4326 that spans the extent of the provided bbox
     # min res specifies the starting zoom level
-    mapproxy_grid = tile_grid(
-        srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution
-    )
+    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
     # bbox is the bounding box of all tiles affected at the given level, unused here
     # size is the x, y dimensions of the grid
     # tiles at level is a generator that returns the tiles in order
