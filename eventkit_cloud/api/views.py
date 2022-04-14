@@ -830,6 +830,15 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "slug"
     ordering = ["name"]
 
+    def get_queryset(self):
+        provider_queryset = (
+            DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
+            .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
+            .filter(Q(user=self.request.user) | Q(user=None))
+        )
+        providers, filtered_provider = attribute_class_filter(provider_queryset, self.request.user)
+        return License.objects.filter(data_providers__in=providers)
+
     @action(methods=["get"], detail=True, renderer_classes=[PlainTextRenderer])
     def download(self, request, slug=None, *args, **kwargs):
         """
