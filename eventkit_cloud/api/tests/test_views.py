@@ -331,9 +331,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -405,9 +408,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -463,9 +469,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -520,9 +529,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -774,9 +786,12 @@ class TestBBoxSearch(APITestCase):
                 self.client.post(url, request_data, format="json")
                 expected_user_details = {
                     "user_id": self.user.id,
-                    "username": "demo",
-                    "is_superuser": True,
-                    "is_staff": False,
+                    "username": self.user.username,
+                    "superuser": self.user.is_superuser,
+                    "staff": self.user.is_staff,
+                    "email": self.user.email,
+                    "fullname": self.user.get_full_name(),
+                    "ip": None,
                 }
                 mock_pickup.assert_called_with(
                     run_uid="some_run_uid", user_details=expected_user_details, session_token=None

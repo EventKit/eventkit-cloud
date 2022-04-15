@@ -196,9 +196,6 @@ class JobViewSet(EventkitViewSet):
         "region__name",
     )
 
-    def dispatch(self, request, *args, **kwargs):
-        return EventkitViewSet.dispatch(self, request, *args, **kwargs)
-
     def get_queryset(self):
         """Return all objects user can view."""
 
@@ -514,7 +511,9 @@ class JobViewSet(EventkitViewSet):
 
             # run the tasks
             # run needs to be created so that the UI can be updated with the task list.
-            user_details = get_user_details(request)
+            from audit_logging.utils import get_user_details
+
+            user_details = get_user_details(request.user)
             try:
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job=job, user=request.user)
@@ -551,10 +550,9 @@ class JobViewSet(EventkitViewSet):
         *Returns:*
             - the serialized run data.
         """
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = get_user_details(request)
-        if user_details is None:
-            user_details = {"username": "unknown-JobViewSet.run"}
+        from audit_logging.utils import get_user_details
+
+        user_details = get_user_details(request.user)
 
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
@@ -1442,11 +1440,6 @@ class ExportRunViewSet(EventkitViewSet):
                 return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
 
         if check_job_permissions(run.job):
-            # This is just to make it easier to trace when user_details haven't been sent
-            user_details = get_user_details(request)
-            if user_details is None:
-                user_details = {"username": "unknown-JobViewSet.run"}
-
             running = ExportRunSerializer(run, context={"request": request})
             rerun_data_provider_records(run.uid, request.user.id, data_provider_slugs)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
@@ -2541,21 +2534,6 @@ def get_provider_task(export_provider, export_formats):
         provider_task.formats.add(*supported_formats)
     provider_task.save()
     return provider_task
-
-
-def get_user_details(request):
-    """
-    Gets user data from a request.
-    :param request: View request.
-    :return: A dict with user data.
-    """
-    logged_in_user = request.user
-    return {
-        "user_id": logged_in_user.id,
-        "username": logged_in_user.username,
-        "is_superuser": logged_in_user.is_superuser,
-        "is_staff": logged_in_user.is_staff,
-    }
 
 
 def geojson_to_geos(geojson_geom, srid=None):
