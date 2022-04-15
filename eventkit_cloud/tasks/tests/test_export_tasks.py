@@ -177,7 +177,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="ESRI Shapefile",
-            input_file=expected_output_path,
+            input_files=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             boundary=None,
@@ -228,7 +228,7 @@ class TestExportTasks(ExportTaskBase):
         except ImportError:
             mock_convert.assert_called_once_with(
                 driver="libkml",
-                input_file=expected_output_path,
+                input_files=expected_output_path,
                 output_file=expected_output_path,
                 task_uid=str(saved_export_task.uid),
                 projection=4326,
@@ -269,7 +269,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="SQLite",
-            input_file=expected_output_path,
+            input_files=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -341,7 +341,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_input_path,
+            input_files=expected_input_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
@@ -440,7 +440,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_path_1,
+            input_files=expected_path_1,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -451,7 +451,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_path_2,
+            input_files=expected_path_2,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -515,7 +515,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver=driver,
-            input_file=sample_input,
+            input_files=sample_input,
             output_file=expected_output_path,
             src_srs=input_projection,
             task_uid=str(saved_export_task.uid),
@@ -576,7 +576,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=example_input_file,
+            input_files=example_input_file,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -679,7 +679,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(
             boundary=None,
             driver="gtiff",
-            input_file=f"GTIFF_RAW:{example_geotiff}",
+            input_files=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
             task_uid=task_uid,
             warp_params=warp_params,
@@ -693,7 +693,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(
             boundary="selection",
             driver="gtiff",
-            input_file=f"GTIFF_RAW:{example_geotiff}",
+            input_files=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
             task_uid=task_uid,
             warp_params=warp_params,
@@ -719,7 +719,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
             driver="nitf",
-            input_file=example_nitf,
+            input_files=example_nitf,
             output_file=expected_outfile,
             task_uid=task_uid,
         )
@@ -728,7 +728,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
             driver="nitf",
-            input_file=example_nitf,
+            input_files=example_nitf,
             output_file=expected_outfile,
             task_uid=task_uid,
         )
@@ -787,7 +787,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="SQLite",
-            input_file=expected_output_path,
+            input_files=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -832,7 +832,7 @@ class TestExportTasks(ExportTaskBase):
             result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job"
         )
         mock_convert.assert_called_once_with(
-            input_file=example_source,
+            input_files=example_source,
             output_file=expected_output_path,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
@@ -917,7 +917,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_esrijson,
+            input_files=expected_esrijson,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -1017,7 +1017,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_path_1,
+            input_files=expected_path_1,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -1028,7 +1028,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_any_call(
             driver="gpkg",
-            input_file=expected_path_2,
+            input_files=expected_path_2,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
@@ -1618,7 +1618,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_files=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
@@ -1685,7 +1685,7 @@ class TestExportTasks(ExportTaskBase):
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=expected_output_path,
+            input_files=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=projection,
@@ -1774,7 +1774,7 @@ class TestExportTasks(ExportTaskBase):
         # test reprojecting
         mock_gdal_convert.assert_called_once_with(
             driver=driver,
-            input_file=f"GTIFF_RAW:{expected_input_path}",
+            input_files=f"GTIFF_RAW:{expected_input_path}",
             output_file=expected_output_path,
             task_uid=task_uid,
             projection=out_projection,
@@ -1968,7 +1968,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.assert_called_once_with(
             driver="gpkg",
-            input_file=example_source_data,
+            input_files=example_source_data,
             output_file=expected_output_path,
             task_uid=task_uid,
             projection=projection,

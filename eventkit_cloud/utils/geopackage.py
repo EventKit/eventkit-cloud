@@ -320,7 +320,7 @@ class Geopackage(object):
             f"from {self.input_pbf} to {self.output_gpkg}"
         )
         convert(
-            input_file=self.input_pbf,
+            input_files=self.input_pbf,
             output_file=self.output_gpkg,
             driver="GPKG",
             boundary=json.loads(self.aoi_geom.geojson),
@@ -489,7 +489,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
 
     gpkg = convert(
         driver="gpkg",
-        input_file=gpkg,
+        input_files=gpkg,
         output_file=geojson_file,
         task_uid=task_uid,
         creation_options=f"-nln {layer_name}",

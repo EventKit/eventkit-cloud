@@ -862,7 +862,7 @@ def merge_chunks(
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
     out = convert(
         driver="gpkg",
-        input_file=chunks,
+        input_files=chunks,
         output_file=output_file,
         task_uid=task_uid,
         boundary=bbox,
