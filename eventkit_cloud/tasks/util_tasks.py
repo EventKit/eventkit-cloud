@@ -1,7 +1,6 @@
 import socket
 import subprocess
 
-from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -23,7 +22,7 @@ User = get_user_model()
 logger = get_task_logger(__name__)
 
 
-@app.task(name="Shutdown Celery Workers", base=UserDetailsBase, bind=True, default_retry_delay=60)
+@app.task(name="Shutdown Celery Workers", bind=True, default_retry_delay=60)
 def shutdown_celery_workers(self):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
@@ -35,7 +34,7 @@ def shutdown_celery_workers(self):
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
-@app.task(name="Get Estimates", base=UserDetailsBase, default_retry_delay=60)
+@app.task(name="Get Estimates", default_retry_delay=60)
 def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):
 
     run = ExportRun.objects.get(uid=run_uid)
