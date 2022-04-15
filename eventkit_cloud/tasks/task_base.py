@@ -1,23 +1,21 @@
 import json
 import os
 
-from audit_logging.celery_support import UserDetailsBase
+from celery import Task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.cache import caches
+
 from eventkit_cloud.tasks.enumerations import TaskState
-
-from eventkit_cloud.tasks.models import ExportTaskRecord
-
 from eventkit_cloud.tasks.helpers import get_message_count
+from eventkit_cloud.tasks.models import ExportTaskRecord
 from eventkit_cloud.utils.scaling.docker import Docker
-
 from eventkit_cloud.utils.scaling.pcf import Pcf
 
 logger = get_task_logger(__name__)
 
 
-class EventKitBaseTask(UserDetailsBase):
+class EventKitBaseTask(Task):
 
     name = "EventKitBaseTask"
 
@@ -68,7 +66,7 @@ class EventKitBaseTask(UserDetailsBase):
                         return {"action": "shutdown", "workers": workers}
 
 
-class LockingTask(UserDetailsBase):
+class LockingTask(Task):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
     It happens with multiple workers for tasks with any delay (countdown, ETA). Its a bug

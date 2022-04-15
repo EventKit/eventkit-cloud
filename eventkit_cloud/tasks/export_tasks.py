@@ -15,7 +15,6 @@ from urllib.parse import urlencode, urljoin
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import yaml
-from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
@@ -494,9 +493,6 @@ def osm_data_collection_task(
         eta = ETA(task_uid=task_uid, debug_os=debug_os)
 
         result = result or {}
-
-        if user_details is None:
-            user_details = {"username": "username not set in osm_data_collection_task"}
 
         selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
@@ -1610,9 +1606,6 @@ def bounds_export_task(
     Function defining geopackage export function.
     """
     user_details = kwargs.get("user_details")
-    # This is just to make it easier to trace when user_details haven't been sent
-    if user_details is None:
-        user_details = {"username": "unknown-bounds_export_task"}
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -1683,7 +1676,7 @@ def mapproxy_export_task(
         raise e
 
 
-@app.task(name="Pickup Run", bind=True, base=UserDetailsBase, acks_late=True)
+@app.task(name="Pickup Run", bind=True, acks_late=True)
 def pick_up_run_task(
     self,
     result=None,
@@ -1702,9 +1695,6 @@ def pick_up_run_task(
     worker = socket.gethostname()
     queue_group = get_celery_queue_group(run_uid=run_uid, worker=worker)
 
-    if user_details is None:
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = {"username": "unknown-pick_up_run_task"}
     run = ExportRun.objects.get(uid=run_uid)
     started_providers = run.data_provider_task_records.exclude(status=TaskState.PENDING.value)
     try:
