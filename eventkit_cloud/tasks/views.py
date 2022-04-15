@@ -16,6 +16,7 @@ from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, Use
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 
+
 logger = getLogger(__name__)
 
 
