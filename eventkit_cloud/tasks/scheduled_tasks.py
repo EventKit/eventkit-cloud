@@ -137,6 +137,34 @@ def scale_by_runs(max_tasks_memory):
             )
             shutdown_celery_workers.s().apply_async(queue=str(finished_run.uid), routing_key=str(finished_run.uid))
 
+        now = datetime.datetime.now(timezone.utc)
+        delta = datetime.timedelta(seconds=settings.MAX_JOB_RUNTIME)
+        time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=settings.MAX_JOB_RUNTIME)
+        active_runs = ExportRun.objects.filter(Q(uid__in=running_task_names))
+        timed_out_runs = ExportRun.objects.filter(
+            Q(uid__in=running_task_names)
+            & Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold)
+        )
+        print(f"time threshold: {time_threshold}")
+        for run in active_runs:
+            print(f"Task name: {run.uid} started at: {run.started_at} status: {run.status}")
+            print(f"less than threshold?: {run.started_at < time_threshold}")
+            print(f"status = running?: {run.status == TaskState.RUNNING.value}")
+
+        logger.error(f"timed out runs: {timed_out_runs}")
+
+        for timed_out_run in timed_out_runs:
+            logger.info(f"Stopping {timed_out_run.uid} because it has been running for too long.")
+            for data_provider_task_record in timed_out_run.data_provider_task_records.filter(status=TaskState.RUNNING.value):
+                data_provider_task_record.status = TaskState.FAILED.value
+                for export_task_record in data_provider_task_record.tasks.filter(status=TaskState.RUNNING.value):
+                    export_task_record.status = TaskState.FAILED.value
+                    export_task_record.save()
+                data_provider_task_record.save()
+            timed_out_run.save()
+            shutdown_celery_workers.s().apply_async(queue=str(timed_out_run.uid), routing_key=str(timed_out_run.uid))
+
+
     for run in runs:
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))

@@ -25,6 +25,7 @@ services:
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
       - MEMCACHED=memcached:11211
       - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
+      - MAX_JOB_RUNTIME
       - CELERY_GROUP_NAME
       - CELERY_SCALE_BY_RUN=True
       - QT_QPA_PLATFORM=offscreen
@@ -152,6 +153,7 @@ services:
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
       - MEMCACHED=memcached:11211
       - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
+      - MAX_JOB_RUNTIME
       - CELERY_GROUP_NAME
       - CONCURRENCY=1
       - CELERY_SCALE_BY_RUN=True
