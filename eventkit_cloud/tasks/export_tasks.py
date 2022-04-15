@@ -63,7 +63,6 @@ from eventkit_cloud.tasks.helpers import (
     update_progress,
     get_arcgis_templates,
     make_file_downloadable,
-    make_dirs,
     get_human_readable_metadata_document,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -79,6 +78,7 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
 from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml

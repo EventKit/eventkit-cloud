@@ -34,7 +34,6 @@ from eventkit_cloud.utils.geopackage import (
     get_zoom_levels_table,
     remove_empty_zoom_levels,
 )
-from eventkit_cloud.utils.image_snapshot import get_resolution_for_extent
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
@@ -569,3 +568,39 @@ def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
     tiles_at_level = mapproxy_grid.get_affected_level_tiles(bbox, 0)[2]
     # convert the tiles to bboxes representing the tiles on the map
     return [mapproxy_grid.tile_bbox(_tile) for _tile in tiles_at_level]
+
+
+def get_resolution_for_extent(extent: list, size: tuple = None):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :param optional size: The pixel size of the image to get the resolution for as a tuple.
+    :return: The resolution at which the extent will render at the given size.
+    """
+    if size is None:
+        size = (1024, 512)
+
+    size_x, size_y = size
+    x_resolution = get_width(extent) / size_x
+    y_resolution = get_height(extent) / size_y
+    return max([x_resolution, y_resolution])
+
+
+def get_width(extent: list):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :return: The width of the given extent.
+    """
+    return extent[2] - extent[0]
+
+
+def get_height(extent: list):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :return: The height of the given extent.
+    """
+    return extent[3] - extent[1]
+
+
+def clear_mapproxy_config_cache():
+    mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
+    cache.delete_many(list(mapproxy_config_keys))

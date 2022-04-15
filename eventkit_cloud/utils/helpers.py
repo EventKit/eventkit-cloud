@@ -1,10 +1,6 @@
-from contextlib import contextmanager
 import os
 
 from django.conf import settings
-from django.core.cache import cache
-
-from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
 
 
 def get_relative_path_from_staging(staging_path):
@@ -29,29 +25,9 @@ def get_download_paths(relative_path):
     return downloads_filepath, download_url
 
 
-def clear_mapproxy_config_cache():
-    mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
-    cache.delete_many(list(mapproxy_config_keys))
-
-
-@contextmanager
-def cd(newdir):
-    prevdir = os.getcwd()
-    os.chdir(newdir)
+def make_dirs(path):
     try:
-        yield
-    finally:
-        os.chdir(prevdir)
-
-
-def get_file_paths(directory):
-    """
-    Gets file paths with absolute file paths for copying the files and a relative file path for
-    where the file should be located in the datapack relative to the directory.
-    """
-    paths = {}
-    with cd(directory):
-        for dirpath, _, filenames in os.walk("./"):
-            for f in filenames:
-                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
-    return paths
+        os.makedirs(path, 0o751, exist_ok=True)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
