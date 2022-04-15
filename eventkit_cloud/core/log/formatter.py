@@ -4,8 +4,8 @@ import traceback
 
 from django.conf import settings
 
-class SingleLineFormatter(logging.Formatter):
 
+class Formatter(logging.Formatter):
     def formatMessage(self, record):
         if settings.LOGGING_SINGLE_LINE_OUTPUT:
             return super().formatMessage(record).encode("unicode_escape").decode("utf-8")
@@ -21,12 +21,11 @@ class SingleLineFormatter(logging.Formatter):
         sio = io.StringIO()
         tb = ei[2]
         # See issues #9427, #1553375. Commented out for now.
-        #if getattr(self, 'fullstack', False):
+        # if getattr(self, 'fullstack', False):
         value = ei[1]
         traceback_output = []
         if settings.LOGGING_SINGLE_LINE_OUTPUT:
-            for line in traceback.TracebackException(
-                    type(value), value, tb, limit=None).format(chain=True):
+            for line in traceback.TracebackException(type(value), value, tb, limit=None).format(chain=True):
                 traceback_output.append(line)
             output = " ".join(traceback_output).encode("unicode_escape").decode("utf-8")
             print(output, file=sio, end="")

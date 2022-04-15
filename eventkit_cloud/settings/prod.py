@@ -356,16 +356,17 @@ MAPPROXY_LOGS = {
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOGGING_SINGLE_LINE_OUTPUT = is_true(os.getenv("LOGGING_SINGLE_LINE_OUTPUT", False))
 
-log_formatter = "logging.Formatter"
-if LOGGING_SINGLE_LINE_OUTPUT:
-    log_formatter = "eventkit_cloud.core.log.formatter.SingleLineFormatter"
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
-    "formatters": {"simple": {"class": log_formatter,
-                              "format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
+    "formatters": {
+        "simple": {
+            "class": "eventkit_cloud.core.log.formatter.Formatter",
+            "format": "[{asctime}] {module} - {levelname} - {message}",
+            "style": "{",
+        }
+    },
     "root": {"handlers": ["console"], "propagate": True, "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
