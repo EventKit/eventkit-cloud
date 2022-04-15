@@ -399,3 +399,10 @@ Some of the scripts found under `/script` can be configured through the use of e
 |---------------|-------------|
 | EVENTKIT_USER | Username used to authenticate. |
 | EVENTKIT_PASS | Password used to authenticate. |
+
+
+### Logging
+
+| Variable Name | Description |
+|---------------|-------------|
+| LOGGING_SINGLE_LINE_OUTPUT | Used to force multiline log output to a single line joined with \n. |

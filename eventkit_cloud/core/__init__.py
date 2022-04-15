@@ -1,10 +1,10 @@
-from logging import getLogger
+import logging
 import os
 
 from django.conf import settings
 
 default_app_config = "eventkit_cloud.core.apps.EventKitCore"
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_staging_dir():
