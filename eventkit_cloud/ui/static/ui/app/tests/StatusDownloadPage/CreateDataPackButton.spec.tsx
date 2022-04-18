@@ -5,6 +5,7 @@ import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile
 import '@testing-library/jest-dom/extend-expect';
 import {rest} from 'msw';
 import {setupServer} from 'msw/node';
+import {ApiStatuses} from "../../utils/hooks/api";
 
 jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
     return {
@@ -114,13 +115,69 @@ describe('CreateDataPackButton component', () => {
             rest.get('/api/runs/zipfiles', (req, res, ctx) => {
                 return res(ctx.json([{
                     "message": "Completed",
-                    "status": "FAILED"
+                    "status": ApiStatuses.files.FAILED
                 }]))
             })
         );
         setup();
         await waitFor(() => screen.getByText('Zip Error'))
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
+    });
+
+     it('should display Download Datapack when zip is available.', async () => {
+        server.use(
+            // override the initial "GET /greeting" request handler
+            // to return a 500 Server Error
+            rest.get('/api/runs/zipfiles', (req, res, ctx) => {
+                return res(ctx.json([{
+                    "message": "Completed",
+                    "status": ApiStatuses.files.SUCCESS
+                }]))
+            })
+        );
+        setup();
+        await waitFor(() => screen.getByText('DOWNLOAD DATAPACK (NaN MB .ZIP)'))
+        expect(screen.getByText('DOWNLOAD DATAPACK (NaN MB .ZIP)')).toBeInTheDocument();
+    });
+
+    it('should display Zip Canceled when run is canceled.', async () => {
+        const {container, rerender} = setup();
+        server.use(
+            // override the initial "GET /greeting" request handler
+            // to return a 500 Server Error
+            rest.get('/api/runs/zipfiles', (req, res, ctx) => {
+                return res(ctx.json([{
+                    "message": "Completed",
+                    "status": ApiStatuses.files.FAILED
+                }]))
+            })
+        );
+        (useRunContext as any).mockImplementation(() => {
+            return {run: {status: ApiStatuses.files.CANCELED}}
+        })
+        rerender(<CreateDataPackButton {...defaultProps()}/>)
+        await waitFor(() => screen.getByText('Zip Canceled'))
+        expect(screen.getByText('Zip Canceled')).toBeInTheDocument();
+    });
+
+      it('should display Job Failed when job has failed.', async () => {
+        const {container, rerender} = setup();
+        server.use(
+            // override the initial "GET /greeting" request handler
+            // to return a 500 Server Error
+            rest.get('/api/runs/zipfiles', (req, res, ctx) => {
+                return res(ctx.json([{
+                    "message": "Completed",
+                    "status": ApiStatuses.files.FAILED
+                }]))
+            })
+        );
+        (useRunContext as any).mockImplementation(() => {
+            return {run: {status: ApiStatuses.files.FAILED}}
+        })
+        rerender(<CreateDataPackButton {...defaultProps()}/>)
+        await waitFor(() => screen.getByText('Job Failed'))
+        expect(screen.getByText('Job Failed')).toBeInTheDocument();
     });
 
 });

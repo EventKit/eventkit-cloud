@@ -110,9 +110,6 @@ class TaskFactory:
         :param run_uid: A uid to reference an ExportRun.
         :return: The AsyncResult from the celery chain of all tasks for this run.
         """
-        # This is just to make it easier to trace when user_details haven't been sent
-        if user_details is None:
-            user_details = {"username": "TaskFactory-parse_tasks"}
 
         if not run_uid:
             raise Exception("Cannot parse_tasks without a run uid.")
@@ -122,6 +119,11 @@ class TaskFactory:
         ).get(uid=run_uid)
         job = run.job
         run_dir = get_run_staging_dir(run.uid)
+
+        if user_details is None:
+            from audit_logging.utils import get_user_details
+
+            user_details = get_user_details(job.user)
 
         wait_for_providers_settings = {
             "queue": f"{queue_group}.priority",
@@ -150,6 +152,7 @@ class TaskFactory:
         run_zip_task_chain = get_zip_task_chain(
             data_provider_task_record_uid=run_task_record.uid,
             worker=worker,
+            user_details=user_details,
         )
         for data_provider_task in job.data_provider_tasks.all():
 
@@ -226,6 +229,7 @@ class TaskFactory:
                             data_provider_task_record_uid=provider_task_record_uid,
                             data_provider_task_record_uids=[provider_task_record_uid],
                             worker=worker,
+                            user_details=user_details,
                         )
                         provider_subtask_chain = chain(provider_subtask_chain, zip_export_provider_sig)
 
@@ -340,9 +344,6 @@ def create_task(
     :param user_details: Some meta data relating to the user request.
     :return: A celery task signature.
     """
-    # This is just to make it easier to trace when user_details haven't been sent
-    if user_details is None:
-        user_details = {"username": "unknown-create_task"}
     export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
 
     if export_provider_task.provider:
@@ -379,6 +380,7 @@ def get_zip_task_chain(
     data_provider_task_record_uids=None,
     run_zip_file_uid=None,
     worker=None,
+    user_details=None,
 ):
     return chain(
         create_task(
@@ -387,6 +389,7 @@ def get_zip_task_chain(
             run_zip_file_uid=run_zip_file_uid,
             worker=worker,
             task=create_zip_task,
+            user_details=user_details,
         )
     )
 

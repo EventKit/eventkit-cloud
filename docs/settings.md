@@ -291,7 +291,7 @@ if `SSL_VERIFICATION` does not point to certificate, then `REQUESTS_CA_BUNDLE` s
 
 #### Version
 The version number will be display on the Login page and the About page.
-<pre>VERSION='1.12.0'</pre>
+<pre>VERSION='1.13.0'</pre>
 #### Contact Url
 The contact url will be displayed as a link on the About page.
 <pre>CONTACT_URL='mailto:my.team@domain.com'</pre>
@@ -399,3 +399,10 @@ Some of the scripts found under `/script` can be configured through the use of e
 |---------------|-------------|
 | EVENTKIT_USER | Username used to authenticate. |
 | EVENTKIT_PASS | Password used to authenticate. |
+
+
+### Logging
+
+| Variable Name | Description |
+|---------------|-------------|
+| LOGGING_SINGLE_LINE_OUTPUT | Used to force multiline log output to a single line joined with \n. |

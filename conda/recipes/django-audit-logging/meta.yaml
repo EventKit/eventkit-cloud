@@ -1,8 +1,8 @@
 {% set name = "django-audit-logging" %}
-{% set version = "0.2.4" %}
+{% set version = "0.3.0" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "c5c08669f57dcb18b121de1b3fe97fd01cb7c33c8f6a7112d87e5715c86694da" %}
+{% set hash_value = "02f8fdd926bba3c6cb3c830658adcc6ffeca5a51987831593836c722660818a2" %}
 
 package:
   name: '{{ name|lower }}'
@@ -14,17 +14,16 @@ source:
   '{{ hash_type }}': '{{ hash_value|lower }}'
 
 build:
-  number: 0
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - pip
-    - django
+    - django {{ django }}
   run:
-    - python
-    - django
+    - python {{ python }}
+    - django {{ django }}
 
 test:
   imports:

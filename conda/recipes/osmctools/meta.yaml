@@ -6,9 +6,6 @@ source:
   fn: osmctools-0.9.tar.gz
   url: https://gitlab.com/osm-c-tools/osmctools/-/archive/0.9/osmctools-0.9.tar.gz
 
-build:
-  number: 0
-
 about:
   home: https://gitlab.com/osm-c-tools/osmctools
 
@@ -24,7 +21,7 @@ requirements:
     - automake
     - autoconf
   host:
-    - zlib
+    - zlib {{ zlib }}
   run:
-    - wget
-    - zlib
+    - wget {{ wget }}
+    - zlib {{ zlib }}
