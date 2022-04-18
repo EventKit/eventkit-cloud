@@ -141,6 +141,10 @@ class ExportTaskBase(TestCase):
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
         self.provider = DataProvider.objects.first()
 
+        self.task_process_patcher = patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
+        self.task_process = self.task_process_patcher.start()
+        self.addCleanup(self.task_process_patcher.stop)
+
 
 class TestExportTasks(ExportTaskBase):
     stage_dir = "/stage"
@@ -167,6 +171,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=shp_export_task.name
         )
         shp_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
+        self.task_process.return_value = Mock(exitcode=0)
         result = shp_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -179,9 +184,9 @@ class TestExportTasks(ExportTaskBase):
             driver="ESRI Shapefile",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             boundary=None,
             projection=4326,
+            executor=self.task_process().start_process,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -213,6 +218,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=kml_export_task.name
         )
         kml_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
+        self.task_process.return_value = Mock(exitcode=0)
         result = kml_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -230,9 +236,9 @@ class TestExportTasks(ExportTaskBase):
                 driver="libkml",
                 input_files=expected_output_path,
                 output_file=expected_output_path,
-                task_uid=str(saved_export_task.uid),
                 projection=4326,
                 boundary=None,
+                executor=self.task_process().start_process,
             )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -259,6 +265,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=sqlite_export_task.name
         )
         sqlite_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
+        self.task_process.return_value = Mock(exitcode=0)
         result = sqlite_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -271,9 +278,9 @@ class TestExportTasks(ExportTaskBase):
             driver="SQLite",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=None,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -328,6 +335,7 @@ class TestExportTasks(ExportTaskBase):
         )
         wfs_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         mock_gpkg.check_content_exists.return_value = True
+        self.task_process.return_value = Mock(exitcode=0)
         result = wfs_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -343,12 +351,12 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_input_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=projection,
             boundary=[1, 2, 3, 4],
             layer_name=expected_provider_slug,
             access_mode="append",
             distinct_field=None,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -442,22 +450,22 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_1,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_1,
+            executor=self.task_process().start_process
         )
 
         mock_convert.assert_any_call(
             driver="gpkg",
             input_files=expected_path_2,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=[1, 2, 3, 4],
             access_mode="append",
             layer_name=layer_2,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result_c["result"])
@@ -505,6 +513,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=mbtiles_export_task.name
         )
         mbtiles_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
+        self.task_process.return_value = Mock(exitcode=0)
         result = mbtiles_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -518,10 +527,10 @@ class TestExportTasks(ExportTaskBase):
             input_files=sample_input,
             output_file=expected_output_path,
             src_srs=input_projection,
-            task_uid=str(saved_export_task.uid),
             projection=output_projection,
             boundary=None,
             use_translate=True,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -565,6 +574,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_convert.return_value = expected_output_path
 
+        self.task_process.return_value = Mock(exitcode=0)
         result = geopackage_export_task(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -578,9 +588,9 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=example_input_file,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=None,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -674,6 +684,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_creation_options.return_value = warp_params, translate_params
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
+        self.task_process.return_value = Mock(exitcode=0)
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
         mock_convert.return_value = expected_outfile
         mock_convert.assert_called_once_with(
@@ -681,9 +692,9 @@ class TestExportTasks(ExportTaskBase):
             driver="gtiff",
             input_files=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
-            task_uid=task_uid,
             warp_params=warp_params,
             translate_params=translate_params,
+            executor=self.task_process().start_process
         )
 
         mock_convert.reset_mock()
@@ -695,9 +706,9 @@ class TestExportTasks(ExportTaskBase):
             driver="gtiff",
             input_files=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
-            task_uid=task_uid,
             warp_params=warp_params,
             translate_params=translate_params,
+            executor=self.task_process().start_process
         )
 
         mock_convert.reset_mock()
@@ -721,7 +732,7 @@ class TestExportTasks(ExportTaskBase):
             driver="nitf",
             input_files=example_nitf,
             output_file=expected_outfile,
-            task_uid=task_uid,
+            executor=self.task_process().start_process
         )
         mock_convert.reset_mock()
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job")
@@ -730,7 +741,7 @@ class TestExportTasks(ExportTaskBase):
             driver="nitf",
             input_files=example_nitf,
             output_file=expected_outfile,
-            task_uid=task_uid,
+            executor=self.task_process().start_process
         )
 
     def test_pbf_export_task(self):
@@ -777,6 +788,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=sqlite_export_task.name
         )
         sqlite_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
+        self.task_process.return_value = Mock(exitcode=0)
         result = sqlite_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -789,9 +801,9 @@ class TestExportTasks(ExportTaskBase):
             driver="SQLite",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=None,
+            executor=self.task_process().start_process,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -828,6 +840,7 @@ class TestExportTasks(ExportTaskBase):
             "gpx": expected_output_path,
             "selection": example_geojson,
         }
+        self.task_process.return_value = Mock(exitcode=0)
         returned_result = gpx_export_task(
             result=example_result, task_uid=task_uid, stage_dir=self.stage_dir, job_name="job"
         )
@@ -838,6 +851,7 @@ class TestExportTasks(ExportTaskBase):
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             creation_options=["-explodecollections"],
             boundary=example_geojson,
+            executor=self.task_process().start_process,
         )
         self.assertEqual(returned_result, expected_result)
 
@@ -898,6 +912,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_geopackage.check_content_exists.return_value = True
+        self.task_process.return_value = Mock(exitcode=0)
 
         # test without trailing slash
         result_a = arcgis_feature_service_export_task.run(
@@ -919,12 +934,12 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_esrijson,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             layer_name=expected_provider_slug,
             boundary=bbox,
             access_mode="append",
             distinct_field=None,
+            executor=self.task_process.start_process,
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
@@ -1019,22 +1034,22 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_1,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=bbox,
             access_mode="append",
             layer_name=layer_name_1,
+            executor=self.task_process().start_process
         )
 
         mock_convert.assert_any_call(
             driver="gpkg",
             input_files=expected_path_2,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=bbox,
             access_mode="append",
             layer_name=layer_name_2,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result_c["result"])
@@ -1605,6 +1620,7 @@ class TestExportTasks(ExportTaskBase):
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
 
+        self.task_process.return_value = Mock(exitcode=0)
         result = vector_file_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -1620,11 +1636,11 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=projection,
             boundary=None,
             layer_name=expected_provider_slug,
             is_raster=False,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -1672,6 +1688,7 @@ class TestExportTasks(ExportTaskBase):
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
 
+        self.task_process.return_value = Mock(exitcode=0)
         result = raster_file_export_task.run(
             run_uid=self.run.uid,
             result=previous_task_result,
@@ -1687,10 +1704,10 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
             projection=projection,
             boundary=None,
             is_raster=True,
+            executor=self.task_process().start_process
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -1940,6 +1957,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.return_value = expected_output_path
         mock_get_export_filepath.side_effect = [expected_output_path, expected_outzip_path]
 
+        self.task_process.return_value = Mock(exitcode=0)
         result = ogcapi_process_export_task.run(
             result=example_result,
             run_uid=self.run.uid,
@@ -1970,9 +1988,9 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=example_source_data,
             output_file=expected_output_path,
-            task_uid=task_uid,
             projection=projection,
             boundary=bbox,
+            executor=self.task_process().start_process,
         )
 
     @patch("eventkit_cloud.tasks.export_tasks.extract_metadata_files")

@@ -40,6 +40,7 @@ from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
+from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.generic import retry
@@ -861,16 +862,17 @@ def merge_chunks(
     distinct_field=None,
 ):
     chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
+    task_process = TaskProcess(task_uid=task_uid)
     out = convert(
         driver="gpkg",
         input_files=chunks,
         output_file=output_file,
-        task_uid=task_uid,
         boundary=bbox,
         layer_name=layer_name,
         projection=projection,
         access_mode="append",
         distinct_field=distinct_field,
+        executor=task_process.start_process,
     )
     return out
 

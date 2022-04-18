@@ -75,6 +75,7 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
 from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
@@ -426,6 +427,8 @@ def osm_data_collection_pipeline(
         port=database["PORT"],
         name=database["NAME"],
     )
+
+    task_process = TaskProcess()
     convert(
         boundary=selection,
         input_files=in_dataset,
@@ -435,6 +438,7 @@ def osm_data_collection_pipeline(
         is_raster=False,
         access_mode="append",
         layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
+        executor=task_process.start_process,
     )
 
     # TODO:  The arcgis templates as of version 1.9.0 rely on both OGC_FID and FID field existing.
@@ -562,13 +566,14 @@ def shp_export_task(
     shp_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "shp")
     selection = parse_result(result, "selection")
 
+    task_process = TaskProcess(task_uid=task_uid)
     shp = convert(
         driver="ESRI Shapefile",
         input_files=shp_in_dataset,
         output_file=shp_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "ESRI Shapefile"
@@ -611,13 +616,14 @@ def kml_export_task(
         logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
         selection = parse_result(result, "selection")
+        task_process = TaskProcess(task_uid=task_uid)
         kml = convert(
             driver="libkml",
             input_files=kml_in_dataset,
             output_file=kml_out_dataset,
-            task_uid=task_uid,
             boundary=selection,
             projection=projection,
+            executor=task_process.start_process,
         )
 
     result["driver"] = "libkml"
@@ -654,6 +660,7 @@ def gpx_export_task(
 
     gpx_file = get_export_filepath(stage_dir, export_task_record, projection, "gpx")
     try:
+        task_process = TaskProcess()
         out = convert(
             input_files=input_file,
             output_file=gpx_file,
@@ -661,6 +668,7 @@ def gpx_export_task(
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             creation_options=["-explodecollections"],
             boundary=selection,
+            executor=task_process.start_process,
         )
         result["file_extension"] = "gpx"
         result["driver"] = "GPX"
@@ -758,13 +766,14 @@ def ogcapi_process_export_task(
             extract=not bool(driver),
         )
         if driver:
+            task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver=driver,
                 input_files=source_data,
                 output_file=output_file,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
+                executor=task_process.start_process,
             )
         else:
             out = source_data
@@ -868,13 +877,14 @@ def sqlite_export_task(
     sqlite_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "sqlite")
     selection = parse_result(result, "selection")
 
+    task_process = TaskProcess(task_uid=task_uid)
     sqlite = convert(
         driver="SQLite",
         input_files=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "SQLite"
@@ -947,13 +957,14 @@ def geopackage_export_task(
             os.rename(gpkg_in_dataset, gpkg_out_dataset)
             gpkg = gpkg_out_dataset
         else:
+            task_process = TaskProcess()
             gpkg = convert(
                 driver="gpkg",
                 input_files=gpkg_in_dataset,
                 output_file=gpkg_out_dataset,
-                task_uid=task_uid,
                 boundary=selection,
                 projection=projection,
+                executor=task_process.start_process,
             )
 
     result["driver"] = "gpkg"
@@ -991,15 +1002,16 @@ def mbtiles_export_task(
     selection = parse_result(result, "selection")
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
+    task_process = TaskProcess(task_uid=task_uid)
     mbtiles = convert(
         driver="MBTiles",
         src_srs=4326,
         input_files=source_dataset,
         output_file=mbtiles_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
         use_translate=True,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "MBTiles"
@@ -1027,14 +1039,15 @@ def geotiff_export_task(
         if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
             gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
+        task_process = TaskProcess(task_uid=task_uid)
         gtiff_out_dataset = convert(
             driver="gtiff",
             input_files=gtiff_in_dataset,
             output_file=gtiff_out_dataset,
-            task_uid=task_uid,
             boundary=selection,
             warp_params=warp_params,
             translate_params=translate_params,
+            executor=task_process.start_process,
         )
 
     result["file_extension"] = "tif"
@@ -1068,12 +1081,13 @@ def nitf_export_task(
     nitf_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "nitf")
 
     creation_options = ["ICORDS=G"]
+    task_process = TaskProcess(task_uid=task_uid)
     nitf = convert(
         driver="nitf",
         input_files=nitf_in_dataset,
         output_file=nitf_out_dataset,
-        task_uid=task_uid,
         creation_options=creation_options,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "nitf"
@@ -1103,7 +1117,10 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
-    hfa = convert(driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
+    task_process = TaskProcess(task_uid=task_uid)
+    hfa = convert(
+        driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, executor=task_process.start_process
+    )
 
     result["file_extension"] = "img"
     result["driver"] = "hfa"
@@ -1191,15 +1208,16 @@ def reprojection_task(
             reprojection = mp.convert()
 
         else:
+            task_process = TaskProcess(task_uid=task_uid)
             reprojection = convert(
                 driver=driver,
                 input_files=in_dataset,
                 output_file=out_dataset,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=selection,
                 warp_params=warp_params,
                 translate_params=translate_params,
+                task_process=task_process,
             )
 
     result["result"] = reprojection
@@ -1257,15 +1275,16 @@ def wfs_export_task(
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
+            task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver="gpkg",
                 input_files=layer.get("path"),
                 output_file=gpkg,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
                 layer_name=layer_name,
                 access_mode="append",
+                task_process=task_process.start_process,
             )
 
     else:
@@ -1442,15 +1461,16 @@ def arcgis_feature_service_export_task(
             raise e
 
         for layer_name, layer in layers.items():
+            task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver="gpkg",
                 input_files=layer.get("path"),
                 output_file=gpkg,
-                task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
                 layer_name=layer_name,
                 access_mode="append",
+                executor=task_process.start_process,
             )
 
     else:
@@ -1532,15 +1552,16 @@ def vector_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
+    task_process = TaskProcess(task_uid=task_uid)
     out = convert(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
-        task_uid=task_uid,
         projection=projection,
         layer_name=export_task_record.export_provider_task.provider.layers[0],
         boundary=bbox,
         is_raster=False,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "gpkg"
@@ -1580,14 +1601,15 @@ def raster_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
+    task_process = TaskProcess(task_uid=task_uid)
     out = convert(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
-        task_uid=task_uid,
         projection=projection,
         boundary=bbox,
         is_raster=True,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "gpkg"

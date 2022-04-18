@@ -11,6 +11,7 @@ from gdal_utils import convert
 from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
+from eventkit_cloud.tasks.task_process import TaskProcess
 from .artifact import Artifact
 
 logger = logging.getLogger(__name__)
@@ -319,6 +320,7 @@ class Geopackage(object):
             f"Creating OSM gpkg using OSM_MAX_TMPFILE_SIZE {settings.OSM_MAX_TMPFILE_SIZE}"
             f"from {self.input_pbf} to {self.output_gpkg}"
         )
+        task_process = TaskProcess(task_uid=self.export_task_record_uid)
         convert(
             input_files=self.input_pbf,
             output_file=self.output_gpkg,
@@ -329,7 +331,7 @@ class Geopackage(object):
                 ("OGR_INTERLEAVED_READING", "YES"),
                 ("OSM_MAX_TMPFILE_SIZE", settings.OSM_MAX_TMPFILE_SIZE),
             ],
-            task_uid=self.export_task_record_uid,
+            executor=task_process.start_process,
         )
         # Cancel the provider task if the geopackage has no data.
         if not check_content_exists(self.output_gpkg):
@@ -487,12 +489,13 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
     with logging_open(geojson_file, "w", user_details=user_details) as open_file:
         open_file.write(geojson)
 
+    task_process = TaskProcess(task_uid=task_uid)
     gpkg = convert(
         driver="gpkg",
         input_files=gpkg,
         output_file=geojson_file,
-        task_uid=task_uid,
         creation_options=f"-nln {layer_name}",
+        executor=task_process.start_process,
     )
 
     return gpkg
