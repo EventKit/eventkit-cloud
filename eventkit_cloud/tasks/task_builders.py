@@ -17,6 +17,7 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
+
 logger = logging.getLogger(__name__)
 
 export_task_registry = {
@@ -68,10 +69,6 @@ class TaskChainBuilder(object):
         :param osm_gpkg: A OSM geopackage with the planet osm schema.
         :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = kwargs.get("user_details")
-        if user_details is None:
-            user_details = {"username": "unknown-{0}TaskChainBuilder.run_task".format(primary_export_task.name)}
 
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
@@ -82,6 +79,13 @@ class TaskChainBuilder(object):
         )
         data_provider: DataProvider = data_provider_task.provider
         job = run.job
+
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get("user_details")
+        if user_details is None:
+            from audit_logging.utils import get_user_details
+
+            user_details = get_user_details(user)
 
         job_name = normalize_name(job.name)
         # get the formats to export

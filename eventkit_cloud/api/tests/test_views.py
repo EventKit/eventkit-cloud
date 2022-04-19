@@ -331,9 +331,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -405,9 +408,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -463,9 +469,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -520,9 +529,12 @@ class TestJobViewSet(APITestCase):
             self.client.post(url, request_data, format="json")
             expected_user_details = {
                 "user_id": self.user.id,
-                "username": "demo",
-                "is_superuser": False,
-                "is_staff": False,
+                "username": self.user.username,
+                "superuser": self.user.is_superuser,
+                "staff": self.user.is_staff,
+                "email": self.user.email,
+                "fullname": self.user.get_full_name(),
+                "ip": None,
             }
             mock_pickup.assert_called_once_with(
                 run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -774,9 +786,12 @@ class TestBBoxSearch(APITestCase):
                 self.client.post(url, request_data, format="json")
                 expected_user_details = {
                     "user_id": self.user.id,
-                    "username": "demo",
-                    "is_superuser": True,
-                    "is_staff": False,
+                    "username": self.user.username,
+                    "superuser": self.user.is_superuser,
+                    "staff": self.user.is_staff,
+                    "email": self.user.email,
+                    "fullname": self.user.get_full_name(),
+                    "ip": None,
                 }
                 mock_pickup.assert_called_with(
                     run_uid="some_run_uid", user_details=expected_user_details, session_token=None
@@ -1452,8 +1467,17 @@ class TestLicenseViewSet(APITestCase):
     def setUp(self):
         group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
         self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
-        self.licenses = [License.objects.create(slug="test1", name="name1", text="text1")]
-        self.licenses += [License.objects.create(slug="test0", name="name0", text="text0")]
+        self.licenses = [
+            License.objects.create(slug="test0", name="name0", text="text0"),
+            License.objects.create(slug="test1", name="name1", text="text1"),
+        ]
+        self.data_providers = [
+            DataProvider.objects.create(name="test0", slug="test0", license=self.licenses[0]),
+            DataProvider.objects.create(name="test1", slug="test1", license=self.licenses[1]),
+        ]
+        self.attribute_class = AttributeClass.objects.create(
+            name="test", slug="test", exclude={"username__in": self.user.username}
+        )
         token = Token.objects.create(user=self.user)
         self.client.credentials(
             HTTP_AUTHORIZATION="Token " + token.key,
@@ -1473,8 +1497,15 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = response.json()
-        self.assertEqual(expected_data, data)
+        self.assertEqual(expected_data, response.json())
+        # Don't show licenses not being used.
+        self.data_providers[0].license = None
+        self.data_providers[0].save()
+        self.assertEqual([{"slug": "test1", "name": "name1", "text": "text1"}], self.client.get(url).json())
+        # Don't show licenses for data that the user can't see.
+        self.data_providers[1].attribute_class = self.attribute_class
+        self.data_providers[1].save()
+        self.assertEqual([], self.client.get(url).json())
 
     def test_get_licenses_detail(self):
         expected_url = "/api/licenses/test1"
@@ -1486,10 +1517,15 @@ class TestLicenseViewSet(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.json()
         self.assertEqual(expected_data, data)
+        # Don't show licenses for data that the user can't see.
+        self.data_providers[1].attribute_class = self.attribute_class
+        self.data_providers[1].save()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_licenses_download(self):
-        expected_url = "/api/licenses/test1/download"
-        url = reverse("api:licenses-download", args=["test1"])
+        expected_url = "/api/licenses/test0/download"
+        url = reverse("api:licenses-download", args=["test0"])
         self.assertEqual(expected_url, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
