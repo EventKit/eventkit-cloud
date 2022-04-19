@@ -23,8 +23,8 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
-from eventkit_cloud.tasks.models import ExportRun
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, pickle_exception
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord, ExportTaskException
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
@@ -92,6 +92,35 @@ def expire_runs_task():
             run.save()
 
 
+@app.task(name="Clean Up Stuck Tasks", base=LockingTask)
+def clean_up_stuck_tasks():
+    # if not settings.TASK_TIMEOUT:
+    #     return
+        # Celery should clean up tasks automatically so add a buffer to let that happen.
+
+        # task_timeout = settings.TASK_TIMEOUT + 600
+    task_timeout = 60
+    time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=task_timeout)
+    export_task_records = ExportTaskRecord.objects.select_related("export_provider_task__tasks",
+                                                                  "export_provider_task__run").filter(
+        Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold))
+    for export_task_record in export_task_records:
+        try:
+            raise Exception("Job timeout exceeded.")
+        except Exception:
+            from billiard.einfo import ExceptionInfo
+            einfo = ExceptionInfo()
+            data_provider_task_record = export_task_record.export_provider_task
+            for etr in data_provider_task_record.tasks.all():
+                ExportTaskException.objects.create(task=export_task_record, exception=pickle_exception(einfo))
+                etr.status = TaskState.FAILED.value
+        # Update task to pending so that it can get picked up again.
+        run = export_task_record.export_provider_task.run
+        run.status = TaskState.PENDING.value
+        run.save()
+        shutdown_celery_workers.s().apply_async(queue=str(run.uid), routing_key=str(run.uid))
+
+
 @app.task(name="Scale Celery", base=LockingTask)
 def scale_celery_task(max_tasks_memory: int = 4096):  # NOQA
     """
@@ -138,34 +167,6 @@ def scale_by_runs(max_tasks_memory):
                 f"or was deleted ({finished_run.deleted})."
             )
             shutdown_celery_workers.s().apply_async(queue=str(finished_run.uid), routing_key=str(finished_run.uid))
-
-        now = datetime.datetime.now(timezone.utc)
-        delta = datetime.timedelta(seconds=settings.MAX_JOB_RUNTIME)
-        time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=settings.MAX_JOB_RUNTIME)
-        active_runs = ExportRun.objects.filter(Q(uid__in=running_task_names))
-        timed_out_runs = ExportRun.objects.filter(
-            Q(uid__in=running_task_names)
-            & Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold)
-        )
-        print(f"time threshold: {time_threshold}")
-        for run in active_runs:
-            print(f"Task name: {run.uid} started at: {run.started_at} status: {run.status}")
-            print(f"less than threshold?: {run.started_at < time_threshold}")
-            print(f"status = running?: {run.status == TaskState.RUNNING.value}")
-
-        logger.error(f"timed out runs: {timed_out_runs}")
-
-        for timed_out_run in timed_out_runs:
-            logger.info(f"Stopping {timed_out_run.uid} because it has been running for too long.")
-            for data_provider_task_record in timed_out_run.data_provider_task_records.filter(status=TaskState.RUNNING.value):
-                data_provider_task_record.status = TaskState.FAILED.value
-                for export_task_record in data_provider_task_record.tasks.filter(status=TaskState.RUNNING.value):
-                    export_task_record.status = TaskState.FAILED.value
-                    export_task_record.save()
-                data_provider_task_record.save()
-            timed_out_run.save()
-            shutdown_celery_workers.s().apply_async(queue=str(timed_out_run.uid), routing_key=str(timed_out_run.uid))
-
 
     for run in runs:
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")

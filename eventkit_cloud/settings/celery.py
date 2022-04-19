@@ -43,6 +43,10 @@ BEAT_SCHEDULE = {
         "task": "Update Statistics Caches",
         "schedule": crontab(minute="0", day_of_month="*/4"),
     },
+    "clean-up-stuck-tasks":{
+        "task": "Clean Up Stuck Tasks",
+        "schedule": 300.0,
+    }
 }
 
 BEAT_SCHEDULE.update(
@@ -98,7 +102,5 @@ if not BROKER_API_URL:
     BROKER_API_URL = os.environ.get("BROKER_API_URL", "http://guest:guest@localhost:15672/api/")
 
 MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
-# default to 8 hours
-MAX_JOB_RUNTIME = int(os.getenv("MAX_JOB_RUNTIME", 28800))
-
-app.conf.task_soft_time_limit = int(os.getenv("TASK_TIMEOUT", 0)) or None
+TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
+app.conf.task_soft_time_limit = TASK_TIMEOUT
