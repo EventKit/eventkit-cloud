@@ -144,7 +144,19 @@ class TestScaleCeleryTask(TestCase):
         # Assert that a task was run.
         scale_by_runs(12000)
 
-        mock_pickup.s.assert_called_once_with(run_uid=str(run.uid), session_token=None)
+        expected_user_details = {
+            "user_id": self.user.id,
+            "username": self.user.username,
+            "superuser": self.user.is_superuser,
+            "staff": self.user.is_staff,
+            "email": self.user.email,
+            "fullname": self.user.get_full_name(),
+            "ip": None,
+        }
+
+        mock_pickup.s.assert_called_once_with(
+            run_uid=str(run.uid), session_token=None, user_details=expected_user_details
+        )
         mock_pickup.s().apply_async.assert_called_once_with(queue=str(run.uid), routing_key=str(run.uid))
         mock_run_task_command.assert_called_once()
 

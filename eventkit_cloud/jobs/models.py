@@ -291,7 +291,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     )
     user = models.ForeignKey(User, related_name="+", null=True, default=None, blank=True, on_delete=models.CASCADE)
     license = models.ForeignKey(
-        License, related_name="+", null=True, blank=True, default=None, on_delete=models.CASCADE
+        License, related_name="data_providers", null=True, blank=True, default=None, on_delete=models.CASCADE
     )
 
     zip = models.BooleanField(default=False)

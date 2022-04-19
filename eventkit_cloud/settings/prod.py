@@ -13,10 +13,10 @@ from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-INSTALLED_APPS += ("django_celery_beat", "django_filters")
-
 # Project apps
 INSTALLED_APPS += (
+    "django_celery_beat",
+    "django_filters",
     "eventkit_cloud.core",
     "eventkit_cloud.auth",
     "eventkit_cloud.jobs",
@@ -27,6 +27,8 @@ INSTALLED_APPS += (
     "eventkit_cloud.utils",
     "eventkit_cloud",
     "notifications",
+    "audit_logging",
+    "django_extensions",
 )
 
 LOGIN_URL = "/login"
@@ -212,13 +214,6 @@ ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
-INSTALLED_APPS += (
-    "django_extensions",
-    "audit_logging",
-)
-
-MIDDLEWARE += ["audit_logging.middleware.UserDetailsMiddleware"]
-
 AUDIT_MODELS = [
     ("eventkit_cloud.tasks.models.ExportRun", "ExportRun"),
     ("eventkit_cloud.tasks.models.DataProviderTaskRecord", "DataProviderTaskRecord"),
@@ -359,17 +354,25 @@ MAPPROXY_LOGS = {
     "silent": is_true(os.getenv("MAPPROXY_LOGS_SILENT")),
 }
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOGGING_SINGLE_LINE_OUTPUT = is_true(os.getenv("LOGGING_SINGLE_LINE_OUTPUT", False))
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
-    "formatters": {"simple": {"format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
+    "formatters": {
+        "simple": {
+            "class": "eventkit_cloud.core.log.formatter.Formatter",
+            "format": "[{asctime}] {module} - {levelname} - {message}",
+            "style": "{",
+        }
+    },
     "root": {"handlers": ["console"], "propagate": True, "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
     },
 }
+
 
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
