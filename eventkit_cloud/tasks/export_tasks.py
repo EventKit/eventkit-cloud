@@ -1217,7 +1217,7 @@ def reprojection_task(
                 boundary=selection,
                 warp_params=warp_params,
                 translate_params=translate_params,
-                task_process=task_process,
+                executor=task_process.start_process,
             )
 
     result["result"] = reprojection
@@ -1284,19 +1284,19 @@ def wfs_export_task(
                 boundary=bbox,
                 layer_name=layer_name,
                 access_mode="append",
-                task_process=task_process.start_process,
+                executor=task_process.start_process,
             )
 
     else:
         out = merge_chunks(
-            gpkg,
-            export_task_record.export_provider_task.provider.layers[0],
-            projection,
-            task_uid,
-            bbox,
-            stage_dir,
-            get_wfs_query_url(name, service_url, layer, projection),
-            configuration.get("cert_info"),
+            output_file=gpkg,
+            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            projection=projection,
+            task_uid=task_uid,
+            bbox=bbox,
+            stage_dir=stage_dir,
+            base_url=get_wfs_query_url(name, service_url, layer, projection),
+            cert_info=configuration.get("cert_info"),
         )
 
     result["driver"] = "gpkg"
@@ -1426,7 +1426,6 @@ def arcgis_feature_service_export_task(
     """
     Function defining sqlite export for ArcFeatureService service.
     """
-
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
 
@@ -1459,7 +1458,6 @@ def arcgis_feature_service_export_task(
         except Exception as e:
             logger.error(f"ArcGIS provider download error: {e}")
             raise e
-
         for layer_name, layer in layers.items():
             task_process = TaskProcess(task_uid=task_uid)
             out = convert(
@@ -1475,14 +1473,14 @@ def arcgis_feature_service_export_task(
 
     else:
         out = merge_chunks(
-            gpkg,
-            export_task_record.export_provider_task.provider.layers[0],
-            projection,
-            task_uid,
-            bbox,
-            stage_dir,
-            get_arcgis_query_url(service_url),
-            configuration.get("cert_info"),
+            output_file=gpkg,
+            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            projection=projection,
+            task_uid=task_uid,
+            bbox=bbox,
+            stage_dir=stage_dir,
+            base_url=get_arcgis_query_url(service_url),
+            cert_info=configuration.get("cert_info"),
             feature_data=True,
         )
 
