@@ -547,14 +547,9 @@ def add_metadata(job, provider, retval):
 def shp_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining SHP export function.
@@ -585,15 +580,9 @@ def shp_export_task(
 def kml_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining KML export function.
@@ -636,15 +625,9 @@ def kml_export_task(
 def gpx_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining GPX export function.
@@ -684,8 +667,6 @@ def gpx_export_task(
 def pbf_export_task(
     self,
     result=None,
-    *args,
-    **kwargs,
 ):
     """
     Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
@@ -713,14 +694,11 @@ def ogcapi_process_export_task(
     config=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     projection=4326,
     session_token=None,
     export_format_slug=None,
-    *args,
-    **kwargs,
 ):
     """
     Function defining OGC API Processes export.  This is called to create a dataset and then convert it to an eventkit
@@ -795,13 +773,10 @@ def ogc_result_task(
     task_uid=None,
     export_format_slug=None,
     stage_dir=None,
-    job_name=None,
     projection=None,
     bbox=None,
     service_url=None,
     session_token=None,
-    *args,
-    **kwargs,
 ):
     """
     A helper method to get additional download formats from an ogcapi endpoint that aren't being converted into other
@@ -857,15 +832,9 @@ def ogc_result_task(
 def sqlite_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining SQLITE export function.
@@ -899,9 +868,7 @@ def output_selection_geojson_task(
     task_uid=None,
     selection=None,
     stage_dir=None,
-    provider_slug=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -930,14 +897,9 @@ def output_selection_geojson_task(
 def geopackage_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining geopackage export function.
@@ -977,14 +939,9 @@ def geopackage_export_task(
 def mbtiles_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=3857,  # MBTiles only support 3857
-    *args,
-    **kwargs,
 ):
     """
     Function defining mbtiles export function.
@@ -1021,7 +978,12 @@ def mbtiles_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs
+    self,
+    result=None,
+    task_uid=None,
+    stage_dir=None,
+    projection=4326,
+    config=None,
 ):
     """
     Function defining geopackage export function.
@@ -1062,14 +1024,9 @@ def geotiff_export_task(
 def nitf_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining nitf export function.
@@ -1100,15 +1057,9 @@ def nitf_export_task(
 def hfa_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining Erdas Imagine HFA (.img) export function.
@@ -1133,15 +1084,11 @@ def hfa_export_task(
 def reprojection_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
     job_name=None,
-    user_details=None,
     projection=None,
     config=None,
-    *args,
-    **kwargs,
 ):
     """
     Function defining a task that will reproject all file formats to the chosen projections.
@@ -1231,18 +1178,12 @@ def wfs_export_task(
     result=None,
     layer=None,
     config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining geopackage export for WFS service.
@@ -1358,19 +1299,13 @@ def wcs_export_task(
     result=None,
     layer=None,
     config=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     name=None,
-    service_type=None,
     user_details=None,
     projection=4326,
-    selection=None,
-    *args,
-    **kwargs,
 ):
     """
     Function defining export for WCS services
@@ -1415,13 +1350,10 @@ def arcgis_feature_service_export_task(
     result=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     projection=4326,
     config=str(),
-    *args,
-    **kwargs,
 ):
     """
     Function defining sqlite export for ArcFeatureService service.
@@ -1525,20 +1457,11 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
 def vector_file_export_task(
     self,
     result=None,
-    layer=None,
-    config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining geopackage export for geospatial vector file service.
@@ -1574,20 +1497,11 @@ def vector_file_export_task(
 def raster_file_export_task(
     self,
     result=None,
-    layer=None,
-    config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining geopackage export for geospatial raster file service.
@@ -1620,7 +1534,7 @@ def raster_file_export_task(
 
 @app.task(name="Create Bounds Export", bind=True, base=ExportTask)
 def bounds_export_task(
-    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs
+    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, **kwargs
 ):
     """
     Function defining geopackage export function.
@@ -1648,10 +1562,8 @@ def mapproxy_export_task(
     result=None,
     layer=None,
     config=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     level_from=None,
@@ -1659,8 +1571,6 @@ def mapproxy_export_task(
     name=None,
     service_type=None,
     projection=4326,
-    *args,
-    **kwargs,
 ):
     """
     Function defining geopackage export for external raster service.
@@ -1699,13 +1609,10 @@ def mapproxy_export_task(
 @app.task(name="Pickup Run", bind=True, acks_late=True)
 def pick_up_run_task(
     self,
-    result=None,
     run_uid=None,
     user_details=None,
     run_zip_file_slug_sets=None,
     session_token=None,
-    *args,
-    **kwargs,
 ):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -1787,8 +1694,6 @@ def create_zip_task(
     data_provider_task_record_uid: List[str] = None,
     data_provider_task_record_uids: List[str] = None,
     run_zip_file_uid=None,
-    *args,
-    **kwargs,
 ):
     """
     :param result: The celery task result value, it should be a dict with the current state.
@@ -2020,7 +1925,7 @@ class FinalizeRunBase(EventKitBaseTask):
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
 @app.task(name="Finalize Run Task", base=FinalizeRunBase)
-def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None, *args, **kwargs):
+def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     """
      Finalizes export run.
 
@@ -2144,7 +2049,7 @@ def fail_synchronous_task_chain(data_provider_task_record=None):
 
 
 @app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
-def create_datapack_preview(result=None, task_uid=None, stage_dir=None, *args, **kwargs):
+def create_datapack_preview(result=None, task_uid=None, stage_dir=None):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
     """
@@ -2191,8 +2096,6 @@ def cancel_export_provider_task(
     delete=False,
     error=False,
     message=None,
-    *args,
-    **kwargs,
 ):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -2262,7 +2165,7 @@ def cancel_export_provider_task(
 
 
 @app.task(name="Cancel Run", base=EventKitBaseTask)
-def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
+def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False):
     result = result or {}
 
     export_run = ExportRun.objects.get(uid=export_run_uid)
@@ -2272,14 +2175,13 @@ def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete
             data_provider_task_uid=export_provider_task.uid,
             canceling_username=canceling_username,
             delete=delete,
-            locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid),
         )
     result["result"] = True
     return result
 
 
 @app.task(name="Kill Task", base=EventKitBaseTask)
-def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
+def kill_task(result=None, task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.
     """
