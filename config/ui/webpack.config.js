@@ -7,6 +7,7 @@ var CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui');
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -20,11 +21,11 @@ var plugins = [
         reportFilename: 'report.html'
     }),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
-    new webpack.HashedModuleIdsPlugin(),
     new CompressionPlugin({
         exclude: /(\.js$)/
     }),
-    new MiniCssExtractPlugin({filename: '[name].css'})
+    new MiniCssExtractPlugin({filename: '[name].css'}),
+    new NodePolyfillPlugin()
 ];
 var app = [APP_DIR + '/index.tsx'];
 var config = {
@@ -146,18 +147,17 @@ var config = {
     },
     plugins: plugins,
     devServer: {
-        hot: true,
-        contentBase: BASE_DIR,
-        watchContentBase: true,
-        publicPath: BUILD_DIR,
         host: "0.0.0.0",
         port: 8080,
         historyApiFallback: true,
-        disableHostCheck: true,
-        watchOptions: {
-            poll: true
-        },
-        inline: true
+        allowedHosts: 'all',
+        static: {
+            directory: BASE_DIR,
+            publicPath: BUILD_DIR,
+        }
+    },
+    watchOptions: {
+        poll: true
     },
 };
 
