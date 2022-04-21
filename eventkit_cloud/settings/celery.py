@@ -45,7 +45,7 @@ BEAT_SCHEDULE = {
     },
     "clean-up-stuck-tasks":{
         "task": "Clean Up Stuck Tasks",
-        "schedule": 300.0,
+        "schedule": 60.0,
     }
 }
 

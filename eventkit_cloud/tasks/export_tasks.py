@@ -367,8 +367,6 @@ def osm_data_collection_pipeline(
 
     pbf_file = yaml.load(config, Loader=CLoader).get("pbf_file")
 
-    import time
-    time.sleep(600)
     if pbf_file:
         logger.info(f"Using PBF file: {pbf_file} instead of overpass.")
         pbf_filepath = pbf_file

@@ -99,12 +99,17 @@ def clean_up_stuck_tasks():
         # Celery should clean up tasks automatically so add a buffer to let that happen.
 
         # task_timeout = settings.TASK_TIMEOUT + 600
+    client, app_name = get_scale_client()
     task_timeout = 60
     time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=task_timeout)
-    export_task_records = ExportTaskRecord.objects.select_related("export_provider_task__tasks",
-                                                                  "export_provider_task__run").filter(
-        Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold))
+    export_task_records = ExportTaskRecord.objects.prefetch_related("export_provider_task__tasks").select_related(
+        "export_provider_task__run").filter(Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold))
     for export_task_record in export_task_records:
+        logger.error("TASK HAS TAKEN TOO LONG TO COMPLETE. TIMING OUT NOW")
+        logger.error(f"Export Task Record: {export_task_record.name} started_at: {export_task_record.started_at}")
+        run = export_task_record.export_provider_task.run
+        shutdown_celery_workers.s().apply_async(queue=str(run.uid), routing_key=str(run.uid))
+        client.terminate_task(str(run.uid))
         try:
             raise Exception("Job timeout exceeded.")
         except Exception:
@@ -114,11 +119,12 @@ def clean_up_stuck_tasks():
             for etr in data_provider_task_record.tasks.all():
                 ExportTaskException.objects.create(task=export_task_record, exception=pickle_exception(einfo))
                 etr.status = TaskState.FAILED.value
+                etr.save()
+            data_provider_task_record.status = TaskState.FAILED.value
+            data_provider_task_record.save()
         # Update task to pending so that it can get picked up again.
-        run = export_task_record.export_provider_task.run
-        run.status = TaskState.PENDING.value
+        run.status = TaskState.SUBMITTED.value
         run.save()
-        shutdown_celery_workers.s().apply_async(queue=str(run.uid), routing_key=str(run.uid))
 
 
 @app.task(name="Scale Celery", base=LockingTask)
