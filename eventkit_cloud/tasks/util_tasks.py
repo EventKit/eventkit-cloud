@@ -4,6 +4,7 @@ import subprocess
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import transaction
 from django.utils.translation import ugettext as _
 from rest_framework import status
@@ -14,6 +15,7 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.utils.scaling import get_scale_client
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 User = get_user_model()
@@ -111,3 +113,18 @@ def enforce_run_limit(job, user=None):
         )
         earliest_run.soft_delete(user=user)
         num_runs -= 1
+
+
+def kill_worker(task_name, client=None):
+    if not client:
+        client = get_scale_client()
+
+    cache_key = f"{task_name}-soft-killed"
+    if not cache.get(cache_key):
+        # try to kill gracefully if we haven't tried already
+        shutdown_celery_workers.s().apply_async(queue=str(task_name), routing_key=str(task_name))
+        # clear from cache in 10 minutes
+        cache.set(cache_key, True, 600)
+    else:
+        # hard kill the task if soft kill is unsuccessful
+        client.terminate_task(str(task_name))

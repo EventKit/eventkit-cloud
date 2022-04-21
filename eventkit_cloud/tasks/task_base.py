@@ -1,4 +1,3 @@
-import json
 import os
 
 from celery import Task
@@ -9,8 +8,7 @@ from django.core.cache import caches
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.models import ExportTaskRecord
-from eventkit_cloud.utils.scaling.docker import Docker
-from eventkit_cloud.utils.scaling.pcf import Pcf
+from eventkit_cloud.utils.scaling import get_scale_client
 
 logger = get_task_logger(__name__)
 
@@ -24,25 +22,15 @@ class EventKitBaseTask(Task):
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
         pcf_scaling = os.getenv("PCF_SCALING", False)
         if pcf_scaling:
-            from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
+            from eventkit_cloud.tasks.scheduled_tasks import kill_worker
 
             queue_type, hostname = self.request.hostname.split("@")
 
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
             if not getattr(settings, "CELERY_SCALE_BY_RUN"):
-                logger.info(f"{self.name} has completed, sending shutdown_celery_workers task to queue {queue_name}.")
-                if os.getenv("CELERY_TASK_APP"):
-                    app_name = os.getenv("CELERY_TASK_APP")
-                else:
-                    app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
-
-                if os.getenv("PCF_SCALING"):
-                    client = Pcf()
-                    client.login()
-                else:
-                    client = Docker()
-                    app_name = settings.DOCKER_IMAGE_NAME
+                logger.info(f"{self.name} has completed, shutting down queue {queue_name}.")
+                client, app_name = get_scale_client()
 
                 # The message was a generic shutdown sent to a specific queue_name.
                 if not (hostname or queue_type):
@@ -61,7 +49,7 @@ class EventKitBaseTask(Task):
 
                 if not export_tasks:
                     if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):
-                        shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
+                        kill_worker(queue_name, client)
                         # return value is unused but useful for storing in the celery result.
                         return {"action": "shutdown", "workers": workers}
 

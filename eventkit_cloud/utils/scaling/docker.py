@@ -107,6 +107,6 @@ class Docker(ScaleClient):
         return running_tasks_memory
 
     def terminate_task(self, task_name: str) -> dict:
-        containers = self.client.containers.list(filters={"label": "task_name=task_name"})
+        containers = self.client.containers.list(filters={"label": f"task_name={task_name}"})
         for container in containers:
             container.stop()

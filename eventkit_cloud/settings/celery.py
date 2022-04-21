@@ -43,10 +43,10 @@ BEAT_SCHEDULE = {
         "task": "Update Statistics Caches",
         "schedule": crontab(minute="0", day_of_month="*/4"),
     },
-    "clean-up-stuck-tasks":{
+    "clean-up-stuck-tasks": {
         "task": "Clean Up Stuck Tasks",
         "schedule": 60.0,
-    }
+    },
 }
 
 BEAT_SCHEDULE.update(
