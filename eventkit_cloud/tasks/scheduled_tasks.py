@@ -94,13 +94,11 @@ def expire_runs_task():
 
 @app.task(name="Clean Up Stuck Tasks", base=LockingTask)
 def clean_up_stuck_tasks():
-    # if not settings.TASK_TIMEOUT:
-    #     return
+    if not settings.TASK_TIMEOUT:
+        return
     # Celery should clean up tasks automatically so add a buffer to let that happen.
-
-    # task_timeout = settings.TASK_TIMEOUT + 600
+    task_timeout = settings.TASK_TIMEOUT + 30
     client, app_name = get_scale_client()
-    task_timeout = 60
     time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=task_timeout)
     export_task_records = (
         ExportTaskRecord.objects.prefetch_related("export_provider_task__tasks")
