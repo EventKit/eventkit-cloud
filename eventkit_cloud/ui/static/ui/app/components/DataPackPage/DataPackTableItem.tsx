@@ -181,7 +181,6 @@ export class DataPackTableItem extends React.Component<Props, State> {
                 >
                     <Link
                         to={`/status/${this.props.run.job.uid}`}
-                        href={`/status/${this.props.run.job.uid}`}
                         style={{ color: 'inherit' }}
                     >
                         {this.props.run.job.name}

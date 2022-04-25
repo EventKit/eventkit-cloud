@@ -5,7 +5,7 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
-import { Route, Redirect } from 'react-router';
+import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import history from './utils/history';
 import configureStore from './store/configureStore';
@@ -41,7 +41,7 @@ render(
         <MuiThemeProvider theme={theme}>
             <ConnectedRouter history={history}>
                 <div>
-                    <Route path="/" component={Application} />
+                    <Route path="/" element={<Application />} />
                 </div>
             </ConnectedRouter>
         </MuiThemeProvider>

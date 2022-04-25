@@ -20,7 +20,8 @@ import NotificationsDropdown from './Notification/NotificationsDropdown';
 import Loadable from 'react-loadable';
 import {connectedReduxRedirect} from 'redux-auth-wrapper/history4/redirect';
 import createBrowserHistory from '../utils/history';
-import {Redirect, Route, RouteComponentProps, Router} from 'react-router';
+import {Navigate, Route, RouteComponentProps, Routes} from 'react-router';
+import { BrowserRouter } from 'react-router-dom';
 import {routerActions} from 'connected-react-router';
 import debounce from 'lodash/debounce';
 import PageLoading from './common/PageLoading';
@@ -272,32 +273,28 @@ const NotificationsPage = Loadable({
     loader: () => import('./NotificationsPage/NotificationsPage'),
 });
 
-const history = createBrowserHistory;
 const routes = (
-    <Router history={history}>
-        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
-        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
+    <BrowserRouter>
+        <Routes>
+            {/* <Route exact path="/login/error" element={UserCanViewErrorPage(<LoginErrorPage />)}/> */}
+            <Route path="/login/error" element={<LoginErrorPage />}/>
+            <Route path="/login" element={<LoginPage />}/>
 
-        <Route path="/logout" component={Logout}/>
-        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
-        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
-        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
-        <Route
-            path="/status/:jobuid"
-            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-        />
-        <Route path="/about" component={UserIsAuthenticated(About)}/>
-        <Route path="/account" component={UserIsAuthenticated(Account)}/>
-        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
-        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
-        <Route
-            exact
-            path="/"
-            render={() => (
-                <Redirect to="/dashboard"/>
-            )}
-        />
-    </Router>
+            <Route path="/logout" element={<Logout />}/>
+            <Route path="/dashboard" element={<DashboardPage />}/>
+            <Route path="/exports" element={<DataPackPage />}/>
+            <Route path="/create" element={<CreateExport />}/>
+            <Route
+                path="/status/:jobuid"
+                element={<StatusDownload />}
+            />
+            <Route path="/about" element={<About />}/>
+            <Route path="/account" element={<Account />}/>
+            <Route path="/groups" element={<UserGroupsPage />}/>
+            <Route path="/notifications" element={<NotificationsPage />}/>
+            <Route path="/" element={<Navigate to="/dashboard" replace/>} />
+        </Routes>
+    </BrowserRouter>
 );
 
 export class Application extends React.Component<Props, State> {

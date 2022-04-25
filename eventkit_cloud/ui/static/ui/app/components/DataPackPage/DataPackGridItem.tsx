@@ -313,7 +313,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                     <Link
                                         className={`${this.props.classes.name} qa-DataPackGridItem-Link`}
                                         to={`/status/${this.props.run.job.uid}`}
-                                        href={`/status/${this.props.run.job.uid}`}
                                     >
                                         {this.props.run.job.name}
                                     </Link>

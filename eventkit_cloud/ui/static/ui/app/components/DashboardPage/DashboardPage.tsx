@@ -509,7 +509,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                             <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
                                             <Link
                                                 to="/exports"
-                                                href="/exports"
                                                 style={styles.link}
                                             >
                                                 View DataPack Library
@@ -577,7 +576,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                             <span>{"You don't have any DataPacks."}&nbsp;</span>
                                             <Link
                                                 to="/create"
-                                                href="/create"
                                                 style={styles.link}
                                             >
                                                 Create DataPack

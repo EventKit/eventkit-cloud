@@ -193,7 +193,6 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
                                     <div className={classes.cardTitle}>
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
-                                            href={`/status/${this.props.run.job.uid}`}
                                             className={classes.titleLink}
                                         >
                                             {this.props.run.job.name}

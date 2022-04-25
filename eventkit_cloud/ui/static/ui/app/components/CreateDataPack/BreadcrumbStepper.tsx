@@ -66,7 +66,7 @@ export interface Props {
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     history: any;
-    routes: Route[];
+    routes: typeof Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
     theme: Eventkit.Theme & Theme;

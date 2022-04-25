@@ -9,7 +9,7 @@ import EstimateContainer from "./EstimateContainer";
 export interface Props {
     children: any;
     history: any;
-    routes: Route[];
+    routes: typeof Route[];
     theme: Eventkit.Theme & Theme;
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;

@@ -37,7 +37,6 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
                     }
                 }
                 to="/create"
-                href="/create"
             >
                 <MatomoClickTracker
                     eventAction="Click Link"

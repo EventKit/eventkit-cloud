@@ -137,8 +137,7 @@ export class Drawer extends React.Component<Props, State> {
                             onClick={this.props.handleMenuItemClick}
                         >
                             <NavLink
-                                className={`qa-Drawer-Link-dashboard ${classes.link}`}
-                                activeClassName={classes.activeLink}
+                                className={`qa-Drawer-Link-dashboard ${classes.link} `}
                                 to="/dashboard"
                             >
                                 <Dashboard className={classes.icon} />
@@ -151,9 +150,7 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink
                                 className={`qa-Drawer-Link-exports ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 to="/exports"
-                                href="/exports"
                             >
                                 <AVLibraryBooks className={classes.icon} />
                                 DataPack Library
@@ -165,9 +162,7 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink
                                 className={`qa-Drawer-Link-create ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 to="/create"
-                                href="/create"
                             >
                                 <ContentAddBox className={classes.icon} />
                                 Create DataPack
@@ -179,9 +174,7 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink
                                 className={`qa-Drawer-Link-groups ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 to="/groups"
-                                href="/groups"
                             >
                                 <SocialGroup className={classes.icon} />
                                 Members and Groups
@@ -193,9 +186,7 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink
                                 className={`qa-Drawer-Link-about ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 to="/about"
-                                href="/about"
                             >
                                 <ActionInfoOutline className={classes.icon} />
                                 About EventKit
@@ -207,9 +198,7 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink
                                 className={`qa-Drawer-Link-account ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 to="/account"
-                                href="/account"
                             >
                                 <SocialPerson className={classes.icon} />
                                 Account Settings

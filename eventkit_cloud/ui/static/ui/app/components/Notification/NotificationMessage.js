@@ -136,7 +136,6 @@ export class NotificationMessage extends Component {
                 key={`${notification.id}-Link`}
                 className="qa-NotificationMessage-Link"
                 to={viewPath}
-                href={viewPath}
                 style={styles.link}
                 onClick={this.handleLinkClick}
                 title={data}
