@@ -69,6 +69,7 @@ export interface State {
 }
 
 export class StatusDownload extends React.Component<Props, State> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

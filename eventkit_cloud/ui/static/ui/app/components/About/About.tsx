@@ -14,6 +14,7 @@ export interface State {
 }
 
 export class About extends React.Component<State> {
+    context: any;
     static contextTypes = {
         config: PropTypes.shape({
             VERSION: PropTypes.string,

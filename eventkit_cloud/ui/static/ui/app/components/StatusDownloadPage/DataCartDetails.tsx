@@ -36,6 +36,7 @@ export interface State {
 }
 
 export class DataCartDetails extends React.Component<Props, State> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

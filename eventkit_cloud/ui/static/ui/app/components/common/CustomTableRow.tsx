@@ -37,6 +37,7 @@ export interface Props {
     dataStyle: any;
     className: string;
     classes: { [className: string]: string; };
+    children: React.ReactNode;
 }
 
 export class CustomTableRow extends Component<Props> {

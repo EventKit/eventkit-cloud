@@ -13,6 +13,7 @@ interface Props {
 }
 
 export class LoginPage extends React.Component<Props, {}> {
+    context: any;
     static contextTypes = {
         config: PropTypes.shape({
             VERSION: PropTypes.string,

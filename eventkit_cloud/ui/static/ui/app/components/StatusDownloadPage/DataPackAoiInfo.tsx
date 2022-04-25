@@ -10,6 +10,7 @@ export interface Props {
 }
 
 export class DataPackAoiInfo extends React.Component<Props, {}> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

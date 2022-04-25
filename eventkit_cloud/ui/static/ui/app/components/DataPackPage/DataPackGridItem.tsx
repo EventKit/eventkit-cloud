@@ -129,6 +129,7 @@ interface StateProps {
 type Props = StyledComponentProps & StateProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
+    context: any;
     static defaultProps = {
         showFeaturedFlag: false,
     };

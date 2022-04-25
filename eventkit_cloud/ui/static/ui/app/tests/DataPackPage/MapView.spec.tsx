@@ -208,7 +208,7 @@ describe('MapView component', () => {
         clearAoiInfo: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
-    
+
     let props;
     let wrapper;
     let instance;
@@ -846,10 +846,10 @@ describe('MapView component', () => {
 
     it('onMapClick should check for features, if multiple it should display in map popup', () => {
         // create a mock function to replace map.forEachFeatureAtPixel
-        const feature1 = new Feature(new Polygon([[-1, -1, 1, 1]]));
+        const feature1 = new Feature(new Polygon([[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]]));
         feature1.setId('1');
         feature1.setProperties({ name: 'number 1', uid: '1' });
-        const feature2 = new Feature(new Polygon([[0, 0, 1, 1]]));
+        const feature2 = new Feature(new Polygon([[[-15, -20], [14, -20], [14, 20], [-15, 20], [-15, -20]]]));
         feature2.setId('2');
         feature2.setProperties({ name: 'number 2', uid: '2' });
         const forEachMock = (pixel, func) => {
@@ -881,7 +881,8 @@ describe('MapView component', () => {
         const { forEachFeatureAtPixel } = Map.prototype;
         // create a mock function to replace map.forEachFeatureAtPixel
         const forEachMock = (pixel, func) => {
-            const feature1 = new Feature(new Polygon([[-1, -1, 1, 1]]));
+            const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
+            const feature1 = new Feature(new Polygon(coords));
             feature1.setId('1');
             feature1.setProperties({ name: 'number 1', uid: '1' });
             [feature1].forEach((feature) => {

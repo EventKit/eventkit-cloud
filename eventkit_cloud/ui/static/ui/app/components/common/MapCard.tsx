@@ -25,7 +25,7 @@ export interface State {
 }
 
 export class MapCard extends React.Component<Props, State> {
-
+    context: any;
     readonly mapDiv: string;
     readonly minZoom: number;
     readonly maxZoom: number;

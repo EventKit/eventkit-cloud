@@ -220,7 +220,6 @@ export class DataPackListItem extends React.Component<Props, State> {
                                     <div className="qa-DataPackListItem-titleLink" style={styles.titleLink}>
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
-                                            href={`/status/${this.props.run.job.uid}`}
                                             style={{color: 'inherit'}}
                                         >
                                             {this.props.run.job.name}

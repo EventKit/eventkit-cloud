@@ -14,7 +14,8 @@
         ]
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "**/*.spec.ts"
     ],
     "include": [
         "./eventkit_cloud/ui/static/ui/app/"

@@ -141,6 +141,7 @@ interface StateProps {
 export type Props = StyledComponentProps & OwnProps & StateProps;
 
 export class DataPackFeaturedItem extends React.Component<Props, {}> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

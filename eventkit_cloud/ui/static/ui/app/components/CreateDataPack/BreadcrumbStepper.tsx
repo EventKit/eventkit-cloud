@@ -98,6 +98,7 @@ export interface State {
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
+    context: any;
     private leaveRoute: null | string;
 
     static defaultProps = {

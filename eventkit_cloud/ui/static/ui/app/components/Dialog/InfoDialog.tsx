@@ -8,6 +8,7 @@ interface Props {
     iconProps?: any;
     dialogProps?: any;
     smallScreen?: boolean;
+    children?: React.ReactNode;
 }
 
 interface State {

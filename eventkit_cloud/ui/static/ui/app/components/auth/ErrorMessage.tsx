@@ -13,6 +13,7 @@ export interface Props {
 }
 
 export class ErrorMessage extends React.Component<Props, {}> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

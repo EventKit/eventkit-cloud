@@ -33,6 +33,7 @@ interface State {
 export class NotificationsPage extends React.Component<Props, State> {
     private itemsPerPage: number;
 
+    context: any;
     static contextTypes = {
         config: PropTypes.shape({
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,

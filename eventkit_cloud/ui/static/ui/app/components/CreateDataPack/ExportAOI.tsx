@@ -118,6 +118,7 @@ function getViewBbox(map: any) : GeoJSON.FeatureCollection {
 }
 
 export class ExportAOI extends React.Component<Props, State> {
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -818,7 +819,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private openBufferDialog() {
         // this still executes the call to setState immediately
         // but it gives you the option to await the state change to be complete
-        return new Promise(async (resolve) => {
+        return new Promise<void>(async (resolve) => {
             // resolve only when setState is completed
             this.setState({showBuffer: true}, resolve);
         });

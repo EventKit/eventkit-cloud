@@ -141,6 +141,7 @@ export class MapView extends React.Component<Props, State> {
     private feature;
     private coordinate;
 
+    context: any;
     static contextTypes = {
         config: PropTypes.object,
     };

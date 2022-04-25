@@ -650,7 +650,7 @@ export function ProviderRow(props: ProviderRowProps) {
                         <TableCell classes={{root: classes.menuColumn}}/>
                         <TableCell classes={{root: classes.arrowColumn}}/>
                     </TableRow>
-                    
+
                     <TableRow
                         className="qa-ProviderRow-TableRow-task"
                     >
@@ -704,7 +704,7 @@ export function ProviderRow(props: ProviderRowProps) {
                             <TableCell classes={{root: classes.arrowColumn, body: classes.nestedRows}}/>
                         </TableRow>
                     ))}
-                    
+
                     {/* Downloads */}
                     <TableRow
                         className="qa-ProviderRow-TableRow-task"

@@ -452,7 +452,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // that it takes for the drawer transition to complete
         return new Promise(async (resolve) => {
             // wait for the state change to be complete
-            await new Promise((r2) => {
+            await new Promise<void>((r2) => {
                 this.setState({drawerOpen: !this.state.drawerOpen}, r2);
             });
             // wait for drawer to be fully open (transition of 450ms)

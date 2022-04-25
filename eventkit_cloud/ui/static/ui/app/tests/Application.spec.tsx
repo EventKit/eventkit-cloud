@@ -172,7 +172,7 @@ describe('Application component', () => {
     it('handleStayLoggedIn should start sending pings and call hide warning', async () => {
         const wrapper = getWrapper(getProps());
         const pingStub = sinon.stub(wrapper.instance(), 'startSendingUserActivePings')
-            .callsFake(() => (new Promise((resolve, reject) => (setTimeout(() => resolve(), 10)))));
+            .callsFake(() => (new Promise<void>((resolve, reject) => (setTimeout(() => resolve(), 10)))));
         const hideStub = sinon.stub(wrapper.instance(), 'hideAutoLogoutWarning');
         await wrapper.instance().handleStayLoggedIn();
         expect(pingStub.calledOnce).toBe(true);
