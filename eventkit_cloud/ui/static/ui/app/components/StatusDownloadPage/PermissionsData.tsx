@@ -5,7 +5,7 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import SocialGroup from '@material-ui/icons/Group';
 import Check from '@material-ui/icons/Check';
 import Lock from '@material-ui/icons/LockOutlined';
-import 'react-day-picker/lib/style.css';
+import 'react-day-picker/dist/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import {connect} from "react-redux";

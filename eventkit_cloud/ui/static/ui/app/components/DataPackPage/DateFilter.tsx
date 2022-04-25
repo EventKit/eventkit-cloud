@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import moment from 'moment';
-import DayPicker from 'react-day-picker';
-import 'react-day-picker/lib/style.css';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 import Modal from '@material-ui/core/Modal';
 import Input from '@material-ui/core/Input';
 
@@ -102,7 +102,7 @@ export class DateFilter extends React.Component<Props, State> {
                             `}
                         </style>
                         <DayPicker
-                            selectedDays={min}
+                            selected={min}
                             month={this.props.minDate ? min : new Date()}
                             onDayClick={this.handleMinUpdate}
                             modifiers={{ disabled: { after: this.props.maxDate ? max : undefined } }}
@@ -127,7 +127,7 @@ export class DateFilter extends React.Component<Props, State> {
                             `}
                         </style>
                         <DayPicker
-                            selectedDays={max}
+                            selected={max}
                             month={this.props.maxDate ? max : new Date()}
                             onDayClick={this.handleMaxUpdate}
                             modifiers={{ disabled: { before: min } }}
