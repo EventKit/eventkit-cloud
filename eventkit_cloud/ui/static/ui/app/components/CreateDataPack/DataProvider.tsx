@@ -116,6 +116,7 @@ interface Props {
     incompatibilityInfo: IncompatibilityInfo;
     open: boolean;
     getRef: (ref: any) => void;
+    children: React.ReactNode;
     classes: {
         container: string;
         listItem: string;

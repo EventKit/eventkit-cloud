@@ -148,7 +148,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
                             </TableCell>
                             <TableCell align={this.valueAlign} className={classes.tableCell}>
                                 <Typography key={"value" + ix} className={classes.details}>
-                                    {value}
+                                    {value as string}
                                 </Typography>
                             </TableCell>
                         </TableRow>

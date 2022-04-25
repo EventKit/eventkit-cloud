@@ -144,7 +144,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
         // display passed in title and a clear button which calls props.onClose
         const title = (
             <div className="qa-ShareBaseDialog-title">
-                <strong>{this.props.title}</strong>
+                <strong>{this.props.title as any}</strong>
                 <Clear style={styles.clear} onClick={this.props.onClose} color="primary"/>
             </div>
         );

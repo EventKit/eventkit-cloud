@@ -476,6 +476,7 @@ const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
     const mapStateToProps = (state, props) => (
         {
+            // @ts-ignore
             run: getFullRun(state, props),
         }
     );

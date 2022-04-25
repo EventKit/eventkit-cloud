@@ -950,8 +950,10 @@ export function ExportInfo(props: Props) {
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
         if (newIsFilteringByProviderGeometry) {
+            // @ts-ignore
             dispatch(getProviders(geojson));
         } else {
+            // @ts-ignore
             dispatch(getProviders(null));
         }
     }

@@ -46,6 +46,7 @@ interface Props {
     checked: boolean;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+    children: React.ReactNode;
 }
 
 export function ZoomLevelSlider(props: Props) {

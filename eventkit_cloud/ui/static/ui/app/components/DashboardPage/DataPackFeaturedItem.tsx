@@ -238,7 +238,8 @@ const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
     const mapStateToProps = (state: {}, props: OwnProps) => (
         {
-            run: getFullRun(state, props),
+            // @ts-ignore
+            run: getFullRun(state),
         }
     );
     return mapStateToProps;

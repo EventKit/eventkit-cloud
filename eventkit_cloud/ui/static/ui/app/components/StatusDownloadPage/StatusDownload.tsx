@@ -503,6 +503,7 @@ const makeMapStateToProps = () => {
             cancelProviderTask: state.cancelProviderTask,
             providers: state.providers.objects,
             user: state.user,
+            // @ts-ignore
             runs: getDatacart(state),
         }
     );
@@ -573,5 +574,5 @@ function mapDispatchToProps(dispatch) {
         ),
     };
 }
-
+// @ts-ignore
 export default withWidth()(withTheme(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));
