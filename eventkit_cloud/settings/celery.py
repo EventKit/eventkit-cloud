@@ -46,19 +46,15 @@ BEAT_SCHEDULE = {
     "clean-up-stuck-tasks": {
         "task": "Clean Up Stuck Tasks",
         "schedule": 60.0,
+        "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
+    },
+    "scale-celery": {
+        "task": "Scale Celery",
+        "schedule": 60.0,
+        "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
+        "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
     },
 }
-
-BEAT_SCHEDULE.update(
-    {
-        "scale-celery": {
-            "task": "Scale Celery",
-            "schedule": 60.0,
-            "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
-            "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
-        },
-    }
-)
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)

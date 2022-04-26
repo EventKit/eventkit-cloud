@@ -1,13 +1,12 @@
+import itertools
 import socket
 import subprocess
 import time
-from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
-from billiard.exceptions import WorkerLostError
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.db import transaction
 from django.utils.translation import ugettext as _
 from rest_framework import status
@@ -27,8 +26,8 @@ User = get_user_model()
 logger = get_task_logger(__name__)
 
 
-@app.task(name="Soft Kill Celery Workers", bind=True)
-def soft_kill_celery_workers(self):
+@app.task(name="Shutdown Celery Workers", bind=True)
+def shutdown_celery_workers(self):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
     more tasks to pick up.
@@ -39,49 +38,39 @@ def soft_kill_celery_workers(self):
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
-@app.task(name="Hard Kill Celery Workers", bind=True)
-def hard_kill_celery_workers(task_to_kill=None, client=None):
-    """
-    Shuts down the entire container running the task we want to kill
-
-    :param task_to_kill: the name of the task that we want to kill
-    :param client: the scaling client currently in use.
-    """
-    logger.error("HARD KILL CELERY WORKERS")
-    logger.error(f"Task to kill: {task_to_kill} client: {client}")
-    if not task_to_kill:
+def kill_workers(task_names=None, client=None, timeout=10):
+    if not task_names:
         return
 
     if not client:
         client, app_name = get_scale_client()
 
-    return client.terminate_task(str(task_to_kill))
+    # Kill all stuck tasks concurrently
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(kill_worker, task_name, client, timeout) for task_name in task_names]
+        wait(futures)
 
 
-# TODO change back to longer time
-@app.task(name="Kill Celery Workers", bind=True)
-def kill_worker(task_to_kill=None, client=None, timeout=10):
-    if not task_to_kill:
+def kill_worker(task_name=None, client=None, timeout=10):
+    if not task_name:
         return
 
     if not client:
         client, app_name = get_scale_client()
 
-    # try to kill gracefully
-    logger.error("###########CALLING SOFT KILL FROM KILL WORKER##################")
     logger.error(f"###########TIMEOUT: {timeout}##################")
     logger.error(f"###########client: {client}##################")
-    logger.error(f"###########task_to_kill: {task_to_kill}##################")
-    try:
-        soft_kill_celery_workers.s().apply_async(queue=str(task_to_kill), routing_key=str(task_to_kill))
-    except WorkerLostError:
-        pass
+    logger.error(f"###########task_name: {task_name}##################")
+    logger.error("###########CALLING SOFT KILL FROM KILL WORKER##################")
+    # try to kill gracefully
+    queue_name = f"{str(task_name).removesuffix('.priority')}.priority"
+    #shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
 
-    # hard kill the task if its still alive, no need to check if soft kill was successful
-    # because terminate_task will check if the task/container exists before trying to hard kill
-    hard_kill_celery_workers.apply_async(task_to_kill=str(task_to_kill), client=client,
-                                         queue=str(task_to_kill), routing_key=str(task_to_kill), countdown=timeout)
+    # allow time for soft kill to try to work
+    time.sleep(timeout)
 
+    # hard kill task if it hasn't already terminated
+    return client.terminate_task(str(task_name))
 
 @app.task(name="Get Estimates", default_retry_delay=60)
 def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):

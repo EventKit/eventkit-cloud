@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import copy
 import datetime
+import itertools
 import json
 import os
 import socket
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 from typing import Union
 
 from celery.utils.log import get_task_logger
@@ -26,7 +27,7 @@ from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import kill_worker
+from eventkit_cloud.tasks.util_tasks import kill_worker, kill_workers
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches
@@ -128,9 +129,7 @@ def clean_up_stuck_tasks():
         run.status = TaskState.SUBMITTED.value
         run.save()
 
-    for run_uid in run_uids:
-        kill_worker.apply_async(task_to_kill=run_uid, client=client, timeout=10,
-                                queue=run_uid, routing_key=run_uid)
+    kill_workers(run_uids, client)
 
 
 @app.task(name="Scale Celery", base=LockingTask)
@@ -173,12 +172,14 @@ def scale_by_runs(max_tasks_memory):
             & (Q(status__in=[state.value for state in TaskState.get_finished_states()]) | Q(deleted=True))
         )
 
+        finished_run_uids = []
         for finished_run in finished_runs:
             logger.info(
                 f"Stopping {finished_run.uid} because it is in a finished state ({finished_run.status}) "
                 f"or was deleted ({finished_run.deleted})."
             )
-            kill_worker.apply_async(task_to_kill=str(finished_run.uid), client=client, queue=str(finished_run.uid), routing_key=str(finished_run.uid))
+            finished_run_uids.append(str(finished_run.uid))
+        kill_workers(task_names=finished_run_uids, client=client)
 
     for run in runs:
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
@@ -240,12 +241,15 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
         has_run_task = False
         running_tasks = client.get_running_tasks(app_name)
         if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
+            running_task_names = []
             for running_task in running_tasks.get("resources"):
                 running_task_name = running_task.get("name")
+                running_task_names.append(running_task_name)
                 logger.info(f"No messages left in the queue, shutting down {running_task_name}.")
-                kill_worker.apply_async(task_to_kill=running_task_name, client=client,
-                                        queue=running_task_name, routing_key=running_task_name)
+            kill_workers(task_names=running_task_names, client=client)
             break
+
+        queues_to_kill = []
         for celery_task_name, celery_task in celery_tasks.items():
             queue = queues.get(celery_task_name)
             if not queue:
@@ -267,17 +271,19 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
                     run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
             elif running_tasks_by_queue_count and not pending_messages:
                 logger.info(
-                    f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
+                    f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Scheduling shutdown..."
                 )
-                kill_worker.apply_async(task_to_kill=queue_name, client=client,
-                                        queue=queue_name, routing_key=queue_name)
+                queues_to_kill.append(queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(
                         f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
                         f"messages left in {queue_name} queue."
                     )
+
             running_tasks_memory = client.get_running_tasks_memory(app_name)
+            kill_workers(queues_to_kill, client)
+
         if not has_run_task:
             break
 
