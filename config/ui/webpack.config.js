@@ -1,7 +1,6 @@
 /* eslint-disable */
 var webpack = require('webpack');
 var path = require('path');
-var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -149,12 +148,16 @@ var config = {
     devServer: {
         host: "0.0.0.0",
         port: 8080,
+        hot: true,
         historyApiFallback: true,
         allowedHosts: 'all',
         static: {
             directory: BASE_DIR,
             publicPath: BUILD_DIR,
-        }
+        },
+        devMiddleware: {
+            writeToDisk: true,
+        },
     },
     watchOptions: {
         poll: true
@@ -162,11 +165,7 @@ var config = {
 };
 
 if (!PROD) {
-    config.plugins.push(new WriteFilePlugin({
-        test: /^(?!.*(hot)).*/, // exclude hot-update files
-    }));
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
-    config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'eval-cheap-module-source-map';
 }
 
