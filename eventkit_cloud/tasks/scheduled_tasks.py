@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import copy
 import datetime
-import itertools
 import json
 import os
 import socket
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ThreadPoolExecutor
 from typing import Union
 
 from celery.utils.log import get_task_logger
@@ -27,7 +26,7 @@ from eventkit_cloud.tasks.export_tasks import pick_up_run_task
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import kill_worker, kill_workers
+from eventkit_cloud.tasks.util_tasks import kill_workers
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.scaling.util import get_scale_client
 from eventkit_cloud.utils.stats.generator import update_all_statistics_caches

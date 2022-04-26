@@ -1,8 +1,7 @@
-import itertools
 import socket
 import subprocess
 import time
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -45,6 +44,8 @@ def kill_workers(task_names=None, client=None, timeout=10):
     if not client:
         client, app_name = get_scale_client()
 
+    task_names = list(set(task_names))
+
     # Kill all stuck tasks concurrently
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(kill_worker, task_name, client, timeout) for task_name in task_names]
@@ -64,7 +65,7 @@ def kill_worker(task_name=None, client=None, timeout=10):
     logger.error("###########CALLING SOFT KILL FROM KILL WORKER##################")
     # try to kill gracefully
     queue_name = f"{str(task_name).removesuffix('.priority')}.priority"
-    #shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
+    shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
 
     # allow time for soft kill to try to work
     time.sleep(timeout)

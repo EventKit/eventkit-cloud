@@ -54,5 +54,6 @@ class TestUtilTasks(TestCase):
         shutdown_celery_mock.s.return_value = async_mock
         mock_scale_client = Mock()
         kill_worker(example_task_name, mock_scale_client, 2)
-        async_mock.apply_async.assert_called_once_with(queue=example_task_name, routing_key=example_task_name)
+        expected_queue_name = f"{example_task_name}.priority"
+        async_mock.apply_async.assert_called_once_with(queue=expected_queue_name, routing_key=expected_queue_name)
         mock_scale_client.terminate_task.assert_called_once_with(example_task_name)

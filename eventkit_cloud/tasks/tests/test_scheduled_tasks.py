@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import uuid
 from collections import OrderedDict
 from unittest.mock import patch, call, Mock
 
@@ -15,7 +16,8 @@ from notifications.models import Notification
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
-from eventkit_cloud.tasks.models import ExportRun
+from eventkit_cloud.tasks.enumerations import TaskState
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.tasks.scheduled_tasks import (
     expire_runs_task,
     send_warning_email,
@@ -27,7 +29,7 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_tasks,
     get_celery_tasks_scale_by_task,
     scale_by_runs,
-    scale_celery_task,
+    scale_celery_task, clean_up_stuck_tasks,
 )
 from eventkit_cloud.utils.services.check_result import CheckResult
 
@@ -60,7 +62,6 @@ class TestExpireRunsTask(TestCase):
         ExportRun.objects.create(job=job, user=job.user, expiration=now_time + timezone.timedelta(days=6))
         ExportRun.objects.create(job=job, user=job.user, expiration=now_time + timezone.timedelta(days=1))
         ExportRun.objects.create(job=job, user=job.user, expiration=now_time - timezone.timedelta(hours=5))
-
         with patch("eventkit_cloud.tasks.scheduled_tasks.timezone.now") as mock_time:
             mock_time.return_value = now_time
 
@@ -77,6 +78,57 @@ class TestExpireRunsTask(TestCase):
             self.assertEqual(3, ExportRun.objects.filter(deleted=False).count())
             self.assertEqual(1, ExportRun.objects.filter(deleted=True).count())
             self.assertEqual(2, Notification.objects.all().count())
+
+
+class TestCleanUpStuckTasks(TestCase):
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username="test", email="test@test.com", password="test")
+        bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        created_at = timezone.now() - timezone.timedelta(days=7)
+        Job.objects.create(
+            name="TestJob",
+            created_at=created_at,
+            published=False,
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
+
+
+    @patch("eventkit_cloud.tasks.scheduled_tasks.ExportTaskRecord")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.kill_workers")
+    @override_settings(TASK_TIMEOUT=30)
+    def test_clean_up_stuck_tasks(self, kill_workers_mock, get_scale_client_mock, mock_etr):
+        mock_scale_client = Mock()
+        get_scale_client_mock.return_value = mock_scale_client, "app_name"
+        job = Job.objects.all()[0]
+
+        run_uid = str(uuid.uuid4())
+        run2_uid = str(uuid.uuid4())
+        run = ExportRun.objects.create(job=job, user=job.user, uid=run_uid)
+        run2 = ExportRun.objects.create(job=job, user=job.user, uid=run2_uid)
+        export_provider_task = DataProviderTaskRecord.objects.create(run=run)
+        export_provider_task2 = DataProviderTaskRecord.objects.create(run=run2)
+
+        [uid1, uid2, uid3] = [str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())]
+        etr1 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task, name="etr1", uid=uid1)
+        etr2 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task, name="etr2", uid=uid2)
+        etr3 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task2, name="etr3", uid=uid3)
+        mock_etr.objects.prefetch_related().select_related().filter.return_value = [etr1, etr2, etr3]
+
+        clean_up_stuck_tasks.run()
+        self.assertEqual(etr1.status, TaskState.CANCELED.value)
+        self.assertEqual(etr2.status, TaskState.CANCELED.value)
+        self.assertEqual(etr3.status, TaskState.CANCELED.value)
+        self.assertEqual(export_provider_task.status, TaskState.PENDING.value)
+        self.assertEqual(run.status, TaskState.SUBMITTED.value)
+        # kill the run(s) that the stuck tasks were part of
+        kill_workers_mock.assert_called_once_with([run_uid, run_uid, run2_uid], mock_scale_client)
 
 
 @override_settings(PCF_SCALING=False)
@@ -115,7 +167,7 @@ class TestScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
     def test_scale_by_runs(
-        self, mock_get_scale_client, mock_get_celery_task_details, mock_run_task_command, mock_pickup
+            self, mock_get_scale_client, mock_get_celery_task_details, mock_run_task_command, mock_pickup
     ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "app_name"
@@ -165,11 +217,11 @@ class TestScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
     def test_scale_by_tasks(
-        self,
-        mock_get_scale_client,
-        mock_get_celery_task_details,
-        mock_order_celery_tasks,
-        mock_get_all_rabbitmq_objects,
+            self,
+            mock_get_scale_client,
+            mock_get_celery_task_details,
+            mock_order_celery_tasks,
+            mock_get_all_rabbitmq_objects,
     ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "app_name"
