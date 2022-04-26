@@ -96,6 +96,7 @@ def expire_runs_task():
 def clean_up_stuck_tasks():
     if not settings.TASK_TIMEOUT:
         return
+
     # Celery should clean up tasks automatically so add a buffer to let that happen.
     task_timeout = settings.TASK_TIMEOUT + 30
     client, app_name = get_scale_client()
@@ -105,10 +106,14 @@ def clean_up_stuck_tasks():
         .select_related("export_provider_task__run")
         .filter(Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold))
     )
+    logger.error("CLEANING UP STUCK TASKS**************")
+    logger.error(f"stuck export task records: {export_task_records}")
+    logger.error(f"task_timeout: {task_timeout}")
+    logger.error(f"time_threshold: {time_threshold}")
     run_uids = []
     for export_task_record in export_task_records:
         run = export_task_record.export_provider_task.run
-        run_uids.append(run.uid)
+        run_uids.append(str(run.uid))
 
         # Cancel the export task records that are over the timeout
         export_task_record.status = TaskState.CANCELED.value
@@ -124,7 +129,8 @@ def clean_up_stuck_tasks():
         run.save()
 
     for run_uid in run_uids:
-        client.terminate_task(run_uid)
+        kill_worker.apply_async(task_to_kill=run_uid, client=client, timeout=10,
+                                queue=run_uid, routing_key=run_uid)
 
 
 @app.task(name="Scale Celery", base=LockingTask)
@@ -172,7 +178,7 @@ def scale_by_runs(max_tasks_memory):
                 f"Stopping {finished_run.uid} because it is in a finished state ({finished_run.status}) "
                 f"or was deleted ({finished_run.deleted})."
             )
-            kill_worker(finished_run.uid, client)
+            kill_worker.apply_async(task_to_kill=str(finished_run.uid), client=client, queue=str(finished_run.uid), routing_key=str(finished_run.uid))
 
     for run in runs:
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
@@ -237,7 +243,8 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
             for running_task in running_tasks.get("resources"):
                 running_task_name = running_task.get("name")
                 logger.info(f"No messages left in the queue, shutting down {running_task_name}.")
-                kill_worker(running_task_name, client)
+                kill_worker.apply_async(task_to_kill=running_task_name, client=client,
+                                        queue=running_task_name, routing_key=running_task_name)
             break
         for celery_task_name, celery_task in celery_tasks.items():
             queue = queues.get(celery_task_name)
@@ -262,7 +269,8 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
                 )
-                kill_worker(queue_name, client)
+                kill_worker.apply_async(task_to_kill=queue_name, client=client,
+                                        queue=queue_name, routing_key=queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(

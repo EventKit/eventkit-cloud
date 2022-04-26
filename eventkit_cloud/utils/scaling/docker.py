@@ -108,5 +108,8 @@ class Docker(ScaleClient):
 
     def terminate_task(self, task_name: str) -> dict:
         containers = self.client.containers.list(filters={"label": f"task_name={task_name}"})
+        logger.error("**********IN TERMINATE TASK*************")
         for container in containers:
             container.stop()
+            logger.error(f"STOPPING CONTAINER: {container.label}")
+        logger.error("****************************************")

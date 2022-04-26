@@ -1990,7 +1990,7 @@ class FinalizeRunBase(EventKitBaseTask):
             if getattr(settings, "CELERY_SCALE_BY_RUN"):
                 queue_name = None if retval is None else retval.get("run_uid")
                 if queue_name:
-                    kill_worker(queue_name)
+                    kill_worker.apply_async(task_to_kill=queue_name, queue=queue_name, routing_key=queue_name)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 

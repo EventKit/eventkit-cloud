@@ -1,6 +1,9 @@
 import socket
 import subprocess
+import time
+from datetime import datetime, timedelta, timezone
 
+from billiard.exceptions import WorkerLostError
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -24,8 +27,8 @@ User = get_user_model()
 logger = get_task_logger(__name__)
 
 
-@app.task(name="Shutdown Celery Workers", bind=True, default_retry_delay=60)
-def shutdown_celery_workers(self):
+@app.task(name="Soft Kill Celery Workers", bind=True)
+def soft_kill_celery_workers(self):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
     more tasks to pick up.
@@ -34,6 +37,50 @@ def shutdown_celery_workers(self):
     """
     subprocess.run("pkill -15 -f 'celery -A eventkit_cloud worker'", shell=True)
     return {"action": "shutdown", "hostname": socket.gethostname()}
+
+
+@app.task(name="Hard Kill Celery Workers", bind=True)
+def hard_kill_celery_workers(task_to_kill=None, client=None):
+    """
+    Shuts down the entire container running the task we want to kill
+
+    :param task_to_kill: the name of the task that we want to kill
+    :param client: the scaling client currently in use.
+    """
+    logger.error("HARD KILL CELERY WORKERS")
+    logger.error(f"Task to kill: {task_to_kill} client: {client}")
+    if not task_to_kill:
+        return
+
+    if not client:
+        client, app_name = get_scale_client()
+
+    return client.terminate_task(str(task_to_kill))
+
+
+# TODO change back to longer time
+@app.task(name="Kill Celery Workers", bind=True)
+def kill_worker(task_to_kill=None, client=None, timeout=10):
+    if not task_to_kill:
+        return
+
+    if not client:
+        client, app_name = get_scale_client()
+
+    # try to kill gracefully
+    logger.error("###########CALLING SOFT KILL FROM KILL WORKER##################")
+    logger.error(f"###########TIMEOUT: {timeout}##################")
+    logger.error(f"###########client: {client}##################")
+    logger.error(f"###########task_to_kill: {task_to_kill}##################")
+    try:
+        soft_kill_celery_workers.s().apply_async(queue=str(task_to_kill), routing_key=str(task_to_kill))
+    except WorkerLostError:
+        pass
+
+    # hard kill the task if its still alive, no need to check if soft kill was successful
+    # because terminate_task will check if the task/container exists before trying to hard kill
+    hard_kill_celery_workers.apply_async(task_to_kill=str(task_to_kill), client=client,
+                                         queue=str(task_to_kill), routing_key=str(task_to_kill), countdown=timeout)
 
 
 @app.task(name="Get Estimates", default_retry_delay=60)
@@ -87,8 +134,8 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
             if data_provider_task_record.provider is not None:
                 # Have to clean out the tasks that were finished and request the ones that weren't.
                 if (
-                    data_provider_task_record.provider.slug in data_provider_slugs
-                    or TaskState[data_provider_task_record.status] in TaskState.get_not_finished_states()
+                        data_provider_task_record.provider.slug in data_provider_slugs
+                        or TaskState[data_provider_task_record.status] in TaskState.get_not_finished_states()
                 ):
                     data_provider_task_record.status = TaskState.PENDING.value
                     # Delete the associated tasks so that they can be recreated.
@@ -113,18 +160,3 @@ def enforce_run_limit(job, user=None):
         )
         earliest_run.soft_delete(user=user)
         num_runs -= 1
-
-
-def kill_worker(task_name, client=None):
-    if not client:
-        client = get_scale_client()
-
-    cache_key = f"{task_name}-soft-killed"
-    if not cache.get(cache_key):
-        # try to kill gracefully if we haven't tried already
-        shutdown_celery_workers.s().apply_async(queue=str(task_name), routing_key=str(task_name))
-        # clear from cache in 10 minutes
-        cache.set(cache_key, True, 600)
-    else:
-        # hard kill the task if soft kill is unsuccessful
-        client.terminate_task(str(task_name))

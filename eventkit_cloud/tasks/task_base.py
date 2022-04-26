@@ -49,7 +49,8 @@ class EventKitBaseTask(Task):
 
                 if not export_tasks:
                     if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):
-                        kill_worker(queue_name, client)
+                        kill_worker.apply_async(task_to_kill=queue_name, client=client,
+                                                queue=queue_name, routing_key=queue_name)
                         # return value is unused but useful for storing in the celery result.
                         return {"action": "shutdown", "workers": workers}
 
