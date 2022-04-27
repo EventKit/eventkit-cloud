@@ -29,7 +29,8 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_by_tasks,
     get_celery_tasks_scale_by_task,
     scale_by_runs,
-    scale_celery_task, clean_up_stuck_tasks,
+    scale_celery_task,
+    clean_up_stuck_tasks,
 )
 from eventkit_cloud.utils.services.check_result import CheckResult
 
@@ -97,7 +98,6 @@ class TestCleanUpStuckTasks(TestCase):
             user=self.user,
             the_geom=the_geom,
         )
-
 
     @patch("eventkit_cloud.tasks.scheduled_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
@@ -167,7 +167,7 @@ class TestScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
     def test_scale_by_runs(
-            self, mock_get_scale_client, mock_get_celery_task_details, mock_run_task_command, mock_pickup
+        self, mock_get_scale_client, mock_get_celery_task_details, mock_run_task_command, mock_pickup
     ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "app_name"
@@ -217,11 +217,11 @@ class TestScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
     def test_scale_by_tasks(
-            self,
-            mock_get_scale_client,
-            mock_get_celery_task_details,
-            mock_order_celery_tasks,
-            mock_get_all_rabbitmq_objects,
+        self,
+        mock_get_scale_client,
+        mock_get_celery_task_details,
+        mock_order_celery_tasks,
+        mock_get_all_rabbitmq_objects,
     ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "app_name"

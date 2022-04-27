@@ -53,7 +53,7 @@ def kill_workers(task_names=None, client=None, timeout=10):
         wait(futures)
 
         # Collect any errors that occurred and raise an appropriate exception
-        errors = [ task.exception() for task in futures if task.exception() is not None]
+        errors = [task.exception() for task in futures if task.exception() is not None]
         if len(errors) == 1:
             raise errors[0]
         elif len(errors) > 1:
@@ -80,6 +80,7 @@ def kill_worker(task_name=None, client=None, timeout=10):
 
     # hard kill task if it hasn't already terminated
     client.terminate_task(str(task_name))
+
 
 @app.task(name="Get Estimates", default_retry_delay=60)
 def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):
@@ -132,8 +133,8 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
             if data_provider_task_record.provider is not None:
                 # Have to clean out the tasks that were finished and request the ones that weren't.
                 if (
-                        data_provider_task_record.provider.slug in data_provider_slugs
-                        or TaskState[data_provider_task_record.status] in TaskState.get_not_finished_states()
+                    data_provider_task_record.provider.slug in data_provider_slugs
+                    or TaskState[data_provider_task_record.status] in TaskState.get_not_finished_states()
                 ):
                     data_provider_task_record.status = TaskState.PENDING.value
                     # Delete the associated tasks so that they can be recreated.

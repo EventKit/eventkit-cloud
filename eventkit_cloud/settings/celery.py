@@ -101,4 +101,4 @@ MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 
 # Default to 8 hours
 TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or 28800
-#app.conf.task_soft_time_limit = TASK_TIMEOUT
+app.conf.task_soft_time_limit = TASK_TIMEOUT

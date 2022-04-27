@@ -66,9 +66,11 @@ class TestUtilTasks(TestCase):
         async_mock = Mock()
         shutdown_celery_mock.s.return_value = async_mock
         mock_scale_client = Mock()
-        mock_scale_client.terminate_task.side_effect = [TaskTerminationError(task_name=example_task1),
-                                                        TaskTerminationError(task_name=example_task2),
-                                                        TaskTerminationError(task_name=example_task3)]
+        mock_scale_client.terminate_task.side_effect = [
+            TaskTerminationError(task_name=example_task1),
+            TaskTerminationError(task_name=example_task2),
+            TaskTerminationError(task_name=example_task3),
+        ]
 
         with self.assertRaises(MultipleTaskTerminationErrors):
             kill_workers(tasks, mock_scale_client, 2)

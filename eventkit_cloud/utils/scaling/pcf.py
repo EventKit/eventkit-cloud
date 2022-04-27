@@ -246,7 +246,9 @@ class Pcf(ScaleClient):
                 headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
             )
             if result.status_code != 200:
-                raise TaskTerminationError(f"Failed to terminate PCF task with guid: {task_guid} for task named: {task_name}")
+                raise TaskTerminationError(
+                    f"Failed to terminate PCF task with guid: {task_guid} for task named: {task_name}"
+                )
         else:
             logger.warning(f"Terminate task was called with task_name: {task_name} but no running tasks were returned.")
             logger.warning(f"Running tasks: {running_tasks}")

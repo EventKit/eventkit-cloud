@@ -3,6 +3,7 @@ class ScaleLimitError(Exception):
 
     pass
 
+
 class TaskTerminationError(Exception):
     """Raise when something goes wrong while trying to terminate a task"""
 
@@ -19,6 +20,7 @@ class TaskTerminationError(Exception):
                 self.message = "Failed to terminate task with unknown name"
         super(TaskTerminationError, self).__init__(self.message, *args, **kwargs)
 
+
 class MultipleTaskTerminationErrors(TaskTerminationError):
     """Raise when multiple task termination errors occurred"""
 
@@ -30,4 +32,6 @@ class MultipleTaskTerminationErrors(TaskTerminationError):
         super().__init__(self.errors)
 
     def __str__(self) -> str:
-        return "The following errors occurred while trying to terminate multiple tasks\n" + "\n".join([str(err) for err in self.errors])
+        return "The following errors occurred while trying to terminate multiple tasks\n" + "\n".join(
+            [str(err) for err in self.errors]
+        )
