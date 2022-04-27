@@ -45,7 +45,7 @@ BEAT_SCHEDULE = {
     },
     "clean-up-stuck-tasks": {
         "task": "Clean Up Stuck Tasks",
-        "schedule": 60.0,
+        "schedule": 1200.0,
         "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
     },
     "scale-celery": {

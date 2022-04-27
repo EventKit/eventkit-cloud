@@ -98,7 +98,7 @@ def clean_up_stuck_tasks():
         return
 
     # Celery should clean up tasks automatically so add a buffer to let that happen.
-    task_timeout = settings.TASK_TIMEOUT + 30
+    task_timeout = settings.TASK_TIMEOUT + 120
     client, app_name = get_scale_client()
     time_threshold = datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=task_timeout)
     export_task_records = (
