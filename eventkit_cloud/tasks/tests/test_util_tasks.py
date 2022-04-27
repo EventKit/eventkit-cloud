@@ -8,7 +8,8 @@ from django.test import TestCase
 
 from eventkit_cloud.jobs.models import Job, DataProvider
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records, kill_worker
+from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records, kill_worker, kill_workers
+from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError, MultipleTaskTerminationErrors
 
 
 class TestUtilTasks(TestCase):
@@ -57,3 +58,17 @@ class TestUtilTasks(TestCase):
         expected_queue_name = f"{example_task_name}.priority"
         async_mock.apply_async.assert_called_once_with(queue=expected_queue_name, routing_key=expected_queue_name)
         mock_scale_client.terminate_task.assert_called_once_with(example_task_name)
+
+    @patch("eventkit_cloud.tasks.util_tasks.shutdown_celery_workers")
+    def test_kill_workers_raises_exception(self, shutdown_celery_mock):
+        example_task1, example_task2, example_task3 = ["example_task1", "example_task2", "example_task3"]
+        tasks = [example_task1, example_task2, example_task3]
+        async_mock = Mock()
+        shutdown_celery_mock.s.return_value = async_mock
+        mock_scale_client = Mock()
+        mock_scale_client.terminate_task.side_effect = [TaskTerminationError(task_name=example_task1),
+                                                        TaskTerminationError(task_name=example_task2),
+                                                        TaskTerminationError(task_name=example_task3)]
+
+        with self.assertRaises(MultipleTaskTerminationErrors):
+            kill_workers(tasks, mock_scale_client, 2)
