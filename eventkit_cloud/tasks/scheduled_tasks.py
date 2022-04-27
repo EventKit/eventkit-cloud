@@ -106,10 +106,6 @@ def clean_up_stuck_tasks():
         .select_related("export_provider_task__run")
         .filter(Q(status=TaskState.RUNNING.value) & Q(started_at__lt=time_threshold))
     )
-    logger.error("CLEANING UP STUCK TASKS**************")
-    logger.error(f"stuck export task records: {export_task_records}")
-    logger.error(f"task_timeout: {task_timeout}")
-    logger.error(f"time_threshold: {time_threshold}")
     run_uids = []
     for export_task_record in export_task_records:
         run = export_task_record.export_provider_task.run

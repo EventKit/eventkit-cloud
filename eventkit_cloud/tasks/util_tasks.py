@@ -38,7 +38,7 @@ def shutdown_celery_workers(self):
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
-def kill_workers(task_names=None, client=None, timeout=10):
+def kill_workers(task_names=None, client=None, timeout=60):
     if not task_names:
         return
 
@@ -60,17 +60,13 @@ def kill_workers(task_names=None, client=None, timeout=10):
             raise MultipleTaskTerminationErrors(errors)
 
 
-def kill_worker(task_name=None, client=None, timeout=10):
+def kill_worker(task_name=None, client=None, timeout=60):
     if not task_name:
         return
 
     if not client:
         client, app_name = get_scale_client()
 
-    logger.error(f"###########TIMEOUT: {timeout}##################")
-    logger.error(f"###########client: {client}##################")
-    logger.error(f"###########task_name: {task_name}##################")
-    logger.error("###########CALLING SOFT KILL FROM KILL WORKER##################")
     # try to kill gracefully
     queue_name = f"{str(task_name).removesuffix('.priority')}.priority"
     shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
