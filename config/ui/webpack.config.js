@@ -48,7 +48,6 @@ var config = {
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: [
                     // cache expensive loader operations
-                    { loader: 'cache-loader' },
                     { loader: 'babel-loader' },
                     { loader: 'ts-loader' },
                 ]
@@ -58,7 +57,6 @@ var config = {
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: [
                     // cache expensive loader operations
-                    {loader: 'cache-loader'},
                     {loader: 'babel-loader'},
                 ],
             },

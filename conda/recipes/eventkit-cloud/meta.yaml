@@ -20,7 +20,7 @@ requirements:
     - git
     - pip {{ pip }}
     - python {{ python }}
-    - nodejs>=10
+    - nodejs>=16
     - ruby
   run_constrained:
     - memcached {{ memcached }}
@@ -45,4 +45,3 @@ about:
 extra:
   recipe-maintainers:
     - jsvrcek
-
