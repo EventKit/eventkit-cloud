@@ -81,6 +81,18 @@ services:
       - EVENTKIT_CRED
       - EVENTKIT_CERT_PASS
       - DATA_UPLOAD_MAX_MEMORY_SIZE=10000000
+      - OAUTH_NAME
+      - OAUTH_AUTHORIZATION_URL
+      - OAUTH_TOKEN_URL
+      - OAUTH_PROFILE_URL
+      - OAUTH_REDIRECT_URI
+      - OAUTH_PROFILE_SCHEMA
+      - OAUTH_RESPONSE_TYPE
+      - OAUTH_SCOPE
+      - OAUTH_TOKEN_KEY
+      - OAUTH_CLIENT_ID
+      - OAUTH_CLIENT_SECRET
+      - OAUTH_LOGOUT_URL
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -172,6 +184,18 @@ services:
       - SECRET_KEY
       - BIND_MOUNT_LOCATION
       - EVENTKIT_CRED
+      - OAUTH_NAME
+      - OAUTH_AUTHORIZATION_URL
+      - OAUTH_TOKEN_URL
+      - OAUTH_PROFILE_URL
+      - OAUTH_REDIRECT_URI
+      - OAUTH_PROFILE_SCHEMA
+      - OAUTH_RESPONSE_TYPE
+      - OAUTH_SCOPE
+      - OAUTH_TOKEN_KEY
+      - OAUTH_CLIENT_ID
+      - OAUTH_CLIENT_SECRET
+      - OAUTH_LOGOUT_URL
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
