@@ -1,32 +1,32 @@
 {% set name = "django-notifications-hq" %}
-{% set version = "1.6.0" %}
+{% set version = "1.7.0" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://files.pythonhosted.org/packages/12/b9/dd3525a3af44dea70a67f614056750daf4f506a32b1c8af41a2dd335b244/{{ name }}-{{ version }}.tar.gz
-  sha256: debeb71b7076b08487b40bf07664d1cc43b9977c4480bbc969b30236dda7a461
+  url: https://github.com/django-notifications/django-notifications/archive/refs/tags/{{version}}.tar.gz
+  sha256: 035e0aa15e307b1a49a4b66f94afe94077ada6e9a88265d10c545d283c7d02d7
 
 build:
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - django {{ django }}
+    - django {% if django is defined %} {{ django }} {% endif %}
     - django-model-utils
     - jsonfield
     - pip
-    - python {{ python }}
-    - pytz {{ pytz }}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pytz {% if pytz is defined %} {{ pytz }} {% endif %}
   run:
-    - django {{ django }}
+    - django {% if django is defined %} {{ django }} {% endif %}
     - django-model-utils
     - jsonfield
-    - python {{ python }}
-    - pytz {{ pytz }}
-    - swapper {{ swapper }}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pytz {% if pytz is defined %} {{ pytz }} {% endif %}
+    - swapper {% if swapper is defined %} {{ swapper }} {% endif %}
 
 test:
   imports:

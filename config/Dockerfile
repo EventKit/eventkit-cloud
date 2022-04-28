@@ -32,7 +32,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out /var/lib/eventkit/conda/cacert.crt && \
     conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
     # Create the environment
-    conda env create --force --file /var/lib/eventkit/environment.yml -n eventkit-cloud python=3.9 && \
+    conda env create --force --file /var/lib/eventkit/environment.yml -n eventkit-cloud python=3.10 && \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/pip install -r requirements-dev.txt && \
     SECRET_KEY=temp_secret_key /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
@@ -40,10 +40,10 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     # Clean up.
     conda clean --yes --all && \
     rm -rf /var/lib/eventkit/conda && \
-    rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/eventkit_cloud
+    rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/eventkit_cloud
 
-COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/eventkit_cloud
+COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/eventkit_cloud
 
-ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/wait-for-postgis.sh"]
+ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/scripts/wait-for-postgis.sh"]
 
 CMD ["echo", "This image has no default run command."]

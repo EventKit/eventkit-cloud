@@ -3,11 +3,11 @@ import logging
 import os
 
 from django import forms
-from django.urls import include, re_path
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
+from django.urls import re_path
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 

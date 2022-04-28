@@ -1,5 +1,5 @@
-from django.urls import include, re_path
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.urls import re_path
 from django.views.generic.base import RedirectView
 
 from eventkit_cloud.core.urls import urlpatterns as eventkit_cloud_urlpatterns

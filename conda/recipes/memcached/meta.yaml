@@ -5,7 +5,6 @@ package:
 source:
   fn: memcached-1.6.9.tar.gz
   url: https://memcached.org/files/memcached-1.6.9.tar.gz
-  sha256: d5a62ce377314dbffdb37c4467e7763e3abae376a16171e613cbe69956f092d1
 
 build:
   number: 0
@@ -13,10 +12,10 @@ build:
 requirements:
   build:
     - libevent
-    - openssl {{ openssl }}
-    - billiard {{ billiard }}
+    - openssl {% if openssl is defined %} {{ openssl }} {% endif %}
+    - billiard {% if billiard is defined %} {{ billiard }} {% endif %}
   run:
     - libevent
-    - openssl {{ openssl }}
+    - openssl {% if openssl is defined %} {{ openssl }} {% endif %}
 about:
   home: https://memcached.org/about
