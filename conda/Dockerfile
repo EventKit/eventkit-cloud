@@ -13,6 +13,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
     export root=$root && \
     echo "y" | conda install python=3.10 && \
+    conda config --remove channels defaults && \
     conda config --add channels conda-forge && \
     conda config --add channels local && \
     conda init bash && \

@@ -57,7 +57,7 @@ click_repl:
 cryptography:
 - 36.0.2
 curl:
-- 7.82.0
+- 7.83.0
 cyrus_sasl:
 - 2.1.27
 dj_database_url:
@@ -173,7 +173,7 @@ libblas:
 libcblas:
 - 3.9.0
 libcurl:
-- 7.82.0
+- 7.83.0
 libdap4:
 - 3.20.6
 libdeflate:
@@ -363,7 +363,7 @@ snappy:
 soupsieve:
 - 2.3.1
 sqlite:
-- 3.38.2
+- 3.38.3
 sqlparse:
 - 0.4.2
 swapper:
@@ -371,7 +371,7 @@ swapper:
 sysroot_linux_64:
 - '2.17'
 tiledb:
-- 2.8.1
+- 2.8.2
 tk:
 - 8.6.12
 typing_extensions:

@@ -20,8 +20,8 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     \
-    # Setup channels, only use channels in environment file or built locally.
-    conda config --add channels defaults && \
+    # Setup channels, only use channels in environment file or built locally. \
+    conda config --remove channels defaults && \
     conda config --add channels conda-forge && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
     # TODO: get build to work with strict priority
