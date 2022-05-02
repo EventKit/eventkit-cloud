@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';

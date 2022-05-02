@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {createStyles, Theme} from '@material-ui/core/styles';
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
@@ -374,7 +374,7 @@ export function MapDrawerOptions(props: Props) {
                 <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
                     <Paper
                         className={`
-                        ${classes.button} ${shouldDisplay ? classes.buttonExpanded : ''} 
+                        ${classes.button} ${shouldDisplay ? classes.buttonExpanded : ''}
                         qa-MapDrawerOptions-Button ${classes.buttonBackdrop}
                         `}
                         square

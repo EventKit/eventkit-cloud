@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {Route} from 'react-router';
 import history from '../../utils/history';
 import {connect} from 'react-redux';
@@ -97,7 +97,7 @@ export interface State {
     isBannerOpen: boolean;
 }
 
-export class BreadcrumbStepper extends React.Component<Props, State> {
+export class BreadcrumbStepper extends Component<Props, State> {
     context: any;
     private leaveRoute: null | string;
 

@@ -1,7 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-} from 'react'
+import {createContext, useContext} from 'react'
 import {ProviderLimits} from "../EstimateContainer";
 
 export interface JobValidationContext {
@@ -23,4 +20,3 @@ const appContext = createContext<JobValidationContext>({} as JobValidationContex
 export const useJobValidationContext = (): JobValidationContext => useContext(appContext);
 export const JobValidationConsumer = appContext.Consumer;
 export const JobValidationProvider = appContext.Provider;
-

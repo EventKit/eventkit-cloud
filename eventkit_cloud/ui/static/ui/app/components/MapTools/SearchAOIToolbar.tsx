@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {getGeocode, types} from '../../actions/geocodeActions';
 import {connect} from "react-redux";
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';

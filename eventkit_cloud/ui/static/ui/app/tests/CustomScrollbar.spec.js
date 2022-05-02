@@ -1,7 +1,6 @@
-import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import { Scrollbars } from 'react-custom-scrollbars';
+import { Scrollbars } from 'react-custom-scrollbars-2';
 import CustomScrollbar from '../components/common/CustomScrollbar';
 
 describe('Custom Scrollbar component', () => {

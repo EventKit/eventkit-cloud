@@ -2,9 +2,10 @@
     "compilerOptions": {
         "sourceMap": true,
         "module": "esnext",
+        "esModuleInterop": true,
         "moduleResolution": "node",
         "target": "es6",
-        "jsx": "react",
+        "jsx": "react-jsx",
         "lib": ["dom", "es6", "esnext"],
         "allowJs": true,
         "allowSyntheticDefaultImports": true,

@@ -1,7 +1,7 @@
 module.exports = (api) => {
     api.cache.using(() => process.env.NODE_ENV);
     const presets = [
-        '@babel/preset-react',
+        ["@babel/preset-react", {"runtime": "automatic"}],
         ['@babel/preset-env', { targets: '> 0.25%, not dead' }],
         '@babel/preset-flow',
     ];

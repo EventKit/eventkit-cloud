@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import moment from 'moment';
 import CustomTableRow from '../common/CustomTableRow';
 
@@ -11,7 +11,7 @@ export interface Props {
     };
 }
 
-export class DataCartInfoTable extends React.Component<Props, {}> {
+export class DataCartInfoTable extends Component<Props, {}> {
     render() {
         const { dataPack } = this.props;
         let finishedAt = 'Not Started';

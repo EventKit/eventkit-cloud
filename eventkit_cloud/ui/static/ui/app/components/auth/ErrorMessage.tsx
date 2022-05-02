@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {
     withTheme, Theme,
 } from '@material-ui/core/styles';
@@ -12,7 +12,7 @@ export interface Props {
     router: any;
 }
 
-export class ErrorMessage extends React.Component<Props, {}> {
+export class ErrorMessage extends Component<Props, {}> {
     context: any;
     static contextTypes = {
         config: PropTypes.object,

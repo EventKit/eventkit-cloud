@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 
 export interface Props {
     className?: string;
@@ -13,7 +13,7 @@ export interface Props {
     textStyle: object;
 }
 
-export class ShareBodyTooltip extends React.Component<Props, {}> {
+export class ShareBodyTooltip extends Component<Props, {}> {
     static defaultProps = {
         target: null,
         body: null,

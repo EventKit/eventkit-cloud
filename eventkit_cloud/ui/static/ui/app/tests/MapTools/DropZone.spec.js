@@ -1,4 +1,3 @@
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import { DropZone } from '../../components/MapTools/DropZone';
 import DropZoneDialog from '../../components/MapTools/DropZoneDialog';

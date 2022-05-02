@@ -3,7 +3,6 @@ import * as sinon from 'sinon';
 import '@testing-library/jest-dom/extend-expect'
 import {ProviderDialog} from '../../components/Dialog/ProviderDialog';
 import {render} from "@testing-library/react";
-import set = Reflect.set;
 
 
 jest.mock("../../components/Dialog/BaseDialog", () => {

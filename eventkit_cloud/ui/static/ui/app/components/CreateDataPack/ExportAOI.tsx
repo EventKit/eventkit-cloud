@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
@@ -117,7 +117,7 @@ function getViewBbox(map: any) : GeoJSON.FeatureCollection {
     return createGeoJSON(geom) as GeoJSON.FeatureCollection;
 }
 
-export class ExportAOI extends React.Component<Props, State> {
+export class ExportAOI extends Component<Props, State> {
     context: any;
     static contextTypes = {
         config: PropTypes.object,
@@ -937,7 +937,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
-            this.helpers.reset(true);
+            this?.helpers?.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data
@@ -1110,9 +1110,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
-                    getHelpers={(helpers: any) => {
-                        this.helpers = helpers
-                    }}
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
                     continuous

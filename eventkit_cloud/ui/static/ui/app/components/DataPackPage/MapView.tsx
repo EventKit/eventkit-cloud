@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component, useEffect, useState } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -54,7 +54,6 @@ import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import {useEffect, useState} from "react";
 import {WGS84} from "../CreateDataPack/ExportAOI";
 
 
@@ -122,7 +121,7 @@ export interface State {
     zoomLevel: number;
 }
 
-export class MapView extends React.Component<Props, State> {
+export class MapView extends Component<Props, State> {
     private map;
     private source;
     private layer;

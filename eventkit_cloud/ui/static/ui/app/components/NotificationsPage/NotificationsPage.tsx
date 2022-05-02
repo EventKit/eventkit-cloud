@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {Theme, withTheme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -30,7 +30,7 @@ interface State {
     pageSize: number;
 }
 
-export class NotificationsPage extends React.Component<Props, State> {
+export class NotificationsPage extends Component<Props, State> {
     private itemsPerPage: number;
 
     context: any;
@@ -249,5 +249,5 @@ function mapDispatchToProps(dispatch) {
         clearNotifications: () => dispatch(clearNotifications()),
     };
 }
-
+// @ts-ignore
 export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(NotificationsPage)));

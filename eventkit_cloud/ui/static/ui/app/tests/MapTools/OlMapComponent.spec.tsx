@@ -1,4 +1,3 @@
-import React from 'react';
 import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent";
 import {mount} from "enzyme";
 
@@ -7,11 +6,9 @@ describe('OlMapComponent', () => {
 
     let props;
     let wrapper;
-    let instance;
     const setup = (overrides = {}) => {
         props = { ...getProps(), ...overrides };
         wrapper = mount(<OlMapComponent {...props}><div id="childDiv"/></OlMapComponent>);
-        instance = wrapper.instance();
     };
 
     const getProps = () => ({

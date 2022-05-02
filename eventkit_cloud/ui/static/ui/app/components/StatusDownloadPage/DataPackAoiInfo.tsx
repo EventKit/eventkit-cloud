@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import CustomTableRow from '../common/CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import {MapView} from "../common/MapView";
@@ -9,7 +9,7 @@ export interface Props {
     extent: object;
 }
 
-export class DataPackAoiInfo extends React.Component<Props, {}> {
+export class DataPackAoiInfo extends Component<Props, {}> {
     context: any;
     static contextTypes = {
         config: PropTypes.object,

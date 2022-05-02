@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import css from '../../styles/ol3map.css';
 
 export class ZoomLevelLabel extends Component {

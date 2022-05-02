@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import MuiDrawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -88,7 +88,7 @@ interface State {
     showLogoutDialog: boolean;
 }
 
-export class Drawer extends React.Component<Props, State> {
+export class Drawer extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.handleLogoutDialogCancel = this.handleLogoutDialogCancel.bind(this);

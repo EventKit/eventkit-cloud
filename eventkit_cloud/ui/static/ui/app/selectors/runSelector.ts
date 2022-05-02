@@ -1,8 +1,12 @@
 import { createSelector } from 'reselect';
 
+export interface Props {
+    runId: string;
+}
+
 export const getAllRuns = (state) => state.exports.data.runs;
 
-export const getPropsRun = (state, props) => state.exports.data.runs[props.runId];
+export const getPropsRun = (state, props) => state.exports.data.runs[props?.runId];
 
 export const getDatacartIds = (state) => state.datacartDetails.ids;
 

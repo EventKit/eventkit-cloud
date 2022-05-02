@@ -1,6 +1,4 @@
-import React, {
-    createContext, useContext, useEffect, useState,
-} from 'react'
+import {createContext, useContext, useEffect, useState} from 'react'
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {arrayHasValue, getCookie} from "../../../utils/generic";
 import {connect} from "react-redux";
@@ -83,4 +81,3 @@ function mapStateToProps(state) {
 }
 
 export const RegionsProvider = connect(mapStateToProps, null)(_RegionsProvider);
-

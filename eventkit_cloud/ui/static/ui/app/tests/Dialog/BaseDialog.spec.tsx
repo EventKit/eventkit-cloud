@@ -1,4 +1,3 @@
-import React from 'react';
 import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -9,7 +8,6 @@ import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import {render, screen} from '@testing-library/react';
 
 jest.mock("@material-ui/core/DialogActions", () => {
-    const React = require('react');
     return (props) => (<div id="dialogactions">{props.children}</div>);
 });
 

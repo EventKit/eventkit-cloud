@@ -1,8 +1,6 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 
 import {shallow} from 'enzyme';
-import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Toolbar from '@material-ui/core/Toolbar';
 import PageHeader from '../../components/common/PageHeader';
@@ -11,7 +9,6 @@ import {DataPackPage} from '../../components/DataPackPage/DataPackPage';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackList from '../../components/DataPackPage/DataPackList';
-import MapView from '../../components/DataPackPage/MapView';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';

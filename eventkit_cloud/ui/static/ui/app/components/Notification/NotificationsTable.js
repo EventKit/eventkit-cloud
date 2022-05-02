@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -12,7 +12,7 @@ import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import NotificationsTableItem from './NotificationsTableItem';
 import NotificationsTableMenu from './NotificationsTableMenu';
 
-export class NotificationsTable extends React.Component {
+export class NotificationsTable extends Component {
     constructor(props) {
         super(props);
         this.getSelectedCount = this.getSelectedCount.bind(this);

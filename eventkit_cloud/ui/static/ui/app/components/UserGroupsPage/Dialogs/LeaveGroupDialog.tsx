@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
@@ -12,7 +12,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class LeaveGroupDialog extends React.Component<Props, {}> {
+export class LeaveGroupDialog extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 

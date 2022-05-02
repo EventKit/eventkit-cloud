@@ -1,7 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-} from 'react'
+import { createContext, useContext } from 'react'
 
 // TODO: refactor app to remove all legacy context references -- switch to this
 export interface ApplicationContext {
@@ -26,4 +23,3 @@ const appContext = createContext<ApplicationContext>({} as ApplicationContext);
 export const useAppContext = (): ApplicationContext => useContext(appContext);
 export const AppConfigConsumer = appContext.Consumer;
 export const AppConfigProvider = appContext.Provider;
-

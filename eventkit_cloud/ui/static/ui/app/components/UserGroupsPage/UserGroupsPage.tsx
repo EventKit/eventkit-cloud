@@ -799,7 +799,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({isRunning: false, stepIndex: 0});
-            this?.helpers.reset(true);
+            this?.helpers?.reset(true);
         } else {
             if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
@@ -853,7 +853,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
-            this?.helpers.reset(true);
+            this?.helpers?.reset(true);
             this.setState({isRunning: true});
         } else {
             this.setState({isRunning: true});
@@ -1282,5 +1282,5 @@ function mapDispatchToProps(dispatch) {
         ),
     };
 }
-
+// @ts-ignore
 export default withWidth()(withTheme(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));

@@ -82,13 +82,13 @@ describe('Run Selector', () => {
             return provider;
         });
         const providerSelector = selectors.getPropsProviderTasks();
-        const providers = providerSelector(state, { runId });
+        const providers = providerSelector(state);
         expect(providers).toEqual(expected);
     });
 
     it('getPropsJob should return the job associated with a run id', () => {
         const runId = '222';
-        expect(selectors.getPropsJob(state, { runId })).toEqual(state.exports.data.jobs[state.exports.data.runs[runId].job]);
+        expect(selectors.getPropsJob(state)).toEqual(state.exports.data.jobs[state.exports.data.runs[runId].job]);
     });
 
     it('toFullProviderTask should add the full tasks to a provider task', () => {
@@ -158,11 +158,13 @@ describe('Run Selector', () => {
         const runId = '222';
         const expected = { ...state.exports.data.runs[runId], job: state.exports.data.jobs['222'] };
         const fullRunSelector = selectors.makeFullRunSelector();
-        expect(fullRunSelector(state, { runId })).toEqual(expected);
+        // @ts-ignore
+        expect(fullRunSelector(state)).toEqual(expected);
     });
 
     it('makeAllRunsSelector should return all runs', () => {
         const expected = Object.values(state.exports.data.runs)
+            // @ts-ignore
             .map((run: { job: string }) => ({ ...run, job: state.exports.data.jobs[run.job] }));
         const allRunsSelector = selectors.makeAllRunsSelector();
         expect(allRunsSelector(state)).toEqual(expected);
@@ -175,6 +177,7 @@ describe('Run Selector', () => {
     it('makeDatacartSelector should return full runs for each id in datacart ids', () => {
         const expected = state.datacartDetails.ids.map((id) => getFullMockRun(id));
         const datacartSelector = selectors.makeDatacartSelector();
+        // @ts-ignore
         expect(datacartSelector(state)).toEqual(expected);
     });
 });

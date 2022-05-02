@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Joyride from 'react-joyride';
@@ -32,7 +32,7 @@ export interface State {
     isRunning: boolean;
 }
 
-export class Account extends React.Component<Props, State> {
+export class Account extends Component<Props, State> {
     private joyride;
     constructor(props) {
         super(props);

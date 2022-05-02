@@ -1,7 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-} from 'react'
+import {createContext, useContext} from 'react'
 
 export interface RunContext {
     run: Eventkit.FullRun;

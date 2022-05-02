@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
 import {withTheme} from '@material-ui/core/styles';
@@ -61,7 +61,7 @@ interface State {
     width: string;
 }
 
-export class DashboardPage extends React.Component<Props, State> {
+export class DashboardPage extends Component<Props, State> {
     private autoRefreshIntervalId: number | undefined = undefined;
     private autoRefreshInterval: number = 10000;
     private onResize: () => void;

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
@@ -17,7 +17,7 @@ import NotificationMenu from './NotificationMenu';
 import NotificationIcon from './NotificationIcon';
 import NotificationMessage from './NotificationMessage';
 
-export class NotificationsTableItem extends React.Component {
+export class NotificationsTableItem extends Component {
     constructor(props) {
         super(props);
         this.handleMarkAsRead = this.handleMarkAsRead.bind(this);

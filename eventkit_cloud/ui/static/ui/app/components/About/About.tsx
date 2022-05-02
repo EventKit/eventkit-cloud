@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../common/CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
@@ -13,7 +13,7 @@ export interface State {
     pageInfo: object[];
 }
 
-export class About extends React.Component<State> {
+export class About extends Component<State> {
     context: any;
     static contextTypes = {
         config: PropTypes.shape({
