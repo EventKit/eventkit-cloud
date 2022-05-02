@@ -358,6 +358,7 @@ def osm_data_collection_pipeline(
     config=None,
     eta=None,
     projection=4326,
+    **kwargs,
 ) -> dict:
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
@@ -550,6 +551,7 @@ def shp_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining SHP export function.
@@ -583,6 +585,7 @@ def kml_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining KML export function.
@@ -628,6 +631,7 @@ def gpx_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining GPX export function.
@@ -667,6 +671,7 @@ def gpx_export_task(
 def pbf_export_task(
     self,
     result=None,
+    **kwargs,
 ):
     """
     Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
@@ -699,6 +704,7 @@ def ogcapi_process_export_task(
     projection=4326,
     session_token=None,
     export_format_slug=None,
+    **kwargs,
 ):
     """
     Function defining OGC API Processes export.  This is called to create a dataset and then convert it to an eventkit
@@ -777,6 +783,7 @@ def ogc_result_task(
     bbox=None,
     service_url=None,
     session_token=None,
+    **kwargs,
 ):
     """
     A helper method to get additional download formats from an ogcapi endpoint that aren't being converted into other
@@ -835,6 +842,7 @@ def sqlite_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining SQLITE export function.
@@ -900,6 +908,7 @@ def geopackage_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining geopackage export function.
@@ -942,6 +951,7 @@ def mbtiles_export_task(
     task_uid=None,
     stage_dir=None,
     projection=3857,  # MBTiles only support 3857
+    **kwargs,
 ):
     """
     Function defining mbtiles export function.
@@ -984,6 +994,7 @@ def geotiff_export_task(
     stage_dir=None,
     projection=4326,
     config=None,
+    **kwargs,
 ):
     """
     Function defining geopackage export function.
@@ -1027,6 +1038,7 @@ def nitf_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining nitf export function.
@@ -1060,6 +1072,7 @@ def hfa_export_task(
     task_uid=None,
     stage_dir=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining Erdas Imagine HFA (.img) export function.
@@ -1089,6 +1102,7 @@ def reprojection_task(
     job_name=None,
     projection=None,
     config=None,
+    **kwargs,
 ):
     """
     Function defining a task that will reproject all file formats to the chosen projections.
@@ -1184,6 +1198,7 @@ def wfs_export_task(
     service_url=None,
     name=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining geopackage export for WFS service.
@@ -1306,6 +1321,7 @@ def wcs_export_task(
     name=None,
     user_details=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining export for WCS services
@@ -1354,6 +1370,7 @@ def arcgis_feature_service_export_task(
     service_url=None,
     projection=4326,
     config=str(),
+    **kwargs,
 ):
     """
     Function defining sqlite export for ArcFeatureService service.
@@ -1462,6 +1479,7 @@ def vector_file_export_task(
     bbox=None,
     service_url=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining geopackage export for geospatial vector file service.
@@ -1502,6 +1520,7 @@ def raster_file_export_task(
     bbox=None,
     service_url=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining geopackage export for geospatial raster file service.
@@ -1571,6 +1590,7 @@ def mapproxy_export_task(
     name=None,
     service_type=None,
     projection=4326,
+    **kwargs,
 ):
     """
     Function defining geopackage export for external raster service.
@@ -1613,6 +1633,7 @@ def pick_up_run_task(
     user_details=None,
     run_zip_file_slug_sets=None,
     session_token=None,
+    **kwargs,
 ):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -1694,6 +1715,7 @@ def create_zip_task(
     data_provider_task_record_uid: List[str] = None,
     data_provider_task_record_uids: List[str] = None,
     run_zip_file_uid=None,
+    **kwargs,
 ):
     """
     :param result: The celery task result value, it should be a dict with the current state.
@@ -2049,7 +2071,7 @@ def fail_synchronous_task_chain(data_provider_task_record=None):
 
 
 @app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
-def create_datapack_preview(result=None, task_uid=None, stage_dir=None):
+def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
     """
