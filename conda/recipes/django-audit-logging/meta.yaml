@@ -12,18 +12,19 @@ source:
   fn: '{{ name }}-{{ version }}.{{ file_ext }}'
   url: https://github.com/eventkit/{{ name }}/archive/v{{ version }}.tar.gz
   '{{ hash_type }}': '{{ hash_value|lower }}'
+  patches: version.patch
 
 build:
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - python {{ python }}
+    - python {% if python is defined %} {{ python }} {% endif %}
     - pip
-    - django {{ django }}
+    - django {% if django is defined %} {{ django }} {% endif %}
   run:
-    - python {{ python }}
-    - django {{ django }}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - django {% if django is defined %} {{ django }} {% endif %}
 
 test:
   imports:

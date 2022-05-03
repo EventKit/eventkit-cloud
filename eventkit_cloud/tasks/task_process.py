@@ -29,7 +29,7 @@ class TaskProcess(object):
         # will be invalid and throw an error.
         connection.close()
 
-        if isinstance(command, collections.Callable):
+        if isinstance(command, collections.abc.Callable):
             with ThreadPoolExecutor() as executor:
                 future = executor.submit(command)
                 future.result()

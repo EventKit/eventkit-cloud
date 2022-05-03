@@ -1,14 +1,13 @@
 {% set name = "django-storages" %}
-{% set version = "1.11.1" %}
-{% set sha256 = "a59e9923cbce7068792f75344ed7727021ee4ac20f227cf17297d0d03d141e91" %}
+{% set version = "1.12.3" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://files.pythonhosted.org/packages/90/23/68d2880cb21c21cb955aea9bb39eed299a4e405f3e1946159ce21ae2bacd/django-storages-1.9.1.tar.gz
-  sha256: "{{ sha256 }}"
+  url: https://github.com/jschneier/django-storages/archive/refs/tags/{{version}}.tar.gz
+  sha256: d461d6208e31df80cec99637f58faa867f3fc88c0826eac4efabb64aac6bf086
 
 build:
   script: "{{ PYTHON }} -m pip install . --no-deps -vv "
@@ -16,10 +15,10 @@ build:
 requirements:
   host:
     - pip
-    - python {{ python }}
+    - python {% if python is defined %} {{ python }} {% endif %}
   run:
-    - python {{ python }}
-    - django {{ django }}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - django {% if django is defined %} {{ django }} {% endif %}
 
 about:
   home: https://github.com/jschneier/django-storages
