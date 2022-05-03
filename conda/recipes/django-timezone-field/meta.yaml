@@ -1,27 +1,28 @@
 {% set name = "django-timezone-field" %}
-{% set version = "4.1.2" %}
+{% set version = "5.0" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://files.pythonhosted.org/packages/3d/ce/ba24bb9b0b33243a829836a3f18ce030e5d0738965faf01fb84942688c80/{{ name }}-{{ version }}.tar.gz
-  sha256: cffac62452d060e365938aa9c9f7b72d70d8b26b9c60243bce227b35abd1b9df
+  url: https://github.com/mfogel/django-timezone-field/archive/refs/tags/{{ version }}.tar.gz
+  sha256: f3e80c01753a9396cd0d8e8a79b696dfbd7be467040247e4e94fc3b380c504d8
 
 build:
   script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
 
 requirements:
   host:
-    - django {{ django }}
-    - pip
-    - python {{ python }}
-    - pytz {{ pytz }}
+    - django {% if django is defined %} {{ django }} {% endif %}
+    - pip {% if pip is defined %} {{ pip }} {% endif %}
+    - poetry {% if poetry is defined %} {{ poetry }} {% endif %}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pytz {% if pytz is defined %} {{ pytz }} {% endif %}
   run:
-    - django {{ django }}
-    - python {{ python }}
-    - pytz {{ pytz }}
+    - django {% if django is defined %} {{ django }} {% endif %}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pytz {% if pytz is defined %} {{ pytz }} {% endif %}
 
 test:
   imports:

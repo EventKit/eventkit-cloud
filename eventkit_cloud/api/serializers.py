@@ -21,7 +21,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db.models import QuerySet
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework.reverse import reverse

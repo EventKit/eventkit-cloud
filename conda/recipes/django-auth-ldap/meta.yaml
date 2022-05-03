@@ -1,5 +1,5 @@
 {% set name = "django-auth-ldap" %}
-{% set version = "2.2.0" %}
+{% set version = "4.0.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,21 +7,21 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: b8ca4fa54982f84522f4fe2505d2df23f9a410c70f44a7ffa6663ac66cf40ec0
+  sha256: 269c6a8e962303e2fd70f1035c133d9118bca75799f08d2567a803ea3086c830
 
 build:
   script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - django {{ django }}
+    - django {% if django is defined %} {{ django }} {% endif %}
     - pip
-    - python-ldap {{ python_ldap }}
-    - python {{ python }}
+    - python-ldap >=3.1
+    - python {% if python is defined %} {{ python }} {% endif %}
   run:
-    - django {{ django }}
-    - python-ldap {{ python_ldap }}
-    - python {{ python }}
+    - django {% if django is defined %} {{ django }} {% endif %}
+    - python-ldap >=3.1
+    - python {% if python is defined %} {{ python }} {% endif %}
 
 about:
   home: https://github.com/django-auth-ldap/django-auth-ldap

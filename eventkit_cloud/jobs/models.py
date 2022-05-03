@@ -554,9 +554,10 @@ class Region(UIDMixin, TimeStampedModelMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        kwargs["the_geom_webmercator"] = convert_polygon(kwargs.get("the_geom_webmercator")) or ""
-        kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
+        if not args:  # Fixture loading happens with args, so don't do this if that.
+            kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+            kwargs["the_geom_webmercator"] = convert_polygon(kwargs.get("the_geom_webmercator")) or ""
+            kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
         super(Region, self).__init__(*args, **kwargs)
 
     name = models.CharField(max_length=100, db_index=True)
@@ -634,10 +635,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
         visibility_choices.append((value.value, value.value))
 
     def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        kwargs["the_geom_webmercator"] = convert_polygon(kwargs.get("the_geom_webmercator")) or ""
-        kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
-        super(Job, self).__init__(*args, **kwargs)
+        if not args:  # Fixture loading happens with args, so don't do this if that.
+            kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+            kwargs["the_geom_webmercator"] = convert_polygon(kwargs.get("the_geom_webmercator")) or ""
+            kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
+        super().__init__(*args, **kwargs)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="owner")
     name = models.CharField(max_length=100, db_index=True)
@@ -761,7 +763,8 @@ class RegionMask(models.Model):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+        if not args:  # Fixture loading happens with args, so don't do this if that.
+            kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
         super(Region, self).__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)

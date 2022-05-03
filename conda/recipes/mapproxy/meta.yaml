@@ -18,16 +18,16 @@ build:
 requirements:
   host:
     - pip
-    - python {{ python }}
+    - python {% if python is defined %} {{ python }} {% endif %}
   run:
-    - pillow {{ pillow }}
-    - python {{ python }}
-    - pyyaml {{ pyyaml }}
-    - proj {{ proj }}
-    - pyproj {{ pyproj }}
-    - gdal {{ gdal }}
-    - geos {{ geos }}
-    - shapely {{ shapely }}
+    - pillow {% if pillow is defined %} {{ pillow }} {% endif %}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pyyaml {% if pyyaml is defined %} {{ pyyaml }} {% endif %}
+    - proj {% if proj is defined %} {{ proj }} {% endif %}
+    - pyproj {% if pyproj is defined %} {{ pyproj }} {% endif %}
+    - gdal {% if gdal is defined %} {{ gdal }} {% endif %}
+    - geos {% if geos is defined %} {{ geos }} {% endif %}
+    - shapely {% if shapely is defined %} {{ shapely }} {% endif %}
 
 test:
   imports:
