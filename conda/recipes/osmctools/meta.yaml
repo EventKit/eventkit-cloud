@@ -21,7 +21,7 @@ requirements:
     - automake
     - autoconf
   host:
-    - zlib {{ zlib }}
+    - zlib {% if zlib is defined %} {{ zlib }} {% endif %}
   run:
-    - wget {{ wget }}
-    - zlib {{ zlib }}
+    - wget {% if wget is defined %} {{ wget }} {% endif %}
+    - zlib {% if zlib is defined %} {{ zlib }} {% endif %}

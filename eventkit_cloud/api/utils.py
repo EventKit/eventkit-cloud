@@ -204,7 +204,11 @@ def get_download_counts_by_area(
 
     query["downloadable__export_task__export_provider_task__run__job__the_geom__intersects"] = OuterRef("the_geom")
     download_subquery = (
-        UserDownload.objects.filter(**query).values("uid").annotate(count=Func("uid", function="COUNT")).values("count")
+        UserDownload.objects.filter(**query)
+        .order_by()
+        .values("uid")
+        .annotate(count=Func("uid", function="COUNT"))
+        .values("count")
     )
 
     regions = (
@@ -230,6 +234,7 @@ def get_download_counts_by_product(
 
     download_subquery = (
         UserDownload.objects.filter(**query)
+        .order_by()
         .filter(
             Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
             | (

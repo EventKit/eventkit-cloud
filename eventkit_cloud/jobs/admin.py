@@ -3,11 +3,11 @@ import logging
 import os
 
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
+from django.urls import re_path
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
@@ -101,8 +101,8 @@ class JobAdmin(OSMGeoAdmin):
     def get_urls(self):
         urls = super(JobAdmin, self).get_urls()
         update_urls = [
-            url(r"^select/$", self.admin_site.admin_view(self.select_exports)),
-            url(
+            re_path(r"^select/$", self.admin_site.admin_view(self.select_exports)),
+            re_path(
                 r"^update/$",
                 self.admin_site.admin_view(self.update_exports),
                 name="update_regions",
