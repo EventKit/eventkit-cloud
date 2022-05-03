@@ -1,5 +1,7 @@
 import socket
 import subprocess
+import time
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -14,6 +16,8 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.utils.scaling import get_scale_client
+from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 User = get_user_model()
@@ -22,7 +26,7 @@ User = get_user_model()
 logger = get_task_logger(__name__)
 
 
-@app.task(name="Shutdown Celery Workers", bind=True, default_retry_delay=60)
+@app.task(name="Shutdown Celery Workers", bind=True)
 def shutdown_celery_workers(self):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
@@ -32,6 +36,46 @@ def shutdown_celery_workers(self):
     """
     subprocess.run("pkill -15 -f 'celery -A eventkit_cloud worker'", shell=True)
     return {"action": "shutdown", "hostname": socket.gethostname()}
+
+
+def kill_workers(task_names=None, client=None, timeout=60):
+    if not task_names:
+        return
+
+    if not client:
+        client, app_name = get_scale_client()
+
+    task_names = list(set(task_names))
+
+    # Kill all stuck tasks concurrently
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(kill_worker, task_name, client, timeout) for task_name in task_names]
+        wait(futures)
+
+        # Collect any errors that occurred and raise an appropriate exception
+        errors = [task.exception() for task in futures if task.exception() is not None]
+        if len(errors) == 1:
+            raise errors[0]
+        elif len(errors) > 1:
+            raise MultipleTaskTerminationErrors(errors)
+
+
+def kill_worker(task_name=None, client=None, timeout=60):
+    if not task_name:
+        return
+
+    if not client:
+        client, app_name = get_scale_client()
+
+    # try to kill gracefully
+    queue_name = f"{str(task_name).removesuffix('.priority')}.priority"
+    shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
+
+    # allow time for soft kill to try to work
+    time.sleep(timeout)
+
+    # hard kill task if it hasn't already terminated
+    client.terminate_task(str(task_name))
 
 
 @app.task(name="Get Estimates", default_retry_delay=60)

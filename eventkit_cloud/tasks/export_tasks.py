@@ -75,7 +75,7 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers, enforce_run_limit
+from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
@@ -1990,7 +1990,7 @@ class FinalizeRunBase(EventKitBaseTask):
             if getattr(settings, "CELERY_SCALE_BY_RUN"):
                 queue_name = None if retval is None else retval.get("run_uid")
                 if queue_name:
-                    shutdown_celery_workers.s().apply_async(queue=queue_name, routing_key=queue_name)
+                    kill_worker(task_name=queue_name)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 
