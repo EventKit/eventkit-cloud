@@ -149,10 +149,14 @@ var config = {
         hot: true,
         historyApiFallback: true,
         allowedHosts: 'all',
-        static: {
+        static: [{
             directory: BASE_DIR,
-            publicPath: BUILD_DIR,
+            publicPath: '/',
         },
+        {
+            directory: BUILD_DIR,
+            publicPath: '/static/ui/build/'
+        }],
         devMiddleware: {
             writeToDisk: true,
         },
