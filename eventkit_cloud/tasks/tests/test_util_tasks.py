@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
@@ -8,7 +8,8 @@ from django.test import TestCase
 
 from eventkit_cloud.jobs.models import Job, DataProvider
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
+from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records, kill_worker, kill_workers
+from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError, MultipleTaskTerminationErrors
 
 
 class TestUtilTasks(TestCase):
@@ -46,3 +47,30 @@ class TestUtilTasks(TestCase):
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
             rerun_data_provider_records(run_uid=self.run.uid, user_id=self.user.id, data_provider_slugs=expected_slugs)
+
+    @patch("eventkit_cloud.tasks.util_tasks.shutdown_celery_workers")
+    def test_kill_worker_softkill(self, shutdown_celery_mock):
+        example_task_name = "example_task"
+        async_mock = Mock()
+        shutdown_celery_mock.s.return_value = async_mock
+        mock_scale_client = Mock()
+        kill_worker(example_task_name, mock_scale_client, 2)
+        expected_queue_name = f"{example_task_name}.priority"
+        async_mock.apply_async.assert_called_once_with(queue=expected_queue_name, routing_key=expected_queue_name)
+        mock_scale_client.terminate_task.assert_called_once_with(example_task_name)
+
+    @patch("eventkit_cloud.tasks.util_tasks.shutdown_celery_workers")
+    def test_kill_workers_raises_exception(self, shutdown_celery_mock):
+        example_task1, example_task2, example_task3 = ["example_task1", "example_task2", "example_task3"]
+        tasks = [example_task1, example_task2, example_task3]
+        async_mock = Mock()
+        shutdown_celery_mock.s.return_value = async_mock
+        mock_scale_client = Mock()
+        mock_scale_client.terminate_task.side_effect = [
+            TaskTerminationError(task_name=example_task1),
+            TaskTerminationError(task_name=example_task2),
+            TaskTerminationError(task_name=example_task3),
+        ]
+
+        with self.assertRaises(MultipleTaskTerminationErrors):
+            kill_workers(tasks, mock_scale_client, 2)

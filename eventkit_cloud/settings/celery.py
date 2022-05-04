@@ -43,18 +43,18 @@ BEAT_SCHEDULE = {
         "task": "Update Statistics Caches",
         "schedule": crontab(minute="0", day_of_month="*/4"),
     },
+    "clean-up-stuck-tasks": {
+        "task": "Clean Up Stuck Tasks",
+        "schedule": 1200.0,
+        "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
+    },
+    "scale-celery": {
+        "task": "Scale Celery",
+        "schedule": 60.0,
+        "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
+        "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
+    },
 }
-
-BEAT_SCHEDULE.update(
-    {
-        "scale-celery": {
-            "task": "Scale Celery",
-            "schedule": 60.0,
-            "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
-            "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
-        },
-    }
-)
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
@@ -99,4 +99,6 @@ if not BROKER_API_URL:
 
 MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 
-app.conf.task_soft_time_limit = int(os.getenv("TASK_TIMEOUT", 0)) or None
+# Default to 8 hours
+TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
+app.conf.task_soft_time_limit = TASK_TIMEOUT
