@@ -1,65 +1,52 @@
+from functools import wraps
 import logging
-import os
+import time
 
-from contextlib import contextmanager
-from zipfile import ZipFile, ZIP_DEFLATED
+from django.conf import settings
 
 logger = logging.getLogger()
 
+MAX_DB_CONNECTION_RETRIES = 8
+TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
-@contextmanager
-def cd(newdir):
-    prevdir = os.getcwd()
-    os.chdir(newdir)
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
+# The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+# retries as retrying forever would cause the job to never finish in the event that the database is down. An
+# improved method would perhaps be to see if there are connection options to create a more reliable connection.
+# We have used this solution for now as I could not find options supporting this in the gdal documentation.
 
 
-def get_file_paths(directory):
-    """
-    Gets file paths with absolute file paths for copying the files and a relative file path for
-    where the file should be located in the datapack relative to the directory.
-    """
-    paths = {}
-    with cd(directory):
-        for dirpath, _, filenames in os.walk("./"):
-            for f in filenames:
-                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
-    return paths
+def retry(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
 
+        attempts = MAX_DB_CONNECTION_RETRIES
+        exc = None
+        while attempts:
+            try:
+                return_value = f(*args, **kwds)
+                if not return_value:
+                    logger.error("The function {0} failed to return any values.".format(getattr(f, "__name__")))
+                    raise Exception("The process failed to return any data, please contact an administrator.")
+                return return_value
+            except Exception as e:
+                logger.error("The function {0} threw an error.".format(getattr(f, "__name__")))
+                logger.error(str(e))
+                exc = e
 
-def requires_zip(file_format):
-    zipped_formats = ["KML", "ESRI Shapefile"]
-    if file_format in zipped_formats:
-        return True
+                if getattr(settings, "TESTING", False):
+                    # Don't wait/retry when running tests.
+                    break
+                attempts -= 1
+                logger.info(e)
+                if "canceled" in str(e).lower():
+                    # If task was canceled (as opposed to fail) don't retry.
+                    logger.info("The task was canceled ")
+                    attempts = 0
+                else:
+                    if attempts:
+                        delay = TIME_DELAY_BASE ** (MAX_DB_CONNECTION_RETRIES - attempts + 1)
+                        logger.error(f"Retrying {str(attempts)} more times, sleeping for {delay}...")
+                        time.sleep(delay)
+        raise exc
 
-
-def create_zip_file(in_file, out_file):
-    """
-
-    :param in_file: The file to be compressed.
-    :param out_file: The result.
-    :return: The archive.
-    """
-    logger.debug("Creating the zipfile {0} from {1}".format(out_file, in_file))
-    with ZipFile(out_file, "a", compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
-        if os.path.isdir(in_file):
-            # Shapefiles will be all of the layers in a directory.
-            # When this gets zipped they will all be in the same zip file.  Some applications (QGIS) will
-            # read this without a problem whereas ArcGIS will need the files extracted first.
-            file_paths = get_file_paths(in_file)
-            for absolute_file_path, relative_file_path in file_paths.items():
-                if os.path.isfile(absolute_file_path):
-                    zipfile.write(absolute_file_path, arcname=os.path.basename(relative_file_path))
-        else:
-            zipfile.write(in_file)
-    return out_file
-
-
-def get_zip_name(file_name):
-    basename, ext = os.path.splitext(file_name)
-    if ext == ".kml":
-        return basename + ".kmz"
-    return basename + ".zip"
+    return wrapper
