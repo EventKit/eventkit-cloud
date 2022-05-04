@@ -1,12 +1,12 @@
 /* eslint-disable */
 var webpack = require('webpack');
 var path = require('path');
-var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui');
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -20,11 +20,11 @@ var plugins = [
         reportFilename: 'report.html'
     }),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
-    new webpack.HashedModuleIdsPlugin(),
     new CompressionPlugin({
         exclude: /(\.js$)/
     }),
-    new MiniCssExtractPlugin({filename: '[name].css'})
+    new MiniCssExtractPlugin({filename: '[name].css'}),
+    new NodePolyfillPlugin()
 ];
 var app = [APP_DIR + '/index.tsx'];
 var config = {
@@ -34,7 +34,6 @@ var config = {
     },
     output: {
         path: BUILD_DIR,
-        filename: '[name].js',
         chunkFilename: '[name].[chunkhash].js',
         publicPath: '/static/ui/build/'
     },
@@ -47,8 +46,6 @@ var config = {
                 test: /\.tsx?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: [
-                    // cache expensive loader operations
-                    { loader: 'cache-loader' },
                     { loader: 'babel-loader' },
                     { loader: 'ts-loader' },
                 ]
@@ -57,8 +54,6 @@ var config = {
                 test: /\.js?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: [
-                    // cache expensive loader operations
-                    {loader: 'cache-loader'},
                     {loader: 'babel-loader'},
                 ],
             },
@@ -92,7 +87,7 @@ var config = {
                     loader: 'file-loader',
                     options: {
                         limit: 100000,
-                        name: 'fonts/[hash].[ext]',
+                        name: 'fonts/[contenthash].[ext]',
                     },
                 },
             },
@@ -102,7 +97,7 @@ var config = {
                     loader: 'file-loader',
                     options: {
                         limit: 100000,
-                        name: 'images/[hash].[ext]',
+                        name: 'images/[contenthash].[ext]',
                         esModule: false,
                     },
                 },
@@ -111,62 +106,33 @@ var config = {
     },
     optimization: {
         minimizer: [new TerserPlugin()],
-        splitChunks: {
-            cacheGroups: {
-                commons: {
-                    chunks: 'all',
-                    minChunks: 2,
-                    priority: -5,
-                    test: /[\\/]node_modules[\\/]/,
-                    enforce: true,
-                },
-                mui: {
-                    name: 'mui',
-                    chunks: 'all',
-                    minChunks: 2,
-                    test: /node_modules\/material-ui/,
-                    enforce: true,
-                },
-                ol: {
-                    name: 'openlayers',
-                    chunks: 'all',
-                    minChunks: 2,
-                    test: /node_modules\/ol/,
-                    enforce: true,
-                },
-                jsts: {
-                    name: 'jsts',
-                    chunks: 'all',
-                    minChunks: 2,
-                    test: /node_modules\/jsts/,
-                    enforce: true,
-                },
-            }
-        }
     },
     plugins: plugins,
     devServer: {
-        hot: true,
-        contentBase: BASE_DIR,
-        watchContentBase: true,
-        publicPath: BUILD_DIR,
         host: "0.0.0.0",
         port: 8080,
+        hot: true,
         historyApiFallback: true,
-        disableHostCheck: true,
-        watchOptions: {
-            poll: true
+        allowedHosts: 'all',
+        static: [{
+            directory: BASE_DIR,
+            publicPath: '/',
         },
-        inline: true
+        {
+            directory: BUILD_DIR,
+            publicPath: '/static/ui/build/'
+        }],
+        devMiddleware: {
+            writeToDisk: true,
+        },
+    },
+    watchOptions: {
+        poll: true
     },
 };
 
 if (!PROD) {
-    config.plugins.push(new WriteFilePlugin({
-        test: /^(?!.*(hot)).*/, // exclude hot-update files
-    }));
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
-    config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'eval-cheap-module-source-map';
 }
 
