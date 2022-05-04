@@ -1,12 +1,10 @@
 // @ts-nocheck
-import '@babel/polyfill';
-import React from 'react';
 import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
-import { Route, Redirect } from 'react-router';
+import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import history from './utils/history';
 import configureStore from './store/configureStore';
