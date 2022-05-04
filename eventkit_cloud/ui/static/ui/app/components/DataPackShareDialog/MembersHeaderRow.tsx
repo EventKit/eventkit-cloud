@@ -11,6 +11,7 @@ import ArrowDown from '@mui/icons-material/ArrowDropDown';
 import ArrowUp from '@mui/icons-material/ArrowDropUp';
 import ButtonBase from '@mui/material/ButtonBase';
 import IndeterminateIcon from '../icons/IndeterminateIcon';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -140,7 +141,7 @@ export class MembersHeaderRow extends React.Component<Props, State> {
         }
 
         let countText = '';
-        if (!isWidthUp('sm', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('sm'))) {
             countText = this.props.public ?
                 '(ALL)' : `(${this.props.selectedCount}/${this.props.memberCount})`;
         } else {

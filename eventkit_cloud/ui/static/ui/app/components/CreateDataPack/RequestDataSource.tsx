@@ -1,20 +1,25 @@
 import BaseDialog from "../Dialog/BaseDialog";
 import * as React from 'react';
-import Button from "@material-ui/core/Button";
+import Button from '@mui/material/Button';
 import CustomTableRow from "../common/CustomTableRow";
 import CustomTextField from "../common/CustomTextField";
-import {CircularProgress, createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
+import CircularProgress from '@mui/material/CircularProgress';
+import createStyles from '@mui/styles/createStyles';
+import { Breakpoint, Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
 import {useEffect} from "react";
 import {getCookie} from "../../utils/generic";
 import {
     useAccessibleRef,
     useDebouncedState,
 } from "../../utils/hooks/hooks";
-import {isWidthUp} from "@material-ui/core/withWidth";
-import withWidth from "@material-ui/core/withWidth/withWidth";
-import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 import {ApiStatuses, useAsyncRequest} from "../../utils/hooks/api";
 import {renderIf} from "../../utils/renderIf";
+import useMediaQuery from '@mui/material/useMediaQuery';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 interface Props {
     open: boolean;
@@ -44,7 +49,7 @@ export function RequestDataSource(props: Props) {
     // and set in the same frame. Changes to this DO trigger re-renders, unlike normal ref change.
     const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
 
-    const isSmallScreen = () => !isWidthUp('sm', width);
+    const isSmallScreen = () => !useMediaQuery(this.props.theme.breakpoints.up('sm'));
 
     // Helper object, maps the field options to their value, setter, and a property
     // indicating whether it should be required. Removes the need to manually keep track of what is required
@@ -199,7 +204,7 @@ export function RequestDataSource(props: Props) {
                                 // This style overrides some child styles to bring it in line with the other components.
                                 inputProps={{ className: classes.innerInput }}
                                 rows={4}
-                                rowsMax={4}
+                                maxRows={4}
                                 multiline
                                 {...sharedProps}
                                 {...getDisplayProps(fieldMap.description)}

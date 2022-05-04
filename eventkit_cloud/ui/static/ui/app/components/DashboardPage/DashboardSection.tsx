@@ -7,6 +7,7 @@ import ImageList from '@mui/material/ImageList';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import SwipeableViews from 'react-swipeable-views';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -113,7 +114,7 @@ export class DashboardSection extends React.Component<Props, State> {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
-        const md = isWidthUp('md', this.props.width);
+        const md = useMediaQuery(this.props.theme.breakpoints.up('md'));
 
         const spacing = md ? 10 : 2;
         const scrollbarWidth = 6;

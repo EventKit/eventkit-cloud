@@ -13,6 +13,7 @@ import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../common/CustomScrollbar';
 import {ScrollBarRefWrap} from "./MapView";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -76,7 +77,7 @@ export class DataPackList extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
-        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
+        const spacing = useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -150,7 +151,7 @@ export class DataPackList extends Component<Props, {}> {
             />
         );
 
-        if (!isWidthUp('md', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('md'))) {
             return (
                 <ScrollBarRefWrap
                     ref={(instance) => { this.scrollbar = instance; }}

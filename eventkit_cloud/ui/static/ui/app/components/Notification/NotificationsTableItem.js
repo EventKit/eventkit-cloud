@@ -15,6 +15,7 @@ import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications
 import NotificationMenu from './NotificationMenu';
 import NotificationIcon from './NotificationIcon';
 import NotificationMessage from './NotificationMessage';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -73,7 +74,7 @@ export class NotificationsTableItem extends Component {
             optionsButtonsContainer: {
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: isWidthUp('xl', width) ? 'center' : 'flex-end',
+                justifyContent: useMediaQuery(this.props.theme.breakpoints.up('xl')) ? 'center' : 'flex-end',
             },
             button: {
                 fontSize: '14px',
@@ -86,7 +87,7 @@ export class NotificationsTableItem extends Component {
         };
 
         let optionsWidth = '60px';
-        if (isWidthUp('xl', width)) optionsWidth = '435px';
+        if (useMediaQuery(this.props.theme.breakpoints.up('xl'))) optionsWidth = '435px';
 
         styles = {
             ...styles,
@@ -154,7 +155,7 @@ export class NotificationsTableItem extends Component {
                     style={styles.optionsRowColumn}
                 >
                     <div style={styles.optionsButtonsContainer}>
-                        {(isWidthUp('xl', width))
+                        {(useMediaQuery(this.props.theme.breakpoints.up('xl'))
                             ? (
                                 <div
                                     className="qa-NotificationsTableItem-ActionButtons"
@@ -228,7 +229,7 @@ export class NotificationsTableItem extends Component {
                                     onRemove={this.props.onRemove}
                                     onView={this.props.onView}
                                 />
-                            )}
+                            ))}
                     </div>
                 </TableCell>
             </TableRow>

@@ -4,7 +4,6 @@ import withTheme from '@mui/styles/withTheme';
 import Dropzone from 'react-dropzone';
 import Button from '@mui/material/Button';
 import FileFileUpload from '@mui/icons-material/CloudUpload';
-import RootRef from '@mui/material/RootRef/RootRef';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {

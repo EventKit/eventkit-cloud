@@ -56,7 +56,7 @@ export const images = {
 // define a global theme for the application
 export const theme = {
     // add in all the eventkit specific styles so they are accessible to all JSS styled components
-    // or components using withTheme https://material-ui.com/customization/themes/#withtheme-component-component
+    // or components using https://mui.com/system/styles/advanced/
     eventkit: {
         colors: { ...colors },
         images: { ...images },

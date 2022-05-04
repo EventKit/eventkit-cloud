@@ -12,6 +12,7 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../common/LoadButtons';
 import {clearNotifications, getNotifications} from '../../actions/notificationsActions';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -88,7 +89,7 @@ export class NotificationsPage extends Component<Props, State> {
     }
 
     getGridPadding() {
-        return isWidthUp('md', this.props.width) ? 7 : 2;
+        return useMediaQuery(this.props.theme.breakpoints.up('md')) ? 7 : 2;
     }
 
     getRange(notifications) {
@@ -123,7 +124,7 @@ export class NotificationsPage extends Component<Props, State> {
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        const spacing = isWidthUp('sm', this.props.width as Breakpoint) ? '10px' : '2px';
+        const spacing = useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '10px' : '2px';
         const styles = {
             root: {
                 position: 'relative' as 'relative',
@@ -195,7 +196,7 @@ export class NotificationsPage extends Component<Props, State> {
                                     )
                                     : (
                                         <div className="qa-NotificationsPage-Content-Notifications">
-                                            {isWidthUp('md', this.props.width)
+                                            {useMediaQuery(this.props.theme.breakpoints.up('md'))
                                                 ? (
                                                     <NotificationsTable
                                                         notificationsData={this.props.notificationsData}

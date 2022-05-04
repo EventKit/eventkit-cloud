@@ -11,6 +11,7 @@ import ProviderPreview from "./ProviderPreview";
 import CreateDataPackButton from "./CreateDataPackButton";
 import {renderIf} from "../../utils/renderIf";
 import {ProviderRowRegionWrap} from "./ProviderRowRegionWrap";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -72,20 +73,20 @@ export class DataPackDetails extends Component<Props, State> {
 
     private getTextFontSize() {
         const {width} = this.props;
-        if (!isWidthUp('sm', width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('sm'))) {
             return '10px';
-        } else if (!isWidthUp('md', width)) {
+        } else if (!useMediaQuery(this.props.theme.breakpoints.up('md'))) {
             return '11px';
-        } else if (!isWidthUp('lg', width)) {
+        } else if (!useMediaQuery(this.props.theme.breakpoints.up('lg'))) {
             return '12px';
-        } else if (!isWidthUp('xl', width)) {
+        } else if (!useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
             return '13px';
         }
         return '14px';
     }
 
     private getTableCellWidth() {
-        if (!isWidthUp('md', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('md'))) {
             return '80px';
         }
         return '120px';
@@ -176,7 +177,7 @@ export class DataPackDetails extends Component<Props, State> {
             },
         };
 
-        const isSmallScreen = () => !isWidthUp('sm', this.props.width);
+        const isSmallScreen = () => !useMediaQuery(this.props.theme.breakpoints.up('sm'));
         const {selectedProvider} = this.state;
 
         return (

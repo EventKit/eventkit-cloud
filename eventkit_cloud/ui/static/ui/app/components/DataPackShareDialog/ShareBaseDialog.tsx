@@ -13,6 +13,7 @@ import Divider from "@mui/material/Divider";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
 import Warning from "@mui/icons-material/Warning";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -88,7 +89,7 @@ export class ShareBaseDialog extends Component<Props, {}> {
 
         const {colors} = this.props.theme.eventkit;
         const {width} = this.props;
-        const marginSubtract = isWidthDown('sm', width) ? 32 : 96;
+        const marginSubtract = useMediaQuery(this.props.theme.breakpoints.down('sm')) ? 32 : 96;
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',

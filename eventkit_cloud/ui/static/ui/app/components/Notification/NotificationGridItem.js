@@ -9,6 +9,7 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMessage from './NotificationMessage';
 import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -37,7 +38,7 @@ export class NotificationGridItem extends Component {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '15px',
-                fontSize: isWidthUp('sm', width) ? '18px' : '14px',
+                fontSize: useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '18px' : '14px',
                 color: colors.text_primary,
                 transition: 'background-color 0.25s',
                 backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
@@ -54,7 +55,7 @@ export class NotificationGridItem extends Component {
             },
             date: {
                 margin: '0 10px',
-                fontSize: isWidthUp('sm', width) ? '12px' : '10px',
+                fontSize: useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '12px' : '10px',
                 display: 'flex',
                 alignItems: 'center',
                 flex: '0 0 auto',
@@ -66,7 +67,7 @@ export class NotificationGridItem extends Component {
                 verticalAlign: 'middle',
             },
             menuItem: {
-                fontSize: !isWidthUp('md', width) ? 10 : 12,
+                fontSize: !useMediaQuery(this.props.theme.breakpoints.up('md')) ? 10 : 12,
             },
         };
 

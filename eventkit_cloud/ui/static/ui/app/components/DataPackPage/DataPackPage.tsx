@@ -33,6 +33,7 @@ import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
 import {StoreHelpers} from "react-joyride";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -138,7 +139,7 @@ export class DataPackPage extends Component<Props, State> {
         this.handleJoyride = this.handleJoyride.bind(this);
         this.pageSize = Number(context.config.DATAPACK_PAGE_SIZE);
         this.state = {
-            open: isWidthUp('xl', props.width),
+            open: useMediaQuery(this.props.theme.breakpoints.up('xl')),
             permissions: {
                 value: '' as Eventkit.Permissions.Visibility,
                 groups: {},
@@ -418,7 +419,7 @@ export class DataPackPage extends Component<Props, State> {
 
     private handleFilterApply(state: State) {
         this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
-        if (!isWidthUp('xl', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
             this.setState({open: false});
         }
     }
@@ -441,7 +442,7 @@ export class DataPackPage extends Component<Props, State> {
             formats: {},
             loading: true,
         }, this.makeRunRequest);
-        if (!isWidthUp('xl', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
             this.setState({open: false});
         }
     }
@@ -505,16 +506,16 @@ export class DataPackPage extends Component<Props, State> {
                     this.setState({open: true});
                 }
             }
-            if (data.step.title === 'Filters' && data.type === 'step:after' && !isWidthUp('xl', this.props.width)) {
+            if (data.step.title === 'Filters' && data.type === 'step:after' && !useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
                 this.setState({open: false});
             }
-            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !isWidthUp('xl', this.props.width)) {
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
                 this.setState({open: false});
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && queryString.parse(this.props.location.search).view === 'list'
-                && !isWidthUp('xl', this.props.width)
+                && !useMediaQuery(this.props.theme.breakpoints.up('xl'))
             ) {
                 this.setState({open: false});
             }
@@ -592,13 +593,13 @@ export class DataPackPage extends Component<Props, State> {
 
         const styles = {
             wholeDiv: {
-                height: isWidthUp('sm', this.props.width) ?
+                height: useMediaQuery(this.props.theme.breakpoints.up('sm')) ?
                     'calc(100vh - 231px)'
                     :
                     'calc(100vh - 223px)',
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && isWidthUp('xl', this.props.width) ? '250px' : '0px',
-                marginTop: isWidthUp('sm', this.props.width) ? '10px' : '2px',
+                marginRight: this.state.open && useMediaQuery(this.props.theme.breakpoints.up('xl')) ? '250px' : '0px',
+                marginTop: useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '10px' : '2px',
                 position: 'relative' as 'relative',
             },
             pageTitle: {
@@ -629,7 +630,7 @@ export class DataPackPage extends Component<Props, State> {
             backgroundStyle: {
                 backgroundImage: `url(${images.topo_dark})`,
             },
-            range: !isWidthUp('md', this.props.width) ?
+            range: !useMediaQuery(this.props.theme.breakpoints.up('md')) ?
                 {color: colors.text_primary, lineHeight: '36px', fontSize: '12px'}
                 :
                 {
@@ -726,7 +727,7 @@ export class DataPackPage extends Component<Props, State> {
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {queryString.parse(this.props.location.search).view === 'list' && isWidthUp('md', this.props.width) ?
+                    {queryString.parse(this.props.location.search).view === 'list' && useMediaQuery(this.props.theme.breakpoints.up('md')) ?
                         null
                         :
                         <DataPackSortDropDown

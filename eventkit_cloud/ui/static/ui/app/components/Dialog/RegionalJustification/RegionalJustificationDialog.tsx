@@ -14,6 +14,7 @@ import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
 import {renderIf} from "../../../utils/renderIf";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
@@ -309,7 +310,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
     }
 
     const [isPolicyOpen, setIsPolicyOpen] = useState(false);
-    const isSmallScreen = () => !isWidthUp('sm', width);
+    const isSmallScreen = () => !useMediaQuery(this.props.theme.breakpoints.up('sm'));
 
     return (
         <BaseDialog

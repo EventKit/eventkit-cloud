@@ -33,6 +33,7 @@ import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
 import {RegionsProvider} from "./common/context/RegionContext";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -727,7 +728,7 @@ export class Application extends React.Component<Props, State> {
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: (this.props.drawer === 'open' || this.props.drawer === 'opening')
-                && isWidthUp('xl', this.props.width) ? 200 : 0,
+                && useMediaQuery(theme.breakpoints.up('xl')) ? 200 : 0,
                 background: 'rgb(17, 24, 35)',
                 backgroundImage: `url(${images.topo_dark})`,
                 height: `calc(100vh - ${mainAppBarHeight}px)`,
@@ -867,7 +868,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default withWidth()(
-    withTheme<any>(
+    withTheme<any, any>(
         withStyles<any, any>(jss)(
             connect(mapStateToProps, mapDispatchToProps)(
                 Application

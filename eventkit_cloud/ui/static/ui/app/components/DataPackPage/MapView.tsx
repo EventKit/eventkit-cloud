@@ -53,7 +53,7 @@ import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo} from '../../actions/datacartActions';
-import {WGS84} from "../CreateDataPack/ExportAOI";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
@@ -502,7 +502,7 @@ export class MapView extends Component<Props, State> {
                 new OverviewMap({
                     className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
-                    collapsed: !isWidthUp('md', this.props.width),
+                    collapsed: !useMediaQuery(this.props.theme.breakpoints.up('md')),
                     tipLabel: '',
                     layers: [
                         new Tile({
@@ -941,7 +941,7 @@ export class MapView extends Component<Props, State> {
     render() {
         const {colors} = this.props.theme.eventkit;
 
-        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
+        const spacing = useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -951,7 +951,7 @@ export class MapView extends Component<Props, State> {
                 marginRight: '10px',
                 paddingBottom: '10px',
             },
-            map: !isWidthUp('md', this.props.width) ?
+            map: !useMediaQuery(this.props.theme.breakpoints.up('md')) ?
                 {
                     width: '100%',
                     height: '100%',
@@ -969,7 +969,7 @@ export class MapView extends Component<Props, State> {
                     padding: '0px 10px 0px 3px',
                     position: 'relative' as 'relative',
                 },
-            list: !isWidthUp('md', this.props.width) ?
+            list: !useMediaQuery(this.props.theme.breakpoints.up('md')) ?
                 {
                     display: 'none',
                 }
@@ -981,7 +981,7 @@ export class MapView extends Component<Props, State> {
                 },
             popupContainer: {
                 position: 'absolute' as 'absolute',
-                width: `calc(100% - ${!isWidthUp('md', this.props.width) ? 20 : 13}px)`,
+                width: `calc(100% - ${(!useMediaQuery(this.props.theme.breakpoints.up('md'))) ? 20 : 13}px)`,
                 bottom: '50px',
                 textAlign: 'center' as 'center',
                 display: 'relative',
@@ -990,7 +990,7 @@ export class MapView extends Component<Props, State> {
             mapPopup: {
                 margin: '0px auto',
                 width: '70%',
-                maxWidth: !isWidthUp('md', this.props.width) ? '90%' : '455px',
+                maxWidth: !useMediaQuery(this.props.theme.breakpoints.up('md')) ? '90%' : '455px',
                 minWidth: '250px',
                 display: 'inline-block',
                 textAlign: 'left' as 'left',

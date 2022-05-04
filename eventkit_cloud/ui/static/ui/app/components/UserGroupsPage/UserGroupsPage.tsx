@@ -41,6 +41,7 @@ import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
 import EventkitJoyride from "../common/JoyrideWrapper";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -257,7 +258,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.bindMethods();
         this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
-            drawerOpen: !(isWidthDown('sm', this.props.width)),
+            drawerOpen: !(useMediaQuery(this.props.theme.breakpoints.down('sm'))),
             selectedUsers: [],
             search: queryString.parse(props.location.search).search as string || '',
             showAddUsers: false,
@@ -768,7 +769,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             return;
         }
 
-        if (isWidthDown('xs', this.props.width)) {
+        if (useMediaQuery(this.props.theme.breakpoints.down('xs'))) {
             const ix = newSteps.findIndex(step => (
                 step.target === '.qa-UserGroupsPage-Button-create'
             ));
@@ -805,7 +806,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.setState({isRunning: false, stepIndex: 0});
             this?.helpers?.reset(true);
         } else {
-            if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
+            if (step.target === '.qa-GroupsDrawer-addGroup' && useMediaQuery(this.props.theme.breakpoints.down('sm'))) {
                 // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
@@ -833,7 +834,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         };
                         this.props.users.users.push(fakeUser);
                     }
-                } else if (type === 'step:after' && isWidthDown('sm', this.props.width)) {
+                } else if (type === 'step:after' && useMediaQuery(this.props.theme.breakpoints.down('sm'))) {
                     this.toggleDrawer();
                 }
             } else if (step.target === '.qa-UserHeader-checkbox' && type === 'tooltip') {
@@ -853,7 +854,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     private handleJoyride() {
-        if (this.state.drawerOpen && isWidthDown('sm', this.props.width)) {
+        if (this.state.drawerOpen && useMediaQuery(this.props.theme.breakpoints.down('sm'))) {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
@@ -868,7 +869,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         const {colors} = this.props.theme.eventkit;
         const {classes} = this.props;
         const {steps, isRunning} = this.state;
-        const smallViewport = isWidthDown('sm', this.props.width);
+        const smallViewport = useMediaQuery(this.props.theme.breakpoints.down('sm'));
 
         const tourButton = (
             <ButtonBase

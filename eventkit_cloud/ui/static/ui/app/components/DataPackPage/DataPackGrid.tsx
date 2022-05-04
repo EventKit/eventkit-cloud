@@ -4,6 +4,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
 import { Breakpoint } from '@mui/material/styles';
 import {useEffect, useState} from "react";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -34,16 +35,16 @@ export function DataPackGrid(props: Props) {
     }, [scrollbar]);
 
     function getColumns() {
-        if (!isWidthUp('md', props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('md'))) {
             return 2;
-        } else if (isWidthUp('xl', props.width)) {
+        } else if (useMediaQuery(this.props.theme.breakpoints.up('xl'))) {
             return 4;
         }
         return 3;
     }
 
 
-    const spacing = isWidthUp('sm', props.width) ? '10px' : '2px';
+    const spacing = useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '10px' : '2px';
     const styles = {
         root: {
             display: 'flex',
@@ -73,7 +74,7 @@ export function DataPackGrid(props: Props) {
                     className="qa-DataPackGrid-ImageList"
                     rowHeight="auto"
                     style={styles.gridList}
-                    gap={isWidthUp('md', props.width) ? 7 : 2}
+                    gap={useMediaQuery(this.props.theme.breakpoints.up('md')) ? 7 : 2}
                     cols={getColumns()}
                 >
                     {props.runIds.map((id, index) => (

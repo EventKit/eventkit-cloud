@@ -8,6 +8,7 @@ import ImageList from '@mui/material/ImageList';
 import Paper from '@mui/material/Paper';
 import NotificationGridItem from './NotificationGridItem';
 import { markAllNotificationsAsRead } from '../../actions/notificationsActions';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -32,17 +33,18 @@ export class NotificationsDropdown extends Component {
             root: {
                 position: 'absolute',
                 top: '80px',
-                left: isWidthUp('md', width) ? '-2px' : '-67px',
+                left: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '-2px' : '-67px',
                 width: isWidthUp('md', width) ? 'auto' : 'calc(100vw - 6px)',
+                width: useMediaQuery(this.props.theme.breakpoints.up('md')) ? 'auto' : 'calc(100vw - 6px)',
                 zIndex: '100',
                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                transformOrigin: isWidthUp('md', width) ? '37px -21px' : '101px -21px',
+                transformOrigin: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '37px -21px' : '101px -21px',
                 ...this.props.style,
             },
             pointer: {
                 position: 'absolute',
                 top: '-12px',
-                left: isWidthUp('md', width) ? '25px' : '89px',
+                left: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '25px' : '89px',
                 width: '25px',
                 height: '25px',
                 background: colors.white,
@@ -50,14 +52,14 @@ export class NotificationsDropdown extends Component {
                 borderTopRightRadius: '3px',
             },
             paper: {
-                width: isWidthUp('md', width) ? '633px' : '100%',
-                paddingBottom: isWidthUp('md', width) ? '24px' : '18px',
+                width: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '633px' : '100%',
+                paddingBottom: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '24px' : '18px',
                 color: colors.black,
             },
             header: {
                 display: 'flex',
                 alignItems: 'center',
-                padding: isWidthUp('md', width) ? '28px 28px 20px' : '18px 18px 18px',
+                padding: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '28px 28px 20px' : '18px 18px 18px',
             },
             headerTitle: {
                 fontSize: '22px',
@@ -71,7 +73,7 @@ export class NotificationsDropdown extends Component {
             },
             gridList: {
                 width: '100%',
-                padding: isWidthUp('md', width) ? '0 18px' : '0 4px',
+                padding: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '0 18px' : '0 4px',
             },
             gridItem: {
                 padding: '10px',
@@ -85,18 +87,18 @@ export class NotificationsDropdown extends Component {
                 color: colors.text_primary,
             },
             viewAllContainer: {
-                marginTop: isWidthUp('md', width) ? '24px' : '18px',
+                marginTop: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '24px' : '18px',
                 textAlign: 'center',
             },
             viewAll: {
                 color: colors.primary,
-                fontSize: isWidthUp('md', width) ? '22px' : '18px',
+                fontSize: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '22px' : '18px',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
             },
         };
 
-        const maxNotifications = isWidthUp('md', width) ? 10 : 8;
+        const maxNotifications = useMediaQuery(this.props.theme.breakpoints.up('md')) ? 10 : 8;
         const notifications = this.props.notifications.notificationsSorted.slice(0, maxNotifications);
 
         let body = (

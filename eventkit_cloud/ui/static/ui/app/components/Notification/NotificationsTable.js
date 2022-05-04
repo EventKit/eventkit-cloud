@@ -10,6 +10,7 @@ import CheckboxIcon from '@mui/icons-material/CheckBox';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import NotificationsTableItem from './NotificationsTableItem';
 import NotificationsTableMenu from './NotificationsTableMenu';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -115,7 +116,7 @@ export class NotificationsTable extends Component {
         };
 
         let optionsWidth = '60px';
-        if (isWidthUp('xl', width)) optionsWidth = '435px';
+        if (useMediaQuery(this.props.theme.breakpoints.up('xl'))) optionsWidth = '435px';
 
         styles = {
             ...styles,
@@ -133,11 +134,11 @@ export class NotificationsTable extends Component {
             dateHeaderColumn: {
                 ...styles.cell,
                 textAlign: 'center',
-                width: isWidthUp('md', width) ? '200px' : '150px',
+                width: useMediaQuery(this.props.theme.breakpoints.up('md')) ? '200px' : '150px',
             },
             optionsHeaderColumn: {
                 ...styles.cell,
-                textAlign: isWidthUp('xl', width) ? 'center' : 'right',
+                textAlign: useMediaQuery(this.props.theme.breakpoints.up('xl')) ? 'center' : 'right',
                 width: optionsWidth,
                 padding: '0 15px 0 0',
             },
@@ -210,7 +211,7 @@ export class NotificationsTable extends Component {
                                 onMarkAsUnread={this.props.onMarkAsUnread}
                                 onRemove={this.props.onRemove}
                                 onView={this.props.onView}
-                                fullSize={isWidthUp('xl', width)} // trigger component update on resize
+                                fullSize={useMediaQuery(this.props.theme.breakpoints.up('xl'))} // trigger component update on resize
                             />
                         ))}
                     </TableBody>

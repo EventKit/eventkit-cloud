@@ -1,10 +1,14 @@
-import { CircularProgress, Typography, withTheme } from '@material-ui/core';
+import CircularProgress from '@mui/material/CircularProgress';
+import { Typography } from "@mui/material";
 import { useEffect, useState } from 'react';
-import { isWidthUp } from '@material-ui/core/withWidth';
-import withWidth from '@material-ui/core/withWidth/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import { Breakpoint } from '@mui/material/styles';
 import { formatMegaBytes, getDuration } from '../../utils/generic';
 import InfoDialog from '../Dialog/InfoDialog';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import withTheme from '@mui/styles/withTheme';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     show: boolean;
@@ -27,7 +31,7 @@ function EstimateLabel(props: Props) {
         return Object.keys(exportInfo.providers).length > 0;
     }
 
-    const isSmallScreen = () => !isWidthUp('sm', props.width);
+    const isSmallScreen = () => !useMediaQuery(this.props.theme.breakpoints.up('sm'));
 
     function haveUnknownEstimate() {
         const providerSlugs = exportInfo.providers.map((provider) => provider.slug);

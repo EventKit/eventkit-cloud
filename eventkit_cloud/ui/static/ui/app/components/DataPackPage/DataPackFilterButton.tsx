@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { Theme, Breakpoint } from '@mui/material/styles';
 import withTheme from '@mui/styles/withTheme';
 import Button from '@mui/material/Button';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -22,9 +23,9 @@ export class DataPackFilterButton extends Component<Props, {}> {
                 height: '30px',
                 lineHeight: '15px',
                 minWidth: 'none',
-                width: isWidthUp('sm', this.props.width) ? '90px' : '40px',
+                width: useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '90px' : '40px',
                 color: colors.primary,
-                fontSize: isWidthUp('sm', this.props.width) ? '12px' : '10px',
+                fontSize: useMediaQuery(this.props.theme.breakpoints.up('sm')) ? '12px' : '10px',
                 padding: '0px',
             },
         };

@@ -3,6 +3,7 @@ import { Theme, Breakpoint } from '@mui/material/styles';
 import withTheme from '@mui/styles/withTheme';
 import Paper from '@mui/material/Paper';
 import ErrorMessage from "./ErrorMessage";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -17,7 +18,7 @@ export class LoginErrorPage extends Component<Props, {}> {
     render() {
         const { colors, images } = this.props.theme.eventkit;
 
-        const mobile = isWidthDown('sm', this.props.width);
+        const mobile = useMediaQuery(this.props.theme.breakpoints.down('sm'));
         const styles = {
             wholeDiv: {
                 width: '100%',

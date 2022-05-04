@@ -32,6 +32,7 @@ import history from "../../utils/history";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {getJobDetails} from "../../utils/generic"
 import {DataCartProvider} from "./context/DataCart";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -208,7 +209,7 @@ export class StatusDownload extends Component<Props, State> {
     }
 
     private getMarginPadding() {
-        if (!isWidthUp('md', this.props.width)) {
+        if (!useMediaQuery(this.props.theme.breakpoints.up('md'))) {
             return '0px';
         }
         return '30px';

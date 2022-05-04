@@ -6,6 +6,7 @@ import { Tab, Tabs } from '@mui/material';
 import AoiInfobar from './AoiInfobar';
 import { MapQueryDisplay } from './MapQueryDisplay';
 import { MapLayer } from './CreateExport';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -142,7 +143,7 @@ export class MapDisplayBar extends Component<Props, State> {
         return (
             <div className="qa-MapDisplayBar">
                 <div className={classes.wrapper} style={{ bottom: (aoiTabVisible && poiTabVisible) ? '70px' : '40px' }}>
-                    {isWidthUp('sm', this.props.width)
+                    {useMediaQuery(this.props.theme.breakpoints.up('sm'))
                     && (
                         <div className={`qa-qa-MapDisplayBar-container ${classes.infobar} ${classes.large}`}>
                             <AoiInfobar
@@ -159,7 +160,7 @@ export class MapDisplayBar extends Component<Props, State> {
                             />
                         </div>
                     )}
-                    {!isWidthUp('sm', this.props.width)
+                    {!useMediaQuery(this.props.theme.breakpoints.up('sm'))
                     && (
                         <div className={`qa-qa-MapDisplayBar-container ${classes.infobar}`}>
                             {(aoiTabVisible && poiTabVisible)
