@@ -1,12 +1,7 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import { InvalidDrawWarning } from '../../components/MapTools/InvalidDrawWarning';
 
 describe('InvalidDrawWarning component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         show: false,

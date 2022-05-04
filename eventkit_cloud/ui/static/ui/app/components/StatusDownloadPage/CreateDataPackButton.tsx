@@ -1,17 +1,19 @@
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 import * as React from "react";
 import InfoDialog from "../Dialog/InfoDialog";
-import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
-import CloudDownload from "@material-ui/icons/CloudDownload";
+import { Theme } from "@mui/material/styles";
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import CloudDownload from "@mui/icons-material/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {binaryPrefixConversion, formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
 import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers} from "../../utils/hooks/hooks";
-import {CircularProgress, IconButton} from "@material-ui/core";
-import CloseIcon from "@material-ui/icons/Close";
-import Popover from "@material-ui/core/Popover";
-import AlertError from "@material-ui/icons/Error";
+import {CircularProgress, IconButton} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import Popover from "@mui/material/Popover";
+import AlertError from "@mui/icons-material/Error";
 import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
 import {MatomoClickTracker} from "../MatomoHandler";
@@ -478,7 +480,7 @@ export function CreateDataPackButton(props: Props) {
                             className={classes.iconButton}
                             type="button"
                             onClick={handlePopoverClose}
-                        >
+                            size="large">
                             <CloseIcon/>
                         </IconButton>
                         <div style={{marginTop: '5px', fontSize: '20px'}}>
@@ -511,7 +513,7 @@ export function CreateDataPackButton(props: Props) {
                             className={classes.iconButton}
                             type="button"
                             onClick={handlePopoverClose}
-                        >
+                            size="large">
                             <CloseIcon/>
                         </IconButton>
                         <div style={{marginTop: '5px'}}>

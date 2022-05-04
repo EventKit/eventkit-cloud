@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import TextField from '@material-ui/core/TextField';
-import Slider from '@material-ui/core/Slider';
-import Clear from '@material-ui/icons/Clear';
+import TextField from '@mui/material/TextField';
+import Slider from '@mui/material/Slider';
+import Clear from '@mui/icons-material/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
 import {JobValidationProvider} from "../../components/CreateDataPack/context/JobValidation";

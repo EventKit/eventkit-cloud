@@ -1,12 +1,7 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 describe('ZoomLevelLabel component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         zoomLevel: 2,

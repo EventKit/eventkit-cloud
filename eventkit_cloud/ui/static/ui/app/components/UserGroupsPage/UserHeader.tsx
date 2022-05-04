@@ -1,11 +1,12 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import MenuItem from '@material-ui/core/MenuItem';
-import Person from '@material-ui/icons/Person';
-import Sort from '@material-ui/icons/Sort';
-import DropDown from '@material-ui/icons/ArrowDropDown';
-import Checked from '@material-ui/icons/CheckBox';
-import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import MenuItem from '@mui/material/MenuItem';
+import Person from '@mui/icons-material/Person';
+import Sort from '@mui/icons-material/Sort';
+import DropDown from '@mui/icons-material/ArrowDropDown';
+import Checked from '@mui/icons-material/CheckBox';
+import Unchecked from '@mui/icons-material/CheckBoxOutlineBlank';
 import IconMenu from '../common/IconMenu';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 

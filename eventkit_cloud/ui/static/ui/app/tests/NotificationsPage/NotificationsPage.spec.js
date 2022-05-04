@@ -1,4 +1,4 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import PageLoading from '../../components/common/PageLoading';
 import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
@@ -36,11 +36,6 @@ const mockNotifications = {
 };
 
 describe('NotificationsPage component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

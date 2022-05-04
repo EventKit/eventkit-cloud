@@ -1,16 +1,11 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {Tab, Tabs} from "@material-ui/core";
-import {createShallow} from "@material-ui/core/test-utils";
+import {Tab, Tabs} from "@mui/material";
+import { shallow } from 'enzyme';
 import {GroupsHeaderTabs} from "../../components/UserGroupsPage/GroupsHeaderTabs";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
+import FormControlLabel from "@mui/material/FormControlLabel";
 
 describe('GroupPanelBody component', () => {
-    let shallow: any;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const handleChangeSpy = jest.fn()
     const getProps = () => ({

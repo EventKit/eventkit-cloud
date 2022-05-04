@@ -1,8 +1,8 @@
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
-import ArrowDropDown from '@material-ui/icons/ArrowDropDown';
-import { PopoverOrigin } from '@material-ui/core/Popover';
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
+import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
+import { PopoverOrigin } from '@mui/material/Popover';
 
 export interface Props {
     className?: string;
@@ -87,7 +87,6 @@ export class DropDownMenu extends React.Component<Props, State> {
                     open={Boolean(this.state.anchor)}
                     onClose={this.handleClose}
                     MenuListProps={{ style: { padding: '5px 0px' }, ...this.props.MenuListProps }}
-                    getContentAnchorEl={null}
                     anchorOrigin={this.props.anchorOrigin}
                     transformOrigin={this.props.transformOrigin}
                 >

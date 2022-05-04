@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import MenuItem from '@material-ui/core/MenuItem';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import FlagIcon from '@material-ui/icons/Flag';
-import CloseIcon from '@material-ui/icons/Close';
+import withTheme from '@mui/styles/withTheme';
+import MenuItem from '@mui/material/MenuItem';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import FlagIcon from '@mui/icons-material/Flag';
+import CloseIcon from '@mui/icons-material/Close';
 import IconMenu from '../common/IconMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import {

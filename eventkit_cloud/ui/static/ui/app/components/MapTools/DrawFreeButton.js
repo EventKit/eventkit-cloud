@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import ContentCreate from '@material-ui/icons/Create';
-import ContentClear from '@material-ui/icons/Clear';
+import withTheme from '@mui/styles/withTheme';
+import ContentCreate from '@mui/icons-material/Create';
+import ContentClear from '@mui/icons-material/Clear';
 
 export class DrawFreeButton extends Component {
     constructor(props) {

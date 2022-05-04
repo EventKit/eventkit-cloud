@@ -1,18 +1,13 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import moment from 'moment';
-import TableRow from '@material-ui/core/TableRow';
+import TableRow from '@mui/material/TableRow';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationsTableItem } from '../../components/Notification/NotificationsTableItem';
 
 describe('NotificationsTableItem component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

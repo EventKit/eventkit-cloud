@@ -1,7 +1,7 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import moment from 'moment';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import { NotificationGridItem } from '../../components/Notification/NotificationGridItem';
 import NotificationMenu from '../../components/Notification/NotificationMenu';
 import NotificationIcon from '../../components/Notification/NotificationIcon';
@@ -11,11 +11,6 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 describe('NotificationGridItem component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

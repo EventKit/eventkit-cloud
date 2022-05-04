@@ -1,20 +1,15 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
-import Checked from '@material-ui/icons/CheckBox';
-import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
-import Dialog from '@material-ui/core/Dialog';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Checked from '@mui/icons-material/CheckBox';
+import Unchecked from '@mui/icons-material/CheckBoxOutlineBlank';
+import Dialog from '@mui/material/Dialog';
 import Indeterminate from '../../components/icons/IndeterminateIcon';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 import { AddMembersDialog } from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 
 describe('AddMembersDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         show: true,

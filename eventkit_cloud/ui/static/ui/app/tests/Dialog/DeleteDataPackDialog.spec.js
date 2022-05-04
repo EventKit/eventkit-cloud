@@ -1,13 +1,8 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import { DeleteDataPackDialog } from '../../components/Dialog/DeleteDataPackDialog';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
 
 describe('DeleteDataPackDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         show: true,

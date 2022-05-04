@@ -1,6 +1,6 @@
 import { shallow } from 'enzyme';
 import { Link } from 'react-router-dom';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import { DataPackLinkButton } from '../../components/DataPackPage/DataPackLinkButton';
 
 const getProps = () => ({

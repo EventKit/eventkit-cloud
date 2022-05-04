@@ -1,6 +1,6 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
 
 const mockNotifications = {
@@ -35,11 +35,6 @@ const mockNotifications = {
 describe('NotificationsDropdown component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

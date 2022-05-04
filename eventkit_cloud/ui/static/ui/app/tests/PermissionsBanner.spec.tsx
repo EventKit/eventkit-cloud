@@ -1,9 +1,9 @@
 import * as sinon from 'sinon';
 import PermissionsBanner from "../components/PermissionsBanner";
-import {ButtonBase, CssBaseline, Grid, Paper} from "@material-ui/core";
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpandLessIcon from '@material-ui/icons/ExpandLess';
-import CloseIcon from '@material-ui/icons/Close';
+import {ButtonBase, CssBaseline, Grid, Paper} from "@mui/material";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CloseIcon from '@mui/icons-material/Close';
 import {mount} from "enzyme";
 import {act} from "react-dom/test-utils";
 

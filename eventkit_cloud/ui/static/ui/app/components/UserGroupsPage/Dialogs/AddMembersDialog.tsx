@@ -1,18 +1,21 @@
 import * as React from 'react';
-import { withStyles, Theme, withTheme, createStyles } from '@material-ui/core/styles';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
-import Checked from '@material-ui/icons/CheckBox';
-import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
-import Clear from '@material-ui/icons/Clear';
-import ArrowDown from '@material-ui/icons/ArrowDropDown';
-import ArrowUp from '@material-ui/icons/ArrowDropUp';
+import { Theme } from '@mui/material/styles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import createStyles from '@mui/styles/createStyles';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Checked from '@mui/icons-material/CheckBox';
+import Unchecked from '@mui/icons-material/CheckBoxOutlineBlank';
+import ButtonBase from '@mui/material/ButtonBase';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Clear from '@mui/icons-material/Clear';
+import ArrowDown from '@mui/icons-material/ArrowDropDown';
+import ArrowUp from '@mui/icons-material/ArrowDropUp';
 import Indeterminate from '../../icons/IndeterminateIcon';
 import CustomTextField from '../../common/CustomTextField';
 import CustomScrollbar from '../../common/CustomScrollbar';
@@ -441,7 +444,7 @@ export class AddMembersDialog extends React.Component<Props, State> {
                 style={{ zIndex: 1501 }}
                 maxWidth={false}
             >
-                <DialogTitle disableTypography className={classes.title}>
+                <DialogTitle className={classes.title}>
                     <div className="qa-AddMembersDialog-title">
                         <strong>ADD TO EXISTING GROUPS</strong>
                         <Clear className={classes.clear} color="primary" onClick={this.props.onClose} />

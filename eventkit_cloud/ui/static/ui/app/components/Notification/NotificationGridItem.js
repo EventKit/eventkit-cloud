@@ -1,15 +1,17 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import withTheme from '@mui/styles/withTheme';
 import moment from 'moment';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMessage from './NotificationMessage';
 import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export class NotificationGridItem extends Component {
     constructor(props) {

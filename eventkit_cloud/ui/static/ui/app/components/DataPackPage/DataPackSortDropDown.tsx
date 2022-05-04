@@ -1,6 +1,6 @@
 // import PropTypes from 'prop-types';
 import { Component } from 'react';
-import MenuItem from '@material-ui/core/MenuItem';
+import MenuItem from '@mui/material/MenuItem';
 import DropDownMenu from '../common/DropDownMenu';
 
 const NAME_LOOKUP = {

@@ -1,24 +1,25 @@
 import * as React from 'react';
-import {withTheme, withStyles, createStyles, Theme} from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import MenuItem from '@material-ui/core/MenuItem';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import IconButton from '@material-ui/core/IconButton';
-import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import Warning from '@material-ui/icons/Warning';
-import Check from '@material-ui/icons/Check';
-import CloudDownload from '@material-ui/icons/CloudDownload';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import MenuItem from '@mui/material/MenuItem';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import ArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import ArrowUp from '@mui/icons-material/KeyboardArrowUp';
+import Warning from '@mui/icons-material/Warning';
+import Check from '@mui/icons-material/Check';
+import CloudDownload from '@mui/icons-material/CloudDownload';
 import IconMenu from '../common/IconMenu';
 import ErrorDialog from './ErrorDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
 import {useEffect, useState} from "react";
 import {useAsyncRequest} from "../../utils/hooks/api";
@@ -26,10 +27,13 @@ import {getCookie} from "../../utils/generic";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 import {useDataCartContext} from "./context/DataCart";
 import {useRunContext} from "./context/RunFile";
-import Popover from "@material-ui/core/Popover";
-import {Link} from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
+import Popover from "@mui/material/Popover";
+import {Link} from "@mui/material";
+import Typography from "@mui/material/Typography";
 import {MatomoClickTracker} from "../MatomoHandler";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const taskPaddingLeft = '44';
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -420,55 +424,53 @@ export function ProviderRow(props: ProviderRowProps) {
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url') || props.restricted) {
             if (props.restricted) {
-                return (
-                    <>
-                        <Popover
-                            {...{
-                                PaperProps: {
-                                    style: {padding: '16px', width: '30%'}
-                                },
-                                open: !!anchor,
-                                anchorEl: anchor,
-                                onClose: () => setAnchor(null),
-                                anchorOrigin: {
-                                    vertical: 'top',
-                                    horizontal: 'center',
-                                },
-                                transformOrigin: {
-                                    vertical: 'bottom',
-                                    horizontal: 'center',
-                                },
-                            }}
-                        >
-                            <div style={{display: 'contents' as 'contents'}}>
-                                You must agree to the domestic imagery policy to download this file.
-                                <div style={{textAlign: 'center', marginTop: '8px'}}>
-                                    <Link
-                                        onClick={() => {
-                                            props.openDialog();
-                                            setAnchor(null);
-                                        }}
-                                    >
-                                        <Typography variant="h6" gutterBottom className={classes.title}>
-                                            See domestic imagery policy
-                                        </Typography>
-                                    </Link>
-                                </div>
+                return <>
+                    <Popover
+                        {...{
+                            PaperProps: {
+                                style: {padding: '16px', width: '30%'}
+                            },
+                            open: !!anchor,
+                            anchorEl: anchor,
+                            onClose: () => setAnchor(null),
+                            anchorOrigin: {
+                                vertical: 'top',
+                                horizontal: 'center',
+                            },
+                            transformOrigin: {
+                                vertical: 'bottom',
+                                horizontal: 'center',
+                            },
+                        }}
+                    >
+                        <div style={{display: 'contents' as 'contents'}}>
+                            You must agree to the domestic imagery policy to download this file.
+                            <div style={{textAlign: 'center', marginTop: '8px'}}>
+                                <Link
+                                    onClick={() => {
+                                        props.openDialog();
+                                        setAnchor(null);
+                                    }}
+                                >
+                                    <Typography variant="h6" gutterBottom className={classes.title}>
+                                        See domestic imagery policy
+                                    </Typography>
+                                </Link>
                             </div>
-                        </Popover>
-                        <IconButton onClick={e => handlePopoverOpen(e)}>
-                            <Warning
-                                className="qa-ProviderRow-Warning-taskStatus"
-                                style={{
-                                    marginLeft: '10px',
-                                    fill: colors.running,
-                                    verticalAlign: 'middle',
-                                }}
+                        </div>
+                    </Popover>
+                    <IconButton onClick={e => handlePopoverOpen(e)} size="large">
+                        <Warning
+                            className="qa-ProviderRow-Warning-taskStatus"
+                            style={{
+                                marginLeft: '10px',
+                                fill: colors.running,
+                                verticalAlign: 'middle',
+                            }}
 
-                            />
-                        </IconButton>
-                    </>
-                );
+                        />
+                    </IconButton>
+                </>;
             }
             return (
                 <CloudDownload
@@ -833,7 +835,7 @@ export function ProviderRow(props: ProviderRowProps) {
                                 className="qa-open-arrow"
                                 disableTouchRipple
                                 onClick={handleToggle}
-                            >
+                                size="large">
                                 {openTable ?
                                     <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary"/>
                                     :

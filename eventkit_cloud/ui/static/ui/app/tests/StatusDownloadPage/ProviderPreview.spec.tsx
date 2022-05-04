@@ -16,14 +16,14 @@ jest.mock('react-swipeable-views', () => {
     );
 });
 
-jest.mock('@material-ui/icons/KeyboardArrowRight', () => {
+jest.mock('@mui/icons-material/KeyboardArrowRight', () => {
     const React = require('react');
     return (props) => (
         <button>rightarrow</button>
     );
 })
 
-jest.mock('@material-ui/icons/KeyboardArrowLeft', () => {
+jest.mock('@mui/icons-material/KeyboardArrowLeft', () => {
     const React = require('react');
     return (props) => (
         <button>leftarrow</button>

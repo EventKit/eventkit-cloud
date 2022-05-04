@@ -1,4 +1,4 @@
-import {IconButton, Popover} from "@material-ui/core";
+import {IconButton, Popover} from "@mui/material";
 import {mount} from "enzyme";
 import {act} from "react-dom/test-utils";
 import {NotificationIconPopover} from "../../components/DataPackPage/NotificationIconPopover";

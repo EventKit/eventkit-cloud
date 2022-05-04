@@ -1,12 +1,12 @@
 import * as React from 'react';
 
-import Popover from '@material-ui/core/Popover';
-import WarningIcon from '@material-ui/icons/Warning';
+import Popover from '@mui/material/Popover';
+import WarningIcon from '@mui/icons-material/Warning';
 import { useState } from 'react';
-import {
-    createStyles, IconButton, Theme, withStyles,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import { IconButton, Theme } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import CloseIcon from '@mui/icons-material/Close';
 import theme from '../../styles/eventkit_theme';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -77,7 +77,7 @@ export function NotificationIconPopover(props: Props) {
             <IconButton
                 className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
-            >
+                size="large">
                 <WarningIcon style={{ color: theme.eventkit.colors.running }} />
             </IconButton>
             <Popover
@@ -101,7 +101,7 @@ export function NotificationIconPopover(props: Props) {
                         className={classes.iconBtn}
                         type="button"
                         onClick={handlePopoverClose}
-                    >
+                        size="large">
                         <CloseIcon />
                     </IconButton>
                     {props.view === 'groups'

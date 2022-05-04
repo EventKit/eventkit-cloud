@@ -1,12 +1,13 @@
-import {
-    withTheme, Theme, withStyles, createStyles,
-} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 import numeral from 'numeral';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import AlertWarning from '@material-ui/icons/Warning';
-import Clear from '@material-ui/icons/Clear';
-import Slider from '@material-ui/core/Slider';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import AlertWarning from '@mui/icons-material/Warning';
+import Clear from '@mui/icons-material/Clear';
+import Slider from '@mui/material/Slider';
 import { useState } from 'react';
 import AlertCallout from './AlertCallout';
 import { getSqKmString } from '../../utils/generic';

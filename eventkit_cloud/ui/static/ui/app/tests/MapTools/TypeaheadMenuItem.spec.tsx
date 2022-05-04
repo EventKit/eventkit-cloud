@@ -1,15 +1,10 @@
-import { createShallow } from '@material-ui/core/test-utils';
-import ActionRoom from '@material-ui/icons/Room';
+import { shallow } from 'enzyme';
+import ActionRoom from '@mui/icons-material/Room';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
 
 describe('TypeaheadMenuItem component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         result: {},

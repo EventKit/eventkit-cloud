@@ -1,5 +1,7 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+
+import withTheme from '@mui/styles/withTheme';
 
 export interface Props {
     title: string;

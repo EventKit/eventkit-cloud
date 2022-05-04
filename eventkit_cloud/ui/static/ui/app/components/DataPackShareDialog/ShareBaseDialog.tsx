@@ -1,19 +1,21 @@
 import { Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import Clear from '@material-ui/icons/Clear';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import Clear from '@mui/icons-material/Clear';
 import CustomScrollbar from '../common/CustomScrollbar';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import BaseDialog from "../Dialog/BaseDialog";
-import Divider from "@material-ui/core/Divider";
+import Divider from "@mui/material/Divider";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
-import Warning from "@material-ui/icons/Warning";
+import Warning from "@mui/icons-material/Warning";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     className?: string;
@@ -149,37 +151,35 @@ export class ShareBaseDialog extends Component<Props, {}> {
             </div>
         );
 
-        return (
-            <>
-                <Dialog
-                    className="qa-ShareBaseDialog-Dialog"
-                    style={{top: '50px'}}
-                    open={this.props.show}
-                    onClose={this.props.onClose}
-                    PaperProps={{style: styles.dialog}}
-                >
-                    <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
-                    <DialogContent style={styles.body}>
-                        <CustomScrollbar
-                            style={{height: `calc(100vh - ${marginSubtract + 76 + 80}px)`}}
-                        >
-                            {this.props.children}
-                        </CustomScrollbar>
-                    </DialogContent>
-                    <DialogActions style={styles.actions}>{actions}</DialogActions>
-                </Dialog>
-                {this.props.permissionState.error &&
-                    <BaseDialog
-                        className="qa-GroupsBody-BaseDialog-error"
-                        show={!!this.props.permissionState.error}
-                        title="ERROR"
-                        onClose={this.clearError}
+        return <>
+            <Dialog
+                className="qa-ShareBaseDialog-Dialog"
+                style={{top: '50px'}}
+                open={this.props.show}
+                onClose={this.props.onClose}
+                PaperProps={{style: styles.dialog}}
+            >
+                <DialogTitle style={styles.title}>{title}</DialogTitle>
+                <DialogContent style={styles.body}>
+                    <CustomScrollbar
+                        style={{height: `calc(100vh - ${marginSubtract + 76 + 80}px)`}}
                     >
-                        {errorMessages}
-                    </BaseDialog>
-                }
-            </>
-        );
+                        {this.props.children}
+                    </CustomScrollbar>
+                </DialogContent>
+                <DialogActions style={styles.actions}>{actions}</DialogActions>
+            </Dialog>
+            {this.props.permissionState.error &&
+                <BaseDialog
+                    className="qa-GroupsBody-BaseDialog-error"
+                    show={!!this.props.permissionState.error}
+                    title="ERROR"
+                    onClose={this.clearError}
+                >
+                    {errorMessages}
+                </BaseDialog>
+            }
+        </>;
     }
 }
 

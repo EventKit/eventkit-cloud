@@ -1,10 +1,13 @@
 import { Component } from 'react';
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import Checkbox from '@material-ui/core/Checkbox';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
 import {connect} from "react-redux";
 import {updateExportOptions} from '../../actions/datacartActions';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import IndeterminateCheckBoxIcon from '@mui/icons-material/IndeterminateCheckBox';
 import {Compatibility} from '../../utils/enums';
 import {IncompatibilityInfo} from "./ExportInfo";
 import {getDefaultFormat} from "../../utils/generic";
@@ -67,13 +70,13 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     infoItem: {
         display: 'flex',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'block',
         },
         '& strong': {
             marginRight: '5px',
             whiteSpace: 'nowrap',
-            [theme.breakpoints.down('sm')]: {
+            [theme.breakpoints.down('md')]: {
                 whiteSpace: 'unset',
             },
         }

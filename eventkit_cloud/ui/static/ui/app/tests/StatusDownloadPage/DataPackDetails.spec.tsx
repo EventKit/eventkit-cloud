@@ -1,20 +1,15 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import Table from '@material-ui/core/Table';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import Button from '@material-ui/core/Button';
-import CloudDownload from '@material-ui/icons/CloudDownload';
+import { shallow } from 'enzyme';
+import Table from '@mui/material/Table';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
+import CloudDownload from '@mui/icons-material/CloudDownload';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 import ProviderRow from '../../components/StatusDownloadPage/ProviderRow';
 import {ProviderRowRegionWrap} from "../../components/StatusDownloadPage/ProviderRowRegionWrap";
 
 describe('DataPackDetails component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const providerTasks = [
         {

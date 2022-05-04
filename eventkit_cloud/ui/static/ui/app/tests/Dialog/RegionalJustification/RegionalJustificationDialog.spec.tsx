@@ -30,7 +30,7 @@ jest.mock(
     () => () => 'dropdown'
 );
 // Replace the spinner component to make it easier to find during testing
-jest.mock('@material-ui/core/CircularProgress', () => {
+jest.mock('@mui/material/CircularProgress', () => {
     // eslint-disable-next-line global-require,no-shadow
     const React = require('react');
     // eslint-disable-next-line react/prop-types

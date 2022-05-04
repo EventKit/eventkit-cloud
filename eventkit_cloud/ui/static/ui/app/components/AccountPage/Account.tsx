@@ -1,9 +1,10 @@
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import Joyride from 'react-joyride';
-import Help from '@material-ui/icons/Help';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import Help from '@mui/icons-material/Help';
+import ButtonBase from '@mui/material/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import UserInfo from './UserInfo';
 import LicenseInfo from './LicenseInfo';

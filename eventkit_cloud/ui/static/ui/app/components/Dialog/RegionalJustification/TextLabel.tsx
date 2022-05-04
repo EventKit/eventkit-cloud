@@ -1,5 +1,7 @@
-import {createStyles, Theme, withStyles} from "@material-ui/core/styles";
-import {TextField} from "@material-ui/core";
+import { Theme } from "@mui/material/styles";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import {TextField} from "@mui/material";
 
 
 interface TextLabelProps {
@@ -48,7 +50,7 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     entryRow: {
         display: 'flex',
         flexWrap: 'wrap',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'block',
         },
     },
@@ -58,7 +60,7 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     right: {
         flexGrow: 5,
         marginLeft: '25px',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             margin: '0px',
         },
     },

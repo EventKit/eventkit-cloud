@@ -1,7 +1,8 @@
 import * as React from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import Popover from '@material-ui/core/Popover';
-import Edit from '@material-ui/icons/Edit';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Popover from '@mui/material/Popover';
+import Edit from '@mui/icons-material/Edit';
 import moment from 'moment';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';

@@ -2,7 +2,7 @@
 import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider, Theme, StyledEngineProvider, createTheme, adaptV4Theme } from '@mui/material/styles';
 import Loadable from 'react-loadable';
 import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
@@ -11,7 +11,7 @@ import configureStore from './store/configureStore';
 import ekTheme from './styles/eventkit_theme';
 import PageLoading from './components/common/PageLoading';
 
-const theme = createMuiTheme(ekTheme);
+const theme = createTheme(adaptV4Theme(ekTheme));
 
 const Loading = (args) => {
     if (args.pastDelay) {
@@ -37,13 +37,15 @@ const Application = Loadable({
 
 render(
     <Provider store={store}>
-        <MuiThemeProvider theme={theme}>
-            <ConnectedRouter history={history}>
-                <div>
-                    <Route path="/" component={Application} />
-                </div>
-            </ConnectedRouter>
-        </MuiThemeProvider>
+        <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={theme}>
+                <ConnectedRouter history={history}>
+                    <div>
+                        <Route path="/" component={Application} />
+                    </div>
+                </ConnectedRouter>
+            </ThemeProvider>
+        </StyledEngineProvider>
     </Provider>,
     document.getElementById('root'),
 );

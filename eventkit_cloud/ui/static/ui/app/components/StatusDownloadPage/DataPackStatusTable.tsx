@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import CustomTableRow from '../common/CustomTableRow';
 import PermissionsData from './PermissionsData';
 import ExpirationData from './ExpirationData';

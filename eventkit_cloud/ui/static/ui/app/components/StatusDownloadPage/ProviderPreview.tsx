@@ -1,8 +1,11 @@
 import { Component } from 'react';
-import {IconButton} from '@material-ui/core';
-import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
-import {withTheme, withStyles, createStyles, Theme} from '@material-ui/core/styles';
+import {IconButton} from '@mui/material';
+import ArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
+import ArrowRight from '@mui/icons-material/KeyboardArrowRight';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 import SwipeableViews from 'react-swipeable-views';
 
 
@@ -111,7 +114,8 @@ export class ProviderPreview extends Component<Props, State> {
                     }}
                     onClick={(event) => {
                         this.nextStep()
-                    }}>
+                    }}
+                    size="large">
                     <ArrowLeft className={classes.iconStyle}/>
                 </IconButton>
                 <SwipeableViews index={step} onChangeIndex={index => {
@@ -139,13 +143,14 @@ export class ProviderPreview extends Component<Props, State> {
                     }}
                     onClick={(event) => {
                         this.previousStep()
-                    }}>
+                    }}
+                    size="large">
                     <ArrowRight className={classes.iconStyle}/>
                 </IconButton>
             </div>
         );
     };
-};
+}
 
 
 export default withTheme(withStyles(jss)(ProviderPreview));

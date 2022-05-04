@@ -1,16 +1,11 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
+import { shallow } from 'enzyme';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { LicenseRow } from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('LicenseRow component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         name: 'test name',

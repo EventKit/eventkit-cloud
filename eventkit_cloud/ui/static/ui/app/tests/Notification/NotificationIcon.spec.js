@@ -1,10 +1,10 @@
-import { createShallow } from '@material-ui/core/test-utils';
-import InfoIcon from '@material-ui/icons/Info';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import WarningIcon from '@material-ui/icons/Warning';
-import ErrorIcon from '@material-ui/icons/Error';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
+import { shallow } from 'enzyme';
+import InfoIcon from '@mui/icons-material/Info';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
+import ErrorIcon from '@mui/icons-material/Error';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { NotificationIcon } from '../../components/Notification/NotificationIcon';
 
 describe('NotificationIcon component', () => {
@@ -17,12 +17,6 @@ describe('NotificationIcon component', () => {
     const group = {
         name: 'Test',
     };
-
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getWrapper = (props) => (
         shallow(<NotificationIcon {...props} {...global.eventkit_test_props} />)

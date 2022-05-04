@@ -1,6 +1,8 @@
-import Select from '@material-ui/core/Select';
-import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
-import { MenuItem } from '@material-ui/core';
+import Select from '@mui/material/Select';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import { MenuItem } from '@mui/material';
 
 interface DropdownProps {
     enabled: boolean;

@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 
 import {shallow} from 'enzyme';
-import Help from '@material-ui/icons/Help';
-import Toolbar from '@material-ui/core/Toolbar';
+import Help from '@mui/icons-material/Help';
+import Toolbar from '@mui/material/Toolbar';
 import PageHeader from '../../components/common/PageHeader';
 import PageLoading from '../../components/common/PageLoading';
 import {DataPackPage} from '../../components/DataPackPage/DataPackPage';

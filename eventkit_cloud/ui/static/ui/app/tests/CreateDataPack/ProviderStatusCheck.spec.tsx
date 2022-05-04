@@ -1,11 +1,11 @@
 import * as sinon from 'sinon';
 import {mount} from 'enzyme';
-import AlertWarning from '@material-ui/icons/Warning';
-import AlertError from '@material-ui/icons/Error';
-import ActionDone from '@material-ui/icons/Done';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import AlertWarning from '@mui/icons-material/Warning';
+import AlertError from '@mui/icons-material/Error';
+import ActionDone from '@mui/icons-material/Done';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ProviderStatusCheck } from '../../components/CreateDataPack/ProviderStatusCheck';
-import {IconButton, Popover} from "@material-ui/core";
+import {IconButton, Popover} from "@mui/material";
 import {act} from "react-dom/test-utils";
 
 jest.mock('../../components/Dialog/BaseDialog', () => 'dialog');

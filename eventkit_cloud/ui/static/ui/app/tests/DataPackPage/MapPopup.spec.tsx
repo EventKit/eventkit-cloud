@@ -1,10 +1,10 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Card from '@material-ui/core/Card';
-import Clear from '@material-ui/icons/Clear';
-import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import Dot from '@material-ui/icons/FiberManualRecord';
+import Card from '@mui/material/Card';
+import Clear from '@mui/icons-material/Clear';
+import ArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import ArrowUp from '@mui/icons-material/KeyboardArrowUp';
+import Dot from '@mui/icons-material/FiberManualRecord';
 import { MapPopup } from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {

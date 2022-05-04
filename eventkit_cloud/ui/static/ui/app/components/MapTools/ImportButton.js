@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import FileFileUpload from '@material-ui/icons/CloudUpload';
-import ContentClear from '@material-ui/icons/Clear';
+import withTheme from '@mui/styles/withTheme';
+import FileFileUpload from '@mui/icons-material/CloudUpload';
+import ContentClear from '@mui/icons-material/Clear';
 
 export class ImportButton extends Component {
     constructor(props) {

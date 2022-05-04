@@ -1,9 +1,7 @@
 import { Component } from 'react';
-import {
-    withTheme, Theme,
-} from '@material-ui/core/styles';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import { Button } from '@material-ui/core';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import { Button } from '@mui/material';
 import * as PropTypes from 'prop-types';
 
 export interface Props {

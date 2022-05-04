@@ -1,16 +1,11 @@
 import * as sinon from 'sinon';
-import {createShallow} from '@material-ui/core/test-utils';
-import Button from '@material-ui/core/Button';
+import { shallow } from 'enzyme';
+import Button from '@mui/material/Button';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
 import {DataPackOptions} from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const providers = [{
         uid: '123',

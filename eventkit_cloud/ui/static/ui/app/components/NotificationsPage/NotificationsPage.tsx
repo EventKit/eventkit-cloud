@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import {connect} from 'react-redux';
-import {Theme, withTheme} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
-import Paper from '@material-ui/core/Paper';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import ImageList from '@mui/material/ImageList';
+import Paper from '@mui/material/Paper';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../common/CustomScrollbar';
@@ -12,7 +12,9 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../common/LoadButtons';
 import {clearNotifications, getNotifications} from '../../actions/notificationsActions';
-import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 interface Props {
     history: any;
@@ -202,11 +204,11 @@ export class NotificationsPage extends Component<Props, State> {
                                                     />
                                                 )
                                                 : (
-                                                    <GridList
+                                                    <ImageList
                                                         className="qa-NotificationsPage-Content-Notifications-Grid"
-                                                        cellHeight="auto"
+                                                        rowHeight="auto"
                                                         style={styles.gridList}
-                                                        spacing={2}
+                                                        gap={2}
                                                         cols={1}
                                                     >
                                                         {notifications.map(notification => (
@@ -216,7 +218,7 @@ export class NotificationsPage extends Component<Props, State> {
                                                                 history={this.props.history}
                                                             />
                                                         ))}
-                                                    </GridList>
+                                                    </ImageList>
                                                 )
                                             }
                                             <LoadButtons

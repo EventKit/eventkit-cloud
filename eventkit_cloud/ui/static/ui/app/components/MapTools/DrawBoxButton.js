@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import ImageCropSquare from '@material-ui/icons/CropSquare';
-import ContentClear from '@material-ui/icons/Clear';
+import withTheme from '@mui/styles/withTheme';
+import ImageCropSquare from '@mui/icons-material/CropSquare';
+import ContentClear from '@mui/icons-material/Clear';
 
 export class DrawBoxButton extends Component {
     constructor(props) {

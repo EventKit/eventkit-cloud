@@ -1,15 +1,10 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import IconMenu from '../../components/common/IconMenu';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
 import { UserHeader } from '../../components/UserGroupsPage/UserHeader';
 
 describe('UserHeader component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         selected: false,

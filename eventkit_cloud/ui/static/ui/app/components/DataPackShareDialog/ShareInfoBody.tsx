@@ -1,6 +1,7 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import ButtonBase from '@mui/material/ButtonBase';
 
 export interface Props {
     view: 'groups' | 'members';

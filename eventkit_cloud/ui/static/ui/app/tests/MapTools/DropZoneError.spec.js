@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
@@ -11,11 +11,6 @@ jest.mock('../../components/Dialog/BaseDialog', () => {
 });
 
 describe('DropZoneError component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         importGeom: {

@@ -1,11 +1,13 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import Paper from '@material-ui/core/Paper';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Paper from '@mui/material/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../common/CustomScrollbar';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 interface Props {
     theme: Eventkit.Theme & Theme;

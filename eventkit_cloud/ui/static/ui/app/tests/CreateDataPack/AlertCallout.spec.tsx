@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { mount } from 'enzyme';
-import Clear from '@material-ui/icons/Clear';
+import Clear from '@mui/icons-material/Clear';
 import { AlertCallout } from '../../components/CreateDataPack/AlertCallout';
 
 describe('AlertCallout component', () => {

@@ -1,10 +1,11 @@
 import { Component, Fragment } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import MenuItem from '@material-ui/core/MenuItem';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import SocialGroup from '@material-ui/icons/Group';
-import Check from '@material-ui/icons/Check';
-import Lock from '@material-ui/icons/LockOutlined';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import MenuItem from '@mui/material/MenuItem';
+import ButtonBase from '@mui/material/ButtonBase';
+import SocialGroup from '@mui/icons-material/Group';
+import Check from '@mui/icons-material/Check';
+import Lock from '@mui/icons-material/LockOutlined';
 import 'react-day-picker/dist/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';

@@ -1,18 +1,13 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CheckBox from '@material-ui/icons/CheckBox';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import { shallow } from 'enzyme';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CheckBox from '@mui/icons-material/CheckBox';
+import ButtonBase from '@mui/material/ButtonBase';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import { MembersHeaderRow } from '../../components/DataPackShareDialog/MembersHeaderRow';
 
 describe('MembersHeaderRow component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         memberCount: 2,

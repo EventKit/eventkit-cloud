@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Drawer from '@material-ui/core/Drawer';
+import Drawer from '@mui/material/Drawer';
 import { FilterDrawer } from '../../components/DataPackPage/FilterDrawer';
 import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';

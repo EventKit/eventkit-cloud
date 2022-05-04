@@ -1,12 +1,7 @@
-import { createShallow } from '@material-ui/core/test-utils';
 import { CustomTableRow } from '../components/common/CustomTableRow';
+import { shallow } from 'enzyme';
 
 describe('CustomTextField component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         title: 'test title',

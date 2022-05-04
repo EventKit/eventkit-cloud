@@ -1,10 +1,11 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Checkbox from '@material-ui/core/Checkbox';
-import AlertError from '@material-ui/icons/Error';
-import NotificationSync from '@material-ui/icons/Sync';
-import NavigationCheck from '@material-ui/icons/Check';
-import ToggleCheckBox from '@material-ui/icons/CheckBox';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
+import AlertError from '@mui/icons-material/Error';
+import NotificationSync from '@mui/icons-material/Sync';
+import NavigationCheck from '@mui/icons-material/Check';
+import ToggleCheckBox from '@mui/icons-material/CheckBox';
 
 export interface Props {
     onChange: (value: object) => void;

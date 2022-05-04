@@ -1,16 +1,11 @@
 import * as React from 'react';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
-import {TextField} from "@material-ui/core";
-import {Slider} from "@material-ui/core";
-import {createShallow} from "@material-ui/core/test-utils";
+import {TextField} from "@mui/material";
+import {Slider} from "@mui/material";
+import { shallow } from 'enzyme';
 
 
 describe('ZoomLevelSlider component', () => {
-    let shallow: any;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     afterEach(() => {
         jest.clearAllMocks();

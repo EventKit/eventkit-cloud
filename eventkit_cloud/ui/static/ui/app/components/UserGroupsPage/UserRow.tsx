@@ -1,10 +1,13 @@
 import { Component } from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import MenuItem from '@material-ui/core/MenuItem';
-import Person from '@material-ui/icons/Person';
-import ArrowDown from '@material-ui/icons/ArrowDropDown';
-import Checked from '@material-ui/icons/CheckBox';
-import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import MenuItem from '@mui/material/MenuItem';
+import Person from '@mui/icons-material/Person';
+import ArrowDown from '@mui/icons-material/ArrowDropDown';
+import Checked from '@mui/icons-material/CheckBox';
+import Unchecked from '@mui/icons-material/CheckBoxOutlineBlank';
 import IconMenu from '../common/IconMenu';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

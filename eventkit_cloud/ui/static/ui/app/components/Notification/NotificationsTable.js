@@ -1,16 +1,18 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Checkbox from '@material-ui/core/Checkbox';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import CheckboxIcon from '@material-ui/icons/CheckBox';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import CheckboxIcon from '@mui/icons-material/CheckBox';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import NotificationsTableItem from './NotificationsTableItem';
 import NotificationsTableMenu from './NotificationsTableMenu';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export class NotificationsTable extends Component {
     constructor(props) {

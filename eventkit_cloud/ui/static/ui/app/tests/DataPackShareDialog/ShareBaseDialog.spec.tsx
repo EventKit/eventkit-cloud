@@ -1,14 +1,9 @@
 import * as sinon from 'sinon';
-import Dialog from '@material-ui/core/Dialog';
+import Dialog from '@mui/material/Dialog';
 import {ShareBaseDialog} from '../../components/DataPackShareDialog/ShareBaseDialog';
-import {createShallow} from "@material-ui/core/test-utils";
+import { shallow } from 'enzyme';
 
 describe('ShareBaseDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         title: 'SHARE',

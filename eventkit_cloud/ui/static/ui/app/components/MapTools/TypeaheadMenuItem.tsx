@@ -1,8 +1,9 @@
-import {
-    createStyles, Theme, withTheme, withStyles,
-} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
 import { MenuItem } from 'react-bootstrap-typeahead';
-import ActionRoom from '@material-ui/icons/Room';
+import ActionRoom from '@mui/icons-material/Room';
 import IrregularPolygon from '../icons/IrregularPolygon';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({

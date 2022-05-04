@@ -1,7 +1,8 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import NavigationCheck from '@material-ui/icons/Check';
-import Button from '@material-ui/core/Button';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import NavigationCheck from '@mui/icons-material/Check';
+import Button from '@mui/material/Button';
 
 interface Props {
     saved: boolean;

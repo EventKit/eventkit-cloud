@@ -1,7 +1,7 @@
 import { mount } from 'enzyme';
 import * as sinon from 'sinon';
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
 import { DropDownMenu, Props } from '../../components/common/DropDownMenu';
 
 describe('DropDownMenu component', () => {

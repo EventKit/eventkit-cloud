@@ -1,12 +1,12 @@
 import * as sinon from 'sinon';
 import { mount } from 'enzyme';
-import Button from '@material-ui/core/Button';
-import Clear from '@material-ui/icons/Clear';
-import AlertWarning from '@material-ui/icons/Warning';
-import ImageCropSquare from '@material-ui/icons/CropSquare';
-import ActionRoom from '@material-ui/icons/Room';
-import Line from '@material-ui/icons/Timeline';
-import Extent from '@material-ui/icons/SettingsOverscan';
+import Button from '@mui/material/Button';
+import Clear from '@mui/icons-material/Clear';
+import AlertWarning from '@mui/icons-material/Warning';
+import ImageCropSquare from '@mui/icons-material/CropSquare';
+import ActionRoom from '@mui/icons-material/Room';
+import Line from '@mui/icons-material/Timeline';
+import Extent from '@mui/icons-material/SettingsOverscan';
 import { RevertDialog } from '../../components/CreateDataPack/RevertDialog';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 

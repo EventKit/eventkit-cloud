@@ -1,14 +1,9 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import CustomTableRow from '../../components/common/CustomTableRow';
 import { DataPackStatusTable } from '../../components/StatusDownloadPage/DataPackStatusTable';
 
 describe('DataPackStatusTable component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         status: 'COMPLETED',

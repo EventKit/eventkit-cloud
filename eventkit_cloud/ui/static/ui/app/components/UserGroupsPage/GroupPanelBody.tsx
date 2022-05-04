@@ -1,9 +1,10 @@
-import {
-    createStyles, Theme, withStyles, withTheme,
-} from '@material-ui/core';
-import MenuItem from '@material-ui/core/MenuItem';
-import MenuList from '@material-ui/core/MenuList';
-import InfoIcon from '@material-ui/icons/InfoOutlined';
+import { Theme } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import { connect } from 'react-redux';
 import IconMenu from '../common/IconMenu';
 import CustomScrollbar from '../common/CustomScrollbar';

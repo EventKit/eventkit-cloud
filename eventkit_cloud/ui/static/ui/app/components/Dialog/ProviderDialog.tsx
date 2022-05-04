@@ -1,8 +1,9 @@
 import { Component } from 'react';
 import {connect} from 'react-redux';
-import {withTheme, StyledComponentProps} from '@material-ui/core/styles';
-import List from '@material-ui/core/List';
-import Progress from '@material-ui/core/CircularProgress';
+import { StyledComponentProps } from '@mui/styles';
+import withTheme from '@mui/styles/withTheme';
+import List from '@mui/material/List';
+import Progress from '@mui/material/CircularProgress';
 import BaseDialog from './BaseDialog';
 import DropDownListItem from '../common/DropDownListItem';
 import {getProviderTask} from '../../actions/providerActions';

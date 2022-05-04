@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
 import * as React from 'react';
 import Overlay from 'ol/Overlay';
-import {
-    createStyles,
-    Theme, withStyles,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from '@material-ui/core/IconButton';
+import { Theme } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 import { TileCoordinate } from '../../../utils/mapUtils';
 import { useEffectOnMount } from '../../../utils/hooks/hooks';
 import { useOlMapContainer } from '../context/OpenLayersContext';
@@ -112,7 +111,7 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
                         props.closePoi ? props.closePoi(e) : () => {};
                         overlayRef.current.setPosition(undefined);
                     }}
-                >
+                    size="large">
                     <CloseIcon className={classes.closeIcon} />
                 </IconButton>
             </div>

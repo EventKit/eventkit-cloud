@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { PermissionsFilter } from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

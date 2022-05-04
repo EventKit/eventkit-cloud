@@ -1,15 +1,10 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import ImageCropSquare from '@material-ui/icons/CropSquare';
-import ContentClear from '@material-ui/icons/Clear';
+import { shallow } from 'enzyme';
+import ImageCropSquare from '@mui/icons-material/CropSquare';
+import ContentClear from '@mui/icons-material/Clear';
 import { DrawBoxButton } from '../../components/MapTools/DrawBoxButton';
 
 describe('DrawBoxButton component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         buttonState: 'DEFAULT',

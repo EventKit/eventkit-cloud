@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
-import ContentClear from '@material-ui/icons/Clear';
+import withTheme from '@mui/styles/withTheme';
+import ActionSettingsOverscan from '@mui/icons-material/SettingsOverscan';
+import ContentClear from '@mui/icons-material/Clear';
 
 export class MapViewButton extends Component {
     constructor(props) {

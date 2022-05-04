@@ -1,4 +1,4 @@
-import createSvgIcon from '@material-ui/icons/utils/createSvgIcon';
+import createSvgIcon from '@mui/icons-material/utils/createSvgIcon';
 
 export default createSvgIcon((
     <>

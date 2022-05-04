@@ -1,7 +1,7 @@
 import { mount } from 'enzyme';
 import * as sinon from 'sinon';
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
 import IconMenu from '../../components/common/IconMenu';
 
 describe('IconMenu component', () => {

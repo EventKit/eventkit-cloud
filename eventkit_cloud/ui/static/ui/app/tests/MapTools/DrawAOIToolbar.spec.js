@@ -1,4 +1,4 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import DrawBoxButton from '../../components/MapTools/DrawBoxButton';
 import DrawFreeButton from '../../components/MapTools/DrawFreeButton';
@@ -6,11 +6,6 @@ import MapViewButton from '../../components/MapTools/MapViewButton';
 import ImportButton from '../../components/MapTools/ImportButton';
 
 describe('DrawAOIToolbar component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     it('should render a toolbar title and 4 sub components', () => {
         const props = {

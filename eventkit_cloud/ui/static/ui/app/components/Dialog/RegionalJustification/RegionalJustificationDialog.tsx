@@ -1,20 +1,23 @@
-import {
-    withTheme, withStyles, createStyles, Theme,
-} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import {Button, CircularProgress} from '@material-ui/core';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import {Button, CircularProgress} from '@mui/material';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import {useEffect, useState} from 'react';
 import BaseDialog from '../BaseDialog';
-import Collapse from "@material-ui/core/Collapse";
-import Radio from "@material-ui/core/Radio";
+import Collapse from "@mui/material/Collapse";
+import Radio from "@mui/material/Radio";
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
 import {renderIf} from "../../../utils/renderIf";
+
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -84,11 +87,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         fontSize: '1em',
         height: 'auto',
         whiteSpace: 'nowrap',
-        [theme.breakpoints.down('md')]: {
+        [theme.breakpoints.down('lg')]: {
             whiteSpace: 'initial',
             padding: '5px',
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             fontSize: '0.9em',
         },
     },

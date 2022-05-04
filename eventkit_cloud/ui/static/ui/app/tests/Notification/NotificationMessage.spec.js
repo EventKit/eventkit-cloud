@@ -1,4 +1,4 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { Link } from 'react-router-dom';
 import { NotificationMessage } from '../../components/Notification/NotificationMessage';
@@ -13,12 +13,6 @@ describe('NotificationMessage component', () => {
     const group = {
         name: 'Test',
     };
-
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getWrapper = (props) => (
         shallow(<NotificationMessage {...props} {...global.eventkit_test_props} />)

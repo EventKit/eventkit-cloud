@@ -1,5 +1,9 @@
 import {Component} from 'react';
-import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     container: {

@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import ButtonBase from '@mui/material/ButtonBase';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import { GroupsHeaderRow } from '../../components/DataPackShareDialog/GroupsHeaderRow';
 

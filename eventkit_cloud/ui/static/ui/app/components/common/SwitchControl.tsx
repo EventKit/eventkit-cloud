@@ -1,6 +1,8 @@
-import {
-    createStyles, Switch, Theme, withStyles, withTheme,
-} from '@material-ui/core';
+import { Switch, Theme } from '@mui/material';
+
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 
 interface Props {
     onSwitch: () => void;

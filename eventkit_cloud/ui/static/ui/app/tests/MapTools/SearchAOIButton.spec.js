@@ -1,15 +1,10 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import ActionSearch from '@material-ui/icons/Search';
-import ContentClear from '@material-ui/icons/Clear';
+import { shallow } from 'enzyme';
+import ActionSearch from '@mui/icons-material/Search';
+import ContentClear from '@mui/icons-material/Clear';
 import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 
 describe('SearchAOIButton component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         buttonState: 'DEFAULT',

@@ -1,12 +1,13 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Checkbox from '@material-ui/core/Checkbox';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
-import Collapse from '@material-ui/core/Collapse';
-import IconButton from '@material-ui/core/IconButton';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CustomScrollbar from '../common/CustomScrollbar';
 
 export interface Props {
@@ -90,7 +91,7 @@ export class UserLicense extends Component<Props, State> {
                                 color="primary"
                                 style={styles.expand}
                                 className="qa-UserLicense-expand"
-                            >
+                                size="large">
                                 <ExpandMoreIcon />
                             </IconButton>
                         </div>

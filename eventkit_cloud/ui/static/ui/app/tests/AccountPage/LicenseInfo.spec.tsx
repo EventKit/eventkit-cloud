@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Checkbox from '@material-ui/core/Checkbox';
+import Checkbox from '@mui/material/Checkbox';
 import { LicenseInfo, Props } from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
 import UserLicense from '../../components/AccountPage/UserLicense';

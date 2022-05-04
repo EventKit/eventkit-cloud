@@ -1,10 +1,11 @@
-import {withTheme, Theme} from '@material-ui/core/styles';
-import Divider from '@material-ui/core/Divider';
-import Warning from '@material-ui/icons/Warning';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Divider from '@mui/material/Divider';
+import Warning from '@mui/icons-material/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 import {renderIf} from "../../utils/renderIf";
 import {useBoolean} from "../../utils/hooks/hooks";
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 
 export interface ErrorDialogProps {
     errors: Array<{

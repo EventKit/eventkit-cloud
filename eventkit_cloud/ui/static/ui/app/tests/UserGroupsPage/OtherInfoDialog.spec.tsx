@@ -1,14 +1,9 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { OtherInfoDialog } from '../../components/UserGroupsPage/Dialogs/OtherInfoDialog';
 
 describe('OtherInfoDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         show: true,

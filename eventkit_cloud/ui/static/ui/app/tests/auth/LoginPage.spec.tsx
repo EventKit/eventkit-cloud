@@ -1,5 +1,5 @@
 import { shallow } from 'enzyme';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 import { LoginPage } from '../../components/auth/LoginPage';

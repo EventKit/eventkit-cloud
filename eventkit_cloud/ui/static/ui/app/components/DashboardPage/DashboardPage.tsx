@@ -1,12 +1,12 @@
 import { Component } from 'react';
 import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
-import {withTheme} from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import {Link} from 'react-router-dom';
 import Joyride, {StoreHelpers} from 'react-joyride';
-import Help from '@material-ui/icons/Help';
-import Paper from '@material-ui/core/Paper';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import Help from '@mui/icons-material/Help';
+import Paper from '@mui/material/Paper';
+import ButtonBase from '@mui/material/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
 import {deleteRun, getFeaturedRuns, getRuns} from '../../actions/datapackActions';
@@ -544,7 +544,7 @@ export class DashboardPage extends Component<Props, State> {
                                         name="Featured"
                                         columns={this.getGridWideColumns()}
                                         gridPadding={this.getGridPadding()}
-                                        cellHeight={this.state.width !== 'xs' ? 335 : 435}
+                                        rowHeight={this.state.width !== 'xs' ? 335 : 435}
                                         onViewAll={this.handleFeaturedViewAll}
                                     >
                                         {this.props.featuredIds.map((id, index) => (

@@ -1,24 +1,20 @@
-import Drawer from '@material-ui/core/Drawer';
+import Drawer from '@mui/material/Drawer';
 import CustomScrollbar from "../common/CustomScrollbar";
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import {
-    createStyles,
-    Theme,
-    withStyles,
-    Icon,
-    Divider, Link, CircularProgress,
-} from "@material-ui/core";
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import { Theme, Icon, Divider, Link, CircularProgress } from "@mui/material";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
 import {useSelector} from "react-redux";
-import CardMedia from '@material-ui/core/CardMedia';
-import Card from '@material-ui/core/Card';
-import Checkbox from '@material-ui/core/Checkbox';
-import Radio from "@material-ui/core/Radio";
-import {Tab, Tabs} from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
-import ListItemText from "@material-ui/core/ListItemText";
-import Button from "@material-ui/core/Button";
-import Clear from '@material-ui/icons/Clear';
+import CardMedia from '@mui/material/CardMedia';
+import Card from '@mui/material/Card';
+import Checkbox from '@mui/material/Checkbox';
+import Radio from "@mui/material/Radio";
+import {Tab, Tabs} from "@mui/material";
+import Typography from "@mui/material/Typography";
+import ListItemText from "@mui/material/ListItemText";
+import Button from "@mui/material/Button";
+import Clear from '@mui/icons-material/Clear';
 import theme from "../../styles/eventkit_theme";
 import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";

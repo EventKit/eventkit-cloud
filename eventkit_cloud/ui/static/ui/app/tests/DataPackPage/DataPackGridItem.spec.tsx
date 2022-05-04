@@ -1,11 +1,11 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
-import CardActions from '@material-ui/core/CardActions';
-import SocialGroup from '@material-ui/icons/Group';
-import Lock from '@material-ui/icons/LockOutlined';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import SocialGroup from '@mui/icons-material/Group';
+import Lock from '@mui/icons-material/LockOutlined';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

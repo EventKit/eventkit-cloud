@@ -1,4 +1,4 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import values from 'lodash/values';
 import { NotificationsTableMenu } from '../../components/Notification/NotificationsTableMenu';
@@ -35,11 +35,6 @@ const mockNotifications = {
 describe('NotificationsTableMenu component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

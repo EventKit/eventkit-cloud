@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../common/CustomTextField';
 

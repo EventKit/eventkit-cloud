@@ -1,13 +1,8 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ConfirmDialog } from '../../components/Dialog/ConfirmDialog';
 
 describe('ConfirmDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         show: true,

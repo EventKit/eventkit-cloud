@@ -1,13 +1,8 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import {MapView} from "../../components/common/MapView";
 import { DataPackAoiInfo } from '../../components/StatusDownloadPage/DataPackAoiInfo';
 
 describe('DataPackAoiInfo component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => (
         {

@@ -1,6 +1,7 @@
 import { Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import Info from '@material-ui/icons/Info';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Info from '@mui/icons-material/Info';
 import CustomTableRow from '../common/CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 import {MatomoClickTracker} from "../MatomoHandler";

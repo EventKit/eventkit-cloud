@@ -1,16 +1,11 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
 import { SearchAOIToolbar } from '../../components/MapTools/SearchAOIToolbar';
 import SearchAOIButton from '../../components/MapTools/SearchAOIButton';
 import TypeaheadMenuItem from '../../components/MapTools/TypeaheadMenuItem';
 
 describe('SearchAOIToolbar button', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         toolbarIcons: { search: 'DEFAULT' },

@@ -593,7 +593,7 @@ export const joyride = {
                     Clicking on a DataPack in the list will highlight its location on the map, and vice versa.
                     </br>To display more DataPacks, click on the Show More button at the bottom,
                     or use the other search functions (explained in the following steps).`,
-                target: '.qa-MapView-GridList',
+                target: '.qa-MapView-ImageList',
                 style: JoyRideStyles.tooltipStyle,
                 placement: 'right',
             },

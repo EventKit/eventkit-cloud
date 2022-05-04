@@ -1,8 +1,8 @@
 import {shallow} from "enzyme";
 import sinon from 'sinon';
 import {QueryDataBox} from "../../components/CreateDataPack/QueryDataBox";
-import {Card, CardContent, IconButton, Typography} from "@material-ui/core";
-import CloseIcon from '@material-ui/icons/Close';
+import {Card, CardContent, IconButton, Typography} from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 
 describe('QueryDataBox component', () => {
         const getProps = () => ({

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
 import BaseDialog from './BaseDialog';
 
 export class ConfirmDialog extends Component {

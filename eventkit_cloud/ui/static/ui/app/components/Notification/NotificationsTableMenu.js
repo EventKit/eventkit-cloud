@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import Divider from '@material-ui/core/Divider';
-import MenuItem from '@material-ui/core/MenuItem';
-import FlagIcon from '@material-ui/icons/Flag';
-import CloseIcon from '@material-ui/icons/Close';
+import withTheme from '@mui/styles/withTheme';
+import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
+import FlagIcon from '@mui/icons-material/Flag';
+import CloseIcon from '@mui/icons-material/Close';
 import values from 'lodash/values';
 import IconMenu from '../common/IconMenu';
 import DeleteDialog from '../Dialog/DeleteNotificationsDialog';

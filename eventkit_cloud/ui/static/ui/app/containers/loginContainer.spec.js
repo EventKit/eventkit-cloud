@@ -1,16 +1,11 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import { Form } from './loginContainer';
+import { shallow } from 'enzyme';
 
 describe('loginContainer', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         handleLogin: sinon.spy(),

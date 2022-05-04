@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
 import {MemberRow} from '../../components/DataPackShareDialog/MemberRow';
 import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
 

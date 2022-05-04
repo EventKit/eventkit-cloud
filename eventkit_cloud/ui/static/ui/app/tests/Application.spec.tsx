@@ -1,8 +1,7 @@
 import axios from 'axios';
 import * as sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import {createShallow} from '@material-ui/core/test-utils';
-import AppBar from '@material-ui/core/AppBar';
+import AppBar from '@mui/material/AppBar';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
@@ -10,9 +9,10 @@ import Drawer from '../components/Drawer';
 import {allTrue, Application} from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
-import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {Provider} from "react-redux";
+import {shallow} from "enzyme";
 
 jest.mock('../components/Dialog/BaseDialog', () => 'basedialog');
 jest.mock('../components/auth/LoginErrorPage', () => 'loginerrorpage');
@@ -33,11 +33,9 @@ jest.mock('../components/common/context/RegionContext', () => ({
 const store = createTestStore({});
 
 describe('Application component', () => {
-    let shallow;
     let mock;
 
     beforeAll(() => {
-        shallow = createShallow();
         mock = new MockAdapter(axios, {delayResponse: 100});
     });
 

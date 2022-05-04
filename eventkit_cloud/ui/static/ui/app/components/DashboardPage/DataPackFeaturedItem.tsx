@@ -1,17 +1,22 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme, Theme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import { StyledComponentProps } from '@mui/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 import { Link } from 'react-router-dom';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 import moment from 'moment';
 import { makeFullRunSelector } from '../../selectors/runSelector';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {MapView} from "../common/MapView";
 import {MapLayer} from "../CreateDataPack/CreateExport";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     card: {
@@ -37,7 +42,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             maxWidth: '67%',
             order: 1,
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             maxHeight: '67%',
         },
     },
@@ -52,7 +57,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             padding: '17px 24px 20px',
             order: 2,
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             maxHeight: '33%',
         },
     },
@@ -89,7 +94,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         [theme.breakpoints.up('md')]: {
             fontSize: '12px',
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'none',
         },
     },

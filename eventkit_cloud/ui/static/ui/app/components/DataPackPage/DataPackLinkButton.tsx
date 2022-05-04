@@ -1,7 +1,8 @@
 import { Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import {Link} from 'react-router-dom';
-import {Button} from '@material-ui/core';
+import {Button} from '@mui/material';
 import {MatomoClickTracker} from "../MatomoHandler";
 
 export interface Props {

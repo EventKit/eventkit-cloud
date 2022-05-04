@@ -1,8 +1,8 @@
 /* eslint prefer-destructuring: 0 */
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import TableCell from '@material-ui/core/TableCell';
-import CheckboxIcon from '@material-ui/icons/CheckBox';
+import TableCell from '@mui/material/TableCell';
+import CheckboxIcon from '@mui/icons-material/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
 import { NotificationsTable } from '../../components/Notification/NotificationsTable';
 import NotificationsTableMenu from '../../components/Notification/NotificationsTableMenu';
@@ -40,11 +40,6 @@ const mockNotifications = {
 describe('NotificationsTable component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

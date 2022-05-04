@@ -4,17 +4,17 @@ import '@testing-library/jest-dom/extend-expect'
 import {MapDrawerOptions} from "../../components/CreateDataPack/MapDrawerOptions";
 import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
 
-jest.mock("@material-ui/core/Grow", () => {
+jest.mock("@mui/material/Grow", () => {
     const React = require('react');
     return (props) => (<div className="qa-Grow">{props.children}</div>)
 });
 
-jest.mock("@material-ui/core/Radio", () => {
+jest.mock("@mui/material/Radio", () => {
     const React = require('react');
     return (props) => (<div {...props} className="qa-Radio">{props.name}</div>)
 });
 
-jest.mock("@material-ui/core/Chip", () => {
+jest.mock("@mui/material/Chip", () => {
     const React = require('react');
     return (props) => (<div {...props} className="qa-Chip">CHIPLABEL-{props.label}</div>)
 });

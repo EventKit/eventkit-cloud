@@ -1,6 +1,6 @@
 import { mount } from 'enzyme';
-import GridList from '@material-ui/core/GridList';
-import GridTile from '@material-ui/core/GridListTile';
+import ImageList from '@mui/material/ImageList';
+import GridTile from '@mui/material/ImageListItem';
 import { InfoGrid, Props } from '../../components/About/InfoGrid';
 
 describe('InfoGrid component', () => {
@@ -17,12 +17,12 @@ describe('InfoGrid component', () => {
         mount(<InfoGrid {...props} />)
     );
 
-    it('should render a header and GridList with passed in items', () => {
+    it('should render a header and ImageList with passed in items', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('h3')).toHaveLength(1);
         expect(wrapper.find('h3').text()).toEqual('Test Header');
-        expect(wrapper.find(GridList)).toHaveLength(1);
+        expect(wrapper.find(ImageList)).toHaveLength(1);
         expect(wrapper.find(GridTile)).toHaveLength(props.items.length);
     });
 

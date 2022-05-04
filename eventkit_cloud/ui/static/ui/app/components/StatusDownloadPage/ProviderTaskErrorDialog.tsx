@@ -1,4 +1,4 @@
-import { withTheme } from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import ErrorDialog, { ErrorDialogProps } from './ErrorDialog';
 
 interface ProviderTaskProps extends Omit<ErrorDialogProps, 'errors'|'name'> {

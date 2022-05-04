@@ -1,10 +1,14 @@
 import { Component } from 'react';
-import withWidth from '@material-ui/core/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import { withTheme, withStyles, createStyles, Theme } from '@material-ui/core/styles';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {

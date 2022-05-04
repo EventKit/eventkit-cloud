@@ -1,16 +1,15 @@
-import {
-    createStyles, Theme,
-    withStyles,
-    withTheme
-} from "@material-ui/core/styles";
-import {Drawer, Divider} from '@material-ui/core';
-import MenuList from '@material-ui/core/MenuList';
-import MenuItem from '@material-ui/core/MenuItem';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
-import Button from '@material-ui/core/Button';
-import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
-import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import { Theme } from "@mui/material/styles";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import {Drawer, Divider} from '@mui/material';
+import MenuList from '@mui/material/MenuList';
+import MenuItem from '@mui/material/MenuItem';
+import ButtonBase from '@mui/material/ButtonBase';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import Button from '@mui/material/Button';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import {useEffect, useState} from 'react';
 import {connect} from "react-redux";
 import {getGroups, types} from "../../actions/groupActions";

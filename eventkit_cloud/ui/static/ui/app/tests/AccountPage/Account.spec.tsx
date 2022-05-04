@@ -1,6 +1,6 @@
 import * as enzyme from 'enzyme';
 import * as sinon from 'sinon';
-import Help from '@material-ui/icons/Help';
+import Help from '@mui/icons-material/Help';
 import PageHeader from '../../components/common/PageHeader';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';

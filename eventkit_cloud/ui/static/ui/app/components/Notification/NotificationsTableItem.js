@@ -1,21 +1,23 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Checkbox from '@material-ui/core/Checkbox';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import FlagIcon from '@material-ui/icons/Flag';
-import CloseIcon from '@material-ui/icons/Close';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
+import ButtonBase from '@mui/material/ButtonBase';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import FlagIcon from '@mui/icons-material/Flag';
+import CloseIcon from '@mui/icons-material/Close';
 import moment from 'moment';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import NotificationMenu from './NotificationMenu';
 import NotificationIcon from './NotificationIcon';
 import NotificationMessage from './NotificationMessage';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export class NotificationsTableItem extends Component {
     constructor(props) {

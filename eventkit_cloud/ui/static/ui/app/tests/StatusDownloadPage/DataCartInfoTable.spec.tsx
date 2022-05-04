@@ -1,9 +1,8 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import CustomTableRow from '../../components/common/CustomTableRow';
 import { DataCartInfoTable } from '../../components/StatusDownloadPage/DataCartInfoTable';
 
 describe('DataCartInfoTable component', () => {
-    const shallow = createShallow();
 
     const props = {
         dataPack: {

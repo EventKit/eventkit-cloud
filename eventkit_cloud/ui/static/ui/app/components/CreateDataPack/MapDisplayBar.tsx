@@ -1,11 +1,14 @@
 import { Component } from 'react';
-import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import { Tab, Tabs } from '@material-ui/core';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import { Tab, Tabs } from '@mui/material';
 import AoiInfobar from './AoiInfobar';
 import { MapQueryDisplay } from './MapQueryDisplay';
 import { MapLayer } from './CreateExport';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     wrapper: {

@@ -1,10 +1,12 @@
 import {useEffect, useRef, useState} from 'react';
-import {createStyles, Theme} from '@material-ui/core/styles';
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
-import {Chip, Grow, Link, Paper, TextField, withStyles} from "@material-ui/core";
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import { Chip, Grow, Link, Paper, TextField } from "@mui/material";
+import withStyles from '@mui/styles/withStyles';
 import {renderIf} from "../../utils/renderIf";
-import Radio from "@material-ui/core/Radio";
+import Radio from "@mui/material/Radio";
 import {useDebouncedState, useProviderIdentity} from "../../utils/hooks/hooks";
 import {arrayHasValue} from "../../utils/generic";
 import unionBy from 'lodash/unionBy';

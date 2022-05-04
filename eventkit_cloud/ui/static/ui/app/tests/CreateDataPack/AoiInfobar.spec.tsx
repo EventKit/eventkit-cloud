@@ -1,11 +1,11 @@
 import * as sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import AlertWarning from '@material-ui/icons/Warning';
-import ImageCropSquare from '@material-ui/icons/CropSquare';
-import ActionRoom from '@material-ui/icons/Room';
-import ActionZoomIn from '@material-ui/icons/ZoomIn';
-import Line from '@material-ui/icons/Timeline';
-import Extent from '@material-ui/icons/SettingsOverscan';
+import AlertWarning from '@mui/icons-material/Warning';
+import ImageCropSquare from '@mui/icons-material/CropSquare';
+import ActionRoom from '@mui/icons-material/Room';
+import ActionZoomIn from '@mui/icons-material/ZoomIn';
+import Line from '@mui/icons-material/Timeline';
+import Extent from '@mui/icons-material/SettingsOverscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import {AoiInfobar, getIcon} from '../../components/CreateDataPack/AoiInfobar';
 import {JobValidationProvider} from "../../components/CreateDataPack/context/JobValidation";

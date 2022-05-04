@@ -1,9 +1,10 @@
 import * as React from 'react';
-import {
-    createStyles, Theme, withStyles, withTheme,
-} from '@material-ui/core/styles';
-import Slider from '@material-ui/core/Slider';
-import TextField from '@material-ui/core/TextField';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import Slider from '@mui/material/Slider';
+import TextField from '@mui/material/TextField';
 import {useEffect, useState} from "react";
 
 

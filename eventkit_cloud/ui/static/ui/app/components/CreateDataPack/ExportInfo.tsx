@@ -1,15 +1,18 @@
 import * as React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 import {useDispatch, useSelector} from 'react-redux';
 import axios from 'axios';
 import {Step} from 'react-joyride';
 import {Virtuoso} from 'react-virtuoso';
-import Paper from '@material-ui/core/Paper';
-import Popover from '@material-ui/core/Popover';
-import Checkbox from '@material-ui/core/Checkbox';
-import Typography from '@material-ui/core/Typography';
-import NavigationRefresh from '@material-ui/icons/Refresh';
+import Paper from '@mui/material/Paper';
+import Popover from '@mui/material/Popover';
+import Checkbox from '@mui/material/Checkbox';
+import Typography from '@mui/material/Typography';
+import NavigationRefresh from '@mui/icons-material/Refresh';
 
 import {getSqKmString} from '../../utils/generic';
 import CustomScrollbar from '../common/CustomScrollbar';
@@ -21,7 +24,7 @@ import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import CustomTextField from '../common/CustomTextField';
 import CustomTableRow from '../common/CustomTableRow';
 import BaseDialog from "../Dialog/BaseDialog";
-import AlertWarning from '@material-ui/icons/Warning';
+import AlertWarning from '@mui/icons-material/Warning';
 import {useDebouncedState} from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
@@ -37,16 +40,16 @@ import {
     Radio,
     RadioGroup,
     TextField
-} from "@material-ui/core";
+} from "@mui/material";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {Step2Validator} from "./ExportValidation";
 import {useAppContext} from "../ApplicationContext";
 import {renderIf} from "../../utils/renderIf";
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 import unionBy from 'lodash/unionBy';
 import {joyride} from '../../joyride.config';
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {

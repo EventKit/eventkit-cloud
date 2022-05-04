@@ -1,8 +1,10 @@
-import {Theme, createStyles, withStyles} from '@material-ui/core/styles';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import CheckCircle from '@material-ui/icons/CheckCircle';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     drawerSection: {

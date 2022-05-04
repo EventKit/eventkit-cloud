@@ -1,10 +1,11 @@
 import * as React from 'react';
 import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Button from '@material-ui/core/Button';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import InfoIcon from '@material-ui/icons/InfoOutlined';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import ButtonBase from '@mui/material/ButtonBase';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import CustomTextField from '../common/CustomTextField';
 import BaseDialog from '../Dialog/BaseDialog';
 import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';

@@ -1,5 +1,5 @@
 import { shallow } from 'enzyme';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import { LoginErrorPage } from '../../components/auth/LoginErrorPage';
 import ErrorMessage from '../../components/auth/ErrorMessage';
 

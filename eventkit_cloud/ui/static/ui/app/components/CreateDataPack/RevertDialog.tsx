@@ -1,12 +1,15 @@
 import { Component } from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import Clear from '@material-ui/icons/Clear';
-import AlertWarning from '@material-ui/icons/Warning';
-import ImageCropSquare from '@material-ui/icons/CropSquare';
-import ActionRoom from '@material-ui/icons/Room';
-import Line from '@material-ui/icons/Timeline';
-import Extent from '@material-ui/icons/SettingsOverscan';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import Button from '@mui/material/Button';
+import Clear from '@mui/icons-material/Clear';
+import AlertWarning from '@mui/icons-material/Warning';
+import ImageCropSquare from '@mui/icons-material/CropSquare';
+import ActionRoom from '@mui/icons-material/Room';
+import Line from '@mui/icons-material/Timeline';
+import Extent from '@mui/icons-material/SettingsOverscan';
 import IrregularPolygon from '../icons/IrregularPolygon';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

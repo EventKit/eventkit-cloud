@@ -1,17 +1,12 @@
 import * as sinon from 'sinon';
-import InfoIcon from '@material-ui/icons/InfoOutlined';
-import {createShallow} from "@material-ui/core/test-utils";
+import InfoIcon from '@mui/icons-material/InfoOutlined';
+import { shallow } from 'enzyme';
 import IconMenu from "../../components/common/IconMenu";
 import {GroupPanelBody} from "../../components/UserGroupsPage/GroupPanelBody";
 import {CustomScrollbar} from "../../components/common/CustomScrollbar";
-import {MenuList, MenuItem} from "@material-ui/core";
+import {MenuList, MenuItem} from "@mui/material";
 
 describe('GroupPanelBody component', () => {
-    let shallow: any;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         selectedValue: '',

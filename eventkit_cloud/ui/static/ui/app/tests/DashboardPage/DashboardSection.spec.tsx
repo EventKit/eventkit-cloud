@@ -1,7 +1,7 @@
 import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import SwipeableViews from 'react-swipeable-views';
 import { DashboardSection } from '../../components/DashboardPage/DashboardSection';
 

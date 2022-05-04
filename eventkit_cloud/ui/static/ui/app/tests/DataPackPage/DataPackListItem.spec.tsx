@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
-import Card from '@material-ui/core/Card';
+import Card from '@mui/material/Card';
 import {DataPackListItem} from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

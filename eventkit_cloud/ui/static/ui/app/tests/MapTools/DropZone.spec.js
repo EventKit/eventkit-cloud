@@ -1,14 +1,9 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import { DropZone } from '../../components/MapTools/DropZone';
 import DropZoneDialog from '../../components/MapTools/DropZoneDialog';
 import DropZoneError from '../../components/MapTools/DropZoneError';
 
 describe('DropZone component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         importGeom: {},

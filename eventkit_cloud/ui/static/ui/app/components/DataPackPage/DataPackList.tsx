@@ -1,19 +1,21 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
-import GridList from '@material-ui/core/GridList';
-import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
-import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
+import ImageList from '@mui/material/ImageList';
+import NavigationArrowDropDown from '@mui/icons-material/ArrowDropDown';
+import NavigationArrowDropUp from '@mui/icons-material/ArrowDropUp';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../common/CustomScrollbar';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {ScrollBarRefWrap} from "./MapView";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     runIds: string[];
@@ -155,11 +157,11 @@ export class DataPackList extends Component<Props, {}> {
                     style={{ height: 'calc(100vh - 236px)', width: '100%' }}
                 >
                     <div style={styles.root} className="qa-DataPackList-root">
-                        <GridList
-                            className="qa-DataPackList-GridList"
-                            cellHeight="auto"
+                        <ImageList
+                            className="qa-DataPackList-ImageList"
+                            rowHeight="auto"
                             cols={1}
-                            spacing={0}
+                            gap={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
                             {this.props.runIds.map(id => (
@@ -173,7 +175,7 @@ export class DataPackList extends Component<Props, {}> {
                                 />
                             ))}
                             {load}
-                        </GridList>
+                        </ImageList>
                     </div>
                 </ScrollBarRefWrap>
             );

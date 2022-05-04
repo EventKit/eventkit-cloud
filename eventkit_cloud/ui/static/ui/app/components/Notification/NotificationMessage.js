@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
 import moment from 'moment';
-import { withTheme } from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import { Link } from 'react-router-dom';
 import {
     verbs, getNotificationViewPath, requiresActionObjDetails, requiresActorDetails,

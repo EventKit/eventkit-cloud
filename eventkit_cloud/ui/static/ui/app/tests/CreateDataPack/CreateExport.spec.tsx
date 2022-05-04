@@ -1,6 +1,6 @@
 import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
-import Help from '@material-ui/icons/Help';
+import Help from '@mui/icons-material/Help';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
 import EstimateContainer from '../../components/CreateDataPack/EstimateContainer';
 import PageHeader from '../../components/common/PageHeader';

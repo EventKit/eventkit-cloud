@@ -1,6 +1,7 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../common/CustomTableRow';

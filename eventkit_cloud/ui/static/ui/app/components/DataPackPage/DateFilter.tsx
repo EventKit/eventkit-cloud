@@ -1,10 +1,11 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import moment from 'moment';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import Modal from '@material-ui/core/Modal';
-import Input from '@material-ui/core/Input';
+import Modal from '@mui/material/Modal';
+import Input from '@mui/material/Input';
 
 export interface Props {
     onMinChange: (date: string) => void;

@@ -1,12 +1,13 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Clear from '@material-ui/icons/Clear';
-import Card from '@material-ui/core/Card';
-import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import Dot from '@material-ui/icons/FiberManualRecord';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import ActionZoomInIcon from '@material-ui/icons/ZoomIn';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Clear from '@mui/icons-material/Clear';
+import Card from '@mui/material/Card';
+import ArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import ArrowUp from '@mui/icons-material/KeyboardArrowUp';
+import Dot from '@mui/icons-material/FiberManualRecord';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ActionZoomInIcon from '@mui/icons-material/ZoomIn';
 import moment from 'moment';
 
 export interface Props {

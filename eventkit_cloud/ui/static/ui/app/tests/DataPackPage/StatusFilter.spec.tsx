@@ -1,9 +1,9 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Checkbox from '@material-ui/core/Checkbox';
-import AlertError from '@material-ui/icons/Error';
-import NotificationSync from '@material-ui/icons/Sync';
-import NavigationCheck from '@material-ui/icons/Check';
+import Checkbox from '@mui/material/Checkbox';
+import AlertError from '@mui/icons-material/Error';
+import NotificationSync from '@mui/icons-material/Sync';
+import NavigationCheck from '@mui/icons-material/Check';
 import { StatusFilter } from '../../components/DataPackPage/StatusFilter';
 
 describe('StatusFilter component', () => {

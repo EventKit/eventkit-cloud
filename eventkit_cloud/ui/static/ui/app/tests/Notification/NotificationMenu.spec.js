@@ -1,9 +1,9 @@
 /* eslint prefer-destructuring: 0 */
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import FlagIcon from '@material-ui/icons/Flag';
-import CloseIcon from '@material-ui/icons/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import FlagIcon from '@mui/icons-material/Flag';
+import CloseIcon from '@mui/icons-material/Close';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import IconMenu from '../../components/common/IconMenu';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
@@ -11,11 +11,6 @@ import { NotificationMenu } from '../../components/Notification/NotificationMenu
 describe('NotificationMenu component', () => {
     let wrapper;
     let instance;
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     function defaultProps() {
         return {

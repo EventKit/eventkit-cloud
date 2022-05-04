@@ -1,9 +1,10 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import IconButton from '@material-ui/core/IconButton';
-import ActionViewModule from '@material-ui/icons/ViewModule';
-import ActionViewStream from '@material-ui/icons/ViewStream';
-import MapsMap from '@material-ui/icons/Map';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import IconButton from '@mui/material/IconButton';
+import ActionViewModule from '@mui/icons-material/ViewModule';
+import ActionViewStream from '@mui/icons-material/ViewStream';
+import MapsMap from '@mui/icons-material/Map';
 
 export interface Props {
     handleViewChange: (view: string) => void;
@@ -39,7 +40,7 @@ export class DataPackViewButtons extends Component<Props, {}> {
                     className="qa-DataPackViewButtons-IconButton-map"
                     onClick={() => this.props.handleViewChange('map')}
                     style={styles.button}
-                >
+                    size="large">
                     <MapsMap
                         className="qa-DataPackViewButtons-MapsMap"
                         color="primary"
@@ -50,7 +51,7 @@ export class DataPackViewButtons extends Component<Props, {}> {
                     className="qa-DataPackViewButtons-IconButton-grid"
                     onClick={() => this.props.handleViewChange('grid')}
                     style={styles.button}
-                >
+                    size="large">
                     <ActionViewModule
                         className="qa-DataPackViewButtons-ActionViewModule"
                         color="primary"
@@ -61,7 +62,7 @@ export class DataPackViewButtons extends Component<Props, {}> {
                     className="qa-DataPackViewButtons-IconButton-list"
                     onClick={() => this.props.handleViewChange('list')}
                     style={styles.button}
-                >
+                    size="large">
                     <ActionViewStream
                         className="qa-DataPackViewButtons-ActionViewStream"
                         color="primary"

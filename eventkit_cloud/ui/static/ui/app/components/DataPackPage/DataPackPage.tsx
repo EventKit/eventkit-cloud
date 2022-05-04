@@ -1,13 +1,13 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
 import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import queryString from 'query-string';
 import * as Joyride from 'react-joyride';
-import Help from '@material-ui/icons/Help';
-import Toolbar from '@material-ui/core/Toolbar';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import Help from '@mui/icons-material/Help';
+import Toolbar from '@mui/material/Toolbar';
+import ButtonBase from '@mui/material/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
 import DataPackGrid from './DataPackGrid';
@@ -28,12 +28,14 @@ import {setPageOrder, setPageView} from '../../actions/uiActions';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
 import {StoreHelpers} from "react-joyride";
 import EventkitJoyride from "../common/JoyrideWrapper";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 interface Props {
     runIds: string[];

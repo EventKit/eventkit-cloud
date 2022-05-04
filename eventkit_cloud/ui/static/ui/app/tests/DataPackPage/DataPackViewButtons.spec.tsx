@@ -1,9 +1,9 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import ActionViewModule from '@material-ui/icons/ViewModule';
-import ActionViewStream from '@material-ui/icons/ViewStream';
-import MapsMap from '@material-ui/icons/Map';
-import IconButton from '@material-ui/core/IconButton';
+import ActionViewModule from '@mui/icons-material/ViewModule';
+import ActionViewStream from '@mui/icons-material/ViewStream';
+import MapsMap from '@mui/icons-material/Map';
+import IconButton from '@mui/material/IconButton';
 import { DataPackViewButtons } from '../../components/DataPackPage/DataPackViewButtons';
 
 describe('DataPackViewButtons component', () => {

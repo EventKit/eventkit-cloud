@@ -1,6 +1,7 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Clear from '@material-ui/icons/Clear';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Clear from '@mui/icons-material/Clear';
 import css from '../../styles/popup.css';
 
 export interface Props {

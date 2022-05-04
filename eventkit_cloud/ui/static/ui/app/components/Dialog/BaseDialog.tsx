@@ -1,10 +1,13 @@
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import Clear from '@material-ui/icons/Clear';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import Clear from '@mui/icons-material/Clear';
 import CustomScrollbar from '../common/CustomScrollbar';
 
 
@@ -119,7 +122,7 @@ export function BaseDialog(props: React.PropsWithChildren<Props>) {
             }}
             style={props.overlayStyle}
         >
-            <DialogTitle className={classes.title} style={props.titleStyle} disableTypography>{title}</DialogTitle>
+            <DialogTitle className={classes.title} style={props.titleStyle}>{title}</DialogTitle>
             <DialogContent
                 style={props.bodyStyle}
                 {...props.bodyProps}

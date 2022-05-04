@@ -1,14 +1,11 @@
 import { Component } from "react";
-import {
-    createStyles,
-    Table, TableCell, TableRow, TableBody,
-    Theme,
-    withStyles, Divider, PropTypes
-} from "@material-ui/core";
-import {Typography} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from "@material-ui/core/IconButton";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import { Table, TableCell, TableRow, TableBody, Theme, Divider, PropTypes } from "@mui/material";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import {Typography} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from "@mui/material/IconButton";
+import CircularProgress from "@mui/material/CircularProgress";
 import CustomScrollbar from "../common/CustomScrollbar";
 import Alignment = PropTypes.Alignment;
 
@@ -178,7 +175,7 @@ export class QueryDataBox extends Component<Props, {}> {
                         onClick={(e) => {
                             handleClose(e);
                         }}
-                    >
+                        size="large">
                         <CloseIcon className={classes.closeIcon}/>
                     </IconButton>
                 }

@@ -1,15 +1,10 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import FileFileUpload from '@material-ui/icons/CloudUpload';
-import ContentClear from '@material-ui/icons/Clear';
+import { shallow } from 'enzyme';
+import FileFileUpload from '@mui/icons-material/CloudUpload';
+import ContentClear from '@mui/icons-material/Clear';
 import { ImportButton } from '../../components/MapTools/ImportButton';
 
 describe('ImportButton component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         buttonState: 'DEFAULT',

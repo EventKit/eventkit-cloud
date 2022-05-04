@@ -1,15 +1,10 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
-import ContentClear from '@material-ui/icons/Clear';
+import { shallow } from 'enzyme';
+import ActionSettingsOverscan from '@mui/icons-material/SettingsOverscan';
+import ContentClear from '@mui/icons-material/Clear';
 import { MapViewButton } from '../../components/MapTools/MapViewButton';
 
 describe('MapViewButton component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         buttonState: 'DEFAULT',

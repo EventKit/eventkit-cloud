@@ -1,8 +1,8 @@
 import { shallow } from "enzyme";
 import FootprintDisplay from "../../components/CreateDataPack/FootprintDisplay";
-import { FormControlLabel } from "@material-ui/core";
-import Card from "@material-ui/core/Card";
-import ListItemText from "@material-ui/core/ListItemText";
+import { FormControlLabel } from "@mui/material";
+import Card from "@mui/material/Card";
+import ListItemText from "@mui/material/ListItemText";
 
 describe('FootprintDisplay component', () => {
 

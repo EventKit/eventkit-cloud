@@ -1,15 +1,15 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import Joyride, {Step, StoreHelpers} from 'react-joyride';
-import Help from '@material-ui/icons/Help';
-import Paper from '@material-ui/core/Paper';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Divider from '@material-ui/core/Divider';
-import Warning from '@material-ui/icons/Warning';
-import ErrorOutline from '@material-ui/icons/ErrorOutlined';
+import Help from '@mui/icons-material/Help';
+import Paper from '@mui/material/Paper';
+import ButtonBase from '@mui/material/ButtonBase';
+import Divider from '@mui/material/Divider';
+import Warning from '@mui/icons-material/Warning';
+import ErrorOutline from '@mui/icons-material/ErrorOutlined';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
 import DataCartDetails from './DataCartDetails';
@@ -28,11 +28,13 @@ import BaseDialog from '../Dialog/BaseDialog';
 import {joyride} from '../../joyride.config';
 import {makeDatacartSelector} from '../../selectors/runSelector';
 import {Location} from 'history';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {getJobDetails} from "../../utils/generic"
 import {DataCartProvider} from "./context/DataCart";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     runs: Eventkit.FullRun[];

@@ -1,15 +1,10 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import ContentCreate from '@material-ui/icons/Create';
-import ContentClear from '@material-ui/icons/Clear';
+import { shallow } from 'enzyme';
+import ContentCreate from '@mui/icons-material/Create';
+import ContentClear from '@mui/icons-material/Clear';
 import { DrawFreeButton } from '../../components/MapTools/DrawFreeButton';
 
 describe('DrawFreeButton component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         buttonState: 'DEFAULT',

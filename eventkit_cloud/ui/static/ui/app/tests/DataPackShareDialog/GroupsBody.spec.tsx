@@ -1,5 +1,5 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import CustomTextField from '../../components/common/CustomTextField';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 import GroupsHeaderRow from '../../components/DataPackShareDialog/GroupsHeaderRow';
@@ -7,11 +7,6 @@ import GroupBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTool
 import { GroupsBody } from '../../components/DataPackShareDialog/GroupsBody';
 
 describe('GroupBody component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         groups: [

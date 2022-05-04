@@ -1,9 +1,9 @@
 import * as React from 'react';
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
-import { PopoverOrigin } from '@material-ui/core/Popover';
-import { PropTypes } from '@material-ui/core';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import NavigationMoreVert from '@mui/icons-material/MoreVert';
+import { PopoverOrigin } from '@mui/material/Popover';
+import { PropTypes } from '@mui/material';
 
 export interface Props {
     className?: string;
@@ -63,7 +63,7 @@ export class IconMenu extends React.Component<Props, State> {
     }
 
     render() {
-        return ([
+        return [
             <IconButton
                 key="button"
                 name="iconButton"
@@ -77,7 +77,7 @@ export class IconMenu extends React.Component<Props, State> {
                 onClick={this.handleOpen}
                 disabled={this.props.disabled}
                 color={this.props.color}
-            >
+                size="large">
                 {this.props.icon || <NavigationMoreVert className="qa-IconMenu-icon" color="primary" />}
             </IconButton>,
             <Menu
@@ -86,7 +86,6 @@ export class IconMenu extends React.Component<Props, State> {
                 anchorEl={this.state.anchor}
                 open={Boolean(this.state.anchor)}
                 onClose={this.handleClose}
-                getContentAnchorEl={undefined}
                 anchorOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
@@ -118,7 +117,7 @@ export class IconMenu extends React.Component<Props, State> {
                     });
                 })}
             </Menu>,
-        ]);
+        ];
     }
 }
 

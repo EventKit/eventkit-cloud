@@ -1,6 +1,6 @@
-import {IconButton, Popover, Typography} from "@material-ui/core";
-import WarningIcon from '@material-ui/icons/Warning';
-import CloseIcon from '@material-ui/icons/Close';
+import {IconButton, Popover, Typography} from "@mui/material";
+import WarningIcon from '@mui/icons-material/Warning';
+import CloseIcon from '@mui/icons-material/Close';
 import {mount} from "enzyme";
 import {act} from "react-dom/test-utils";
 import {UnavailableFilterPopup} from "../../components/DataPackPage/UnavailableFilterPopup";

@@ -1,12 +1,13 @@
 import { Component } from 'react';
-import {
-    withTheme, createStyles, withStyles, Theme,
-} from '@material-ui/core/styles';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import Radio from '@material-ui/core/Radio';
-import Button from '@material-ui/core/Button';
-import FormControl from '@material-ui/core/FormControl';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import BaseDialog from './BaseDialog';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({

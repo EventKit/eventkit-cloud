@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import {arrayHasValue} from "../../utils/generic";

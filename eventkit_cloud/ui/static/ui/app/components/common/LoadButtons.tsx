@@ -1,10 +1,11 @@
 import { createRef, Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
-import ArrowRightIcon from '@material-ui/icons/ArrowRight';
-import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
-import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 
 export interface Props {
     style?: object;

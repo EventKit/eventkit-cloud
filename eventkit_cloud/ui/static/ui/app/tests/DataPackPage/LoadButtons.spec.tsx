@@ -1,10 +1,10 @@
 import * as sinon from 'sinon';
 import {mount} from 'enzyme';
-import Button from '@material-ui/core/Button';
-import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
-import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import Button from '@mui/material/Button';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import {LoadButtons} from '../../components/common/LoadButtons';
-import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 
 describe('LoadButtons component', () => {
     const getProps = () => ({

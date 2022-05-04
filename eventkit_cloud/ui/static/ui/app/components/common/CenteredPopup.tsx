@@ -1,9 +1,13 @@
 import * as React from "react";
-import {Theme, withStyles} from "@material-ui/core/styles";
-import withWidth from "@material-ui/core/withWidth";
+import { Theme } from "@mui/material/styles";
+import withStyles from '@mui/styles/withStyles';
 import {useRef} from "react";
-import Popover from "@material-ui/core/Popover";
-import Button from "@material-ui/core/Button";
+import Popover from "@mui/material/Popover";
+import Button from "@mui/material/Button";
+
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 
 const jss = (theme: Eventkit.Theme & Theme) => ({

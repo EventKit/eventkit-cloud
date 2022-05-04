@@ -1,6 +1,8 @@
 import {useState} from "react";
-import {createStyles, TextField, Theme, withStyles} from "@material-ui/core";
-import {OutlinedTextFieldProps} from "@material-ui/core/TextField";
+import { TextField, Theme } from "@mui/material";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import {OutlinedTextFieldProps} from "@mui/material/TextField";
 
 
 interface Props extends OutlinedTextFieldProps {

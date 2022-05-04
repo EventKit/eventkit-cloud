@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import ActionSearch from '@material-ui/icons/Search';
-import ContentClear from '@material-ui/icons/Clear';
+import withTheme from '@mui/styles/withTheme';
+import ActionSearch from '@mui/icons-material/Search';
+import ContentClear from '@mui/icons-material/Clear';
 
 export class SearchAOIButton extends Component {
     constructor(props) {

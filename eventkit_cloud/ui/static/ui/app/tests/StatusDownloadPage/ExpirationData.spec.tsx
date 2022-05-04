@@ -1,15 +1,9 @@
 import * as sinon from 'sinon';
-import Edit from '@material-ui/icons/Edit';
-import { createShallow } from '@material-ui/core/test-utils';
+import Edit from '@mui/icons-material/Edit';
+import { shallow } from 'enzyme';
 import { ExpirationData } from '../../components/StatusDownloadPage/ExpirationData';
 
 describe('ExpirationData component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
-
     const getProps = () => ({
         expiration: '2017-03-24T15:52:35.637258Z',
         handleExpirationChange: sinon.spy(),

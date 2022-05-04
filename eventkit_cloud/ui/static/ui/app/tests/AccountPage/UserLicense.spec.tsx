@@ -1,10 +1,10 @@
 import { mount } from 'enzyme';
 import * as sinon from 'sinon';
-import CheckBox from '@material-ui/core/Checkbox';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import CheckBox from '@mui/material/Checkbox';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 import UserLicense from '../../components/AccountPage/UserLicense';
 

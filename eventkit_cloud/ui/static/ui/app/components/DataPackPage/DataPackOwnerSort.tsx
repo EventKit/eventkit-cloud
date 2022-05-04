@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import MenuItem from '@material-ui/core/MenuItem';
+import MenuItem from '@mui/material/MenuItem';
 import DropDownMenu from '../common/DropDownMenu';
 
 export interface Props {

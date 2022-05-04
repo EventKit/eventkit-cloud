@@ -1,7 +1,8 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Checkbox from '@material-ui/core/Checkbox';
-import Checked from '@material-ui/icons/CheckBox';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Checkbox from '@mui/material/Checkbox';
+import Checked from '@mui/icons-material/CheckBox';
 
 export interface Props {
     formats: Eventkit.Format[];

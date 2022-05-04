@@ -1,8 +1,10 @@
 import { Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Button from '@material-ui/core/Button';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     handleToggle: () => void;

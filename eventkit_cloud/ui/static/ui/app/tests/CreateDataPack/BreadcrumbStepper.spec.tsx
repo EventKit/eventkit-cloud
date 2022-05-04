@@ -1,9 +1,9 @@
 import * as sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import Warning from '@material-ui/icons/Warning';
-import NavigationArrowBack from '@material-ui/icons/ArrowBack';
-import NavigationArrowForward from '@material-ui/icons/ArrowForward';
-import NavigationCheck from '@material-ui/icons/Check';
+import Warning from '@mui/icons-material/Warning';
+import NavigationArrowBack from '@mui/icons-material/ArrowBack';
+import NavigationArrowForward from '@mui/icons-material/ArrowForward';
+import NavigationCheck from '@mui/icons-material/Check';
 import PageLoading from '../../components/common/PageLoading';
 import { BreadcrumbStepper } from '../../components/CreateDataPack/BreadcrumbStepper';
 import ExportAOI from '../../components/CreateDataPack/ExportAOI';
@@ -11,7 +11,7 @@ import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../../components/CreateDataPack/ExportSummary';
 import * as utils from '../../utils/mapUtils';
 import history from '../../utils/history';
-import {Fab} from "@material-ui/core";
+import {Fab} from "@mui/material";
 
 const providers = [
     {

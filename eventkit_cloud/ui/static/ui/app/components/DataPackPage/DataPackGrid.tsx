@@ -1,10 +1,12 @@
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@mui/material/ImageList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
+import { Breakpoint } from '@mui/material/styles';
 import {useEffect, useState} from "react";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export interface Props {
     runIds: string[];
@@ -67,16 +69,16 @@ export function DataPackGrid(props: Props) {
             style={{height: 'calc(100vh - 236px)', width: '100%'}}
         >
             <div style={styles.root} className="qa-div-root">
-                <GridList
-                    className="qa-DataPackGrid-GridList"
-                    cellHeight="auto"
+                <ImageList
+                    className="qa-DataPackGrid-ImageList"
+                    rowHeight="auto"
                     style={styles.gridList}
-                    spacing={isWidthUp('md', props.width) ? 7 : 2}
+                    gap={isWidthUp('md', props.width) ? 7 : 2}
                     cols={getColumns()}
                 >
                     {props.runIds.map((id, index) => (
                         <DataPackGridItem
-                            className="qa-DataPackGrid-GridListItem"
+                            className="qa-DataPackGrid-ImageListItem"
                             runId={id}
                             userData={props.user.data}
                             key={id}
@@ -88,7 +90,7 @@ export function DataPackGrid(props: Props) {
                             showFeaturedFlag
                         />
                     ))}
-                </GridList>
+                </ImageList>
             </div>
             <LoadButtons
                 range={props.range}

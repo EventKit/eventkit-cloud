@@ -1,7 +1,7 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
 import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
@@ -51,7 +51,6 @@ import {
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
 import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
@@ -60,6 +59,9 @@ import EventkitJoyride from "../common/JoyrideWrapper";
 import {MapZoomLimiter} from "./MapZoomLimiter";
 import {Step1Validator} from "./ExportValidation";
 import {getProviders} from "../../actions/providerActions";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 export const WGS84 = 'EPSG:4326';
 

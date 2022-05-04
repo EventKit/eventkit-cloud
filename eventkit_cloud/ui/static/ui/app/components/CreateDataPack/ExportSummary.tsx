@@ -1,18 +1,21 @@
 import * as PropTypes from 'prop-types';
 import { Component } from 'react';
-import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 import {connect} from 'react-redux';
 import Joyride, {Step, StoreHelpers} from 'react-joyride';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import MapCard from '../common/MapCard';
 import CustomScrollbar from '../common/CustomScrollbar';
 import CustomTableRow from '../common/CustomTableRow';
 import {joyride} from '../../joyride.config';
 import {isZoomLevelInRange, shouldDisplay, supportsZoomLevels} from "../../utils/generic";
 import InfoDialog from "../Dialog/InfoDialog";
-import {Link} from "@material-ui/core";
+import {Link} from "@mui/material";
 import EventkitJoyride from "../common/JoyrideWrapper";
-import Checkbox from "@material-ui/core/Checkbox";
+import Checkbox from "@mui/material/Checkbox";
 import {updateExportInfo} from "../../actions/datacartActions";
 import {stepperNextDisabled, stepperNextEnabled} from "../../actions/uiActions";
 import Visibility = Eventkit.Permissions.Visibility;
@@ -99,13 +102,13 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     infoItem: {
         display: 'flex',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'block',
         },
         '& strong': {
             marginRight: '5px',
             whiteSpace: 'nowrap',
-            [theme.breakpoints.down('sm')]: {
+            [theme.breakpoints.down('md')]: {
                 whiteSpace: 'unset',
             },
         }

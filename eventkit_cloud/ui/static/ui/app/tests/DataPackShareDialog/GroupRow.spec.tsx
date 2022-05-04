@@ -2,9 +2,9 @@ import * as sinon from 'sinon';
 import axios from 'axios';
 import {mount, shallow} from 'enzyme';
 import MockAdapter from 'axios-mock-adapter';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 import {GroupRow} from '../../components/DataPackShareDialog/GroupRow';
 import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
 

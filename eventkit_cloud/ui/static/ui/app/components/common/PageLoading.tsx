@@ -1,7 +1,8 @@
-import {
-    withStyles, withTheme, createStyles, Theme,
-} from '@material-ui/core/styles';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { Theme } from '@mui/material/styles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import createStyles from '@mui/styles/createStyles';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const jss = () => createStyles({
     full: {

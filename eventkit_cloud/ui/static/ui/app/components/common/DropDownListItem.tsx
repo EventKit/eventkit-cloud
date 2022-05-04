@@ -1,11 +1,12 @@
 import { Children, Component } from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Collapse from '@material-ui/core/Collapse';
-import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 export interface Props {
     title: any;
@@ -44,7 +45,10 @@ export class DropDownListItem extends Component<Props, State> {
                 <div style={{ flex: '1 1 auto', fontWeight: 'bold', color: colors.black }}>
                     {this.props.title}
                 </div>
-                <IconButton onClick={this.handleExpand} style={{ width: '36px', height: '36px' }}>
+                <IconButton
+                    onClick={this.handleExpand}
+                    style={{ width: '36px', height: '36px' }}
+                    size="large">
                     {this.state.open ?
                         <ExpandLess color="primary" />
                         :

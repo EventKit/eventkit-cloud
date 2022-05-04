@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import moment from 'moment';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
 
 describe('DataPackFeaturedItem component', () => {

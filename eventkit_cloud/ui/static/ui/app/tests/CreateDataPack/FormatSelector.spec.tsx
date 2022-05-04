@@ -1,4 +1,4 @@
-import Checkbox from '@material-ui/core/Checkbox';
+import Checkbox from '@mui/material/Checkbox';
 import {shallow} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";
 import {Compatibility} from '../../utils/enums';

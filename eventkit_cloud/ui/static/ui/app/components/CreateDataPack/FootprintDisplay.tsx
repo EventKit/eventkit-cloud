@@ -1,11 +1,11 @@
 import { Component } from 'react';
-import {
-    createStyles, withStyles, FormControlLabel, Switch,
-} from '@material-ui/core';
+import { FormControlLabel, Switch } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
 import * as PropTypes from 'prop-types';
-import Card from '@material-ui/core/Card';
-import ListItemText from '@material-ui/core/ListItemText';
-import Typography from '@material-ui/core/Typography';
+import Card from '@mui/material/Card';
+import ListItemText from '@mui/material/ListItemText';
+import Typography from '@mui/material/Typography';
 import theme from '../../styles/eventkit_theme';
 import { MapLayer } from './CreateExport';
 

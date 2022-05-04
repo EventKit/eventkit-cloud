@@ -1,14 +1,9 @@
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import IconMenu from '../../components/common/IconMenu';
 import { OwnUserRow } from '../../components/UserGroupsPage/OwnUserRow';
 
 describe('OwnUserRow component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         user: {

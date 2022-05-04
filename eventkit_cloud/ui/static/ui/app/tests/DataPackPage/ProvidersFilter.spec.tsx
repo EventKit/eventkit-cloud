@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Checkbox from '@material-ui/core/Checkbox';
+import Checkbox from '@mui/material/Checkbox';
 import { ProvidersFilter } from '../../components/DataPackPage/ProvidersFilter';
 
 describe('ProvidersFilter component', () => {

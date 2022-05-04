@@ -1,14 +1,9 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DeleteNotificationsDialog } from '../../components/Dialog/DeleteNotificationsDialog';
 
 describe('DeleteDataPackDialog component', () => {
-    let shallow: any;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         show: true,

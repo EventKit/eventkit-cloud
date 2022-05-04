@@ -1,16 +1,18 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import {connect} from 'react-redux';
-import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
-import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
 import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import queryString from 'query-string';
-import Help from '@material-ui/icons/Help';
-import Button from '@material-ui/core/Button';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import TextField from '@material-ui/core/TextField';
-import Warning from '@material-ui/icons/Warning';
-import AddCircle from '@material-ui/icons/AddCircle';
+import Help from '@mui/icons-material/Help';
+import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
+import TextField from '@mui/material/TextField';
+import Warning from '@mui/icons-material/Warning';
+import AddCircle from '@mui/icons-material/AddCircle';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../common/CustomScrollbar';
@@ -37,9 +39,11 @@ import {
 import {getUsers} from '../../actions/usersActions';
 import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from '../../utils/history';
 import EventkitJoyride from "../common/JoyrideWrapper";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     header: {
@@ -74,7 +78,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         padding: '0px 10px',
         margin: '0px -10px 0px 5px',
         display: 'none',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'inline-block',
         },
     },
@@ -88,7 +92,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     body: {
         height: 'calc(100vh - 130px)',
         width: 'calc(100% - 250px)',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width: '100%',
         }
     },
@@ -171,7 +175,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     tourText: {
         marginLeft: '5px',
         display: 'inline-block',
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: 'none',
         },
     },

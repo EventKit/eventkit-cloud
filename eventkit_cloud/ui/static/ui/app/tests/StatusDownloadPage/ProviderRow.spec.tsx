@@ -29,14 +29,14 @@ jest.mock('../../components/Dialog/BaseDialog', () => {
         </div>);
 });
 
-jest.mock('@material-ui/icons/KeyboardArrowUp', () => {
+jest.mock('@mui/icons-material/KeyboardArrowUp', () => {
     // eslint-disable-next-line global-require,no-shadow
     const React = require('react');
     // eslint-disable-next-line react/prop-types
     return (props) => (<div>arrow up</div>)
 });
 
-jest.mock('@material-ui/icons/KeyboardArrowDown', () => {
+jest.mock('@mui/icons-material/KeyboardArrowDown', () => {
     // eslint-disable-next-line global-require,no-shadow
     const React = require('react');
     // eslint-disable-next-line react/prop-types

@@ -1,5 +1,5 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import moment from 'moment';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
@@ -9,7 +9,7 @@ import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoT
 import { DataCartDetails } from '../../components/StatusDownloadPage/DataCartDetails';
 
 describe('DataCartDetails component', () => {
-    let shallow;
+
 
     const run = {
         uid: '12345',
@@ -77,10 +77,6 @@ describe('DataCartDetails component', () => {
             export_provider_type: 2,
         },
     ];
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => (
         {

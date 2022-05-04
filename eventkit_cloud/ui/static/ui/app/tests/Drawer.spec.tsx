@@ -1,23 +1,18 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import MenuItem from '@material-ui/core/MenuItem';
+import MenuItem from '@mui/material/MenuItem';
 import { NavLink } from 'react-router-dom';
-import Dashboard from '@material-ui/icons/Dashboard';
-import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
-import ContentAddBox from '@material-ui/icons/AddBox';
-import ActionInfoOutline from '@material-ui/icons/InfoOutlined';
-import SocialPerson from '@material-ui/icons/Person';
-import SocialGroup from '@material-ui/icons/Group';
-import ActionExitToApp from '@material-ui/icons/ExitToApp';
+import Dashboard from '@mui/icons-material/Dashboard';
+import AVLibraryBooks from '@mui/icons-material/LibraryBooks';
+import ContentAddBox from '@mui/icons-material/AddBox';
+import ActionInfoOutline from '@mui/icons-material/InfoOutlined';
+import SocialPerson from '@mui/icons-material/Person';
+import SocialGroup from '@mui/icons-material/Group';
+import ActionExitToApp from '@mui/icons-material/ExitToApp';
 import { Drawer } from '../components/Drawer';
 import ConfirmDialog from '../components/Dialog/ConfirmDialog';
+import { shallow } from 'enzyme';
 
 describe('Drawer component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         open: true,

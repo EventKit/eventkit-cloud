@@ -1,19 +1,14 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import SocialGroup from '@material-ui/icons/Group';
-import Lock from '@material-ui/icons/LockOutlined';
+import { shallow } from 'enzyme';
+import ButtonBase from '@mui/material/ButtonBase';
+import SocialGroup from '@mui/icons-material/Group';
+import Lock from '@mui/icons-material/LockOutlined';
 import DropDownMenu from '../../components/common/DropDownMenu';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import { PermissionsData } from '../../components/StatusDownloadPage/PermissionsData';
-import {Button} from "@material-ui/core";
+import {Button} from "@mui/material";
 
 describe('PermissionsData component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         permissions: {

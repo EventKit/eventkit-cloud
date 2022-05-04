@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import ButtonBase from '@material-ui/core/ButtonBase';
+import ButtonBase from '@mui/material/ButtonBase';
 import { ShareInfoBody } from '../../components/DataPackShareDialog/ShareInfoBody';
 
 describe('MembersHeaderRow component', () => {

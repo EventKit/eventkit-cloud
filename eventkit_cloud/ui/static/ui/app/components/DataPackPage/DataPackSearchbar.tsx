@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import TextField from '@mui/material/TextField';
 
 export interface Props {
     onSearchChange: (search: string) => void;

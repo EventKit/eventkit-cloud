@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Lock from '@material-ui/icons/LockOutlined';
-import SocialGroup from '@material-ui/icons/Group';
-import CheckCircle from '@material-ui/icons/CheckCircle';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import ButtonBase from '@mui/material/ButtonBase';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Lock from '@mui/icons-material/LockOutlined';
+import SocialGroup from '@mui/icons-material/Group';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export interface Props {

@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import Joyride from 'react-joyride';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
@@ -9,11 +9,6 @@ import CustomScrollbar from '../../components/common/CustomScrollbar';
 import history from '../../utils/history';
 
 describe('StatusDownload component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const config = { MAX_DATAPACK_EXPIRATION_DAYS: '30' };
     const providers = [

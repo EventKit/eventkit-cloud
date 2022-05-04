@@ -1,9 +1,8 @@
-import { createShallow } from '@material-ui/core/test-utils';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { shallow } from 'enzyme';
+import CircularProgress from '@mui/material/CircularProgress';
 import { PageLoading } from '../../components/common/PageLoading';
 
 describe('Loading component', () => {
-    const shallow = createShallow();
     const props = {
         classes: {
             full: 'full',

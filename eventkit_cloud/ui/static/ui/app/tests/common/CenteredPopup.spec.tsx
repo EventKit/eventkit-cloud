@@ -4,7 +4,7 @@ import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 import {CenteredPopup} from "../../components/common/CenteredPopup";
 
-jest.mock('@material-ui/core/Popover', () => {
+jest.mock('@mui/material/Popover', () => {
     // eslint-disable-next-line global-require,no-shadow
     const React = require('react');
     // eslint-disable-next-line react/prop-types

@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import { DataPackFilterButton } from '../../components/DataPackPage/DataPackFilterButton';
 
 describe('DataPackFilterButton component', () => {

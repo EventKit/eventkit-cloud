@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import TextField from '@material-ui/core/TextField';
+import TextField from '@mui/material/TextField';
 import { DataPackSearchbar } from '../../components/DataPackPage/DataPackSearchbar';
 
 describe('DataPackSearchbar component', () => {

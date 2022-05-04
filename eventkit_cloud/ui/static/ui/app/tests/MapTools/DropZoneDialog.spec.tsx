@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import Dropzone from 'react-dropzone';
 import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
 
@@ -9,11 +9,6 @@ jest.mock("../../components/Dialog/BaseDialog", () => {
 });
 
 describe('DropZoneDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         showImportModal: false,

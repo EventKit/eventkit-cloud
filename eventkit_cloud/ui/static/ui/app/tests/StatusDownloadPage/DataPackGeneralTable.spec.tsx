@@ -1,14 +1,9 @@
 import * as sinon from 'sinon';
-import {createShallow} from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import CustomTableRow from '../../components/common/CustomTableRow';
 import {DataPackGeneralTable} from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const projections = [{srid: 4326, name: "TEST:4326"}];
     const providers = [

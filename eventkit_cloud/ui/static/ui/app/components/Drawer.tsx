@@ -1,17 +1,19 @@
 import { Component } from 'react';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
-import MuiDrawer from '@material-ui/core/Drawer';
-import MenuItem from '@material-ui/core/MenuItem';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import createStyles from '@mui/styles/createStyles';
+import MuiDrawer from '@mui/material/Drawer';
+import MenuItem from '@mui/material/MenuItem';
 import { NavLink } from 'react-router-dom';
-import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
-import ContentAddBox from '@material-ui/icons/AddBox';
-import Dashboard from '@material-ui/icons/Dashboard';
-import ActionInfoOutline from '@material-ui/icons/InfoOutlined';
-import SocialPerson from '@material-ui/icons/Person';
-import SocialGroup from '@material-ui/icons/Group';
-import ActionExitToApp from '@material-ui/icons/ExitToApp';
-import Mail from '@material-ui/icons/MailOutlined';
-import { Theme } from '@material-ui/core';
+import AVLibraryBooks from '@mui/icons-material/LibraryBooks';
+import ContentAddBox from '@mui/icons-material/AddBox';
+import Dashboard from '@mui/icons-material/Dashboard';
+import ActionInfoOutline from '@mui/icons-material/InfoOutlined';
+import SocialPerson from '@mui/icons-material/Person';
+import SocialGroup from '@mui/icons-material/Group';
+import ActionExitToApp from '@mui/icons-material/ExitToApp';
+import Mail from '@mui/icons-material/MailOutlined';
+import { Theme } from '@mui/material';
 import ConfirmDialog from './Dialog/ConfirmDialog';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({

@@ -1,10 +1,10 @@
 import * as PropTypes from 'prop-types';
 import { Component, useEffect, useState } from 'react';
 import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
-import Dot from '@material-ui/icons/FiberManualRecord';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import ImageList from '@mui/material/ImageList';
+import Dot from '@mui/icons-material/FiberManualRecord';
 import axios from 'axios';
 import Map from 'ol/Map';
 import Feature from 'ol/Feature';
@@ -53,8 +53,11 @@ import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo} from '../../actions/datacartActions';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import {WGS84} from "../CreateDataPack/ExportAOI";
+
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 
 export const RED_STYLE = new Style({
@@ -1019,11 +1022,11 @@ export class MapView extends Component<Props, State> {
             <div style={{height: 'calc(100vh - 236px)'}}>
                 <ScrollBarRefWrap style={styles.list} setScrollbar={this.props.setScrollbar}>
                     <div style={styles.root}>
-                        <GridList
-                            className="qa-MapView-GridList"
-                            cellHeight="auto"
+                        <ImageList
+                            className="qa-MapView-ImageList"
+                            rowHeight="auto"
                             cols={1}
-                            spacing={0}
+                            gap={0}
                             style={{width: '100%'}}
                         >
                             {this.props.runIds.map(id => (
@@ -1038,7 +1041,7 @@ export class MapView extends Component<Props, State> {
                                     providers={this.props.providers}
                                 />
                             ))}
-                        </GridList>
+                        </ImageList>
                     </div>
                     {load}
                 </ScrollBarRefWrap>

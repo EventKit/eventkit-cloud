@@ -1,7 +1,7 @@
 import { mount } from 'enzyme';
 import * as sinon from 'sinon';
-import NavigationCheck from '@material-ui/icons/Check';
-import Button from '@material-ui/core/Button';
+import NavigationCheck from '@mui/icons-material/Check';
+import Button from '@mui/material/Button';
 import SaveButton from '../../components/AccountPage/SaveButton';
 
 describe('SaveButton component', () => {

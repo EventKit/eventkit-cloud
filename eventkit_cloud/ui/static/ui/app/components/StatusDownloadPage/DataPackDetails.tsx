@@ -1,16 +1,19 @@
 import { Component } from 'react';
-import {withTheme, withStyles, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import withStyles from '@mui/styles/withStyles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import ProviderPreview from "./ProviderPreview";
 import CreateDataPackButton from "./CreateDataPackButton";
 import {renderIf} from "../../utils/renderIf";
 import {ProviderRowRegionWrap} from "./ProviderRowRegionWrap";
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {

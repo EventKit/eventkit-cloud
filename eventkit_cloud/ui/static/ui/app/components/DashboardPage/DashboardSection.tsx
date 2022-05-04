@@ -1,11 +1,15 @@
 import * as React from 'react';
-import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
+import { Theme, Breakpoint } from '@mui/material/styles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import createStyles from '@mui/styles/createStyles';
+import ImageList from '@mui/material/ImageList';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import SwipeableViews from 'react-swipeable-views';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+
+// FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
+const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     tabsRoot: {
@@ -46,7 +50,7 @@ export interface Props {
     columns: number;
     onViewAll?: () => void;
     noDataElement?: React.ReactElement<any>;
-    cellHeight?: number;
+    rowHeight?: number;
     gridPadding?: number;
     rows?: number;
     rowMajor?: boolean;
@@ -65,7 +69,7 @@ export class DashboardSection extends React.Component<Props, State> {
         style: {},
         onViewAll: undefined,
         noDataElement: undefined,
-        cellHeight: undefined,
+        rowHeight: undefined,
         gridPadding: 2,
         rows: 1,
         rowMajor: true,
@@ -181,7 +185,7 @@ export class DashboardSection extends React.Component<Props, State> {
                                 </div>
                             ));
                         } else {
-                            // For column-major layouts, create an inner single-column GridList for each column, so
+                            // For column-major layouts, create an inner single-column ImageList for each column, so
                             // that items each column gets filled completely before adding to the next one.
                             const childrenColumns = [];
                             let column = [];
@@ -201,11 +205,11 @@ export class DashboardSection extends React.Component<Props, State> {
                             }
 
                             content = childrenColumns.map((childrenColumn, columnIndex) => (
-                                <GridList
+                                <ImageList
                                     key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}`}
                                     className="qa-DashboardSection-Page-Column"
-                                    cellHeight={this.props.cellHeight || 'auto'}
-                                    spacing={this.props.gridPadding}
+                                    rowHeight={this.props.rowHeight || 'auto'}
+                                    gap={this.props.gridPadding}
                                     cols={1}
                                 >
                                     {childrenColumn.map((child, index) => (
@@ -216,21 +220,21 @@ export class DashboardSection extends React.Component<Props, State> {
                                             {child}
                                         </div>
                                     ))}
-                                </GridList>
+                                </ImageList>
                             ));
                         }
 
                         return (
-                            <GridList
+                            <ImageList
                                 key={`DashboardSection-${this.props.name}-Page${pageIndex}`}
                                 className="qa-DashboardSection-Page"
-                                cellHeight={this.props.cellHeight || 'auto'}
+                                rowHeight={this.props.rowHeight || 'auto'}
                                 style={styles.gridList}
-                                spacing={this.props.gridPadding}
+                                gap={this.props.gridPadding}
                                 cols={this.props.columns}
                             >
                                 {content}
-                            </GridList>
+                            </ImageList>
                         );
                     })}
                 </SwipeableViews>

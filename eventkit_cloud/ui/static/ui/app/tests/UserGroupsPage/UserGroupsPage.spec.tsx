@@ -1,7 +1,7 @@
-import {createShallow} from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import Joyride from 'react-joyride';
-import Help from '@material-ui/icons/Help';
+import Help from '@mui/icons-material/Help';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
 import LeaveGroupDialog from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
@@ -15,11 +15,6 @@ import history from '../../utils/history';
 import queryString from 'query-string';
 
 describe('UserGroupsPage component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const getProps = () => ({
         location: {

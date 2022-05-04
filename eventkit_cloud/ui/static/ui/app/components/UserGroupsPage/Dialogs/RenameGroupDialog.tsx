@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Button from '@mui/material/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../common/CustomTextField';
 

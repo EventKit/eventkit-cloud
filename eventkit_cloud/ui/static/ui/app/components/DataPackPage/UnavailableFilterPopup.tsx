@@ -1,13 +1,13 @@
 import * as React from 'react';
 
-import Popover from '@material-ui/core/Popover';
-import WarningIcon from '@material-ui/icons/Warning';
-import Typography from '@material-ui/core/Typography';
+import Popover from '@mui/material/Popover';
+import WarningIcon from '@mui/icons-material/Warning';
+import Typography from '@mui/material/Typography';
 import { useState } from 'react';
-import {
-    createStyles, IconButton, Link, Theme, withStyles,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import { IconButton, Link, Theme } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import CloseIcon from '@mui/icons-material/Close';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
@@ -62,7 +62,7 @@ export function UnavailableFilterPopup(props: Props) {
             <IconButton
                 className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
-            >
+                size="large">
                 <WarningIcon />
             </IconButton>
             <span>
@@ -96,7 +96,7 @@ export function UnavailableFilterPopup(props: Props) {
                         className={classes.iconBtn}
                         type="button"
                         onClick={handlePopoverClose}
-                    >
+                        size="large">
                         <CloseIcon />
                     </IconButton>
                     <div>

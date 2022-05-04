@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
-import Divider from '@material-ui/core/Divider';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import CloseIcon from '@material-ui/icons/Close';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import { createStyles, Theme, withStyles } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+import CssBaseline from '@mui/material/CssBaseline';
+import CloseIcon from '@mui/icons-material/Close';
+import ButtonBase from '@mui/material/ButtonBase';
+import { Theme } from '@mui/material';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     paper: {
@@ -54,37 +56,35 @@ function PermissionsBanner(props: Props) {
         setOpen(false);
     };
 
-    return (
-        <>
-            <CssBaseline />
-            <Paper elevation={0} className={classes.paper}>
-                <Grid container spacing={8} justify="space-between">
-                    <Grid item xs={10}>
-                        <div className={(!isOpen) ? classes.nonExpandedText : classes.expandedText}>
-                            Some sources may have been limited based on your permissions. If you believe this is an
-                            error, please contact an administrator.
-                        </div>
-                    </Grid>
-                    <Grid item>
-                        <ButtonBase
-                            className="qa-NotificationsTableItem-ActionButtons-Expand"
-                            onClick={(!isOpen) ? handleExpand : handleCloseExpand}
-                        >
-                            {!isOpen && (<ExpandMoreIcon />)}
-                            {isOpen && (<ExpandLessIcon />)}
-                        </ButtonBase>
-                        <ButtonBase
-                            className="qa-NotificationsTableItem-ActionButtons-Remove"
-                            onClick={props.handleClosedPermissionsBanner}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </ButtonBase>
-                    </Grid>
+    return <>
+        <CssBaseline />
+        <Paper elevation={0} className={classes.paper}>
+            <Grid container spacing={8} justifyContent="space-between">
+                <Grid item xs={10}>
+                    <div className={(!isOpen) ? classes.nonExpandedText : classes.expandedText}>
+                        Some sources may have been limited based on your permissions. If you believe this is an
+                        error, please contact an administrator.
+                    </div>
                 </Grid>
-            </Paper>
-            <Divider />
-        </>
-    );
+                <Grid item>
+                    <ButtonBase
+                        className="qa-NotificationsTableItem-ActionButtons-Expand"
+                        onClick={(!isOpen) ? handleExpand : handleCloseExpand}
+                    >
+                        {!isOpen && (<ExpandMoreIcon />)}
+                        {isOpen && (<ExpandLessIcon />)}
+                    </ButtonBase>
+                    <ButtonBase
+                        className="qa-NotificationsTableItem-ActionButtons-Remove"
+                        onClick={props.handleClosedPermissionsBanner}
+                    >
+                        <CloseIcon fontSize="small" />
+                    </ButtonBase>
+                </Grid>
+            </Grid>
+        </Paper>
+        <Divider />
+    </>;
 }
 
 export default withStyles(jss)(PermissionsBanner);

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import { shallow } from 'enzyme';
 import { CreateGroupDialog } from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
 
 import BaseDialog from "../../components/Dialog/BaseDialog";
@@ -16,11 +16,6 @@ jest.mock("../../components/common/CustomTextField", () => {
 });
 
 describe('CreateGroupDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         show: true,

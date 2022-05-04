@@ -1,6 +1,6 @@
 import Joyride, {Props} from 'react-joyride';
-import {withTheme} from "@material-ui/core";
-import {Theme} from "@material-ui/core/styles";
+import withTheme from '@mui/styles/withTheme';
+import {Theme} from "@mui/material/styles";
 import {JoyRideStyles} from "../../joyride.config";
 import {useMatomoContext} from "../MatomoHandler";
 

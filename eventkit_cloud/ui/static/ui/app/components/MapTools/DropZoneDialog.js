@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import withTheme from '@mui/styles/withTheme';
 import Dropzone from 'react-dropzone';
-import Button from '@material-ui/core/Button';
-import FileFileUpload from '@material-ui/icons/CloudUpload';
-import RootRef from '@material-ui/core/RootRef/RootRef';
+import Button from '@mui/material/Button';
+import FileFileUpload from '@mui/icons-material/CloudUpload';
+import RootRef from '@mui/material/RootRef/RootRef';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {
@@ -72,7 +72,7 @@ export class DropZoneDialog extends Component {
                     {({ getRootProps, getInputProps }) => {
                         const { ref } = getRootProps();
                         return (
-                            <RootRef rootRef={ref}>
+                            <>
                                 <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
                                     <span style={styles.text}>
                                         <strong>GeoJSON, KML, GPKG, zipped SHP, GeoTIFF</strong>
@@ -96,7 +96,7 @@ export class DropZoneDialog extends Component {
                                         Select A File
                                     </Button>
                                 </div>
-                            </RootRef>
+                            </>
                         );
                     }}
                 </Dropzone>

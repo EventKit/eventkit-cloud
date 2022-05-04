@@ -1,14 +1,17 @@
 import * as React from 'react';
-import AlertWarning from '@material-ui/icons/Warning';
-import AlertError from '@material-ui/icons/Error';
-import ActionDone from '@material-ui/icons/Done';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Popover from '@material-ui/core/Popover';
-import Typography from '@material-ui/core/Typography';
+import AlertWarning from '@mui/icons-material/Warning';
+import AlertError from '@mui/icons-material/Error';
+import ActionDone from '@mui/icons-material/Done';
+import CircularProgress from '@mui/material/CircularProgress';
+import Popover from '@mui/material/Popover';
+import Typography from '@mui/material/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, IconButton, Theme, withStyles, withTheme} from "@material-ui/core";
-import CloseIcon from '@material-ui/icons/Close';
+import { IconButton, Theme } from "@mui/material";
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
+import CloseIcon from '@mui/icons-material/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
 import {useAsyncRequest} from "../../utils/hooks/api";
@@ -293,7 +296,7 @@ export function ProviderStatusCheck(props: Props) {
                                 className={classes.iconBtn}
                                 type='button'
                                 onClick={handlePopoverClose}
-                            >
+                                size="large">
                                 <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
                         </Typography>

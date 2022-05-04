@@ -1,6 +1,9 @@
 import * as React from 'react';
 import {connect} from "react-redux";
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import { Theme } from '@mui/material/styles';
+import createStyles from '@mui/styles/createStyles';
+import withStyles from '@mui/styles/withStyles';
+import withTheme from '@mui/styles/withTheme';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import '../../styles/typeaheadStyles.css';
 import debounce from 'lodash/debounce';

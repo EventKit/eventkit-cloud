@@ -1,9 +1,10 @@
 import * as React from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
-import CheckBox from '@material-ui/icons/CheckBox';
+import { Theme } from '@mui/material/styles';
+import withTheme from '@mui/styles/withTheme';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CheckBoxOutline from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBox from '@mui/icons-material/CheckBox';
 import AdminShare from '../icons/AdminShareIcon';
 import NotificationIconPopover from "../DataPackPage/NotificationIconPopover";
 
