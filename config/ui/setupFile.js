@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import Enzyme from 'enzyme';
 import Adapter from '@wojtekmaj/enzyme-adapter-react-17';
-import '@babel/polyfill';
 import 'raf/polyfill';
 import theme from './eventkit_cloud/ui/static/ui/app/styles/eventkit_theme';
 

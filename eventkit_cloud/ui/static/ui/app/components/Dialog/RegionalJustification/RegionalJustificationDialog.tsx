@@ -240,7 +240,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         if (policy) {
             actionProps.actions = [
                 (
-                    <Button classes={{root: classes.cancelAndExitButton, label: classes.cancelAndExitButtonLabel}}
+                    <Button classes={{root: classes.cancelAndExitButton}}
                             key="cancelAndExit"
                             variant="contained"
                             size="large"

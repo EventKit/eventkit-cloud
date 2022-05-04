@@ -34,6 +34,7 @@ import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
 import {RegionsProvider} from "./common/context/RegionContext";
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { Theme } from '@mui/material/styles';
 
 // FIXME checkout https://mui.com/components/use-media-query/#migrating-from-withwidth
 const withWidth = () => (WrappedComponent) => (props) => <WrappedComponent {...props} width="xs" />;
@@ -141,7 +142,7 @@ interface Props {
     getNotificationsUnreadCount: (options?: object) => void;
     getNotifications: (options?: object) => void;
     width: Breakpoint;
-    theme: Eventkit.Theme;
+    theme: Eventkit.Theme & Theme;
     classes: {
         appBar: string;
         title: string;
@@ -728,7 +729,7 @@ export class Application extends React.Component<Props, State> {
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: (this.props.drawer === 'open' || this.props.drawer === 'opening')
-                && useMediaQuery(theme.breakpoints.up('xl')) ? 200 : 0,
+                && useMediaQuery(this.props.theme.breakpoints.up('xl')) ? 200 : 0,
                 background: 'rgb(17, 24, 35)',
                 backgroundImage: `url(${images.topo_dark})`,
                 height: `calc(100vh - ${mainAppBarHeight}px)`,

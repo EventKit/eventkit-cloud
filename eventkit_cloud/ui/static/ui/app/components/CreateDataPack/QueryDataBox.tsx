@@ -1,5 +1,6 @@
 import { Component } from "react";
-import { Table, TableCell, TableRow, TableBody, Theme, Divider, PropTypes } from "@mui/material";
+import { Table, TableRow, TableBody, Theme, Divider } from "@mui/material";
+import TableCell, { TableCellProps } from '@mui/material/TableCell';
 import createStyles from '@mui/styles/createStyles';
 import withStyles from '@mui/styles/withStyles';
 import {Typography} from '@mui/material';
@@ -7,7 +8,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from "@mui/material/IconButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import CustomScrollbar from "../common/CustomScrollbar";
-import Alignment = PropTypes.Alignment;
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     card: {
@@ -78,8 +78,8 @@ export interface Props {
 
 export class QueryDataBox extends Component<Props, {}> {
 
-    private keyAlign : Alignment = "left";
-    private valueAlign : Alignment = "right";
+    private keyAlign: TableCellProps['align'] = "left";
+    private valueAlign: TableCellProps['align'] = "right";
 
     static defaultProps = {
         maxHeight: 125,

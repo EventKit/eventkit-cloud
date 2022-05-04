@@ -105,7 +105,7 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
             <div>
                 <IconButton
                     className={classes.closeButton}
-                    buttonRef={closerRef}
+                    ref={closerRef}
                     type="button"
                     onClick={(e) => {
                         props.closePoi ? props.closePoi(e) : () => {};
