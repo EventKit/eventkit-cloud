@@ -18,12 +18,12 @@ build:
 
 requirements:
   host:
-    - python {{ python }}
-    - pip
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pip {% if pip is defined %} {{ pip }} {% endif %}
   run:
-    - python {{ python }}
-    - pyproj {{ pyproj }}
-    - gdal {{ gdal }}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pyproj {% if pyproj is defined %} {{ pyproj }} {% endif %}
+    - gdal {% if gdal is defined %} {{ gdal }} {% endif %}
 
 test:
   imports:
