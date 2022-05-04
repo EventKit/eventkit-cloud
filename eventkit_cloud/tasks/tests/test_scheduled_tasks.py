@@ -23,7 +23,6 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     send_warning_email,
     check_provider_availability_task,
     clean_up_queues_task,
-    list_to_dict,
     get_celery_task_details,
     order_celery_tasks,
     scale_by_tasks,
@@ -32,6 +31,7 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     scale_celery_task,
     clean_up_stuck_tasks,
 )
+from eventkit_cloud.tasks.helpers import list_to_dict
 from eventkit_cloud.utils.services.check_result import CheckResult
 
 logger = logging.getLogger(__name__)

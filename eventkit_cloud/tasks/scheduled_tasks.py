@@ -23,7 +23,7 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, list_to_dict
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import kill_workers
@@ -159,6 +159,8 @@ def scale_by_runs(max_tasks_memory):
     total_tasks = 0
     running_tasks = client.get_running_tasks(app_name)
     logger.info(f"Running tasks: {running_tasks}")
+    running_default_tasks = client.get_running_tasks(app_name, "celery")
+
     if running_tasks:
         total_tasks = running_tasks["pagination"].get("total_results", 0)
         running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
@@ -177,13 +179,15 @@ def scale_by_runs(max_tasks_memory):
         kill_workers(task_names=finished_run_uids, client=client)
 
     for run in runs:
+        celery_run_task = copy.deepcopy(celery_tasks["run"])
+
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
 
         if max_runs and total_tasks >= max_runs:
             logger.info(f"total_tasks ({total_tasks}) >= max_runs ({max_runs})")
             break
-        if running_tasks_memory + celery_tasks["memory"] >= max_tasks_memory:
+        if running_tasks_memory + celery_run_task["memory"] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
             break
         task_name = run.uid
@@ -205,10 +209,11 @@ def scale_by_runs(max_tasks_memory):
         pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token, user_details=user_details).apply_async(
             queue=str(task_name), routing_key=str(task_name)
         )
-        task = copy.deepcopy(celery_tasks)
-        task["command"] = task["command"].format(celery_group_name=task_name)
-        run_task_command(client, app_name, str(task_name), task)
+        celery_run_task["command"] = celery_run_task["command"].format(celery_group_name=task_name)
+        run_task_command(client, app_name, str(task_name), celery_run_task)
+        # Keep track of new resources being used.
         total_tasks += 1
+        running_tasks_memory += celery_run_task["memory"]
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -333,21 +338,6 @@ def run_task_command(client: ScaleClient, app_name: str, queue_name: str, task: 
     client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
 
-def list_to_dict(list_to_convert: dict, key_name: str):
-    """
-    USed to convert a list of dictionaries to a dictionary using some common properties (i.e. name)
-    Careful as data will be lost for duplicate entries, this assumes the list is a "set".
-    :param list_to_convert: A list of dictionaries
-    :param key_name: A value from each dict to use as the key.
-    :return: A dictionary.
-    """
-    converted_dict = dict()
-    if list_to_convert:
-        for item in list_to_convert:
-            converted_dict[item[key_name]] = item
-    return converted_dict
-
-
 @app.task(
     name="Check Provider Availability",
     base=EventKitBaseTask,
@@ -443,18 +433,24 @@ def get_celery_tasks_scale_by_run():
     default_command = (
         "echo '************STARTING NEW WORKER****************' && hostname && echo {celery_group_name} & "
         "CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --concurrency=1 "
-        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
-        "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large "
         "& CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL "
         "-n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} "
         "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
     )
 
-    celery_tasks = {
+    celery_tasks = {"run": {
         "command": default_command,
         # NOQA
         "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
         "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
+    }, "celery": {
+                "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+                + get_celery_health_check_command("celery"),
+                "disk": 2048,
+                "memory": 2048,
+                "limit": 6,
+            }
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
