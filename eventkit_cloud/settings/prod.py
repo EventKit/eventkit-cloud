@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 import dj_database_url
 import os
 import json
@@ -359,11 +358,16 @@ LOGGING_SINGLE_LINE_OUTPUT = is_true(os.getenv("LOGGING_SINGLE_LINE_OUTPUT", Fal
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
+    "filters": {
+        "context_filter": {
+            "()": "eventkit_cloud.core.log.context_filter.ContextFilter",
+        },
+    },
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple", "filters": ["context_filter"]}},
     "formatters": {
         "simple": {
             "class": "eventkit_cloud.core.log.formatter.Formatter",
-            "format": "[{asctime}] {module} - {levelname} - {message}",
+            "format": "[{asctime}] {module} - {levelname} - {message} - context: {context}",
             "style": "{",
         }
     },

@@ -7,6 +7,13 @@ from django.conf import settings
 
 class Formatter(logging.Formatter):
     def formatMessage(self, record):
+        try:
+            # would use getattr but it still raises attribute error because it is overwritten in LogRecord
+            record.context
+        except AttributeError:
+            record.context = None
+        print(record.context)
+        print(record.args)
         if settings.LOGGING_SINGLE_LINE_OUTPUT:
             return super().formatMessage(record).encode("unicode_escape").decode("utf-8")
         return super().formatMessage(record)

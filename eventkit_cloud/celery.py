@@ -1,7 +1,11 @@
+import logging
 import os
 
 from celery import Celery
 from enum import Enum
+
+from celery.app.log import TaskFormatter
+from celery.signals import after_setup_task_logger
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 
@@ -26,3 +30,12 @@ app.autodiscover_tasks(related_name="export_tasks")
 app.autodiscover_tasks(related_name="scheduled_tasks")
 
 app.conf.task_protocol = 1
+
+@after_setup_task_logger.connect
+def setup_task_logger(logger, *args, **kwargs):
+    from eventkit_cloud.core.log.context_filter import ContextFilter
+    sh = logging.StreamHandler()
+    sh.setFormatter(TaskFormatter(
+            '[%(asctime)s] %{module}s - %{levelname}s - %(task_id)s - %(task_name)s - %(name)s'))
+    logger.addHandler(sh)
+    logger.setFilter(ContextFilter())
