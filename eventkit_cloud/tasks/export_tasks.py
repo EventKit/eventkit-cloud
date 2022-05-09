@@ -243,15 +243,16 @@ class ExportTask(EventKitBaseTask):
         export_task_record.status = status
         export_task_record.save()
         logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
-        try:
-            data_provider_task_record = export_task_record.export_provider_task
-            fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
-            run = data_provider_task_record.run
-            stage_dir = kwargs["stage_dir"]
-            export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
-        except Exception:
-            tb = traceback.format_exc()
-            logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
+        if self.abort_on_error:
+            try:
+                data_provider_task_record = export_task_record.export_provider_task
+                fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
+                run = data_provider_task_record.run
+                stage_dir = kwargs["stage_dir"]
+                export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
+            except Exception:
+                tb = traceback.format_exc()
+                logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
         return {"status": status}
 
     def update_task_state(self, result=None, task_status=TaskState.RUNNING.value, task_uid=None):
