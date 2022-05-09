@@ -1028,7 +1028,6 @@ export class MapView extends React.Component<Props, State> {
                         >
                             {this.props.runIds.map(id => (
                                 <DataPackListItem
-                                    runId={id}
                                     user={this.props.user}
                                     key={id}
                                     onRunDelete={this.props.onRunDelete}

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import moment from 'moment';
-import DayPicker from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import Modal from '@material-ui/core/Modal';
 import Input from '@material-ui/core/Input';
 import { DateFilter } from '../../components/DataPackPage/DateFilter';

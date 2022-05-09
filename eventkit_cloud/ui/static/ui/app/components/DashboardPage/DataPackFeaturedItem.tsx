@@ -236,7 +236,7 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
 
 const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
-    const mapStateToProps = (state: {}, props: OwnProps) => (
+    const mapStateToProps = (state, props: OwnProps) => (
         {
             run: getFullRun(state, props),
         }

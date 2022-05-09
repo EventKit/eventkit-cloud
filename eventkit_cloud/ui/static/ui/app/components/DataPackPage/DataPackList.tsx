@@ -164,7 +164,6 @@ export class DataPackList extends React.Component<Props, {}> {
                         >
                             {this.props.runIds.map(id => (
                                 <DataPackListItem
-                                    runId={id}
                                     user={this.props.user}
                                     key={id}
                                     onRunDelete={this.props.onRunDelete}
@@ -306,7 +305,6 @@ export class DataPackList extends React.Component<Props, {}> {
                             <TableBody>
                                 {this.props.runIds.map(id => (
                                     <DataPackTableItem
-                                        runId={id}
                                         user={this.props.user}
                                         key={id}
                                         onRunDelete={this.props.onRunDelete}

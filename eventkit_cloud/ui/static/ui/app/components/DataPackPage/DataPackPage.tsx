@@ -114,7 +114,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }),
     };
 
-    constructor(props: Props, context) {
+    constructor(props: Props) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
@@ -134,7 +134,6 @@ export class DataPackPage extends React.Component<Props, State> {
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
-        this.pageSize = Number(context.config.DATAPACK_PAGE_SIZE);
         this.state = {
             open: isWidthUp('xl', props.width),
             permissions: {
@@ -180,6 +179,7 @@ export class DataPackPage extends React.Component<Props, State> {
             ...queryString.parse(this.props.location.search),
         };
         this.updateLocationQuery(query);
+        this.pageSize = Number(this.context.config.DATAPACK_PAGE_SIZE);
     }
 
     componentDidMount() {
