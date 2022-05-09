@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -87,7 +87,7 @@ enum TabNum {
     PoiInfo= 2,
 }
 
-export class MapDisplayBar extends React.Component<Props, State> {
+export class MapDisplayBar extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {

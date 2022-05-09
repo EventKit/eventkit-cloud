@@ -1,7 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-} from 'react'
+import { createContext, useContext } from 'react';
 
 // TODO: refactor app to remove all legacy context references -- switch to this
 export interface ApplicationContext {

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export interface Props {
@@ -7,7 +7,7 @@ export interface Props {
     onClose: () => void;
 }
 
-export class AdministratorInfoDialog extends React.Component<Props, {}> {
+export class AdministratorInfoDialog extends Component<Props, {}> {
     render() {
         return (
             <BaseDialog

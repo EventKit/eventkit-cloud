@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component, Fragment } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -27,7 +27,7 @@ interface State {
     dataPermissions: Eventkit.Permissions;
 }
 
-export class PermissionsData extends React.Component<Props, State> {
+export class PermissionsData extends Component<Props, State> {
     private permissions: Permissions;
 
     constructor(props: Props) {
@@ -151,13 +151,9 @@ export class PermissionsData extends React.Component<Props, State> {
 
         if (!this.props.adminPermissions) {
             if (this.props.permissions.value !== 'PRIVATE') {
-                return (
-                    <React.Fragment>{membersIcon} Shared</React.Fragment>
-                );
+                return <Fragment>{membersIcon} Shared</Fragment>;
             } else {
-                return (
-                    <React.Fragment>{privateIcon} Private</React.Fragment>
-                );
+                return <Fragment>{privateIcon} Private</Fragment>;
             }
         } else {
             let membersAndGroups = null;
@@ -188,7 +184,7 @@ export class PermissionsData extends React.Component<Props, State> {
             }
 
             return (
-                <React.Fragment>
+                <Fragment>
                     <DropDownMenu
                         key="permissionsMenu"
                         className="qa-PermissionsData-DropDownMenu-published"
@@ -242,7 +238,7 @@ export class PermissionsData extends React.Component<Props, State> {
                         job={this.props.job}
                     />
                     }
-                </React.Fragment>
+                </Fragment>
             );
         }
     }

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import axios from 'axios';
 import {withStyles, withTheme, createStyles, Theme} from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -90,7 +90,7 @@ export interface State {
     membersFetched: boolean;
 }
 
-export class GroupRow extends React.Component<Props, State> {
+export class GroupRow extends Component<Props, State> {
     static defaultProps = {
         admin: false,
         showAdmin: false,

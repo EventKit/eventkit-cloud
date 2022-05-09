@@ -1,4 +1,4 @@
-import React from 'react';
+import { Component } from 'react';
 import {IconButton} from '@material-ui/core';
 import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
@@ -46,7 +46,7 @@ interface State {
     arrowsVisible: boolean;
 }
 
-export class ProviderPreview extends React.Component<Props, State> {
+export class ProviderPreview extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.nextStep = this.nextStep.bind(this);

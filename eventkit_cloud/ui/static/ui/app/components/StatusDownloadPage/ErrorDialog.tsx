@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';

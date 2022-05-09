@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -101,7 +101,7 @@ interface State {
     page: number;
 }
 
-export class DataPackPage extends React.Component<Props, State> {
+export class DataPackPage extends Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
     private scrollbarRef: any;

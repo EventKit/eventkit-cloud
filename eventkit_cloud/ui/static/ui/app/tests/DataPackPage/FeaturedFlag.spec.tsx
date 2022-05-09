@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { shallow } from 'enzyme';
 import { FeaturedFlag } from '../../components/DataPackPage/FeaturedFlag';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import * as sinon from 'sinon';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';

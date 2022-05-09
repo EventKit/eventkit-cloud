@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as enzyme from 'enzyme';
 import * as sinon from 'sinon';
 import Help from '@material-ui/icons/Help';

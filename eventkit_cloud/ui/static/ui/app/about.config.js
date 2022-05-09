@@ -1,4 +1,3 @@
-import React from 'react';
 import create from '../images/AboutPage/three_step_1.png';
 import manage from '../images/AboutPage/three_step_2.png';
 import use from '../images/AboutPage/three_step_3.png';

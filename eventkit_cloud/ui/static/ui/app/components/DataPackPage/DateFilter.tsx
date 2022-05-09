@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import moment from 'moment';
 import { DayPicker } from 'react-day-picker';
@@ -18,7 +18,7 @@ export interface State {
     open: string;
 }
 
-export class DateFilter extends React.Component<Props, State> {
+export class DateFilter extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.handleMinOpen = this.handleMinOpen.bind(this);

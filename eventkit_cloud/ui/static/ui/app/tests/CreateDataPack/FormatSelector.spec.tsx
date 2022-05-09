@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Checkbox from '@material-ui/core/Checkbox';
 import {shallow} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";

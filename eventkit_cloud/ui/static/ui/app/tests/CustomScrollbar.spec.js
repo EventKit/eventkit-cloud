@@ -1,4 +1,3 @@
-import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { Scrollbars } from 'react-custom-scrollbars-2';

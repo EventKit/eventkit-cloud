@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
@@ -35,7 +35,7 @@ export interface State {
     maxDate: null | Date;
 }
 
-export class DataCartDetails extends React.Component<Props, State> {
+export class DataCartDetails extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };

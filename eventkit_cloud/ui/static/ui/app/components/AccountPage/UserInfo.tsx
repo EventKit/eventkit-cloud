@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import moment from 'moment';
 import UserInfoTableRow from './UserInfoTableRow';
 
@@ -7,7 +7,7 @@ export interface Props {
     updateLink: string;
 }
 
-export class UserInfo extends React.Component<Props, {}> {
+export class UserInfo extends Component<Props, {}> {
     render() {
         const styles = {
             table: {

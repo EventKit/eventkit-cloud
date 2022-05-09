@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
@@ -117,7 +117,7 @@ function getViewBbox(map: any) : GeoJSON.FeatureCollection {
     return createGeoJSON(geom) as GeoJSON.FeatureCollection;
 }
 
-export class ExportAOI extends React.Component<Props, State> {
+export class ExportAOI extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };

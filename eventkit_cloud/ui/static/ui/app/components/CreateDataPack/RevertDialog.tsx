@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Clear from '@material-ui/icons/Clear';
@@ -86,7 +86,7 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-export class RevertDialog extends React.Component<Props, {}> {
+export class RevertDialog extends Component<Props, {}> {
 
     private getIcon(geomType: string, source: string) {
         const type = geomType.toUpperCase();

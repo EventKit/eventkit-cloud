@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import {MapView} from "../../components/common/MapView";
 import { DataPackAoiInfo } from '../../components/StatusDownloadPage/DataPackAoiInfo';

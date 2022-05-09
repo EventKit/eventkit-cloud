@@ -1,4 +1,3 @@
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import PageLoading from '../../components/common/PageLoading';

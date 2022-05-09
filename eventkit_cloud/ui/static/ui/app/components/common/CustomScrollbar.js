@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 
 export class CustomScrollbar extends Component {

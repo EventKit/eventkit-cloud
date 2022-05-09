@@ -1,4 +1,3 @@
-import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import ContentCreate from '@material-ui/icons/Create';

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
@@ -33,7 +33,7 @@ export interface Props {
     setScrollbar?: (ref: any) => void;
 }
 
-export class DataPackList extends React.Component<Props, {}> {
+export class DataPackList extends Component<Props, {}> {
     private scrollbar: CustomScrollbar;
     constructor(props: Props) {
         super(props);

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import ErrorDialog, { ErrorDialogProps } from './ErrorDialog';
 

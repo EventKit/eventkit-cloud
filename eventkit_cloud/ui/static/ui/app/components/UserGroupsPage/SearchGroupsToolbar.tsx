@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {connect} from "react-redux";
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import 'react-bootstrap-typeahead/css/Typeahead.css';

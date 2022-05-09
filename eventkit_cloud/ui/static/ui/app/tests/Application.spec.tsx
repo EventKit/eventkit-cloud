@@ -1,4 +1,3 @@
-import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';

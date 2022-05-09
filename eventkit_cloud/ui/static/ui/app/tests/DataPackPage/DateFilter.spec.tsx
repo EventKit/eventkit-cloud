@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import moment from 'moment';

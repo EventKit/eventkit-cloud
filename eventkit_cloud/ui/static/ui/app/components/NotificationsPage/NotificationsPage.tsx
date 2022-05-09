@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {Theme, withTheme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -31,7 +31,7 @@ export interface State {
     notifications: Eventkit.Store.Notifications;
 }
 
-export class NotificationsPage extends React.Component<Props, State> {
+export class NotificationsPage extends Component<Props, State> {
     private itemsPerPage: number;
 
     static contextTypes = {
