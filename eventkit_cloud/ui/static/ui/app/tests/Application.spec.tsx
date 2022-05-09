@@ -11,7 +11,7 @@ import Drawer from '../components/Drawer';
 import {allTrue, Application} from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
-import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {Provider} from "react-redux";
 
@@ -172,7 +172,7 @@ describe('Application component', () => {
     it('handleStayLoggedIn should start sending pings and call hide warning', async () => {
         const wrapper = getWrapper(getProps());
         const pingStub = sinon.stub(wrapper.instance(), 'startSendingUserActivePings')
-            .callsFake(() => (new Promise((resolve, reject) => (setTimeout(() => resolve(), 10)))));
+            .callsFake(() => (new Promise<void>((resolve, reject) => (setTimeout(() => resolve(), 10)))));
         const hideStub = sinon.stub(wrapper.instance(), 'hideAutoLogoutWarning');
         await wrapper.instance().handleStayLoggedIn();
         expect(pingStub.calledOnce).toBe(true);
@@ -237,7 +237,7 @@ describe('Application component', () => {
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
-        expect(wrapper.state().autoLogoutWarningText).toContain('60 seconds');
+        expect(wrapper.state().autoLogoutWarningText).toContain('59 seconds');
     });
 
     it('Auto logged out alert should show after exceeding auto logout time', () => {

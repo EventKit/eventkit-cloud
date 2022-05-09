@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { Component } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars';
 
@@ -8,11 +9,6 @@ export class CustomScrollbar extends Component {
 
     scrollToBottom() {
         this.scrollbar.scrollToBottom();
-    }
-
-    scrollToMiddle() {
-        const scrollHeight = this.scrollbar.getScrollHeight();
-        this.scrollbar.scrollTop(scrollHeight / 4);
     }
 
     renderThumb({ style, ...props }) {

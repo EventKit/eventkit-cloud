@@ -2,6 +2,7 @@
     "compilerOptions": {
         "sourceMap": true,
         "module": "esnext",
+        "esModuleInterop": true,
         "moduleResolution": "node",
         "target": "es6",
         "jsx": "react",
@@ -14,7 +15,9 @@
         ]
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
     ],
     "include": [
         "./eventkit_cloud/ui/static/ui/app/"

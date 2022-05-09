@@ -10,8 +10,13 @@ import BaseDialog from '../Dialog/BaseDialog';
 export class DropZoneDialog extends Component {
     constructor(props) {
         super(props);
-        this.onDrop = this.onDrop.bind(this);
         this.handleClear = this.handleClear.bind(this);
+        this.onDrop = this.onDrop.bind(this);
+    }
+
+    handleClear() {
+        this.props.setImportModalState(false);
+        this.props.setAllButtonsDefault();
     }
 
     onDrop(acceptedFiles) {
@@ -20,11 +25,6 @@ export class DropZoneDialog extends Component {
             this.props.setImportModalState(false);
             this.props.processGeoJSONFile(file);
         }
-    }
-
-    handleClear() {
-        this.props.setImportModalState(false);
-        this.props.setAllButtonsDefault();
     }
 
     render() {

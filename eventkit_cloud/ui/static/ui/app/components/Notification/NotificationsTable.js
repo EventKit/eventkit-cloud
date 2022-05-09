@@ -41,8 +41,18 @@ export class NotificationsTable extends React.Component {
         }
     }
 
-    getSelectedCount() {
-        return Object.keys(this.state.selected).length;
+    handleSelectAllCheck() {
+        this.setState((prevState) => {
+            let selected = { ...prevState.selected };
+            if (this.getSelectedCount() === 0) {
+                this.props.notificationsArray.forEach((notification) => {
+                    selected[notification.id] = notification;
+                });
+            } else {
+                selected = {};
+            }
+            return { selected };
+        });
     }
 
     getSelectAllCheckedIcon() {
@@ -50,6 +60,10 @@ export class NotificationsTable extends React.Component {
             return <CheckboxIcon />;
         }
         return <IndeterminateCheckboxIcon />;
+    }
+
+    getSelectedCount() {
+        return Object.keys(this.state.selected).length;
     }
 
     setSelected(notification, isSelected) {
@@ -66,20 +80,6 @@ export class NotificationsTable extends React.Component {
 
     isSelected(notification) {
         return !!this.state.selected[notification.id];
-    }
-
-    handleSelectAllCheck() {
-        this.setState((prevState) => {
-            let selected = { ...prevState.selected };
-            if (this.getSelectedCount() === 0) {
-                this.props.notificationsArray.forEach((notification) => {
-                    selected[notification.id] = notification;
-                });
-            } else {
-                selected = {};
-            }
-            return { selected };
-        });
     }
 
     render() {

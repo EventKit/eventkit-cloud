@@ -98,7 +98,7 @@ describe('GroupBody component', () => {
     it('getPermissionGroups' +
         ' should set loading states and call props.getPermissionGroups' +
         '', async () => {
-        const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
+        const getStub = sinon.stub().returns(new Promise<void>(resolve => resolve()));
         setup({getPermissionGroups
                 : getStub});
         const stateStub = sinon.stub(wrapper.instance(), 'setState');

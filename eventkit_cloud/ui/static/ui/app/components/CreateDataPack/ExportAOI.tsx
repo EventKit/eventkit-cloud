@@ -818,7 +818,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private openBufferDialog() {
         // this still executes the call to setState immediately
         // but it gives you the option to await the state change to be complete
-        return new Promise(async (resolve) => {
+        return new Promise<void>(async (resolve) => {
             // resolve only when setState is completed
             this.setState({showBuffer: true}, resolve);
         });
@@ -936,7 +936,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
-            this.helpers.reset(true);
+            this.helpers?.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data
