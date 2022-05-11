@@ -21,7 +21,7 @@ class TestWCSConverter(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch("eventkit_cloud.utils.wcs.gdalutils.retry")
+    @patch("eventkit_cloud.utils.wcs.retry")
     @patch("eventkit_cloud.utils.wcs.auth_requests.get_cred")
     @patch("eventkit_cloud.utils.wcs.os.write")
     @patch("eventkit_cloud.utils.wcs.os.path.exists")

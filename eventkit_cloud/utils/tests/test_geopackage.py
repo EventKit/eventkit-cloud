@@ -221,7 +221,7 @@ class TestGeopackage(TransactionTestCase):
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
 
-    @patch("eventkit_cloud.utils.gdalutils.convert")
+    @patch("eventkit_cloud.utils.geopackage.convert")
     @patch("builtins.open")
     def test_add_geojson_to_geopackage(self, open, mock_convert):
 
@@ -239,7 +239,7 @@ class TestGeopackage(TransactionTestCase):
         )
         gdal_mock = mock_convert.return_value
         gdal_mock.convert.called_once_with(
-            driver="gpkg", input_file=geojson, output_file=gpkg, creation_options="-nln {0}".format(layer_name)
+            driver="gpkg", input_files=geojson, output_file=gpkg, creation_options="-nln {0}".format(layer_name)
         )
 
     @patch("eventkit_cloud.utils.geopackage.sqlite3")

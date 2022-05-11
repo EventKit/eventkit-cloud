@@ -1,12 +1,6 @@
-import logging
 import os
 
 from django.conf import settings
-from django.core.cache import cache
-
-from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
-
-logger = logging.getLogger()
 
 
 def get_relative_path_from_staging(staging_path):
@@ -31,6 +25,9 @@ def get_download_paths(relative_path):
     return downloads_filepath, download_url
 
 
-def clear_mapproxy_config_cache():
-    mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
-    cache.delete_many(list(mapproxy_config_keys))
+def make_dirs(path):
+    try:
+        os.makedirs(path, 0o751, exist_ok=True)
+    except OSError:
+        if not os.path.isdir(path):
+            raise

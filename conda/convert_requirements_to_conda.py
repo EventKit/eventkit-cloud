@@ -12,7 +12,7 @@ def convert_requirements_to_conda():
         if "git+" in requirement:
             # Match the repository name and version from the Github URL.
             repository = "".join(requirement.split("/")[-1:]).split(".")[0]
-            version = re.search("(?:@v(.*?)#)", requirement).group(1)
+            version = re.search("(?:@v?(.*?)#)", requirement).group(1)
             conda_requirements.append(f"{repository}={version}".lower())
         else:
             conda_alias = None

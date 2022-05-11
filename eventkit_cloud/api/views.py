@@ -18,7 +18,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
 from rest_framework import filters, permissions, status, views, viewsets, mixins
