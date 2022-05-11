@@ -53,15 +53,13 @@ export class NotificationMessage extends Component {
             || (requiresActionObjDetails.includes(verb) && (!notification.action_object || !notification.action_object.details))
         ) {
             return (
-                <>
-                    <span
-                        key={`${notification.id}-error`}
-                        style={{ ...styles.text, color: colors.warning, whiteSpace: 'normal' }}
-                        className="qa-NotificationMessage-error"
-                    >
-                        Uh oh! Sorry, this notification&apos;s details are no longer available.
-                    </span>
-                </>
+                <span
+                    key={`${notification.id}-error`}
+                    style={{ ...styles.text, color: colors.warning, whiteSpace: 'normal' }}
+                    className="qa-NotificationMessage-error"
+                >
+                    Uh oh! Sorry, this notification&apos;s details are no longer available.
+                </span>
             );
         }
 

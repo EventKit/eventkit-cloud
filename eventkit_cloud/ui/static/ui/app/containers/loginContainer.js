@@ -26,6 +26,16 @@ export class Form extends React.Component {
         this.checkOAuthEndpoint();
     }
 
+    handleSubmit(event) {
+        event.preventDefault();
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.search : ''));
+    }
+
+    handleOAuth(event) {
+        event.preventDefault();
+        window.location.assign('/oauth');
+    }
+
     onChange(event) {
         this.setState({ [event.target.name]: event.target.value }, () => {
             if (!this.state.username || !this.state.password) {
@@ -65,16 +75,6 @@ export class Form extends React.Component {
             this.setState({ oauthName: response.data.name });
         }).catch(() => {
         });
-    }
-
-    handleSubmit(event) {
-        event.preventDefault();
-        this.props.handleLogin(this.state, (this.props.location ? this.props.location.search : ''));
-    }
-
-    handleOAuth(event) {
-        event.preventDefault();
-        window.location.assign('/oauth');
     }
 
     render() {

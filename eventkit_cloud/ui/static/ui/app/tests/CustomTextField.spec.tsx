@@ -1,9 +1,9 @@
 import React from 'react';
-import sinon from 'sinon';
 import {mount} from 'enzyme';
 import {CustomTextField} from '../components/common/CustomTextField';
 import {act} from "react-dom/test-utils";
 import {arrayHasValue} from "../utils/generic";
+import {setImmediate} from 'timers';
 
 describe('CustomTextField component', () => {
     const defaultProps = { classes: {}, ...(global as any).eventkit_test_props, };

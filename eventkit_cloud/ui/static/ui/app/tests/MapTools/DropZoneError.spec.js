@@ -7,7 +7,7 @@ import { DropZoneError } from '../../components/MapTools/DropZoneError';
 jest.mock('../../components/Dialog/BaseDialog', () => {
     // eslint-disable-next-line global-require,no-shadow
     const React = require('react');
-    // eslint-disable-next-line react/prop-types
+    // eslint-disable-next-line
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
 

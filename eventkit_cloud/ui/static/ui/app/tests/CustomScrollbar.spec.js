@@ -37,14 +37,4 @@ describe('Custom Scrollbar component', () => {
         wrapper.instance().scrollToBottom();
         expect(scrollSpy.calledOnce).toBe(true);
     });
-
-    it('scrollToMiddle should call scrollTop with scrollHeight / 4', () => {
-        const wrapper = mount(<CustomScrollbar />);
-        const scrollSpy = sinon.spy();
-        const scrollbar = { scrollTop: scrollSpy, getScrollHeight: () => (12) };
-        wrapper.instance().scrollbar = scrollbar;
-        wrapper.instance().scrollToMiddle();
-        expect(scrollSpy.calledOnce).toBe(true);
-        expect(scrollSpy.calledWith(3)).toBe(true);
-    });
 });

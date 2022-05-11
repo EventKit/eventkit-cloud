@@ -452,7 +452,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // that it takes for the drawer transition to complete
         return new Promise(async (resolve) => {
             // wait for the state change to be complete
-            await new Promise((r2) => {
+            await new Promise<void>((r2) => {
                 this.setState({drawerOpen: !this.state.drawerOpen}, r2);
             });
             // wait for drawer to be fully open (transition of 450ms)
@@ -799,7 +799,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({isRunning: false, stepIndex: 0});
-            this?.helpers.reset(true);
+            this.helpers?.reset(true);
         } else {
             if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
