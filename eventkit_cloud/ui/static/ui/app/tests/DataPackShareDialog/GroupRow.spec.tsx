@@ -1,20 +1,17 @@
 import * as sinon from 'sinon';
 import axios from 'axios';
-import {mount, shallow} from 'enzyme';
+import {shallow} from 'enzyme';
 import MockAdapter from 'axios-mock-adapter';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-import {GroupRow} from '../../components/DataPackShareDialog/GroupRow';
-import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
+import {render, screen} from '@testing-library/react';
 
-jest.mock('../../components/DataPackPage/NotificationIconPopover');
-jest.mock('../../styles/eventkit_theme.js', () => ({
-        eventkit: {
-            colors: {}
-        }
-    })
-);
+jest.doMock('../../components/DataPackPage/NotificationIconPopover', () => {
+    return () => (<div id="notification-icon-popover">notification-icon-popover</div>)
+});
+
+const {GroupRow} = require('../../components/DataPackShareDialog/GroupRow');
 
 describe('GroupRow component', () => {
     const getProps = () => ({
@@ -152,7 +149,7 @@ describe('GroupRow component', () => {
     });
 
     it('should render the warning icon next to a group who is restricted to view any data sources', () => {
-        const newWrapper = mount(<GroupRow {...getProps()}/>);
-        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
+        render(<GroupRow {...getProps()}/>);
+        screen.getByText('notification-icon-popover');
     });
 });

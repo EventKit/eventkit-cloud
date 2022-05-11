@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {ChangeEvent} from 'react';
 import {Tab, Tabs} from "@material-ui/core";
 import {createShallow} from "@material-ui/core/test-utils";
 import {GroupsHeaderTabs} from "../../components/UserGroupsPage/GroupsHeaderTabs";
@@ -54,7 +54,7 @@ describe('GroupPanelBody component', () => {
             .at(0)
             .props().value)
             .toBe('admin');
-        const event = {target: {value: 'member'}} as React.ChangeEvent<HTMLInputElement>;
+        const event = {target: {value: 'member'}} as ChangeEvent<HTMLInputElement>;
         wrapper.find(Tabs).at(0).simulate('change', event);
         expect(handleChangeSpy).toBeCalledWith(event);
     });

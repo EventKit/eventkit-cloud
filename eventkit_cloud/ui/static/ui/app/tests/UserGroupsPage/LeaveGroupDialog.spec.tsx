@@ -1,12 +1,11 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import {LeaveGroupDialog} from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
 import {render, screen} from '@testing-library/react';
 
-jest.mock("../../components/Dialog/BaseDialog", () => {
-    const React = require('react');
+jest.doMock("../../components/Dialog/BaseDialog", () => {
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
+
+const {LeaveGroupDialog} = require('../../components/UserGroupsPage/Dialogs/LeaveGroupDialog');
 
 describe('LeaveGroupDialog component', () => {
 

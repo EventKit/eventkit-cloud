@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {Component, KeyboardEvent} from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -21,7 +21,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class MemberRow extends React.Component<Props, {}> {
+export class MemberRow extends Component<Props, {}> {
     static defaultProps = {
         showAdmin: false,
         admin: false,
@@ -55,7 +55,7 @@ export class MemberRow extends React.Component<Props, {}> {
         this.props.handleAdminMouseOut();
     }
 
-    private onKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+    private onKeyDown(e: KeyboardEvent<HTMLElement>) {
         const key = e.which || e.keyCode;
         if (key === 13) {
             this.handleAdminCheck();

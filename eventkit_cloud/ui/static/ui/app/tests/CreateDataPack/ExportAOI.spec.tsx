@@ -1,4 +1,3 @@
-import * as React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import axios from 'axios';
@@ -24,10 +23,7 @@ import * as utils from '../../utils/mapUtils';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 import MapDisplayBar from "../../components/CreateDataPack/MapDisplayBar";
 
-jest.mock('../../components/CreateDataPack/MapZoomLimiter', () => {
-    const React = require('react');
-    return (props) => (<div>zoomlimiter</div>);
-});
+jest.doMock('../../components/CreateDataPack/MapZoomLimiter', () => () => (<div>zoomlimiter</div>));
 
 
 describe('ExportAOI component', () => {

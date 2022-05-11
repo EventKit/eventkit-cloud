@@ -174,12 +174,12 @@ export class DataPackPage extends Component<Props, State> {
     }
 
     componentWillMount() {
+        this.pageSize = Number(this.context.config.DATAPACK_PAGE_SIZE);
         const query = {
             ...this.defaultQuery,
             ...queryString.parse(this.props.location.search),
         };
         this.updateLocationQuery(query);
-        this.pageSize = Number(this.context.config.DATAPACK_PAGE_SIZE);
     }
 
     componentDidMount() {

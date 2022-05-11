@@ -1,17 +1,14 @@
 import * as sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import {shallow} from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
-import {MemberRow} from '../../components/DataPackShareDialog/MemberRow';
-import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
+import {render, screen} from '@testing-library/react';
 
-jest.mock('../../components/DataPackPage/NotificationIconPopover');
-jest.mock('../../styles/eventkit_theme.js', () => ({
-        eventkit: {
-            colors: {}
-        }
-    })
-);
+jest.doMock('../../components/DataPackPage/NotificationIconPopover', () => {
+    return () => (<div id="notification-icon-popover">notification-icon-popover</div>)
+});
+
+const {MemberRow} = require('../../components/DataPackShareDialog/MemberRow');
 
 describe('MemberRow component', () => {
     const getProps = () => ({
@@ -106,7 +103,7 @@ describe('MemberRow component', () => {
     });
 
     it('should render the warning icon next to a user who is restricted to view any data sources', () => {
-        const newWrapper = mount(<MemberRow {...getProps()}/>);
-        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
+        render(<MemberRow {...getProps()}/>);
+        screen.getByText('notification-icon-popover');
     });
 });
