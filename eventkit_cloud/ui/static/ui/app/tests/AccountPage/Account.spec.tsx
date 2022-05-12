@@ -144,6 +144,7 @@ describe('Account Component', () => {
     it('should update state and setTimeout when user has been patched', () => {
         jest.useFakeTimers();
         const stateSpy = sinon.spy(instance, 'setState');
+        jest.spyOn(global, 'setTimeout');
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
         const nextProps = getProps();
         nextProps.user.status.patched = true;
