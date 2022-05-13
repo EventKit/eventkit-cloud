@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
@@ -10,7 +10,7 @@ import Paper from '@material-ui/core/Paper';
 import NotificationGridItem from './NotificationGridItem';
 import { markAllNotificationsAsRead } from '../../actions/notificationsActions';
 
-export class NotificationsDropdown extends React.Component {
+export class NotificationsDropdown extends Component {
     constructor(props) {
         super(props);
         this.handleViewAll = this.handleViewAll.bind(this);

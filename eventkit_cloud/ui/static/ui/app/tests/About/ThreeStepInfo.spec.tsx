@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import { ThreeStepInfo, Props } from '../../components/About/ThreeStepInfo';
 import create from '../../../images/AboutPage/three_step_1.png';

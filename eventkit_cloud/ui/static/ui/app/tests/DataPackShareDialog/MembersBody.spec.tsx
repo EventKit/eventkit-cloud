@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import CustomTextField from '../../components/common/CustomTextField';
@@ -99,7 +98,7 @@ describe('MembersBody component', () => {
     });
 
     it('getPermissionUsers should set loading states and call props.getPermissionUsers', async () => {
-        const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
+        const getStub = sinon.stub().returns(new Promise<void>(resolve => resolve()));
         setup({ getPermissionUsers: getStub });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const jobUid = 'xx222';

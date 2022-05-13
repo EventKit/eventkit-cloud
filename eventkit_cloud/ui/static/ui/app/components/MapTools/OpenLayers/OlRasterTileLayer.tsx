@@ -1,4 +1,4 @@
-import React, {useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {MapLayer} from "../../CreateDataPack/CreateExport";
 import {useOlMapContainer} from "../context/OpenLayersContext";
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { unmountComponentAtNode } from 'react-dom';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';

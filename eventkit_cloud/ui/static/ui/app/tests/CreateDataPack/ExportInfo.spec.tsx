@@ -1,37 +1,32 @@
-import * as React from 'react';
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
-import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
 import {fireEvent, render} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
 import rootReducer from "../../reducers/rootReducer";
 
-jest.mock("../../components/common/CustomTableRow", () => {
-    const React = require('react');
+jest.doMock("../../components/common/CustomTableRow", () => {
     return (props) => (<div className="row">{props.children}</div>);
 });
 
-jest.mock("../../components/common/MapCard", () => {
-    const React = require('react');
+jest.doMock("../../components/common/MapCard", () => {
     return (props) => (<div className="mapcard">{props.children}</div>);
 });
 
-jest.mock("../../components/common/CustomTextField", () => {
-    const React = require('react');
+jest.doMock("../../components/common/CustomTextField", () => {
     return (props) => (<div className="textField">{props.children}</div>);
 });
 
-jest.mock("../../components/CreateDataPack/DataProvider", () => {
-    const React = require('react');
+jest.doMock("../../components/CreateDataPack/DataProvider", () => {
     return (children) => (<div className="provider" data-testid="DataProvider">{children.provider.name}</div>);
 });
 
-jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
-    const React = require('react');
+jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
+
+const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
 
 const formats = [
     {

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -11,7 +11,7 @@ interface Props {
     router: any;
 }
 
-export class LoginErrorPage extends React.Component<Props, {}> {
+export class LoginErrorPage extends Component<Props, {}> {
     render() {
         const { colors, images } = this.props.theme.eventkit;
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import { useOlMapContainer } from '../context/OpenLayersContext';
 import { ReceivesVectorLayer } from './OlFeatureLayer';
 import has = Reflect.has;

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import {mount} from 'enzyme';
 import Button from '@material-ui/core/Button';

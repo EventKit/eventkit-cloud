@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Clear from '@material-ui/icons/Clear';
 import Card from '@material-ui/core/Card';
@@ -23,7 +23,7 @@ export interface State {
     showMore: boolean;
 }
 
-export class MapPopup extends React.Component<Props, State> {
+export class MapPopup extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.showMore = this.showMore.bind(this);

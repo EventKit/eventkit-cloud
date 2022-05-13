@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
 import ContentClear from '@material-ui/icons/Clear';

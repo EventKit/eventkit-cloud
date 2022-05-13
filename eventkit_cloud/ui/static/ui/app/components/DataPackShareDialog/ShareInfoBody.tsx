@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 
@@ -8,7 +8,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class ShareInfoBody extends React.Component<Props, {}> {
+export class ShareInfoBody extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 

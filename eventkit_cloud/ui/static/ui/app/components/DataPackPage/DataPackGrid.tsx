@@ -1,4 +1,3 @@
-import * as React from 'react';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';

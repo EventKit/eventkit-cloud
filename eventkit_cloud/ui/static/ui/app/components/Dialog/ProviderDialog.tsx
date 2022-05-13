@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, StyledComponentProps} from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
@@ -31,7 +31,7 @@ interface DispatchProps {
 
 type Props = StyledComponentProps & StateProps & DispatchProps & OwnProps;
 
-export class ProviderDialog extends React.Component<Props, State> {
+export class ProviderDialog extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {

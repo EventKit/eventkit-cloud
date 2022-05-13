@@ -24,7 +24,7 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         requiresAuth = true,
         onSuccess = () => ({}),
         batchSuccess = () => undefined,
-        onError = error => ({ error: error.response.data }),
+        onError = error => ({ error: error.response?.data }),
         payload = {},
         url,
         method,

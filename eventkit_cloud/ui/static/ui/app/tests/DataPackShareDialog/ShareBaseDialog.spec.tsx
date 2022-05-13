@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import Dialog from '@material-ui/core/Dialog';
 import {ShareBaseDialog} from '../../components/DataPackShareDialog/ShareBaseDialog';

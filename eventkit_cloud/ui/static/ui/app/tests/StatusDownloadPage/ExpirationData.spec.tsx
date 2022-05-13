@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import Edit from '@material-ui/icons/Edit';
 import { createShallow } from '@material-ui/core/test-utils';
