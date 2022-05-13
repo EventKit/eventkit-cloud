@@ -1672,7 +1672,7 @@ def pick_up_run_task(
                 data_provider_task_record.save()
         run.save()
         logger.error(str(e))
-        export_task_error_handler(run_uid=run_uid, args=args, kawrgs=kwargs)
+        export_task_error_handler(run_uid=run_uid)
         raise e
 
 
