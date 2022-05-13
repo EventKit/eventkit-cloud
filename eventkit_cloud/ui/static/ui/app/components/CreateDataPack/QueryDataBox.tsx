@@ -1,4 +1,4 @@
-import * as React from "react";
+import { Component } from "react";
 import {
     createStyles,
     Table, TableCell, TableRow, TableBody,
@@ -79,7 +79,7 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-export class QueryDataBox extends React.Component<Props, {}> {
+export class QueryDataBox extends Component<Props, {}> {
 
     private keyAlign : Alignment = "left";
     private valueAlign : Alignment = "right";

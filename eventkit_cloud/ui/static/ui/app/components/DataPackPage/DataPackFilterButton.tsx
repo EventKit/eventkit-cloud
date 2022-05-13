@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
@@ -10,7 +10,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
 }
-export class DataPackFilterButton extends React.Component<Props, {}> {
+export class DataPackFilterButton extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 

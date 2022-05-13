@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import OlRasterTileLayer from "./OpenLayers/OlRasterTileLayer";
 import OlFeatureLayer from "./OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "./OpenLayers/ZoomToAoi";

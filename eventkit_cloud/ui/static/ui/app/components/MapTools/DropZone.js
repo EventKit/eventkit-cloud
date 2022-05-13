@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import DropZoneError from './DropZoneError';
 import DropZoneDialog from './DropZoneDialog';
 

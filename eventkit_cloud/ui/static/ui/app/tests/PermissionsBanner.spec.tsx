@@ -1,4 +1,3 @@
-import React from 'react';
 import * as sinon from 'sinon';
 import PermissionsBanner from "../components/PermissionsBanner";
 import {ButtonBase, CssBaseline, Grid, Paper} from "@material-ui/core";

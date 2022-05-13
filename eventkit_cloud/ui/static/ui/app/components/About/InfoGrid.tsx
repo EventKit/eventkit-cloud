@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';
 
@@ -12,7 +12,7 @@ export interface Props {
     itemStyle?: object;
 }
 
-export class InfoGrid extends React.Component<Props, {}> {
+export class InfoGrid extends Component<Props, {}> {
     render() {
         const styles = {
             title: {

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import {connect} from "react-redux";
@@ -91,7 +91,7 @@ interface Props {
     classes: { [className: string]: string };
 }
 
-export class FormatSelector extends React.Component<Props, {}> {
+export class FormatSelector extends Component<Props, {}> {
 
     static defaultProps;
 

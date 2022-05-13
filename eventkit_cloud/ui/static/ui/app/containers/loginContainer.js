@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import axios from 'axios';
 import Button from '@material-ui/core/Button';
 import { login } from '../actions/userActions';
 
-export class Form extends React.Component {
+export class Form extends Component {
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
@@ -24,6 +24,16 @@ export class Form extends React.Component {
     componentDidMount() {
         this.checkAuthEndpoint();
         this.checkOAuthEndpoint();
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.search : ''));
+    }
+
+    handleOAuth(event) {
+        event.preventDefault();
+        window.location.assign('/oauth');
     }
 
     onChange(event) {
@@ -65,16 +75,6 @@ export class Form extends React.Component {
             this.setState({ oauthName: response.data.name });
         }).catch(() => {
         });
-    }
-
-    handleSubmit(event) {
-        event.preventDefault();
-        this.props.handleLogin(this.state, (this.props.location ? this.props.location.search : ''));
-    }
-
-    handleOAuth(event) {
-        event.preventDefault();
-        window.location.assign('/oauth');
     }
 
     render() {

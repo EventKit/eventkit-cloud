@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import NavigationCheck from '@material-ui/icons/Check';
 import Button from '@material-ui/core/Button';
@@ -10,7 +10,7 @@ interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class SaveButton extends React.Component<Props, {}> {
+export class SaveButton extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
         const styles = {

@@ -1,5 +1,4 @@
 import sinon from 'sinon';
-import raf from 'raf';
 import { get } from 'ol/proj';
 import View from 'ol/View';
 import * as extent from 'ol/extent';
@@ -12,9 +11,6 @@ import VectorLayer from 'ol/layer/Vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
 import { convertGeoJSONtoJSTS, covers } from '../../utils/mapUtils';
-
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
 
 describe('mapUtils', () => {
     it('jstsGeomToOlGeom should convert JSTS to Ol', () => {

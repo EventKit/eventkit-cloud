@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { createRef, Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
@@ -24,8 +24,8 @@ export interface State {
     width: string | number;
 }
 
-export class LoadButtons extends React.Component<Props, State> {
-    private self = React.createRef<HTMLDivElement>();
+export class LoadButtons extends Component<Props, State> {
+    private self = createRef<HTMLDivElement>();
     static defaultProps: any = {
         style: {},
     }

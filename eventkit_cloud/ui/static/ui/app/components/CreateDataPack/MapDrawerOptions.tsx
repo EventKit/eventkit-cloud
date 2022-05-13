@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {createStyles, Theme} from '@material-ui/core/styles';
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";

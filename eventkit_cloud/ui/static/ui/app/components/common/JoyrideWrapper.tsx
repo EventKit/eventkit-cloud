@@ -1,5 +1,4 @@
 import Joyride, {Props} from 'react-joyride';
-import * as React from "react";
 import {withTheme} from "@material-ui/core";
 import {Theme} from "@material-ui/core/styles";
 import {JoyRideStyles} from "../../joyride.config";

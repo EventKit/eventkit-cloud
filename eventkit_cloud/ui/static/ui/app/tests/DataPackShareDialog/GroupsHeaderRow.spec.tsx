@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
