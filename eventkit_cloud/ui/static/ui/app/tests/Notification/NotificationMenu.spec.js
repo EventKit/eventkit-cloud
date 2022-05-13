@@ -1,5 +1,4 @@
 /* eslint prefer-destructuring: 0 */
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';

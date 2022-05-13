@@ -1,13 +1,9 @@
-import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
-jest.mock('../../components/Dialog/BaseDialog', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line
+jest.doMock('../../components/Dialog/BaseDialog', () => {
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
 

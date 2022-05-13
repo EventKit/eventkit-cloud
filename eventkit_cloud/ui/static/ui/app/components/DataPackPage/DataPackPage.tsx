@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -101,7 +101,7 @@ interface State {
     page: number;
 }
 
-export class DataPackPage extends React.Component<Props, State> {
+export class DataPackPage extends Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
     private scrollbarRef: any;
@@ -114,7 +114,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }),
     };
 
-    constructor(props: Props, context) {
+    constructor(props: Props) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
@@ -134,7 +134,6 @@ export class DataPackPage extends React.Component<Props, State> {
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
-        this.pageSize = Number(context.config.DATAPACK_PAGE_SIZE);
         this.state = {
             open: isWidthUp('xl', props.width),
             permissions: {
@@ -175,6 +174,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     componentWillMount() {
+        this.pageSize = Number(this.context.config.DATAPACK_PAGE_SIZE);
         const query = {
             ...this.defaultQuery,
             ...queryString.parse(this.props.location.search),

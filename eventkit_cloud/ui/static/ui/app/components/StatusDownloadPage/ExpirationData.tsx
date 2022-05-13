@@ -3,8 +3,8 @@ import {withTheme, Theme} from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import Edit from '@material-ui/icons/Edit';
 import moment from 'moment';
-import DayPicker from 'react-day-picker';
-import 'react-day-picker/lib/style.css';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 import {MatomoClickTracker} from "../MatomoHandler";
 
 interface Props {
@@ -96,7 +96,7 @@ export class ExpirationData extends React.Component<Props, State> {
                         <style>{'.DayPicker-Day { width: 34px; } .DayPicker { font-size: 14px; } '}</style>
                         <DayPicker
                             onDayClick={this.handleDayClick}
-                            selectedDays={new Date(this.props.expiration)}
+                            selected={new Date(this.props.expiration)}
                             month={new Date(this.props.expiration)}
                             modifiers={{disabled: {before: this.props.minDate, after: this.props.maxDate}}}
                             modifiersStyles={{selected: {backgroundColor: colors.primary}}}

@@ -1,5 +1,3 @@
-import * as React from 'react';
-import {MapDrawer} from "../../components/CreateDataPack/MapDrawer";
 import {act} from "react-test-renderer"
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
@@ -7,13 +5,11 @@ import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 import rootReducer from "../../reducers/rootReducer";
 
-jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
-    const React = require('react');
+jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
 
-jest.mock("../../components/CreateDataPack/MapDrawerOptions", () => {
-    const React = require('react');
+jest.doMock("../../components/CreateDataPack/MapDrawerOptions", () => {
     return (props) => {
         props.setProviders(props.providers);
         return (
@@ -21,13 +17,16 @@ jest.mock("../../components/CreateDataPack/MapDrawerOptions", () => {
         );
     }
 });
-jest.mock('../../styles/eventkit_theme.js', () => ({
+
+jest.doMock('../../styles/eventkit_theme.js', () => ({
         eventkit: {
             images: {},
             colors: {}
         }
     })
 );
+
+const {MapDrawer} = require("../../components/CreateDataPack/MapDrawer");
 
 describe('FilterDrawer component', () => {
 

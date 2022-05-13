@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import withWidth from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import { withTheme, withStyles, createStyles, Theme } from '@material-ui/core/styles';
@@ -68,7 +68,7 @@ interface State {
     licenseDialogOpen: boolean;
 }
 
-export class LicenseRow extends React.Component<Props, State> {
+export class LicenseRow extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.setLicenseOpen = this.setLicenseOpen.bind(this);

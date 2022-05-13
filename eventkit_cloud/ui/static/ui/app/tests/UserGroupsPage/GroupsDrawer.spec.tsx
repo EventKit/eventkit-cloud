@@ -1,34 +1,26 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 import {render, screen, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 
-
-jest.mock('../../components/UserGroupsPage/SearchGroupsToolbar', () => {
-    const React = require('react');
+jest.doMock('../../components/UserGroupsPage/SearchGroupsToolbar', () => {
     return (props) => (
         <button onClick={() => props.setQuery('query')}>SearchGroupsToolbar</button>
     );
 });
 
-jest.mock('../../components/UserGroupsPage/GroupPanelBody', () => {
-    const React = require('react');
+jest.doMock('../../components/UserGroupsPage/GroupPanelBody', () => {
     return (props) => (<button onClick={props.onLeaveGroupClick}>GroupsPanelBody</button>);
 });
 
-jest.mock('../../components/UserGroupsPage/GroupsHeaderTabs', () => {
-    const React = require('react');
-    return (props) => (<div>GroupsHeaderTabs</div>);
+jest.doMock('../../components/UserGroupsPage/GroupsHeaderTabs', () => {
+    return () => (<div>GroupsHeaderTabs</div>);
 });
 
-
-jest.mock('../../components/Dialog/ProviderDialog', () => {
-    const React = require('react');
-    return (props) => (<div>ProviderDialog</div>);
+jest.doMock('../../components/Dialog/ProviderDialog', () => {
+    return () => (<div>ProviderDialog</div>);
 });
 
-
+const {GroupsDrawer} = require('../../components/UserGroupsPage/GroupsDrawer');
 
 describe('GroupsDrawer component', () => {
     const getProps = () => ({

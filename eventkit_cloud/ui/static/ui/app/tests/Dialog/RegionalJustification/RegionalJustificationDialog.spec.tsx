@@ -1,17 +1,11 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
-import {RegionalJustificationDialog} from "../../../components/Dialog/RegionalJustification/RegionalJustificationDialog";
-
 
 // Base dialog is typically mocked out with simple text because it can cause issues,
 // In this case we're mocking it more comprehensively so we can verify that the actions and title
 // contain the appropriate text.
-jest.mock('../../../components/Dialog/BaseDialog',  () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
+jest.doMock('../../../components/Dialog/BaseDialog',  () => {
     return (props) => (
         <div id="basedialog">
             <span>{props.title}</span>
@@ -21,22 +15,20 @@ jest.mock('../../../components/Dialog/BaseDialog',  () => {
     );
 });
 
-jest.mock(
+jest.doMock(
     '../../../components/Dialog/RegionalJustification/TextLabel',
     () => () => 'textlabel'
 );
-jest.mock(
+jest.doMock(
     '../../../components/Dialog/RegionalJustification/JustificationDropdown',
     () => () => 'dropdown'
 );
 // Replace the spinner component to make it easier to find during testing
-jest.mock('@material-ui/core/CircularProgress', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
+jest.doMock('@material-ui/core/CircularProgress', () => {
     return () => (<div>spinner</div>);
 });
 
+const {RegionalJustificationDialog} = require("../../../components/Dialog/RegionalJustification/RegionalJustificationDialog");
 
 describe('CreateDataPackButton component', () => {
     const defaultProps = () => ({

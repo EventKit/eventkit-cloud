@@ -1,10 +1,10 @@
-import * as React from 'react';
+import { Component } from 'react';
 
 export interface Props {
     member: Eventkit.UserData;
 }
 
-export class GroupMemberRow extends React.Component<Props, {}> {
+export class GroupMemberRow extends Component<Props, {}> {
     render() {
         let name = this.props.member.username;
         if (this.props.member.first_name && this.props.member.last_name) {

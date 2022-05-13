@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import Joyride, {Step, StoreHelpers} from 'react-joyride';
@@ -152,7 +152,7 @@ export interface State {
     isRunning: boolean;
 }
 
-export class ExportSummary extends React.Component<Props, State> {
+export class ExportSummary extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };

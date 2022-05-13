@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import { Warning } from '../../components/AccountPage/Warning';
 

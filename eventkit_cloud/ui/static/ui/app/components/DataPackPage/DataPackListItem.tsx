@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import moment from 'moment';
@@ -40,7 +40,7 @@ export interface State {
     shareDialogOpen: boolean;
 }
 
-export class DataPackListItem extends React.Component<Props, State> {
+export class DataPackListItem extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
