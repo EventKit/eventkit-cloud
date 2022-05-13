@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import { MapView } from '../../components/common/MapView';
 import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent";

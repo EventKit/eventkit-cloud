@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -6,8 +5,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { PermissionsFilter } from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
-jest.mock("../../components/DataPackShareDialog/DataPackShareDialog", () => {
-    const React = require('react');
+jest.doMock("../../components/DataPackShareDialog/DataPackShareDialog", () => {
     return (props) => (<div className="sharedialog">{props.children}</div>);
 });
 

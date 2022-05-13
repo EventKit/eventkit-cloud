@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 
 export interface Props {
     title: any;
@@ -7,7 +7,7 @@ export interface Props {
     bodyStyle?: object;
 }
 
-export class InfoParagraph extends React.Component<Props, {}> {
+export class InfoParagraph extends Component<Props, {}> {
     render() {
         const styles = {
             title: {

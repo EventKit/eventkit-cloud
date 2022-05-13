@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import * as sinon from 'sinon';
 import NavigationCheck from '@material-ui/icons/Check';

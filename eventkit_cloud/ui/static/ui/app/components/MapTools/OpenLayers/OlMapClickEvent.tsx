@@ -1,4 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
+import * as React from 'react';
 import {useOlMapContainer} from "../context/OpenLayersContext";
 import {generateDrawLayer, TileCoordinate, wrapX} from "../../../utils/mapUtils";
 import {getTopLeft, getTopRight} from "ol/extent";

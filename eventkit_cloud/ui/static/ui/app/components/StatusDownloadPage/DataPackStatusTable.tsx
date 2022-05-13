@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import CustomTableRow from '../common/CustomTableRow';
 import PermissionsData from './PermissionsData';
@@ -20,7 +20,7 @@ export interface Props {
     job: Eventkit.Job;
 }
 
-export class DataPackStatusTable extends React.Component<Props, {}> {
+export class DataPackStatusTable extends Component<Props, {}> {
     static defaultProps = {
         minDate: null,
         maxDate: null,

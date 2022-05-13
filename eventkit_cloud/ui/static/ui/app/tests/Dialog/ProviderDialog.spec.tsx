@@ -1,20 +1,17 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import '@testing-library/jest-dom/extend-expect'
-import {ProviderDialog} from '../../components/Dialog/ProviderDialog';
 import {render} from "@testing-library/react";
-import set = Reflect.set;
 
 
-jest.mock("../../components/Dialog/BaseDialog", () => {
-    const React = require('react');
+jest.doMock("../../components/Dialog/BaseDialog", () => {
     return (props) => (<div className="basedialog">{props.children}</div>);
 });
 
-jest.mock("../../components/common/DropDownListItem", () => {
-    const React = require('react');
+jest.doMock("../../components/common/DropDownListItem", () => {
     return (props) => (<div className="basedialog">{props.children}</div>);
 });
+
+const {ProviderDialog} = require('../../components/Dialog/ProviderDialog');
 
 const providers = [
     {

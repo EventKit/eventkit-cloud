@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
@@ -24,7 +24,7 @@ export interface State {
 
 }
 
-export class MapCard extends React.Component<Props, State> {
+export class MapCard extends Component<Props, State> {
 
     readonly mapDiv: string;
     readonly minZoom: number;

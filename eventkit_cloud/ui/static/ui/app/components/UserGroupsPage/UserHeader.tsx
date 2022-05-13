@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
@@ -30,7 +30,7 @@ export interface State {
     showAdminConfirm: boolean;
 }
 
-export class UserHeader extends React.Component<Props, State> {
+export class UserHeader extends Component<Props, State> {
     static defaultProps = {
         handleRemoveUsers: () => { console.warn('No remove users handler supplied'); },
         handleAdminRights: () => { console.warn('No admin rights handler supplied'); },

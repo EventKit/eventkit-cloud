@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
 import Button from '@material-ui/core/Button';

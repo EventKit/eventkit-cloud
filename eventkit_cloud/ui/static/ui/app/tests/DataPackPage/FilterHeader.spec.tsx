@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import { FilterHeader } from '../../components/DataPackPage/FilterHeader';

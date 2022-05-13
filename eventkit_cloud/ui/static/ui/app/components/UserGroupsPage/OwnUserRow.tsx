@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
@@ -62,7 +62,7 @@ export interface Props {
     classes: { [className: string]: string; };
 }
 
-export class OwnUserRow extends React.Component<Props, {}> {
+export class OwnUserRow extends Component<Props, {}> {
     static defaultProps = {
         isAdmin: false,
         handleDemoteAdmin: () => { console.warn('Demote admin function not provided'); },

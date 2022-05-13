@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import Enzyme from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import Adapter from '@wojtekmaj/enzyme-adapter-react-17';
 import theme from './eventkit_cloud/ui/static/ui/app/styles/eventkit_theme';
 
 global.window.resizeTo = (width, height) => {

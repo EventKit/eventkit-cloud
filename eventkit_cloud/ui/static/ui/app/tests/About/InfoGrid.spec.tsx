@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { mount } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';

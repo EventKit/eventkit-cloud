@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Card from '@material-ui/core/Card';
@@ -21,7 +21,7 @@ export interface State {
     expanded: boolean;
 }
 
-export class UserLicense extends React.Component<Props, State> {
+export class UserLicense extends Component<Props, State> {
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);

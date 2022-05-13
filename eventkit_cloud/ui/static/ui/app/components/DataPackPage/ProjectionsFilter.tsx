@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Checked from '@material-ui/icons/CheckBox';
@@ -10,7 +10,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class ProjectionsFilter extends React.Component<Props, {}> {
+export class ProjectionsFilter extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { projections } = this.props;

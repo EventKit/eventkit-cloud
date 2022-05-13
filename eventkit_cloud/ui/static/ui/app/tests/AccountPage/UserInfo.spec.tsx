@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { shallow } from 'enzyme';
 import { UserInfo } from '../../components/AccountPage/UserInfo';
 import UserInfoTableRow from '../../components/AccountPage/UserInfoTableRow';

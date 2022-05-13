@@ -1,17 +1,13 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import BaseDialog from '../../components/Dialog/BaseDialog';
-import { AdministratorInfoDialog } from '../../components/UserGroupsPage/Dialogs/AdministratorInfoDialog';
 import {render, screen} from '@testing-library/react';
 
-jest.mock("../../components/Dialog/BaseDialog", () => {
-    const React = require('react');
+jest.doMock("../../components/Dialog/BaseDialog", () => {
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
 
-describe('AdministratorInfoDialog component', () => {
+const {AdministratorInfoDialog} = require('../../components/UserGroupsPage/Dialogs/AdministratorInfoDialog');
 
+describe('AdministratorInfoDialog component', () => {
 
     const props = {
         show: true,

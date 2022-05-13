@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {
     withTheme, createStyles, withStyles, Theme,
 } from '@material-ui/core/styles';
@@ -41,7 +41,7 @@ interface Props {
     };
 }
 
-export class DeleteNotificationsDialog extends React.Component<Props, {}> {
+export class DeleteNotificationsDialog extends Component<Props, {}> {
     render() {
         const { classes } = this.props;
 

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import * as React from 'react';
 import VectorLayer from 'ol/layer/Vector';
 import { useOlMapContainer } from '../context/OpenLayersContext';
 
