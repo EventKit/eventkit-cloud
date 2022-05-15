@@ -1,5 +1,5 @@
 import {connect} from 'react-redux';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
@@ -35,7 +35,7 @@ export interface State {
     showPublicWarning: boolean;
 }
 
-export class DataPackShareDialog extends React.Component<Props, State> {
+export class DataPackShareDialog extends Component<Props, State> {
     static defaultProps = {
         submitButtonLabel: 'SAVE',
         title: 'SHARE',

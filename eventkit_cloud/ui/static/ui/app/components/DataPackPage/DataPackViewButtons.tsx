@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import ActionViewModule from '@material-ui/icons/ViewModule';
@@ -11,7 +11,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class DataPackViewButtons extends React.Component<Props, {}> {
+export class DataPackViewButtons extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 

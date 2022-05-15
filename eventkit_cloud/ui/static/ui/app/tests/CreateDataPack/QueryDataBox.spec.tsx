@@ -1,4 +1,3 @@
-import * as React from "react";
 import {shallow} from "enzyme";
 import sinon from 'sinon';
 import {QueryDataBox} from "../../components/CreateDataPack/QueryDataBox";

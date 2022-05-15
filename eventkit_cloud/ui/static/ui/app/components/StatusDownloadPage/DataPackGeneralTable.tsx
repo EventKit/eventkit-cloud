@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../common/CustomTableRow';
@@ -17,7 +17,7 @@ export interface State {
     providerDialogOpen: boolean;
 }
 
-export class DataPackGeneralTable extends React.Component<Props, State> {
+export class DataPackGeneralTable extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);

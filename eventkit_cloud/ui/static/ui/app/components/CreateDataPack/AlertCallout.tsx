@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Clear from '@material-ui/icons/Clear';
 import css from '../../styles/popup.css';
@@ -13,7 +13,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class AlertCallout extends React.Component<Props, {}> {
+export class AlertCallout extends Component<Props, {}> {
     render() {
         const styles = {
             clear: {

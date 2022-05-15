@@ -1,4 +1,4 @@
-import * as React from "react";
+import { Component } from "react";
 import axios from "axios";
 import {getCookie, getFeatureUrl} from "../../utils/generic";
 import QueryDataBox from "./QueryDataBox";
@@ -28,7 +28,7 @@ export interface State {
     closeCard: boolean;
 }
 
-export class MapQueryDisplay extends React.Component<Props, State> {
+export class MapQueryDisplay extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
 

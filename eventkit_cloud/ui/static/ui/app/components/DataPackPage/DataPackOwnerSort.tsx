@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import MenuItem from '@material-ui/core/MenuItem';
 import DropDownMenu from '../common/DropDownMenu';
 
@@ -8,7 +8,7 @@ export interface Props {
     owner: string;
 }
 
-export class DataPackOwnerSort extends React.Component<Props, {}> {
+export class DataPackOwnerSort extends Component<Props, {}> {
     constructor(props: Props) {
         super(props);
         this.handleAll = this.handleAll.bind(this);

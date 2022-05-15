@@ -1,6 +1,5 @@
 import Select from '@material-ui/core/Select';
 import { createStyles, Theme, withStyles } from '@material-ui/core/styles';
-import * as React from 'react';
 import { MenuItem } from '@material-ui/core';
 
 interface DropdownProps {

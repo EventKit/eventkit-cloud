@@ -1,5 +1,4 @@
 import { CircularProgress, Typography, withTheme } from '@material-ui/core';
-import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { isWidthUp } from '@material-ui/core/withWidth';
 import withWidth from '@material-ui/core/withWidth/withWidth';

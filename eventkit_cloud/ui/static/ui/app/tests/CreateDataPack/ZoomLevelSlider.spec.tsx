@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {ChangeEvent} from 'react';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
 import {TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/core";
@@ -53,14 +53,14 @@ describe('ZoomLevelSlider component', () => {
 
     it('should fire the updateZoom function when the minimum zoom-value textbox is changed', () => {
         const wrapper = getWrapper(getProps());
-        const event = {target: {value: "3", name: "zoom-value"}} as React.ChangeEvent<HTMLInputElement>;
+        const event = {target: {value: "3", name: "zoom-value"}} as ChangeEvent<HTMLInputElement>;
         wrapper.find(TextField).at(0).simulate("change", event);
         expect(updateZoomSpy).toBeCalledTimes(1);
     });
 
     it('should fire the updateZoom function when the maximum zoom-value textbox is changed', () => {
         const wrapper = getWrapper(getProps());
-        const event = {target: {value: '13'}} as React.ChangeEvent<HTMLInputElement>;
+        const event = {target: {value: '13'}} as ChangeEvent<HTMLInputElement>;
         wrapper.find(TextField).at(1).simulate('change', event);
         expect(updateZoomSpy).toBeCalledTimes(1);
     });

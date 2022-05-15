@@ -1,19 +1,16 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import {ErrorDialog} from '../../components/StatusDownloadPage/ErrorDialog';
 import {screen, render} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 
-jest.mock('../../components/Dialog/BaseDialog', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
+jest.doMock('../../components/Dialog/BaseDialog', () => {
     return (props) => (
         <div className="basedialog">
             <span>basedialog in test</span>
             {props.children}
         </div>);
 });
+
+const {ErrorDialog} = require('../../components/StatusDownloadPage/ErrorDialog');
 
 describe('ProviderError component', () => {
     const getProps = () => ({

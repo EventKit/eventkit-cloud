@@ -1,4 +1,5 @@
-import React, {useState, useEffect, useRef} from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import {MapContainer} from "../../../utils/mapBuilder";
 import {OlMapProvider, OlZoomProvider} from "../context/OpenLayersContext";
 import {useEffectOnMount} from "../../../utils/hooks/hooks";

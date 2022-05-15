@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
@@ -140,7 +140,7 @@ interface StateProps {
 
 export type Props = StyledComponentProps & OwnProps & StateProps;
 
-export class DataPackFeaturedItem extends React.Component<Props, {}> {
+export class DataPackFeaturedItem extends Component<Props, {}> {
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -236,7 +236,7 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
 
 const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
-    const mapStateToProps = (state: {}, props: OwnProps) => (
+    const mapStateToProps = (state, props: OwnProps) => (
         {
             run: getFullRun(state, props),
         }

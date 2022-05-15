@@ -1,4 +1,4 @@
-import React from 'react';
+import { Component } from 'react';
 import {
     createStyles, withStyles, FormControlLabel, Switch,
 } from '@material-ui/core';
@@ -50,7 +50,7 @@ export interface State {
     checked: boolean;
 }
 
-export class FootprintDisplay extends React.Component<Props, State> {
+export class FootprintDisplay extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
