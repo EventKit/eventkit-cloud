@@ -172,6 +172,7 @@ services:
       - SECRET_KEY
       - BIND_MOUNT_LOCATION
       - EVENTKIT_CRED
+      - ROCKETCHAT_NOTIFICATIONS
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
