@@ -1,9 +1,20 @@
-import * as React from 'react';
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
-import {RegionJustification} from "../../components/StatusDownloadPage/RegionJustification";
 import {_RegionProvider} from "../../components/common/context/RegionContext";
 import {RegionalJustificationDialog} from "../../components/Dialog/RegionalJustification/RegionalJustificationDialog";
+
+jest.doMock('../../components/Dialog/RegionalJustification/RegionalJustificationDialog', () => {
+    return (props) => (
+        <div id="regionjustification">
+            RegionalJustificationDialog
+            <button className="qa-submit" onClick={() => props.onSubmit('sdfg')}>
+                submit button
+            </button>
+        </div>
+    );
+});
+
+const {RegionJustification} = require('../../components/StatusDownloadPage/RegionJustification');
 
 const featureCollectionExtent = {
     type: 'FeatureCollection',
@@ -42,20 +53,6 @@ const featureCollectionPolicy = {
         },
     }],
 };
-
-jest.mock('../../components/Dialog/RegionalJustification/RegionalJustificationDialog', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
-    return (props) => (
-        <div id="regionjustification">
-            RegionalJustificationDialog
-            <button className="qa-submit" onClick={() => props.onSubmit('sdfg')}>
-                submit button
-            </button>
-        </div>
-    );
-});
 
 const policy = {
     providers: [{slug: 'providerslug', uid: 'sluguid', name: 'providername'}],

@@ -196,11 +196,12 @@ services:
       - OAUTH_CLIENT_ID
       - OAUTH_CLIENT_SECRET
       - OAUTH_LOGOUT_URL
+      - ROCKETCHAT_NOTIFICATIONS
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
   postgis:
-    image: kartoza/postgis:11.5-2.5
+    image: kartoza/postgis:14
     environment:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASS=eventkit_exports
@@ -209,12 +210,17 @@ services:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
+      - "./config/postgis.conf:/settings/extra.conf"
       - "postgis_database:/var/lib/postgresql"
   rabbitmq:
-    image: rabbitmq:3.6.6-management
+    image: rabbitmq:3.9-management
+    hostname: rabbitmq
     expose:
       - "5672"
-      - "15672"
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
   mkdocs:
     image: cfinfrastructure/mkdocs:latest
     working_dir: /build
@@ -304,3 +310,4 @@ services:
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:
   postgis_database:
+  rabbitmq:

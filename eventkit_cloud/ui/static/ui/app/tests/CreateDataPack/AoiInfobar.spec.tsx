@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';

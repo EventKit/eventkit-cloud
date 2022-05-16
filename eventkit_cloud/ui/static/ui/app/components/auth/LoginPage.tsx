@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -12,7 +12,7 @@ interface Props {
     width: Breakpoint;
 }
 
-export class LoginPage extends React.Component<Props, {}> {
+export class LoginPage extends Component<Props, {}> {
     static contextTypes = {
         config: PropTypes.shape({
             VERSION: PropTypes.string,

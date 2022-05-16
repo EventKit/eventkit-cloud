@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import Joyride from 'react-joyride';
 import { shallow } from 'enzyme';

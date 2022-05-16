@@ -1,13 +1,8 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import {GroupsDrawer} from '../../components/UserGroupsPage/GroupsDrawer';
 import {render, screen, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
-import {ProviderPreview} from "../../components/StatusDownloadPage/ProviderPreview";
 
-
-jest.mock('react-swipeable-views', () => {
-    const React = require('react');
+jest.doMock('react-swipeable-views', () => {
     return (props) => (
         <div>
             <span>{props.children}</span>
@@ -16,19 +11,19 @@ jest.mock('react-swipeable-views', () => {
     );
 });
 
-jest.mock('@material-ui/icons/KeyboardArrowRight', () => {
-    const React = require('react');
+jest.doMock('@material-ui/icons/KeyboardArrowRight', () => {
     return (props) => (
         <button>rightarrow</button>
     );
 })
 
-jest.mock('@material-ui/icons/KeyboardArrowLeft', () => {
-    const React = require('react');
+jest.doMock('@material-ui/icons/KeyboardArrowLeft', () => {
     return (props) => (
         <button>leftarrow</button>
     );
 })
+
+const {ProviderPreview} = require("../../components/StatusDownloadPage/ProviderPreview");
 
 describe('GroupsDrawer component', () => {
     const getProps = () => ({

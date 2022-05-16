@@ -1,5 +1,4 @@
 import RegionJustification from "./RegionJustification";
-import * as React from "react";
 import ProviderRow, {ProviderRowProps} from "./ProviderRow";
 import {useState} from "react";
 

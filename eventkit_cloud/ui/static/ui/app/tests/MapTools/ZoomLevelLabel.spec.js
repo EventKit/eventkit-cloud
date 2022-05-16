@@ -1,4 +1,3 @@
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 

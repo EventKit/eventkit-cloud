@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {Children, cloneElement, isValidElement, PropsWithChildren} from 'react';
 import {connect} from "react-redux";
 import {createContext, useCallback, useContext, useEffect} from "react";
 
@@ -72,7 +72,7 @@ interface MatomoProps {
     userData: any;
 }
 
-export function MatomoHandler(props: React.PropsWithChildren<MatomoProps>) {
+export function MatomoHandler(props: PropsWithChildren<MatomoProps>) {
     const {SITE_ID, APPNAME, URL, CUSTOM_DIM_ID, CUSTOM_VAR_ID, CUSTOM_VAR_NAME, CUSTOM_VAR_SCOPE} = props;
     const {user = undefined} = props.userData || {};
 
@@ -151,7 +151,7 @@ interface MatomoEvent {
     eventValue?: number | string;
 }
 
-export function MatomoClickTracker(props: React.PropsWithChildren<MatomoEvent>) {
+export function MatomoClickTracker(props: PropsWithChildren<MatomoEvent>) {
     const {pushClick} = useMatomoContext();
     if (!pushClick) {
         return (<>{props.children}</>);
@@ -159,10 +159,10 @@ export function MatomoClickTracker(props: React.PropsWithChildren<MatomoEvent>) 
     return (
         <span className={`qa-MatomoClick-${props.eventName}`}>
             {
-                React.Children.map(props.children, (_child) => {
+                Children.map(props.children, (_child) => {
                     // This maps over all top level children and adds/modifies the onClick prop
                     // Ignoring all non-valid elements (null)
-                    if (!React.isValidElement(_child)) return;
+                    if (!isValidElement(_child)) return;
                     const {onClick, ...originalProps} = _child.props;
                     // We replace the child components onClick property with this function.
                     // It will push the click event to Matomo, then call the original onClick prop if it was defined.
@@ -176,7 +176,7 @@ export function MatomoClickTracker(props: React.PropsWithChildren<MatomoEvent>) 
                     // Clone the child and replace the onClick
                     // If the child component is disabled (i.e. MUI button disabled prop), the onClick won't be called,
                     // this is probably desired behavior, but should be noted.
-                    return React.cloneElement(_child, {
+                    return cloneElement(_child, {
                         ...originalProps,
                         onClick: _onClick,
 

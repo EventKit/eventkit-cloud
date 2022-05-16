@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import BreadcrumbStepper from "./BreadcrumbStepper";
 import {getCookie, getSqKm, isZoomLevelInRange} from "../../utils/generic";
 import {allHaveArea, featureToBbox, WGS84} from '../../utils/mapUtils';

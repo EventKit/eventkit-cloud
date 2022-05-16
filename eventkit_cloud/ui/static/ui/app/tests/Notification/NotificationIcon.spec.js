@@ -1,4 +1,3 @@
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import InfoIcon from '@material-ui/icons/Info';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';

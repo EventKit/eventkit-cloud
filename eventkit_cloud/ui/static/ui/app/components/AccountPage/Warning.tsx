@@ -1,11 +1,11 @@
-import * as React from 'react';
+import { Component } from 'react';
 
 export interface Props {
     className?: string;
     text: any;
 }
 
-export class Warning extends React.Component<Props, {}> {
+export class Warning extends Component<Props, {}> {
     render() {
         const bodyStyle = {
             backgroundColor: '#f8e6dd',

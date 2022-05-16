@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
     withStyles, withTheme, createStyles, Theme,
 } from '@material-ui/core/styles';

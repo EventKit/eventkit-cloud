@@ -17,9 +17,9 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_path,
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.tasks.helpers import make_dirs
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils import s3
-from eventkit_cloud.utils.mapproxy import create_mapproxy_app
+from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
     :param bbox: region of the world to get tiles for
     :return: A Pillow Image object built for the collected tiles.
     """
+
     if bbox is None:
         bbox = copy.copy(WGS84_FULL_WORLD)
     # Creates and returns a TileGrid object, allows us specify min_res instead of supplying the resolution list.
@@ -128,6 +129,7 @@ def fit_to_area(image, pixels_x=500, pixels_y=250):
 
 
 def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
+
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
@@ -147,34 +149,3 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
     thumbnail_snapshot.save()
 
     return thumbnail_snapshot
-
-
-def get_resolution_for_extent(extent: list, size: tuple = None):
-    """
-    :param extent: A bounding box as a list [w,s,e,n].
-    :param optional size: The pixel size of the image to get the resolution for as a tuple.
-    :return: The resolution at which the extent will render at the given size.
-    """
-    if size is None:
-        size = (1024, 512)
-
-    size_x, size_y = size
-    x_resolution = get_width(extent) / size_x
-    y_resolution = get_height(extent) / size_y
-    return max([x_resolution, y_resolution])
-
-
-def get_width(extent: list):
-    """
-    :param extent: A bounding box as a list [w,s,e,n].
-    :return: The width of the given extent.
-    """
-    return extent[2] - extent[0]
-
-
-def get_height(extent: list):
-    """
-    :param extent: A bounding box as a list [w,s,e,n].
-    :return: The height of the given extent.
-    """
-    return extent[3] - extent[1]

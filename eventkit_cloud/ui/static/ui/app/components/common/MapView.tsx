@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {MapLayer} from "../CreateDataPack/CreateExport";
 import OlMapComponent from "../MapTools/OpenLayers/OlMapComponent";
 import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
@@ -19,7 +19,7 @@ export interface Props {
     style?: any;
 }
 
-export class MapView extends React.Component<Props> {
+export class MapView extends Component<Props> {
 
     private mapDiv: string;
     private minZoom: number;

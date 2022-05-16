@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { combineReducers } from 'redux';
 import isEqual from 'lodash/isEqual';
 import { types } from '../actions/datapackActions';

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import Checkbox from '@material-ui/core/Checkbox';
 import Warning from './Warning';
 import UserLicense from './UserLicense';
@@ -16,7 +16,7 @@ export interface Props {
     onAllCheck: (e: any, checked: boolean) => void;
 }
 
-export class LicenseInfo extends React.Component<Props, {}> {
+export class LicenseInfo extends Component<Props, {}> {
     private allTrue(acceptedLicenses) {
         return Object.keys(acceptedLicenses).every(l => acceptedLicenses[l]);
     }

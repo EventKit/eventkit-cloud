@@ -1,23 +1,20 @@
-import * as React from 'react';
-import {render, screen, getByText, fireEvent} from '@testing-library/react';
+import {render, screen, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
-import {MapDrawerOptions} from "../../components/CreateDataPack/MapDrawerOptions";
 import {shouldDisplay as providerShouldDisplay} from "../../utils/generic";
 
-jest.mock("@material-ui/core/Grow", () => {
-    const React = require('react');
+jest.doMock("@material-ui/core/Grow", () => {
     return (props) => (<div className="qa-Grow">{props.children}</div>)
 });
 
-jest.mock("@material-ui/core/Radio", () => {
-    const React = require('react');
+jest.doMock("@material-ui/core/Radio", () => {
     return (props) => (<div {...props} className="qa-Radio">{props.name}</div>)
 });
 
-jest.mock("@material-ui/core/Chip", () => {
-    const React = require('react');
+jest.doMock("@material-ui/core/Chip", () => {
     return (props) => (<div {...props} className="qa-Chip">CHIPLABEL-{props.label}</div>)
 });
+
+const {MapDrawerOptions} = require("../../components/CreateDataPack/MapDrawerOptions");
 
 describe('FilterDrawer component', () => {
     const providers = [

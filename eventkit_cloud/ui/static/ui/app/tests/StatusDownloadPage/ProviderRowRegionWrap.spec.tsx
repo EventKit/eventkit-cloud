@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
