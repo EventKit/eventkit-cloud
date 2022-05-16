@@ -84,7 +84,7 @@ def get_area_geojson(geojson, earth_r=6371):
         for i in range(len(ring) - 2):
             a += (rad(ring[i + 1][0]) - rad(ring[i - 1][0])) * math.sin(rad(ring[i][1]))
 
-    area = abs(a * (earth_r ** 2) / 2)
+    area = abs(a * (earth_r**2) / 2)
     return area
 
 
