@@ -81,6 +81,7 @@ export class DataCartDetails extends Component<Props, State> {
     render() {
         const {colors} = this.props.theme.eventkit;
         const selectedBasemap = {mapUrl: this.context.config.BASEMAP_URL} as MapLayer;
+        const adminPermissions = this.props.cartDetails.job.relationship === 'ADMIN'
 
         const styles = {
             container: {
@@ -149,7 +150,7 @@ export class DataCartDetails extends Component<Props, State> {
                             handlePermissionsChange={this.handlePermissionsChange}
                             statusColor={statusBackgroundColor}
                             statusFontColor={statusFontColor}
-                            adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
+                            adminPermissions={adminPermissions}
                             job={this.props.job}
                         />
                     </div>
@@ -160,6 +161,7 @@ export class DataCartDetails extends Component<Props, State> {
                             onProviderCancel={this.props.onProviderCancel}
                             providers={this.props.providers}
                             job={this.props.job}
+                            adminPermissions={adminPermissions}
                         />
                     </div>
                     <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer"
@@ -174,7 +176,7 @@ export class DataCartDetails extends Component<Props, State> {
                             dataPack={this.props.cartDetails}
                             job={this.props.job}
                             providers={this.props.providers}
-                            adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
+                            adminPermissions={adminPermissions}
                         />
                     </div>
                     <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer"
