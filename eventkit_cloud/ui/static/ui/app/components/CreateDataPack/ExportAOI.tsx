@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
@@ -117,7 +117,7 @@ function getViewBbox(map: any) : GeoJSON.FeatureCollection {
     return createGeoJSON(geom) as GeoJSON.FeatureCollection;
 }
 
-export class ExportAOI extends React.Component<Props, State> {
+export class ExportAOI extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -818,7 +818,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private openBufferDialog() {
         // this still executes the call to setState immediately
         // but it gives you the option to await the state change to be complete
-        return new Promise(async (resolve) => {
+        return new Promise<void>(async (resolve) => {
             // resolve only when setState is completed
             this.setState({showBuffer: true}, resolve);
         });
@@ -936,7 +936,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
-            this.helpers.reset(true);
+            this.helpers?.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data

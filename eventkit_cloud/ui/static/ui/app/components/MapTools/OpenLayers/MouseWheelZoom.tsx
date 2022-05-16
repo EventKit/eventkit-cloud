@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import { useEffect } from 'react';
 import {useOlMapContainer} from "../context/OpenLayersContext";
 import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
 

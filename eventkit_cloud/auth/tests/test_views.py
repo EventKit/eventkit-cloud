@@ -162,7 +162,7 @@ class TestAuthViews(TestCase):
         example_refresh_token = "refresh"
 
         request = RequestFactory().get("/")
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
         request.session.save()
 

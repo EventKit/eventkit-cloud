@@ -18,18 +18,18 @@ build:
 requirements:
   build:
     - git
-    - pip {{ pip }}
-    - python {{ python }}
-    - nodejs>=10
+    - pip {% if pip is defined %} {{ pip }} {% endif %}
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - nodejs>=16
     - ruby
   run_constrained:
-    - memcached {{ memcached }}
+    - memcached {% if memcached is defined %} {{ memcached }} {% endif %}
     - qgis
   run:
-    - python {{ python }}
+    - python {% if python is defined %} {{ python }} {% endif %}
     - mesa-libgl-cos7-x86_64
-    - osmctools {{ osmctools }}
-    - proj {{ proj }}
+    - osmctools {% if osmctools is defined %} {{ osmctools }} {% endif %}
+    - proj {% if proj is defined %} {{ proj }} {% endif %}
     {% for req in run_requirements -%}
       - {{ req }}
     {% endfor %}
@@ -45,4 +45,3 @@ about:
 extra:
   recipe-maintainers:
     - jsvrcek
-

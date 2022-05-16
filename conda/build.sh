@@ -15,7 +15,7 @@ mkdir -p /root/miniconda3/conda-bld/noarch
 conda index /root/miniconda3/conda-bld
 
 echo "Adding channels"
-conda config --add channels defaults
+conda config --remove channels defaults || echo "Defaults already removed."
 conda config --add channels conda-forge
 conda config --add channels local
 

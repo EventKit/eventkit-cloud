@@ -1,5 +1,3 @@
-import * as React from 'react';
-import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import {MapView} from "../../components/common/MapView";
 import { DataPackAoiInfo } from '../../components/StatusDownloadPage/DataPackAoiInfo';
@@ -7,13 +5,8 @@ import { DataPackAoiInfo } from '../../components/StatusDownloadPage/DataPackAoi
 describe('DataPackAoiInfo component', () => {
     let shallow;
 
-    let mount;
     beforeAll(() => {
         shallow = createShallow();
-    });
-
-    afterAll(() => {
-        mount.restore();
     });
 
     const getProps = () => (

@@ -28,7 +28,8 @@ class DataProviderRequest(UserRequest):
 
 class SizeIncreaseRequest(UserRequest):
     def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+        if not args:  # Fixture loading happens with args, so don't do this if that.
+            kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
         super(SizeIncreaseRequest, self).__init__(*args, **kwargs)
 
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="requested_provider")

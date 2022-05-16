@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';

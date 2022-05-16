@@ -1,4 +1,4 @@
-import React from 'react';
+import { PropsWithChildren, ReactNode } from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -40,7 +40,7 @@ interface Props {
     show: boolean;
     onClose?: (...args: any) => void;
     title?: any,
-    actions?: React.ReactNode[];
+    actions?: ReactNode[];
     buttonText?: string;
     dialogStyle?: any;
     dialogProps?: any;
@@ -75,7 +75,7 @@ BaseDialog.defaultProps = {
 } as unknown as Props;
 
 
-export function BaseDialog(props: React.PropsWithChildren<Props>) {
+export function BaseDialog(props: PropsWithChildren<Props>) {
     const { classes } = props;
     // the default is just a close button
     const defaultActions = [

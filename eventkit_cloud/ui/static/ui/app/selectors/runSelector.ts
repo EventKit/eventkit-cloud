@@ -1,16 +1,26 @@
 import { createSelector } from 'reselect';
 
-export const getAllRuns = (state) => state.exports.data.runs;
+interface State {
+    exports: any,
+    data: any,
+    datacartDetails: any,
+}
 
-export const getPropsRun = (state, props) => state.exports.data.runs[props.runId];
+interface Props {
+    runId: string,
+}
 
-export const getDatacartIds = (state) => state.datacartDetails.ids;
+export const getAllRuns = (state: State) => state.exports.data.runs;
 
-export const getAllJobs = (state) => state.exports.data.jobs;
+export const getPropsRun = (state: State, props: Props) => state.exports.data.runs[props.runId];
 
-export const getAllProviderTasks = (state) => state.exports.data.provider_tasks;
+export const getDatacartIds = (state: State) => state.datacartDetails.ids;
 
-export const getAllExportTasks = (state) => state.exports.data.tasks;
+export const getAllJobs = (state: State) => state.exports.data.jobs;
+
+export const getAllProviderTasks = (state: State) => state.exports.data.provider_tasks;
+
+export const getAllExportTasks = (state: State) => state.exports.data.tasks;
 
 export const getPropsProviderTasks = () => createSelector(
     [getPropsRun, getAllProviderTasks, getAllExportTasks],

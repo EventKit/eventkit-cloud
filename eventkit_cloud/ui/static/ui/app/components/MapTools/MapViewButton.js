@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
 import ContentClear from '@material-ui/icons/Clear';

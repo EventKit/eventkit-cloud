@@ -156,10 +156,8 @@ class TaskChainBuilder(object):
             if data_provider.preview_url:
                 subtasks.append(
                     create_datapack_preview.s(
-                        run_uid=run.uid,
                         stage_dir=stage_dir,
                         task_uid=data_provider_task_record.uid,
-                        user_details=user_details,
                     ).set(queue=queue_group, routing_key=queue_group)
                 )
 

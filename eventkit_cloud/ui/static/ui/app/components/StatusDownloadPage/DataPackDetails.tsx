@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, withStyles, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
@@ -53,7 +53,7 @@ export interface State {
     hasBlockedRegion: boolean;
 }
 
-export class DataPackDetails extends React.Component<Props, State> {
+export class DataPackDetails extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.handleInfoOpen = this.handleInfoOpen.bind(this);

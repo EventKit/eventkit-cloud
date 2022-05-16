@@ -1,27 +1,13 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import {ProviderRow} from '../../components/StatusDownloadPage/ProviderRow';
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
-import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
-import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
-import {useAsyncRequest} from "../../utils/hooks/api";
-import {useDataCartContext} from "../../components/StatusDownloadPage/context/DataCart";
 
-jest.mock('../../components/MatomoHandler', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
-    return {
-        MatomoClickTracker: (props) => (<>{props.children}</>)
-    }
-});
+jest.doMock('../../components/MatomoHandler', () => ({
+    MatomoClickTracker: (props) => (<>{props.children}</>)
+}));
 
 
-jest.mock('../../components/Dialog/BaseDialog', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
+jest.doMock('../../components/Dialog/BaseDialog', () => {
     return (props) => (
         <div className="basedialog">
             <span>basedialog in test</span>
@@ -29,47 +15,32 @@ jest.mock('../../components/Dialog/BaseDialog', () => {
         </div>);
 });
 
-jest.mock('@material-ui/icons/KeyboardArrowUp', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
-    return (props) => (<div>arrow up</div>)
-});
+jest.doMock('@material-ui/icons/KeyboardArrowUp', () => () => (<div>arrow up</div>));
 
-jest.mock('@material-ui/icons/KeyboardArrowDown', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
-    return (props) => (<div>arrow down</div>)
-});
+jest.doMock('@material-ui/icons/KeyboardArrowDown', () => () => (<div>arrow down</div>));
 
-jest.mock('../../components/StatusDownloadPage/LicenseRow', () => {
-    // eslint-disable-next-line global-require,no-shadow
-    const React = require('react');
-    // eslint-disable-next-line react/prop-types
-    return (props) => (<div>license row</div>)
-});
+jest.doMock('../../components/StatusDownloadPage/LicenseRow', () => () => (<div>license row</div>));
 
-jest.mock('../../components/StatusDownloadPage/ProviderTaskErrorDialog', () => jest.fn())
+jest.doMock('../../components/StatusDownloadPage/ProviderTaskErrorDialog', () => jest.fn())
 
-jest.mock('../../utils/hooks/api', () => {
-    return {
-        useAsyncRequest: jest.fn(),
-    }
-})
+jest.doMock('../../utils/hooks/api', () => ({
+    useAsyncRequest: jest.fn(),
+}))
 
 
-jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
-    return {
-        useRunContext: jest.fn(),
-    }
-});
+jest.doMock('../../components/StatusDownloadPage/context/RunFile', () => ({
+    useRunContext: jest.fn(),
+}));
 
-jest.mock('../../components/StatusDownloadPage/context/DataCart', () => {
-    return {
-        useDataCartContext: jest.fn(),
-    }
-});
+jest.doMock('../../components/StatusDownloadPage/context/DataCart', () => ({
+    useDataCartContext: jest.fn(),
+}));
+
+const {ProviderRow} =  require('../../components/StatusDownloadPage/ProviderRow');
+const ProviderTaskErrorDialog = require("../../components/StatusDownloadPage/ProviderTaskErrorDialog");
+const {useRunContext} = require("../../components/StatusDownloadPage/context/RunFile");
+const {useAsyncRequest} = require("../../utils/hooks/api");
+const {useDataCartContext} = require("../../components/StatusDownloadPage/context/DataCart");
 
 describe('ProviderRow component', () => {
     const selectedProviders = {

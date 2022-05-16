@@ -5,6 +5,7 @@ from enum import Enum
 
 import requests
 
+from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 
 logger = logging.getLogger(__file__)
@@ -240,10 +241,14 @@ class Pcf(ScaleClient):
             logger.info(f"found task {task_guid} calling cancel")
 
             url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
-            return self.session.post(
+            result = self.session.post(
                 url,
                 headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
-            ).json()
+            )
+            if result.status_code != 200:
+                raise TaskTerminationError(
+                    f"Failed to terminate PCF task with guid: {task_guid} for task named: {task_name}"
+                )
         else:
             logger.warning(f"Terminate task was called with task_name: {task_name} but no running tasks were returned.")
             logger.warning(f"Running tasks: {running_tasks}")

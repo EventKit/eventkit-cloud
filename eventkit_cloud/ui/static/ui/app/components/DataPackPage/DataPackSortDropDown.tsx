@@ -1,5 +1,5 @@
 // import PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import MenuItem from '@material-ui/core/MenuItem';
 import DropDownMenu from '../common/DropDownMenu';
 
@@ -16,7 +16,7 @@ export interface Props {
     value: string;
 }
 
-export class DataPackSortDropDown extends React.Component<Props, {}> {
+export class DataPackSortDropDown extends Component<Props, {}> {
     constructor(props: Props) {
         super(props);
         this.handleChange = this.handleChange.bind(this);

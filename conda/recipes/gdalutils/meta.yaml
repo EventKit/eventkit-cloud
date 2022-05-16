@@ -1,0 +1,41 @@
+{% set name = "gdalutils" %}
+{% set version = "1.0.0" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "f80c96f6e3307aa29ee32edb2d92158bafa225569a9ec4baa158885f1c73e46f" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://github.com/eventkit/{{ name }}/archive/{{ version }}.tar.gz
+  '{{ hash_type }}': '{{ hash_value|lower }}'
+
+build:
+  script: {{ PYTHON }} -m pip install . -vv
+
+requirements:
+  host:
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pip {% if pip is defined %} {{ pip }} {% endif %}
+  run:
+    - python {% if python is defined %} {{ python }} {% endif %}
+    - pyproj {% if pyproj is defined %} {{ pyproj }} {% endif %}
+    - gdal {% if gdal is defined %} {{ gdal }} {% endif %}
+
+test:
+  imports:
+    - gdal_utils
+
+about:
+  home: https://github.com/eventkit/gdalutils
+  summary: 'gdalutils'
+  description: 'This package includes various utilities for using gdal for geospatial data processing.'
+  doc_url: 'https://github.com/EventKit/gdalutils/blob/main/README.md'
+  dev_url: 'https://github.com/eventkit/gdalutils'
+
+extra:
+  recipe-maintainers:
+    - coop56

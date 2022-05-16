@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import * as sinon from 'sinon';
 import IconMenu from '../../components/common/IconMenu';

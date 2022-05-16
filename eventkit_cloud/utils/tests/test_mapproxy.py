@@ -20,6 +20,11 @@ from eventkit_cloud.utils.mapproxy import (
     get_footprint_layer_name,
     get_mapproxy_metadata_url,
     get_custom_exp_backoff,
+    clear_mapproxy_config_cache,
+    mapproxy_config_keys_index,
+    get_resolution_for_extent,
+    get_width,
+    get_height,
 )
 
 logger = logging.getLogger(__name__)
@@ -237,6 +242,32 @@ class TestHelpers(TransactionTestCase):
         with self.assertRaises(Exception):
             mock_get_cache_value.return_value = TaskState.CANCELED.value
             custom_backoff()
+
+    @patch("eventkit_cloud.utils.mapproxy.cache")
+    def test_clear_mapproxy_config_cache(self, cache_mock):
+        mapproxy_config_keys = cache_mock.get_or_set.return_value = {"key-a", "key-b"}
+        clear_mapproxy_config_cache()
+        cache_mock.get_or_set.assert_called_with(mapproxy_config_keys_index, set())
+        cache_mock.delete_many.assert_called_with(list(mapproxy_config_keys))
+
+    @patch("eventkit_cloud.utils.mapproxy.get_height")
+    @patch("eventkit_cloud.utils.mapproxy.get_width")
+    def test_get_resolution_for_extent(self, mock_get_width, mock_get_height):
+        extent = (-180, -90, 180, 90)
+        mock_get_width.return_value = 360
+        mock_get_height.return_value = 180
+        resolution = get_resolution_for_extent(extent)
+        self.assertEqual(resolution, 0.3515625)
+
+    def test_get_width(self):
+        extent = (-180, -90, 180, 90)
+        width = get_width(extent)
+        self.assertEqual(width, 360)
+
+    def test_get_height(self):
+        extent = (-180, -90, 180, 90)
+        height = get_height(extent)
+        self.assertEqual(height, 180)
 
 
 class TestLogger(TransactionTestCase):

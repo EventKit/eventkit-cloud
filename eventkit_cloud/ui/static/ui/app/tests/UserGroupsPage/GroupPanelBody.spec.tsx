@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import {createShallow} from "@material-ui/core/test-utils";

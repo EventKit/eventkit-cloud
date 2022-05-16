@@ -1,9 +1,7 @@
-import * as React from 'react';
-import * as sinon from 'sinon';
+import {ChangeEvent} from 'react';
 import {Tab, Tabs} from "@material-ui/core";
 import {createShallow} from "@material-ui/core/test-utils";
 import {GroupsHeaderTabs} from "../../components/UserGroupsPage/GroupsHeaderTabs";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
 
 describe('GroupPanelBody component', () => {
     let shallow: any;
@@ -43,9 +41,9 @@ describe('GroupPanelBody component', () => {
     it('should show total counts for each group category on the header tabs', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(Tab).first().html()).toContain(10);
-        expect(wrapper.find(Tab).at(1).html()).toContain(1);
-        expect(wrapper.find(Tab).at(2).html()).toContain(5);
+        expect(wrapper.find(Tab).first().html()).toContain('10');
+        expect(wrapper.find(Tab).at(1).html()).toContain('1');
+        expect(wrapper.find(Tab).at(2).html()).toContain('5');
     });
 
     it('clicking on "Member" tab should fire handleChange to show Shared Groups', () => {
@@ -56,7 +54,7 @@ describe('GroupPanelBody component', () => {
             .at(0)
             .props().value)
             .toBe('admin');
-        const event = {target: {value: 'member'}} as React.ChangeEvent<HTMLInputElement>;
+        const event = {target: {value: 'member'}} as ChangeEvent<HTMLInputElement>;
         wrapper.find(Tabs).at(0).simulate('change', event);
         expect(handleChangeSpy).toBeCalledWith(event);
     });

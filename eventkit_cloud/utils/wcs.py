@@ -7,10 +7,14 @@ from string import Template
 
 import yaml
 
+from gdal_utils import get_dimensions, get_meta, merge_geotiffs
+
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils import gdalutils
+from eventkit_cloud.utils.generic import retry
+from eventkit_cloud.utils.mapproxy import get_chunked_bbox
+
 
 logger = logging.getLogger(__name__)
 
@@ -161,8 +165,8 @@ class WCSConverter(object):
 
         scale = float(service.get("scale"))
         params["service"] = "WCS"
-        width, height = gdalutils.get_dimensions(self.bbox, scale)
-        tile_bboxes = gdalutils.get_chunked_bbox(self.bbox, (width, height))
+        width, height = get_dimensions(self.bbox, scale)
+        tile_bboxes = get_chunked_bbox(self.bbox, (width, height))
 
         geotiffs = []
         session = get_or_update_session(slug=self.slug, **self.config)
@@ -184,7 +188,7 @@ class WCSConverter(object):
                     # resolution but makes the requests slow down.
                     # If it is set in the config, use that value, otherwise compute approximate res based on scale
                     if self.config.get("tile_size", None) is None:
-                        tile_x, tile_y = gdalutils.get_dimensions(_tile_bbox, scale)
+                        tile_x, tile_y = get_dimensions(_tile_bbox, scale)
                         params["width"] = tile_x
                         params["height"] = tile_y
                     else:
@@ -217,19 +221,19 @@ class WCSConverter(object):
                 logger.error(e)
                 raise Exception("There was an error writing the file to disk.")
         if len(geotiffs) > 1:
-            self.out = gdalutils.merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
+            self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
         else:
             shutil.copy(geotiffs[0], self.out)
 
         if not os.path.isfile(self.out):
             raise Exception("Nothing was returned from the WCS service.")
-        if not gdalutils.get_meta(self.out).get("is_raster"):
+        if not get_meta(self.out).get("is_raster"):
             with open(self.out, "r") as output_file:
                 logger.error("Content of failed WCS request")
                 logger.error(output_file.read())
             raise Exception("The service failed to return a proper response")
 
-    @gdalutils.retry
+    @retry
     def convert(self):
         """
         Download WCS data and convert to geopackage

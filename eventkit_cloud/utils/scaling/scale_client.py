@@ -13,5 +13,5 @@ class ScaleClient(abc.ABC):
     def get_running_tasks_memory(self, app_name: str) -> int:
         pass
 
-    def terminate_task(self, task_name: str) -> dict:
+    def terminate_task(self, task_name: str):
         pass

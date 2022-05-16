@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import Button from '@material-ui/core/Button';
 
 export interface Props {
@@ -6,7 +6,7 @@ export interface Props {
     onClear: () => void;
 }
 
-export class FilterHeader extends React.Component<Props, {}> {
+export class FilterHeader extends Component<Props, {}> {
     render() {
         const styles = {
             drawerHeader: {

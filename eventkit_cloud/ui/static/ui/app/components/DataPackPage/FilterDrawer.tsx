@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import Drawer from '@material-ui/core/Drawer';
 import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
@@ -34,7 +34,7 @@ export interface State {
     projections: { [srid: number]: boolean };
 }
 
-export class FilterDrawer extends React.Component<Props, State> {
+export class FilterDrawer extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.getDefaultState = this.getDefaultState.bind(this);

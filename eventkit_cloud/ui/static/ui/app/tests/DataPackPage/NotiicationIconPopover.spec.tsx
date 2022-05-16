@@ -1,4 +1,3 @@
-import React from 'react';
 import {IconButton, Popover} from "@material-ui/core";
 import {mount} from "enzyme";
 import {act} from "react-dom/test-utils";

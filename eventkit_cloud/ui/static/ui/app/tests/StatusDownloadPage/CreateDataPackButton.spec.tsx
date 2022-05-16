@@ -1,28 +1,22 @@
-import * as React from 'react';
-import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
-import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
-import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
+import {render, screen, getByText, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import {rest} from 'msw';
 import {setupServer} from 'msw/node';
 import {ApiStatuses} from "../../utils/hooks/api";
 
-jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
-    return {
-        useRunContext: jest.fn(),
-    }
-});
+jest.doMock('../../components/StatusDownloadPage/context/RunFile', () => ({
+    useRunContext: jest.fn(),
+}));
 
-jest.mock('../../components/Dialog/BaseDialog', () => 'dialog');
-jest.mock('../../components/common/CenteredPopup', () => 'centeredPopup');
+jest.doMock('../../components/Dialog/BaseDialog', () => 'dialog');
+jest.doMock('../../components/common/CenteredPopup', () => 'centeredPopup');
 
-jest.mock('../../components/StatusDownloadPage/RegionJustification', () => 'regionjustification');
+jest.doMock('../../components/StatusDownloadPage/RegionJustification', () => 'regionjustification');
 
-jest.mock('../../components/Dialog/ProviderDialog', () => {
-    const React = require('react');
-    return (props) => (<div>ProviderDialog</div>);
-});
+jest.doMock('../../components/Dialog/ProviderDialog', () => () => (<div>ProviderDialog</div>));
 
+const {CreateDataPackButton} = require("../../components/StatusDownloadPage/CreateDataPackButton");
+const {useRunContext} = require("../../components/StatusDownloadPage/context/RunFile");
 
 const providers = [
     {

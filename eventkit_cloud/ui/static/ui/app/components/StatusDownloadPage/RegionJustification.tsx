@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
+import * as React from 'react';
 import RegionalJustificationDialog from '../Dialog/RegionalJustification/RegionalJustificationDialog';
 import {useRegionContext} from '../common/context/RegionContext';
 import {DepsHashers, useEffectOnMount, useProviderIdentity} from '../../utils/hooks/hooks';

@@ -208,6 +208,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
+    children?: React.ReactNode
 }
 
 export interface State {
@@ -233,6 +234,9 @@ export interface State {
     stepIndex: number;
     isRunning: boolean;
     page: number;
+    user: Eventkit.Store.User;
+    users: Eventkit.Store.Users;
+    groups: Eventkit.Store.Groups;
 }
 
 export class UserGroupsPage extends React.Component<Props, State> {
@@ -247,11 +251,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
     private helpers: StoreHelpers;
     private scrollbar;
 
-    constructor(props: Props, context) {
+    constructor(props: Props) {
         super(props);
 
         this.bindMethods();
-        this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
@@ -274,10 +277,14 @@ export class UserGroupsPage extends React.Component<Props, State> {
             stepIndex: 0,
             isRunning: false,
             page: 1,
+            user: null,
+            users: null,
+            groups: null,
         };
     }
 
     componentWillMount() {
+        this.pageSize = Number(this.context.config.USER_GROUPS_PAGE_SIZE);
         // If there is no ordering specified default to username
         let {ordering, page_size} = queryString.parse(this.props.location.search);
         let changedQuery = false;
@@ -452,7 +459,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // that it takes for the drawer transition to complete
         return new Promise(async (resolve) => {
             // wait for the state change to be complete
-            await new Promise((r2) => {
+            await new Promise<void>((r2) => {
                 this.setState({drawerOpen: !this.state.drawerOpen}, r2);
             });
             // wait for drawer to be fully open (transition of 450ms)
@@ -799,7 +806,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({isRunning: false, stepIndex: 0});
-            this?.helpers.reset(true);
+            this.helpers?.reset(true);
         } else {
             if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
@@ -1251,7 +1258,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: State) {
     return {
         user: state.user.data.user,
         users: state.users,
@@ -1259,7 +1266,7 @@ function mapStateToProps(state) {
     };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: any): any {
     const timeout = new DrawerTimeout();
     return {
         getGroups: params => (

@@ -1,5 +1,5 @@
 import * as PropTypes from 'prop-types';
-import * as React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
@@ -68,7 +68,7 @@ export interface State {
     job: Eventkit.Job;
 }
 
-export class StatusDownload extends React.Component<Props, State> {
+export class StatusDownload extends Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
