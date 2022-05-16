@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from concurrent import futures
 from distutils import dir_util
 from functools import reduce
+from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
 from typing import List, Optional, Union, ValuesView, Tuple, Dict
@@ -848,6 +849,7 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
+@handle_auth
 def merge_chunks(
     output_file,
     layer_name,
@@ -856,12 +858,16 @@ def merge_chunks(
     bbox: list,
     stage_dir: str,
     base_url: str,
-    cert_info=None,
     task_points=100,
     feature_data=False,
     distinct_field=None,
+    session=None,
+    *args,
+    **kwargs
 ):
-    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, cert_info, task_points, feature_data)
+    session = get_or_update_session(session=session, **kwargs)
+    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args,
+                             **kwargs)
     task_process = TaskProcess(task_uid=task_uid)
     out = convert(
         driver="gpkg",
@@ -877,7 +883,7 @@ def merge_chunks(
     return out
 
 
-def download_chunks_concurrently(layer, task_points, feature_data):
+def download_chunks_concurrently(layer, task_points, feature_data, session=None):
     base_path = layer.get("base_path")
     if not os.path.exists(base_path):
         os.mkdir(base_path)
@@ -893,15 +899,18 @@ def download_chunks_concurrently(layer, task_points, feature_data):
         task_points=task_points,
         feature_data=feature_data,
         distinct_field=layer.get("distinct_field"),
+        session=session
     )
 
 
-def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False):
+@handle_auth
+def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False, *args, **kwargs):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
 
     try:
+        session = get_or_update_session(*args, **kwargs)
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
 
         # Get the total number of task points to compare against current progress.
@@ -909,7 +918,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
 
         futures_list = [
             executor.submit(
-                download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data
+                download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data, session=session
             )
             for layer in layers
         ]
@@ -926,25 +935,35 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
 
 
 @retry
-def download_feature_data(task_uid: str, input_url: str, out_file: str, cert_info=None, task_points=100):
+def download_feature_data(task_uid: str, input_url: str, out_file: str, task_points=100, *args, **kwargs):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
     # or redirect to a parent URL if a resource is not found.
 
     try:
+        json_response = None
         out_file = download_data(task_uid, input_url, out_file, task_points=task_points)
         with open(out_file) as f:
-            json_response = json.load(f)
+            try:
+                json_response = json.load(f)
+            except JSONDecodeError:
+                logger.error("Unable to read JSON from file")
+                logger.info("The file contents are:")
+                logger.info(f.read())
+                raise
 
             if json_response.get("error"):
                 logger.error(json_response)
                 raise Exception("The service did not receive a valid response.")
 
             if "features" not in json_response:
+                # If no features are returned it would be good to let user know, but failing and retrying here
+                # doesn't seem to be the best approach.
                 logger.error(f"No features were returned for {input_url}")
-                raise Exception("No features were returned.")
 
     except Exception as e:
+        if json_response:
+            logger.info(json_response)
         logger.error(f"Feature data download error: {e}")
         raise e
 
@@ -956,10 +975,11 @@ def download_chunks(
     bbox: list,
     stage_dir: str,
     base_url: str,
-    cert_info=None,
     task_points=100,
     feature_data=False,
     level=15,
+    *args,
+    **kwargs
 ):
     tile_bboxes = get_chunked_bbox(bbox, level=level)
     chunks = []
@@ -969,7 +989,7 @@ def download_chunks(
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_feature_data if feature_data else download_data
-        download_function(task_uid, url, outfile, cert_info=cert_info, task_points=(task_points * len(tile_bboxes)))
+        download_function(task_uid, url, outfile, task_points=(task_points * len(tile_bboxes)), *args, **kwargs)
         chunks.append(outfile)
     return chunks
 
@@ -1004,7 +1024,8 @@ def download_data(task_uid: str, input_url: str, out_file: str = None, session=N
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to get data from: {input_url}")
         if response:
-            logger.error(response.text)
+            logger.error(response.status_code)
+            logger.error(response.content)
         raise Exception("Failed to download data.") from e
 
     from audit_logging.file_logging import logging_open
