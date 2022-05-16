@@ -225,7 +225,6 @@ class ExportTask(EventKitBaseTask):
             3. create an export task exception
             4. save the export task with the task exception
             5. run export_task_error_handler if the run should be aborted
-               - this is only for initial tasks on which subsequent export tasks depend
         """
         # TODO: If there is a failure before the task was created this will fail to run.
         status = TaskState.FAILED.value
@@ -247,7 +246,7 @@ class ExportTask(EventKitBaseTask):
         export_task_record.status = status
         export_task_record.save()
         logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
-        if self.abort_on_error or True:
+        if self.abort_on_error:
             try:
                 data_provider_task_record = export_task_record.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
@@ -1673,7 +1672,8 @@ def pick_up_run_task(
                 data_provider_task_record.save()
         run.save()
         logger.error(str(e))
-        raise
+        export_task_error_handler(run_uid=run_uid)
+        raise e
 
 
 def wait_for_run(run_uid: str = None) -> None:
@@ -2021,7 +2021,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     try:
         run = ExportRun.objects.get(uid=run_uid)
         try:
-            if os.path.isdir(stage_dir):
+            if stage_dir is not None and os.path.isdir(stage_dir):
                 if not os.getenv("KEEP_STAGE", False):
                     shutil.rmtree(stage_dir)
         except IOError:
