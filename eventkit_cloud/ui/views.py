@@ -137,7 +137,6 @@ def search(request):
     q = request.GET.get("query", None)
     if not q:
         return HttpResponse(status=204, content_type="application/json")
-
     error_string = "An unknown error occurred while querying for results, please contact an administrator."
     degree_range = 0.05
     if is_mgrs(q):
