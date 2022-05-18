@@ -292,7 +292,7 @@ class TestExportTasks(ExportTaskBase):
         mock_download_concurrently,
         mock_get_export_filepath,
         mock_merge_chunks,
-        mock_exists
+        mock_exists,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -821,7 +821,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath,
         mock_makedirs,
         mock_merge_chunks,
-        mock_exists
+        mock_exists,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
