@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Collapse from '@material-ui/core/Collapse';

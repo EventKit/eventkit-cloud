@@ -1,7 +1,4 @@
-import React, {
-    createContext,
-    useContext,
-} from 'react'
+import { createContext, useContext } from 'react';
 import {MapContainer} from "../../../utils/mapBuilder";
 
 export interface OlContext {

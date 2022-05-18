@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, {Component} from 'react';
+import { Component } from 'react';
 import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

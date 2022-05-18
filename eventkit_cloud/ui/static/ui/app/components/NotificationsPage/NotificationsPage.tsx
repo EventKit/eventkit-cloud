@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as PropTypes from 'prop-types';
+import { Component } from 'react';
 import {connect} from 'react-redux';
 import {Theme, withTheme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
@@ -14,7 +14,7 @@ import LoadButtons from '../common/LoadButtons';
 import {clearNotifications, getNotifications} from '../../actions/notificationsActions';
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
-interface Props {
+export interface Props {
     history: any;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
@@ -24,13 +24,14 @@ interface Props {
     width: Breakpoint;
 }
 
-interface State {
+export interface State {
     loading: boolean;
     loadingPage: boolean;
     pageSize: number;
+    notifications: Eventkit.Store.Notifications;
 }
 
-export class NotificationsPage extends React.Component<Props, State> {
+export class NotificationsPage extends Component<Props, State> {
     private itemsPerPage: number;
 
     static contextTypes = {
@@ -39,22 +40,23 @@ export class NotificationsPage extends React.Component<Props, State> {
         }),
     };
 
-    constructor(props: Props, context) {
+    constructor(props: Props) {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
         this.state = {
             loadingPage: true,
             loading: true,
             pageSize: this.itemsPerPage,
+            notifications: null,
         };
     }
 
     async componentWillMount() {
         await this.props.clearNotifications();
+        this.itemsPerPage = Number(this.context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
     }
 
     componentDidMount() {
@@ -235,7 +237,7 @@ export class NotificationsPage extends React.Component<Props, State> {
     }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: State): Pick<Props, 'notificationsStatus' | 'notificationsData'> {
     return {
         notificationsStatus: state.notifications.status,
         notificationsData: state.notifications.data,

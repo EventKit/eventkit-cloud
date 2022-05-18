@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 
 export interface Props {
@@ -7,7 +7,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export class FeaturedFlag extends React.Component<Props, {}> {
+export class FeaturedFlag extends Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 

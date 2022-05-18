@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';

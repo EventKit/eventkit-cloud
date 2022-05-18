@@ -29,6 +29,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from gdal_utils import convert
 from yaml import CLoader
 
 from eventkit_cloud.celery import app, TaskPriority
@@ -62,7 +63,6 @@ from eventkit_cloud.tasks.helpers import (
     update_progress,
     get_arcgis_templates,
     make_file_downloadable,
-    make_dirs,
     get_human_readable_metadata_document,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -75,9 +75,12 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
-from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.helpers import make_dirs
+from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
@@ -342,7 +345,7 @@ class ZipFileTask(FormatTask):
         return retval
 
 
-@gdalutils.retry
+@retry
 def osm_data_collection_pipeline(
     export_task_record_uid,
     stage_dir,
@@ -355,6 +358,7 @@ def osm_data_collection_pipeline(
     config=None,
     eta=None,
     projection=4326,
+    **kwargs,
 ) -> dict:
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
@@ -424,15 +428,18 @@ def osm_data_collection_pipeline(
         port=database["PORT"],
         name=database["NAME"],
     )
-    gdalutils.convert(
+
+    task_process = TaskProcess()
+    convert(
         boundary=selection,
-        input_file=in_dataset,
+        input_files=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
         driver="gpkg",
         is_raster=False,
         access_mode="append",
         layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
+        executor=task_process.start_process,
     )
 
     # TODO:  The arcgis templates as of version 1.9.0 rely on both OGC_FID and FID field existing.
@@ -541,13 +548,9 @@ def add_metadata(job, provider, retval):
 def shp_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -560,13 +563,14 @@ def shp_export_task(
     shp_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "shp")
     selection = parse_result(result, "selection")
 
-    shp = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    shp = convert(
         driver="ESRI Shapefile",
-        input_file=shp_in_dataset,
+        input_files=shp_in_dataset,
         output_file=shp_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "ESRI Shapefile"
@@ -578,14 +582,9 @@ def shp_export_task(
 def kml_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -606,16 +605,17 @@ def kml_export_task(
         qgs_file = generate_qgs_style(metadata)
         kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
-        logger.info("QGIS is not installed, using gdalutils.convert.")
+        logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
         selection = parse_result(result, "selection")
-        kml = gdalutils.convert(
+        task_process = TaskProcess(task_uid=task_uid)
+        kml = convert(
             driver="libkml",
-            input_file=kml_in_dataset,
+            input_files=kml_in_dataset,
             output_file=kml_out_dataset,
-            task_uid=task_uid,
             boundary=selection,
             projection=projection,
+            executor=task_process.start_process,
         )
 
     result["driver"] = "libkml"
@@ -628,14 +628,9 @@ def kml_export_task(
 def gpx_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -652,13 +647,15 @@ def gpx_export_task(
 
     gpx_file = get_export_filepath(stage_dir, export_task_record, projection, "gpx")
     try:
-        out = gdalutils.convert(
-            input_file=input_file,
+        task_process = TaskProcess()
+        out = convert(
+            input_files=input_file,
             output_file=gpx_file,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             creation_options=["-explodecollections"],
             boundary=selection,
+            executor=task_process.start_process,
         )
         result["file_extension"] = "gpx"
         result["driver"] = "GPX"
@@ -674,7 +671,6 @@ def gpx_export_task(
 def pbf_export_task(
     self,
     result=None,
-    *args,
     **kwargs,
 ):
     """
@@ -703,13 +699,11 @@ def ogcapi_process_export_task(
     config=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     projection=4326,
     session_token=None,
     export_format_slug=None,
-    *args,
     **kwargs,
 ):
     """
@@ -756,13 +750,14 @@ def ogcapi_process_export_task(
             extract=not bool(driver),
         )
         if driver:
-            out = gdalutils.convert(
+            task_process = TaskProcess(task_uid=task_uid)
+            out = convert(
                 driver=driver,
-                input_file=source_data,
+                input_files=source_data,
                 output_file=output_file,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
+                executor=task_process.start_process,
             )
         else:
             out = source_data
@@ -784,12 +779,10 @@ def ogc_result_task(
     task_uid=None,
     export_format_slug=None,
     stage_dir=None,
-    job_name=None,
     projection=None,
     bbox=None,
     service_url=None,
     session_token=None,
-    *args,
     **kwargs,
 ):
     """
@@ -846,14 +839,9 @@ def ogc_result_task(
 def sqlite_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -866,13 +854,14 @@ def sqlite_export_task(
     sqlite_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "sqlite")
     selection = parse_result(result, "selection")
 
-    sqlite = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    sqlite = convert(
         driver="SQLite",
-        input_file=sqlite_in_dataset,
+        input_files=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "SQLite"
@@ -887,9 +876,7 @@ def output_selection_geojson_task(
     task_uid=None,
     selection=None,
     stage_dir=None,
-    provider_slug=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -918,13 +905,9 @@ def output_selection_geojson_task(
 def geopackage_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -945,13 +928,14 @@ def geopackage_export_task(
             os.rename(gpkg_in_dataset, gpkg_out_dataset)
             gpkg = gpkg_out_dataset
         else:
-            gpkg = gdalutils.convert(
+            task_process = TaskProcess()
+            gpkg = convert(
                 driver="gpkg",
-                input_file=gpkg_in_dataset,
+                input_files=gpkg_in_dataset,
                 output_file=gpkg_out_dataset,
-                task_uid=task_uid,
                 boundary=selection,
                 projection=projection,
+                executor=task_process.start_process,
             )
 
     result["driver"] = "gpkg"
@@ -964,13 +948,9 @@ def geopackage_export_task(
 def mbtiles_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=3857,  # MBTiles only support 3857
-    *args,
     **kwargs,
 ):
     """
@@ -989,15 +969,16 @@ def mbtiles_export_task(
     selection = parse_result(result, "selection")
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
-    mbtiles = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    mbtiles = convert(
         driver="MBTiles",
         src_srs=4326,
-        input_file=source_dataset,
+        input_files=source_dataset,
         output_file=mbtiles_out_dataset,
-        task_uid=task_uid,
         boundary=selection,
         projection=projection,
         use_translate=True,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "MBTiles"
@@ -1007,7 +988,13 @@ def mbtiles_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs
+    self,
+    result=None,
+    task_uid=None,
+    stage_dir=None,
+    projection=4326,
+    config=None,
+    **kwargs,
 ):
     """
     Function defining geopackage export function.
@@ -1025,14 +1012,15 @@ def geotiff_export_task(
         if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
             gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-        gtiff_out_dataset = gdalutils.convert(
+        task_process = TaskProcess(task_uid=task_uid)
+        gtiff_out_dataset = convert(
             driver="gtiff",
-            input_file=gtiff_in_dataset,
+            input_files=gtiff_in_dataset,
             output_file=gtiff_out_dataset,
-            task_uid=task_uid,
             boundary=selection,
             warp_params=warp_params,
             translate_params=translate_params,
+            executor=task_process.start_process,
         )
 
     result["file_extension"] = "tif"
@@ -1047,13 +1035,9 @@ def geotiff_export_task(
 def nitf_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1066,12 +1050,13 @@ def nitf_export_task(
     nitf_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "nitf")
 
     creation_options = ["ICORDS=G"]
-    nitf = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    nitf = convert(
         driver="nitf",
-        input_file=nitf_in_dataset,
+        input_files=nitf_in_dataset,
         output_file=nitf_out_dataset,
-        task_uid=task_uid,
         creation_options=creation_options,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "nitf"
@@ -1084,14 +1069,9 @@ def nitf_export_task(
 def hfa_export_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
-    config=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1101,7 +1081,10 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
-    hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid)
+    task_process = TaskProcess(task_uid=task_uid)
+    hfa = convert(
+        driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, executor=task_process.start_process
+    )
 
     result["file_extension"] = "img"
     result["driver"] = "hfa"
@@ -1114,14 +1097,11 @@ def hfa_export_task(
 def reprojection_task(
     self,
     result=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
     job_name=None,
-    user_details=None,
     projection=None,
     config=None,
-    *args,
     **kwargs,
 ):
     """
@@ -1189,15 +1169,16 @@ def reprojection_task(
             reprojection = mp.convert()
 
         else:
-            reprojection = gdalutils.convert(
+            task_process = TaskProcess(task_uid=task_uid)
+            reprojection = convert(
                 driver=driver,
-                input_file=in_dataset,
+                input_files=in_dataset,
                 output_file=out_dataset,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=selection,
                 warp_params=warp_params,
                 translate_params=translate_params,
+                executor=task_process.start_process,
             )
 
     result["result"] = reprojection
@@ -1211,17 +1192,12 @@ def wfs_export_task(
     result=None,
     layer=None,
     config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1255,27 +1231,28 @@ def wfs_export_task(
         download_concurrently(layers.values(), configuration.get("concurrency"))
 
         for layer_name, layer in layers.items():
-            out = gdalutils.convert(
+            task_process = TaskProcess(task_uid=task_uid)
+            out = convert(
                 driver="gpkg",
-                input_file=layer.get("path"),
+                input_files=layer.get("path"),
                 output_file=gpkg,
-                task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
                 layer_name=layer_name,
                 access_mode="append",
+                executor=task_process.start_process,
             )
 
     else:
         out = merge_chunks(
-            gpkg,
-            export_task_record.export_provider_task.provider.layers[0],
-            projection,
-            task_uid,
-            bbox,
-            stage_dir,
-            get_wfs_query_url(name, service_url, layer, projection),
-            configuration.get("cert_info"),
+            output_file=gpkg,
+            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            projection=projection,
+            task_uid=task_uid,
+            bbox=bbox,
+            stage_dir=stage_dir,
+            base_url=get_wfs_query_url(name, service_url, layer, projection),
+            cert_info=configuration.get("cert_info"),
         )
 
     result["driver"] = "gpkg"
@@ -1337,18 +1314,13 @@ def wcs_export_task(
     result=None,
     layer=None,
     config=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     name=None,
-    service_type=None,
     user_details=None,
     projection=4326,
-    selection=None,
-    *args,
     **kwargs,
 ):
     """
@@ -1394,18 +1366,15 @@ def arcgis_feature_service_export_task(
     result=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     projection=4326,
     config=str(),
-    *args,
     **kwargs,
 ):
     """
     Function defining sqlite export for ArcFeatureService service.
     """
-
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
 
@@ -1438,29 +1407,29 @@ def arcgis_feature_service_export_task(
         except Exception as e:
             logger.error(f"ArcGIS provider download error: {e}")
             raise e
-
         for layer_name, layer in layers.items():
-            out = gdalutils.convert(
+            task_process = TaskProcess(task_uid=task_uid)
+            out = convert(
                 driver="gpkg",
-                input_file=layer.get("path"),
+                input_files=layer.get("path"),
                 output_file=gpkg,
-                task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
                 layer_name=layer_name,
                 access_mode="append",
+                executor=task_process.start_process,
             )
 
     else:
         out = merge_chunks(
-            gpkg,
-            export_task_record.export_provider_task.provider.layers[0],
-            projection,
-            task_uid,
-            bbox,
-            stage_dir,
-            get_arcgis_query_url(service_url),
-            configuration.get("cert_info"),
+            output_file=gpkg,
+            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            projection=projection,
+            task_uid=task_uid,
+            bbox=bbox,
+            stage_dir=stage_dir,
+            base_url=get_arcgis_query_url(service_url),
+            cert_info=configuration.get("cert_info"),
             feature_data=True,
         )
 
@@ -1505,19 +1474,11 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
 def vector_file_export_task(
     self,
     result=None,
-    layer=None,
-    config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1530,15 +1491,16 @@ def vector_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
-    out = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    out = convert(
         driver="gpkg",
-        input_file=gpkg,
+        input_files=gpkg,
         output_file=gpkg,
-        task_uid=task_uid,
         projection=projection,
         layer_name=export_task_record.export_provider_task.provider.layers[0],
         boundary=bbox,
         is_raster=False,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "gpkg"
@@ -1553,19 +1515,11 @@ def vector_file_export_task(
 def raster_file_export_task(
     self,
     result=None,
-    layer=None,
-    config=str(),
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1578,14 +1532,15 @@ def raster_file_export_task(
 
     download_data(task_uid, service_url, gpkg)
 
-    out = gdalutils.convert(
+    task_process = TaskProcess(task_uid=task_uid)
+    out = convert(
         driver="gpkg",
-        input_file=gpkg,
+        input_files=gpkg,
         output_file=gpkg,
-        task_uid=task_uid,
         projection=projection,
         boundary=bbox,
         is_raster=True,
+        executor=task_process.start_process,
     )
 
     result["driver"] = "gpkg"
@@ -1598,7 +1553,7 @@ def raster_file_export_task(
 
 @app.task(name="Create Bounds Export", bind=True, base=ExportTask)
 def bounds_export_task(
-    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs
+    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, **kwargs
 ):
     """
     Function defining geopackage export function.
@@ -1626,10 +1581,8 @@ def mapproxy_export_task(
     result=None,
     layer=None,
     config=None,
-    run_uid=None,
     task_uid=None,
     stage_dir=None,
-    job_name=None,
     bbox=None,
     service_url=None,
     level_from=None,
@@ -1637,7 +1590,6 @@ def mapproxy_export_task(
     name=None,
     service_type=None,
     projection=4326,
-    *args,
     **kwargs,
 ):
     """
@@ -1677,12 +1629,10 @@ def mapproxy_export_task(
 @app.task(name="Pickup Run", bind=True, acks_late=True)
 def pick_up_run_task(
     self,
-    result=None,
     run_uid=None,
     user_details=None,
     run_zip_file_slug_sets=None,
     session_token=None,
-    *args,
     **kwargs,
 ):
     """
@@ -1765,7 +1715,6 @@ def create_zip_task(
     data_provider_task_record_uid: List[str] = None,
     data_provider_task_record_uids: List[str] = None,
     run_zip_file_uid=None,
-    *args,
     **kwargs,
 ):
     """
@@ -1872,7 +1821,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     return result
 
 
-@gdalutils.retry
+@retry
 def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.
@@ -1998,7 +1947,7 @@ class FinalizeRunBase(EventKitBaseTask):
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
 @app.task(name="Finalize Run Task", base=FinalizeRunBase)
-def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None, *args, **kwargs):
+def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     """
      Finalizes export run.
 
@@ -2122,7 +2071,7 @@ def fail_synchronous_task_chain(data_provider_task_record=None):
 
 
 @app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
-def create_datapack_preview(result=None, task_uid=None, stage_dir=None, *args, **kwargs):
+def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
     """
@@ -2169,8 +2118,6 @@ def cancel_export_provider_task(
     delete=False,
     error=False,
     message=None,
-    *args,
-    **kwargs,
 ):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -2240,7 +2187,7 @@ def cancel_export_provider_task(
 
 
 @app.task(name="Cancel Run", base=EventKitBaseTask)
-def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
+def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False):
     result = result or {}
 
     export_run = ExportRun.objects.get(uid=export_run_uid)
@@ -2250,14 +2197,13 @@ def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete
             data_provider_task_uid=export_provider_task.uid,
             canceling_username=canceling_username,
             delete=delete,
-            locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid),
         )
     result["result"] = True
     return result
 
 
 @app.task(name="Kill Task", base=EventKitBaseTask)
-def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
+def kill_task(result=None, task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.
     """

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
 
 import {shallow} from 'enzyme';
@@ -161,7 +160,7 @@ describe('DataPackPage component', () => {
             collection: 'all',
             order: '-job__featured',
             view: 'map',
-            page_size: Number(config.DATAPACK_PAGE_SIZE),
+            page_size: undefined,
             search: null
         };
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
@@ -179,7 +178,7 @@ describe('DataPackPage component', () => {
             collection: 'all',
             order,
             view,
-            page_size: '12',
+            page_size: undefined,
             search: null,
         }
         setup({runsMeta: {...props.runsMeta, order, view}, location: {search: {}}});
@@ -282,7 +281,7 @@ describe('DataPackPage component', () => {
             collection: 'all',
             order: '-job__featured',
             view: 'map',
-            page_size: Number(config.DATAPACK_PAGE_SIZE),
+            page_size: undefined,
             search: null
         };
 

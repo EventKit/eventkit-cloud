@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { PageLoading } from '../../components/common/PageLoading';

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { Component } from 'react';
 import { connect } from 'react-redux';
 import { logout } from '../actions/userActions';
 
@@ -13,7 +13,7 @@ const createHandlers = (dispatch) => {
     };
 };
 
-class Logout extends React.Component {
+class Logout extends Component {
     constructor(props) {
         super(props);
         this.handlers = createHandlers(this.props.dispatch);

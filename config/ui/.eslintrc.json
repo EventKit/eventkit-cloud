@@ -1,13 +1,17 @@
 {
-    "extends": "airbnb",
+    "extends": [
+        "airbnb",
+        "plugin:react/jsx-runtime"
+        ],
     "env": {
         "browser": true,
         "node": true,
         "jest": true
     },
-    "parser": "babel-eslint",
+    "parser": "@babel/eslint-parser",
     "rules": {
         "class-methods-use-this": "off",
+        "default-param-last": 0,
         "max-len": [2, 140, 4],
         "no-console": "off",
         "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],

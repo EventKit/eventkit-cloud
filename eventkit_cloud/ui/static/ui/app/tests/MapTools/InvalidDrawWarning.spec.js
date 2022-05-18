@@ -1,4 +1,3 @@
-import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import { InvalidDrawWarning } from '../../components/MapTools/InvalidDrawWarning';
 

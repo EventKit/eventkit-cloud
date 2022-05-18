@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {useCallback, useEffect} from 'react';
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffectOnMount} from "../../utils/hooks/hooks";

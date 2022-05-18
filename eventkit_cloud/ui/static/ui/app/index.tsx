@@ -1,6 +1,3 @@
-import '@babel/polyfill';
-import React from 'react';
-import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';

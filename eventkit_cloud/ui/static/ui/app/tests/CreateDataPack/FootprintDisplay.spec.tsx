@@ -1,5 +1,4 @@
 import { shallow } from "enzyme";
-import * as React from "react";
 import FootprintDisplay from "../../components/CreateDataPack/FootprintDisplay";
 import { FormControlLabel } from "@material-ui/core";
 import Card from "@material-ui/core/Card";

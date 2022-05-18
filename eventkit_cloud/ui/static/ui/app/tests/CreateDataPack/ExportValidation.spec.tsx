@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {render} from "@testing-library/react";
 import {Step1Validator} from "../../components/CreateDataPack/ExportValidation";
 import {useJobValidationContext} from "../../components/CreateDataPack/context/JobValidation";

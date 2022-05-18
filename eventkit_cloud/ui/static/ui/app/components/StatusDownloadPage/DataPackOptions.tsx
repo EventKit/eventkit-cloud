@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
@@ -24,7 +24,7 @@ export interface State {
     showCloneDialog: boolean;
 }
 
-export class DataPackOptions extends React.Component<Props, State> {
+export class DataPackOptions extends Component<Props, State> {
     static defaultProps = {
         adminPermissions: false,
     };

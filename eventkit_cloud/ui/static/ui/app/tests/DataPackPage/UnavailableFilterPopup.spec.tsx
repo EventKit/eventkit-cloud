@@ -1,4 +1,3 @@
-import React from 'react';
 import {IconButton, Popover, Typography} from "@material-ui/core";
 import WarningIcon from '@material-ui/icons/Warning';
 import CloseIcon from '@material-ui/icons/Close';

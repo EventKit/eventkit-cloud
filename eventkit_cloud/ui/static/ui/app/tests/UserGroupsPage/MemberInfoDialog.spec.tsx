@@ -1,13 +1,11 @@
-import * as React from 'react';
 import * as sinon from 'sinon';
-import { MemberInfoDialog } from '../../components/UserGroupsPage/Dialogs/MemberInfoDialog';
 import {render, screen} from '@testing-library/react';
 
-
-jest.mock("../../components/Dialog/BaseDialog", () => {
-    const React = require('react');
+jest.doMock("../../components/Dialog/BaseDialog", () => {
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
+
+const { MemberInfoDialog } = require('../../components/UserGroupsPage/Dialogs/MemberInfoDialog');
 
 describe('MemberInfoDialog component', () => {
 
@@ -17,7 +15,7 @@ describe('MemberInfoDialog component', () => {
         ...(global as any).eventkit_test_props,
     };
 
-    it('should render a BaseDialog with a body', () => {
+    it('should render a MemberInfoDialog with a body', () => {
         render(<MemberInfoDialog {...props} />);
         screen.getByText(/You may leave any group you are a member of. /);
     });

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
@@ -29,7 +29,7 @@ export interface Props {
     clearDataCartPermissions: () => void;
 }
 
-export class ShareBaseDialog extends React.Component<Props, {}> {
+export class ShareBaseDialog extends Component<Props, {}> {
     static defaultProps = {
         title: 'SHARE',
         children: undefined,

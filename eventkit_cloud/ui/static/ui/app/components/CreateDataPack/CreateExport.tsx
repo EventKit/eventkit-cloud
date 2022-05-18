@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -31,7 +31,7 @@ export interface State {
     walkthroughClicked: boolean;
 }
 
-export class CreateExport extends React.Component<Props, State> {
+export class CreateExport extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
