@@ -277,6 +277,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
     @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
@@ -291,6 +292,7 @@ class TestExportTasks(ExportTaskBase):
         mock_download_concurrently,
         mock_get_export_filepath,
         mock_merge_chunks,
+        mock_exists
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -305,6 +307,8 @@ class TestExportTasks(ExportTaskBase):
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
         mock_merge_chunks.return_value = expected_output_path
+        mock_exists.return_value = True
+
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         query_url = "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=BBOX_PLACEHOLDER"
@@ -800,6 +804,7 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
     @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.make_dirs")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
@@ -816,6 +821,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath,
         mock_makedirs,
         mock_merge_chunks,
+        mock_exists
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -835,6 +841,7 @@ class TestExportTasks(ExportTaskBase):
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_merge_chunks.return_value = expected_output_path
+        mock_exists.return_value = True
 
         previous_task_result = {"source": expected_input_url}
 
