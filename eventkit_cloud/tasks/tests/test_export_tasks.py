@@ -338,7 +338,6 @@ class TestExportTasks(ExportTaskBase):
             bbox=[1, 2, 3, 4],
             stage_dir=self.stage_dir,
             base_url=f"{service_url}{query_url}",
-            cert_info=None,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -388,7 +387,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "layer_name": layer_1,
                 "projection": projection,
             },
@@ -398,7 +396,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "layer_name": layer_2,
                 "projection": projection,
             },
@@ -872,7 +869,6 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
             stage_dir=self.stage_dir,
             base_url=f"{service_url}/{query_string}",
-            cert_info=None,
             feature_data=True,
         )
 
@@ -919,7 +915,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_1,
                 "distinct_field": None,
@@ -930,7 +925,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_2,
                 "distinct_field": expected_field,

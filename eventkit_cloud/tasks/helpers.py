@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import copy
 import glob
 import json
@@ -13,6 +12,7 @@ import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from concurrent import futures
+from contextlib import contextmanager
 from distutils import dir_util
 from functools import reduce
 from json import JSONDecodeError
@@ -43,14 +43,16 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.generic import retry
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 
-logger = logging.getLogger()
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_run_staging_dir(run_uid):
@@ -849,7 +851,6 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     return manifest_file
 
 
-@handle_auth
 def merge_chunks(
     output_file,
     layer_name,
@@ -863,27 +864,35 @@ def merge_chunks(
     distinct_field=None,
     session=None,
     *args,
-    **kwargs
+    **kwargs,
 ):
-    session = get_or_update_session(session=session, **kwargs)
-    chunks = download_chunks(task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args,
-                             **kwargs)
-    task_process = TaskProcess(task_uid=task_uid)
-    out = convert(
-        driver="gpkg",
-        input_files=chunks,
-        output_file=output_file,
-        boundary=bbox,
-        layer_name=layer_name,
-        projection=projection,
-        access_mode="append",
-        distinct_field=distinct_field,
-        executor=task_process.start_process,
+    session = get_or_update_session(session=session, *args, **kwargs)
+    chunks = download_chunks(
+        task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args, **kwargs
     )
-    return out
+    task_process = TaskProcess(task_uid=task_uid)
+    try:
+        out = convert(
+            driver="gpkg",
+            input_files=chunks,
+            output_file=output_file,
+            boundary=bbox,
+            layer_name=layer_name,
+            projection=projection,
+            access_mode="append",
+            distinct_field=distinct_field,
+            executor=task_process.start_process,
+        )
+        return out
+    except Exception:
+        logger.error("Failed to convert %s in merge_chunks", chunks, exc_info=True)
 
 
-def download_chunks_concurrently(layer, task_points, feature_data, session=None):
+def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwargs):
+    # Session is not threadsafe https://github.com/psf/requests/issues/2766.
+    # We can create a new session and this should be ok to use, but will require more overhead.
+    logger.debug("download_chunks_concurrently using *args %s and **kwargs %s", args, kwargs)
+    session = get_or_update_session(*args, **kwargs)
     base_path = layer.get("base_path")
     if not os.path.exists(base_path):
         os.mkdir(base_path)
@@ -899,18 +908,16 @@ def download_chunks_concurrently(layer, task_points, feature_data, session=None)
         task_points=task_points,
         feature_data=feature_data,
         distinct_field=layer.get("distinct_field"),
-        session=session
+        session=session,
     )
 
 
-@handle_auth
 def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False, *args, **kwargs):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
 
     try:
-        session = get_or_update_session(*args, **kwargs)
         executor = futures.ThreadPoolExecutor(max_workers=concurrency)
 
         # Get the total number of task points to compare against current progress.
@@ -918,7 +925,12 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
 
         futures_list = [
             executor.submit(
-                download_chunks_concurrently, layer=layer, task_points=task_points, feature_data=feature_data, session=session
+                download_chunks_concurrently,
+                layer=layer,
+                task_points=task_points,
+                feature_data=feature_data,
+                *args,
+                **kwargs,
             )
             for layer in layers
         ]
@@ -935,14 +947,19 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
 
 
 @retry
-def download_feature_data(task_uid: str, input_url: str, out_file: str, task_points=100, *args, **kwargs):
+def download_arcgis_feature_data(
+    task_uid: str, input_url: str, out_file: str, task_points=100, session=None, *args, **kwargs
+):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
     # or redirect to a parent URL if a resource is not found.
 
+    logger.debug("Downloading feature data for %s", task_uid)
+    if session:
+        logger.debug("session %s", session.adapters)
     try:
         json_response = None
-        out_file = download_data(task_uid, input_url, out_file, task_points=task_points)
+        out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
         with open(out_file) as f:
             try:
                 json_response = json.load(f)
@@ -960,6 +977,10 @@ def download_feature_data(task_uid: str, input_url: str, out_file: str, task_poi
                 # If no features are returned it would be good to let user know, but failing and retrying here
                 # doesn't seem to be the best approach.
                 logger.error(f"No features were returned for {input_url}")
+                # Without features and fields gdal will blow up.
+                json_response["features"] = []
+                json_response["fields"] = []
+                json.dump(json_response, f)
 
     except Exception as e:
         if json_response:
@@ -978,17 +999,18 @@ def download_chunks(
     task_points=100,
     feature_data=False,
     level=15,
+    size=None,
     *args,
-    **kwargs
+    **kwargs,
 ):
-    tile_bboxes = get_chunked_bbox(bbox, level=level)
+    tile_bboxes = get_chunked_bbox(bbox, size=size, level=level)
     chunks = []
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
-        download_function = download_feature_data if feature_data else download_data
+        download_function = download_arcgis_feature_data if feature_data else download_data
         download_function(task_uid, url, outfile, task_points=(task_points * len(tile_bboxes)), *args, **kwargs)
         chunks.append(outfile)
     return chunks

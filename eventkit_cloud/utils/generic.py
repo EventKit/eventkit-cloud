@@ -6,8 +6,8 @@ from django.conf import settings
 
 logger = logging.getLogger()
 
-MAX_DB_CONNECTION_RETRIES = 8
-TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
+MAX_DB_CONNECTION_RETRIES = 5
+TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 6 would be about a minute max delay.
 
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
