@@ -82,6 +82,7 @@ from eventkit_cloud.api.utils import (
 )
 from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
@@ -1418,6 +1419,7 @@ class ExportRunViewSet(EventkitViewSet):
         """
         return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
 
+    @requires_oauth_authentication
     @action(methods=["post"], detail=True)
     def rerun_providers(self, request, uid=None, *args, **kwargs):
         """

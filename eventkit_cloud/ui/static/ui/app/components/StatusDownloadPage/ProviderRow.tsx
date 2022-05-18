@@ -177,6 +177,7 @@ export interface ProviderRowProps {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
+    adminPermissions: boolean;
 }
 
 export function ProviderRow(props: ProviderRowProps) {
@@ -559,7 +560,7 @@ export function ProviderRow(props: ProviderRowProps) {
                 <MenuItem
                     className="qa-ProviderRow-MenuItem-rerun"
                     key="rerun"
-                    disabled={!cancelMenuDisabled}
+                    disabled={!cancelMenuDisabled || !props.adminPermissions}
                     style={{fontSize: '12px'}}
                     onClick={() => {
                         makeRequest()

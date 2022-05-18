@@ -1,13 +1,25 @@
+import axios from 'axios';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
-import { Route, Redirect } from 'react-router';
+import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import history from './utils/history';
 import configureStore from './store/configureStore';
 import ekTheme from './styles/eventkit_theme';
 import PageLoading from './components/common/PageLoading';
+
+// Add a 401 / 403 response interceptor to redirect the user to login if they are not authenticated to DRF.
+axios.interceptors.response.use(function (response) {
+    return response;
+}, function (error) {
+    if (error.response.status === 401 || error.response.status === 403) {
+        window.location.href = '/login';
+    } else {
+        return Promise.reject(error);
+    }
+});
 
 const theme = createMuiTheme(ekTheme);
 
