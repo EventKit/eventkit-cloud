@@ -1208,7 +1208,8 @@ def wfs_export_task(
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
     configuration = load_provider_config(config)
-
+    if configuration.get("layers"):
+        configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data = configuration.get("vector_layers", [])
     if len(vector_layer_data):
         layers = {}
@@ -1222,14 +1223,15 @@ def wfs_export_task(
                 "path": path,
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
-                "cert_info": configuration.get("cert_info"),
                 "layer_name": layer["name"],
                 "projection": projection,
             }
 
-        download_concurrently(layers.values(), configuration.get("concurrency"))
+        download_concurrently(layers.values(), **configuration)
 
         for layer_name, layer in layers.items():
+            if not os.path.exists(layer["path"]):
+                continue
             task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver="gpkg",
@@ -1251,7 +1253,7 @@ def wfs_export_task(
             bbox=bbox,
             stage_dir=stage_dir,
             base_url=get_wfs_query_url(name, service_url, layer, projection),
-            cert_info=configuration.get("cert_info"),
+            **configuration,
         )
 
     result["driver"] = "gpkg"
@@ -1380,7 +1382,8 @@ def arcgis_feature_service_export_task(
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
     configuration = load_provider_config(config)
-
+    if configuration.get("layers"):
+        configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data = configuration.get("vector_layers", [])
     out = None
     if len(vector_layer_data):
@@ -1395,22 +1398,23 @@ def arcgis_feature_service_export_task(
                 "path": path,
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
-                "cert_info": configuration.get("cert_info"),
                 "layer_name": layer.get("name"),
                 "projection": projection,
                 "distinct_field": layer.get("distinct_field"),
             }
 
         try:
-            download_concurrently(layers.values(), configuration.get("concurrency"), feature_data=True)
+            download_concurrently(layers.values(), feature_data=True, **configuration)
         except Exception as e:
             logger.error(f"ArcGIS provider download error: {e}")
             raise e
         for layer_name, layer in layers.items():
+            if not os.path.exists(layer["path"]):
+                continue
             task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver="gpkg",
-                input_files=layer.get("path"),
+                input_files=layer["path"],
                 output_file=gpkg,
                 boundary=bbox,
                 projection=projection,
@@ -1428,11 +1432,11 @@ def arcgis_feature_service_export_task(
             bbox=bbox,
             stage_dir=stage_dir,
             base_url=get_arcgis_query_url(service_url),
-            cert_info=configuration.get("cert_info"),
             feature_data=True,
+            **configuration,
         )
 
-    if not (out and geopackage.check_content_exists(out)):
+    if not geopackage.check_content_exists(out):
         raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"

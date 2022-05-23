@@ -277,6 +277,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
     @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
@@ -291,6 +292,7 @@ class TestExportTasks(ExportTaskBase):
         mock_download_concurrently,
         mock_get_export_filepath,
         mock_merge_chunks,
+        mock_exists,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -305,6 +307,8 @@ class TestExportTasks(ExportTaskBase):
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
         mock_merge_chunks.return_value = expected_output_path
+        mock_exists.return_value = True
+
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         query_url = "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=BBOX_PLACEHOLDER"
@@ -338,7 +342,6 @@ class TestExportTasks(ExportTaskBase):
             bbox=[1, 2, 3, 4],
             stage_dir=self.stage_dir,
             base_url=f"{service_url}{query_url}",
-            cert_info=None,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -388,7 +391,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "layer_name": layer_1,
                 "projection": projection,
             },
@@ -398,7 +400,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "layer_name": layer_2,
                 "projection": projection,
             },
@@ -803,6 +804,7 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
     @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.make_dirs")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
@@ -819,6 +821,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath,
         mock_makedirs,
         mock_merge_chunks,
+        mock_exists,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -838,6 +841,7 @@ class TestExportTasks(ExportTaskBase):
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_merge_chunks.return_value = expected_output_path
+        mock_exists.return_value = True
 
         previous_task_result = {"source": expected_input_url}
 
@@ -872,7 +876,6 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
             stage_dir=self.stage_dir,
             base_url=f"{service_url}/{query_string}",
-            cert_info=None,
             feature_data=True,
         )
 
@@ -919,7 +922,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_1,
                 "distinct_field": None,
@@ -930,7 +932,6 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
-                "cert_info": None,
                 "projection": projection,
                 "layer_name": layer_name_2,
                 "distinct_field": expected_field,
