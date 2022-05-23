@@ -21,6 +21,7 @@ describe('ProviderRow component', () => {
         onProviderCancel: sinon.spy(),
         selectProvider: sinon.spy(),
         extents: [{}],
+        adminPermissions: true,
     });
 
     const providerRowRef = {} as any;

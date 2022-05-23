@@ -532,6 +532,8 @@ def get_table_count(gpkg, table):
         if is_alnum(table):
             result = conn.execute("SELECT COUNT(*) FROM '{0}';".format(table))
             return result.fetchone()[0]
+        else:
+            logger.error("The table %s wasn't read because it contains unsafe characters.", table)
     return False
 
 

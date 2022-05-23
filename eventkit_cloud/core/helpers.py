@@ -197,6 +197,7 @@ def get_or_update_session(*args, **session_info):
 
     if cert_path and cert_pass:
         try:
+            logger.debug(f"setting {cert_path} for session")
             adapter = requests_pkcs12.Pkcs12Adapter(
                 pkcs12_filename=cert_path,
                 pkcs12_password=cert_pass,
