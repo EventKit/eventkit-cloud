@@ -1,3 +1,4 @@
+import base64
 import json
 
 renderers = {"simple": "SimpleRenderer"}
@@ -21,12 +22,12 @@ def set_renderer(layer, renderer_type):
 
 def set_symbol(layer, symbol_json):
     sym = layer.symbology
-
-    sym.renderer.symbol.applySymbolFromGallery(base_symbols.get(symbol_json[]))
-    sym_style = sym_json["style"]
-    symbol = base_symbols.get(sym_style)
-    color = sym_json['color']
-    width = sym_json['width']
+    sym.renderer.symbol.applySymbolFromGallery(base_symbols.get(symbol_json["style"]))
+    color = symbol_json['color']
+    width = symbol_json['width']
+    sym.renderer.symbol.color = {'CMYK': color}
+    sym.renderer.symbol.size = width
+    layer.symbology = sym
 
 
 def update_layer_symbology(layer, layer_json):
@@ -44,6 +45,12 @@ def update_layer_symbology(layer, layer_json):
                 set_symbol(layer, symbol)
 
 
+def save_as_image(image_data, output_filename):
+    byte_str = image_data.encode("ascii")
+    img_output = base64.decodebytes(byte_str)
+    f = open(output_filename, "wb")
+    f.write(img_output)
+    f.close()
 
 
 # f = open(filepath)
