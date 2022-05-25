@@ -58,6 +58,7 @@ BEAT_SCHEDULE = {
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
+CELERY_MAX_DEFAULT_TASKS = int(os.getenv("CELERY_MAX_DEFAULT_TASKS", 3))
 
 app.conf.beat_schedule = BEAT_SCHEDULE
 

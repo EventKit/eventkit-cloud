@@ -154,16 +154,22 @@ def scale_by_runs(max_tasks_memory):
     celery_task_details = get_celery_task_details(client, app_name)
     running_tasks_memory = int(celery_task_details["memory"])
     celery_tasks = get_celery_tasks_scale_by_run()
+
+    # Check if we need to scale for default system tasks.
+    scale_default_tasks(client, app_name, celery_tasks)
+
     # Get run in progress
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
     total_tasks = 0
     running_tasks = client.get_running_tasks(app_name)
     logger.info(f"Running tasks: {running_tasks}")
-    running_default_tasks = client.get_running_tasks(app_name, "celery")
 
     if running_tasks:
         total_tasks = running_tasks["pagination"].get("total_results", 0)
-        running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
+        # Get a list of running task names excluding the default celery tasks.
+        running_task_names = [
+            resource.get("name") for resource in running_tasks.get("resources") if resource.get("name") != "celery"
+        ]
         finished_runs = ExportRun.objects.filter(
             Q(uid__in=running_task_names)
             & (Q(status__in=[state.value for state in TaskState.get_finished_states()]) | Q(deleted=True))
@@ -214,6 +220,24 @@ def scale_by_runs(max_tasks_memory):
         # Keep track of new resources being used.
         total_tasks += 1
         running_tasks_memory += celery_run_task["memory"]
+
+
+def scale_default_tasks(client, app_name, celery_tasks):
+    broker_api_url = getattr(settings, "BROKER_API_URL")
+    queues = get_all_rabbitmq_objects(broker_api_url, "queues")
+    queue = queues.get("celery")
+    queue_name = queue.get("name")
+    pending_messages = queue.get("messages", 0)
+    logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
+
+    running_default_tasks = client.get_running_tasks(app_name, "celery")
+    total_default_tasks = running_default_tasks["pagination"].get("total_results", 0)
+    logger.info("Running default tasks: {}".format(running_default_tasks))
+    if pending_messages and total_default_tasks < settings.CELERY_MAX_DEFAULT_TASKS:
+        logger.info(f"Scaling up a worker for queue {queue_name}.")
+        celery_run_task = copy.deepcopy(celery_tasks["celery"])
+        run_task_command(client, app_name, "celery", celery_run_task)
+        logger.info("Running default tasks: {}".format(running_default_tasks))
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -439,18 +463,20 @@ def get_celery_tasks_scale_by_run():
         "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
     )
 
-    celery_tasks = {"run": {
-        "command": default_command,
-        # NOQA
-        "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
-        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
-    }, "celery": {
-                "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-                + get_celery_health_check_command("celery"),
-                "disk": 2048,
-                "memory": 2048,
-                "limit": 6,
-            }
+    celery_tasks = {
+        "run": {
+            "command": default_command,
+            # NOQA
+            "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
+            "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
+        },
+        "celery": {
+            "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+            + get_celery_health_check_command("celery"),
+            "disk": 2048,
+            "memory": 2048,
+            "limit": 6,
+        },
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks

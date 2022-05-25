@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import copy
 import logging
 import uuid
 from collections import OrderedDict
@@ -26,6 +26,8 @@ from eventkit_cloud.tasks.scheduled_tasks import (
     get_celery_task_details,
     order_celery_tasks,
     scale_by_tasks,
+    scale_default_tasks,
+    get_celery_tasks_scale_by_run,
     get_celery_tasks_scale_by_task,
     scale_by_runs,
     scale_celery_task,
@@ -211,6 +213,34 @@ class TestScaleCeleryTask(TestCase):
         )
         mock_pickup.s().apply_async.assert_called_once_with(queue=str(run.uid), routing_key=str(run.uid))
         mock_run_task_command.assert_called_once()
+
+    @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.run_task_command")
+    @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
+    def test_scale_default_tasks(self, mock_get_scale_client, mock_run_task_command, mock_get_all_rabbitmq_objects):
+        mock_scale_client = Mock()
+        mock_get_scale_client.return_value = mock_scale_client, "test_app"
+        celery_tasks = get_celery_tasks_scale_by_run()
+        celery_run_task = copy.deepcopy(celery_tasks["celery"])
+
+        # Test too many tasks already running.
+        mock_scale_client.get_running_tasks_memory.return_value = 2048
+        mock_scale_client.get_running_tasks.return_value = {"pagination": {"total_results": 3}}
+        mock_get_all_rabbitmq_objects.return_value = {"celery": {"messages": 1}}
+        scale_default_tasks(mock_scale_client, "test_app", celery_tasks)
+        mock_run_task_command.assert_not_called()
+
+        # Test no messages in queue.
+        mock_get_all_rabbitmq_objects.return_value = {"celery": {"messages": 0}}
+        mock_scale_client.get_running_tasks.return_value = {"pagination": {"total_results": 1}}
+        scale_default_tasks(mock_scale_client, "test_app", celery_tasks)
+        mock_run_task_command.assert_not_called()
+
+        # Test scaling up with a message, assuming we're under the running task limit.
+        mock_get_all_rabbitmq_objects.return_value = {"celery": {"messages": 1}}
+        mock_scale_client.get_running_tasks.return_value = {"pagination": {"total_results": 1}}
+        scale_default_tasks(mock_scale_client, "test_app", celery_tasks)
+        mock_run_task_command.assert_called_with(mock_scale_client, "test_app", "celery", celery_run_task)
 
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.order_celery_tasks")
