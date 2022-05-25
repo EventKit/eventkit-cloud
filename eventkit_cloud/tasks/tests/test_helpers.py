@@ -255,7 +255,7 @@ class TestHelpers(TestCase):
     def test_get_all_rabbitmq_objects(self, requests_mocker):
         example_api = "http://example/api/"
         queues = "queues"
-        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
+        expected_queues = {"queue1": {"name": "queue1"}, "queue2": {"name": "queue2"}}
         res1 = {"page_count": 2, "page": 1, "items": [{"name": "queue1"}]}
         res2 = {"page_count": 2, "page": 2, "items": [{"name": "queue2"}]}
 

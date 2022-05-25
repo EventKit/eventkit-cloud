@@ -164,12 +164,18 @@ class TestScaleCeleryTask(TestCase):
             celery_tasks = get_celery_tasks_scale_by_task()
             mock_scale_by_tasks.assert_called_once_with(celery_tasks, 16000)
 
+    @patch("eventkit_cloud.tasks.scheduled_tasks.scale_default_tasks")
     @patch("eventkit_cloud.tasks.scheduled_tasks.pick_up_run_task")
     @patch("eventkit_cloud.tasks.scheduled_tasks.run_task_command")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_celery_task_details")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
     def test_scale_by_runs(
-        self, mock_get_scale_client, mock_get_celery_task_details, mock_run_task_command, mock_pickup
+        self,
+        mock_get_scale_client,
+        mock_get_celery_task_details,
+        mock_run_task_command,
+        mock_pickup,
+        mock_scale_default_tasks,
     ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "app_name"
