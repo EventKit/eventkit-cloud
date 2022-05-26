@@ -62,6 +62,11 @@ CELERY_GROUP_NAME=<app name>
 ```
 The group name for the scheduled PCF tasks for celery.
 
+```
+CELERY_MAX_DEFAULT_TASKS=<integer>
+```
+The maximum number of workers to spin up for default system tasks.  These tasks generally complete fairly quickly so 
+you shouldn't need to spin up too many workers for them.
 
 #### CELERY TASKS
 
