@@ -1379,14 +1379,23 @@ def arcgis_feature_service_export_task(
     export_task_record = get_export_task_record(task_uid)
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
-
+    layer_filename = os.path.splitext(gpkg)[0] + ".lyrx"
     configuration = load_provider_config(config)
+
+    group_template_file = open('group_template.json', 'r')
+    group_template_json = json.load(group_template_file)
+    group_template_file.close()
+
+    layer_template_file = open('layer_template.json', 'r')
+    layer_template_json = json.load(layer_template_file)
+    layer_template_file.close()
 
     vector_layer_data = configuration.get("vector_layers", [])
     out = None
     if len(vector_layer_data):
         layers = {}
         for layer in vector_layer_data:
+            group_template_json['layerDefinitions'].append(layer_template_json)
             # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
             path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
             url = get_arcgis_query_url(layer.get("url"))
@@ -1436,10 +1445,16 @@ def arcgis_feature_service_export_task(
     if not (out and geopackage.check_content_exists(out)):
         raise Exception("The service returned no data for the selected area.")
 
+    layer_file = open(layer_filename, 'w')
+    with open('data.json', 'w', encoding='utf-8') as f:
+        json.dump(group_template_json, layer_file, ensure_ascii=False, indent=4)
+    layer_file.close()
+
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
     result["gpkg"] = out
+    result["layer_file"] = layer_file
 
     return result
 

@@ -252,7 +252,7 @@ def add_layer_to_map(
 ) -> arcpy._mp.Layer:
     """
     :param layer_name: The name of the layer as it will appear in ArcPro.
-    :param layer_file: The .lyr which will be used for the layer template.
+    :param layer_path: The .lyr which will be used for the layer template.
     :param data_frame:  The dataframe from the map document where the layer should be loaded.
     :return: Layer, raises exception.
     """
@@ -440,7 +440,6 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [CreateAPRX]
-
 
 class CreateAPRX(object):
     def __init__(self):

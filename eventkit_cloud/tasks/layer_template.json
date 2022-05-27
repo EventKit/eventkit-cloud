@@ -1,0 +1,65 @@
+{
+      "type" : "CIMFeatureLayer",
+      // Fill in layer name
+      "name" : "",
+      // Fill in URI
+      "uRI" : "",
+      "sourceModifiedTime" : {
+        "type" : "TimeInstant"
+      },
+      // Fill in Metadata URI
+      "metadataURI" : "",
+      "useSourceMetadata" : true,
+      //Fill in description
+      "description" : "Airport_Runway_4326_gpkg",
+      "layerElevation" : {
+        "type" : "CIMLayerElevationSurface",
+        "mapElevationID" : "{752ADD4F-A4BC-44F1-8B73-D03138DD2020}"
+      },
+      "expanded" : true,
+      "layerType" : "Operational",
+      "showLegends" : true,
+      "visibility" : true,
+      "displayCacheType" : "Permanent",
+      "maxDisplayCacheAge" : 5,
+      "showPopups" : true,
+      "serviceLayerID" : -1,
+      "refreshRate" : -1,
+      "refreshRateUnit" : "esriTimeUnitsSeconds",
+      "blendingMode" : "Alpha",
+      "allowDrapingOnIntegratedMesh" : true,
+      "autoGenerateFeatureTemplates" : true,
+      "featureElevationExpression" : "0",
+      "featureTable" : {
+        "type" : "CIMFeatureTable",
+        // Fill in display field
+        "displayField" : "OBJECTID",
+        "editable" : true,
+        "fieldDescriptions" : [
+          // Fill in fields
+        ],
+        "dataConnection" : {
+          "type" : "CIMStandardDataConnection",
+          "workspaceConnectionString" : "AUTHENTICATION_MODE=OSA;DATABASE=.\\salt-salt-20220526-eventkit\\data\\usgs_transportation\\salt-4326-usgs_transportation-salt-20220526-eventkit-u.gpkg",
+          "workspaceFactory" : "Sql",
+          // Fill in dataset
+          "dataset" : "main.Airport_Runway",
+          "datasetType" : "esriDTFeatureClass"
+        },
+        "studyAreaSpatialRel" : "esriSpatialRelUndefined",
+        "searchOrder" : "esriSearchOrderSpatial"
+      },
+      "htmlPopupEnabled" : true,
+      "selectable" : true,
+      "featureCacheType" : "Session",
+      "displayFiltersType" : "ByScale",
+      "featureBlendingMode" : "Alpha",
+      "labelClasses" : [
+        // Fill in labels
+      ],
+      "renderer" : {
+        // Fill in renderer
+      },
+      "scaleSymbols" : true,
+      "snappable" : true
+    }

@@ -582,6 +582,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             try:
                 staging_filepath = export_task.result.get_file_path(staging=True)
                 archive_filepath = export_task.result.get_file_path(archive=True)
+                layer_filepath = os.path.splitext(archive_filepath)[0] + ".lyrx"
             except Exception:
                 continue
 
@@ -596,6 +597,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                     if matches:
                         projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
+                        "layer_file": layer_filepath,
                         "file_path": archive_filepath,
                         "full_file_path": staging_filepath,
                         "file_ext": os.path.splitext(staging_filepath)[1],
