@@ -290,6 +290,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_USER_LAST_ACTIVE_AT = "user_last_active_at"
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+ARCGIS_DIR = os.path.join(BASE_DIR, "tasks")
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"

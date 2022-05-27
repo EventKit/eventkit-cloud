@@ -1,16 +1,12 @@
 {
       "type" : "CIMFeatureLayer",
-      // Fill in layer name
       "name" : "",
-      // Fill in URI
       "uRI" : "",
       "sourceModifiedTime" : {
         "type" : "TimeInstant"
       },
-      // Fill in Metadata URI
       "metadataURI" : "",
       "useSourceMetadata" : true,
-      //Fill in description
       "description" : "Airport_Runway_4326_gpkg",
       "layerElevation" : {
         "type" : "CIMLayerElevationSurface",
@@ -32,17 +28,13 @@
       "featureElevationExpression" : "0",
       "featureTable" : {
         "type" : "CIMFeatureTable",
-        // Fill in display field
         "displayField" : "OBJECTID",
         "editable" : true,
-        "fieldDescriptions" : [
-          // Fill in fields
-        ],
+        "fieldDescriptions" : [],
         "dataConnection" : {
           "type" : "CIMStandardDataConnection",
           "workspaceConnectionString" : "AUTHENTICATION_MODE=OSA;DATABASE=.\\salt-salt-20220526-eventkit\\data\\usgs_transportation\\salt-4326-usgs_transportation-salt-20220526-eventkit-u.gpkg",
           "workspaceFactory" : "Sql",
-          // Fill in dataset
           "dataset" : "main.Airport_Runway",
           "datasetType" : "esriDTFeatureClass"
         },
@@ -54,12 +46,8 @@
       "featureCacheType" : "Session",
       "displayFiltersType" : "ByScale",
       "featureBlendingMode" : "Alpha",
-      "labelClasses" : [
-        // Fill in labels
-      ],
-      "renderer" : {
-        // Fill in renderer
-      },
+      "labelClasses" : [],
+      "renderer" : {},
       "scaleSymbols" : true,
       "snappable" : true
     }

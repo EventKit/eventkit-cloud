@@ -5,12 +5,8 @@
   "layers" : [
     "CIMPATH=salt/group.xml"
   ],
-  "layerDefinitions" : [
-    // NOTE TODO Layer definitions go here
-  ],
-  "binaryReferences" : [
-    // NOTE TODO Binary references go here
-  ],
+  "layerDefinitions" : [],
+  "binaryReferences" : [],
   "elevationSurfaces" : [
     {
       "type" : "CIMMapElevationSurface",
