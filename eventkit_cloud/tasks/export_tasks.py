@@ -1379,14 +1379,14 @@ def arcgis_feature_service_export_task(
     export_task_record = get_export_task_record(task_uid)
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
-    layer_filename = os.path.splitext(gpkg)[0] + ".lyrx"
+    layer_filename =  os.path.join(os.path.dirname(__file__), os.path.splitext(gpkg)[0] + ".lyrx")
     configuration = load_provider_config(config)
 
-    group_template_file = open('group_template.json', 'r')
+    group_template_file = open(os.path.join(os.path.dirname(__file__), 'group_template.json'), 'r')
     group_template_json = json.load(group_template_file)
     group_template_file.close()
 
-    layer_template_file = open('layer_template.json', 'r')
+    layer_template_file = open(os.path.join(os.path.dirname(__file__), 'layer_template.json'), 'r')
     layer_template_json = json.load(layer_template_file)
     layer_template_file.close()
 
