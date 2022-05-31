@@ -7,6 +7,7 @@ import pickle
 import re
 import shutil
 import signal
+import tempfile
 import time
 import urllib.parse
 import uuid
@@ -946,7 +947,7 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
     return layers
 
 
-def check_arcgis_feature_response(file_path: str, max_record_count: int = None):
+def parse_arcgis_feature_response(file_path: str) -> dict:
     with open(file_path) as f:
         try:
             json_response = json.load(f)
@@ -966,7 +967,6 @@ def check_arcgis_feature_response(file_path: str, max_record_count: int = None):
             # Without features and fields gdal will blow up.
             json_response["features"] = []
             json_response["fields"] = []
-        # TODO: raise exception IFF features == max_record_count
     return json_response
 
 
@@ -983,23 +983,36 @@ def download_arcgis_feature_data(
     if session:
         logger.debug("session %s", session.adapters)
     service_description = service_description or dict()
-    pagination = False
-    max_record_count = None
-    with suppress(KeyError):
-        pagination = service_description["advancedQueryCapabilities"]["supportsPagination"]
-        max_record_count = service_description["maxRecordCount"]
+    pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
+    max_record_count = service_description.get("maxRecordCount", 1000)
     try:
         json_response = None
         logger.debug(f"Downloading data from: {input_url}")
         if pagination:
-            # TODO: do pagination make paginated requests while there are requests to be made...
-            # make max_record_count -= 1  so that when checking WITHOUT pagination we know if we hit our limit.
-            # use resulOffset and resultRecordCount
+            result_offset = 0
+            result_record_count = 10 # TODO: change this to max_record_count after testing.
+            while True:
+                # TODO: Make sure this input_url is accurate.
+                input_url = f"{input_url}?resultOffset={result_offset}&resultRecordCount={result_record_count}"
+                logger.debug(f"Downloading data in chunks from: {input_url}")
+
+                with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
+                    download_data(task_uid, input_url, arcgis_response_file.name, session=session, task_points=task_points)
+                    feature_response = parse_arcgis_feature_response(arcgis_response_file.name)
+                    if not json_response:
+                        json_response = feature_response
+
+                json_response["features"].extend(feature_response["features"])
+
+                result_offset = result_offset + result_record_count
+                if not feature_response.get("exceededTransferLimit"):
+                    break
+
         else:
             out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
-            feature_response = check_arcgis_feature_response(out_file)
+            json_response = parse_arcgis_feature_response(out_file)
         with open(out_file) as f:
-            json.dump(feature_response, f)
+            json.dump(json_response, f)
     except Exception as e:
         if json_response:
             logger.info(json_response)
@@ -1028,7 +1041,7 @@ def download_chunks(
     if feature_data:
         service_url = None
         try:
-            parsed_url = urllib.urlparse(base_url)
+            parsed_url = urllib.parse.urlparse(base_url)
             service_url = parsed_url._replace(path=parsed_url.path.removesuffix("/query")).geturl()
             result = session.get(service_url, params={"f": "json"})
             result.raise_for_status()
