@@ -63,10 +63,12 @@ CELERY_GROUP_NAME=<app name>
 The group name for the scheduled PCF tasks for celery.
 
 ```
-CELERY_MAX_DEFAULT_TASKS=<integer>
+CELERY_DEFAULT_TASK_SETTINGS='{"CELERY_MAX_DEFAULT_TASKS": 3,
+                                "CELERY_DEFAULT_DISK_SIZE": 3072,
+                                "CELERY_DEFAULT_MEMORY_SIZE": 3072}'
 ```
-The maximum number of workers to spin up for default system tasks.  These tasks generally complete fairly quickly so 
-you shouldn't need to spin up too many workers for them.
+
+A dictionary of settings to use to scale control the sizes and limits on the celery workers.
 
 #### CELERY TASKS
 

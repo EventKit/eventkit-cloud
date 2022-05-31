@@ -58,6 +58,14 @@ BEAT_SCHEDULE = {
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
+celery_default_task_settings = {
+    "CELERY_MAX_DEFAULT_TASKS": 3,
+    "CELERY_DEFAULT_DISK_SIZE": 3072,
+    "CELERY_DEFAULT_MEMORY_SIZE": 3072,
+}
+CELERY_DEFAULT_TASK_SETTINGS = (
+    json.loads(os.getenv("CELERY_DEFAULT_TASK_SETTINGS", "{}")) or celery_default_task_settings
+)
 CELERY_MAX_DEFAULT_TASKS = int(os.getenv("CELERY_MAX_DEFAULT_TASKS", 3))
 
 app.conf.beat_schedule = BEAT_SCHEDULE

@@ -233,11 +233,13 @@ def scale_default_tasks(client, app_name, celery_tasks):
     running_default_tasks = client.get_running_tasks(app_name, "celery")
     total_default_tasks = running_default_tasks["pagination"].get("total_results", 0)
     logger.info("Running default tasks: {}".format(running_default_tasks))
-    if pending_messages and total_default_tasks < settings.CELERY_MAX_DEFAULT_TASKS:
+    if pending_messages and total_default_tasks < celery_tasks["celery"].get("limit", 0):
         logger.info(f"Scaling up a worker for queue {queue_name}.")
         celery_run_task = copy.deepcopy(celery_tasks["celery"])
         run_task_command(client, app_name, "celery", celery_run_task)
         logger.info("Running default tasks: {}".format(running_default_tasks))
+    elif total_default_tasks and not pending_messages:
+        kill_workers(["celery"], client)
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -438,16 +440,11 @@ def get_celery_health_check_command(node_type: str):
     Constructs a health check command for celery workers.
     :param node_type: A string with the name of the node type to add to hostnames.
     """
-    hostnames = ["priority@$HOSTNAME"]
-    if node_type != "priority":
-        hostnames.append(f"{node_type}@$HOSTNAME")
 
-    ping_command = " && ".join(
-        [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames]
-    )
     health_check_command = (
-        f" & sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
-        "echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+        " & sleep 30;"
+        f"while celery -A eventkit_cloud inspect --timeout=20 --destination={node_type}@$HOSTNAME ping >/dev/null 2>&1;"
+        "do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
     )
 
     return health_check_command
@@ -473,9 +470,9 @@ def get_celery_tasks_scale_by_run():
         "celery": {
             "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
             + get_celery_health_check_command("celery"),
-            "disk": 2048,
-            "memory": 2048,
-            "limit": 6,
+            "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+            "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
+            "limit": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_MAX_DEFAULT_TASKS"]),
         },
     }
 
@@ -501,31 +498,31 @@ def get_celery_tasks_scale_by_task():
                 + priority_queue_command
                 + get_celery_health_check_command("worker"),
                 # NOQA
-                "disk": 2048,
-                "memory": 2048,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
             },
             f"{celery_group_name}.large": {
                 "command": "celery -A eventkit_cloud worker --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
                 + priority_queue_command
                 + get_celery_health_check_command("large"),
                 # NOQA
-                "disk": 2048,
-                "memory": 4096,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]) * 2,
             },
             "celery": {
                 "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
                 + priority_queue_command
                 + get_celery_health_check_command("celery"),
-                "disk": 2048,
-                "memory": 2048,
-                "limit": 6,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
+                "limit": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_MAX_DEFAULT_TASKS"]),
             },
             f"{celery_group_name}.priority": {
                 "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
                 + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
-                "disk": 2048,
-                "memory": 2048,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
                 "limit": 2,
             },
         }
