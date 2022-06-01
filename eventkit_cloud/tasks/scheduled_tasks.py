@@ -468,7 +468,7 @@ def get_celery_tasks_scale_by_run():
             "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
         },
         "celery": {
-            "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+            "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery,celery.priority "
             + get_celery_health_check_command("celery"),
             "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
             "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
