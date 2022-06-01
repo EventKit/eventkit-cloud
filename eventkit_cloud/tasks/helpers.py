@@ -13,7 +13,7 @@ import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from concurrent import futures
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from distutils import dir_util
 from functools import reduce
 from json import JSONDecodeError
@@ -972,8 +972,14 @@ def parse_arcgis_feature_response(file_path: str) -> dict:
 
 @retry
 def download_arcgis_feature_data(
-        task_uid: str, input_url: str, out_file: str, task_points: int = 100, session: Session = None,
-        service_description: dict = None, *args, **kwargs
+    task_uid: str,
+    input_url: str,
+    out_file: str,
+    task_points: int = 100,
+    session: Session = None,
+    service_description: dict = None,
+    *args,
+    **kwargs,
 ):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
@@ -987,23 +993,21 @@ def download_arcgis_feature_data(
     max_record_count = service_description.get("maxRecordCount", 1000)
     try:
         json_response = None
-        logger.debug(f"Downloading data from: {input_url}")
         if pagination:
             result_offset = 0
-            result_record_count = 10 # TODO: change this to max_record_count after testing.
+            result_record_count = max_record_count
             while True:
-                # TODO: Make sure this input_url is accurate.
                 input_url = f"{input_url}?resultOffset={result_offset}&resultRecordCount={result_record_count}"
-                logger.debug(f"Downloading data in chunks from: {input_url}")
 
                 with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
-                    download_data(task_uid, input_url, arcgis_response_file.name, session=session, task_points=task_points)
+                    download_data(
+                        task_uid, input_url, arcgis_response_file.name, session=session, task_points=task_points
+                    )
                     feature_response = parse_arcgis_feature_response(arcgis_response_file.name)
                     if not json_response:
                         json_response = feature_response
 
                 json_response["features"].extend(feature_response["features"])
-
                 result_offset = result_offset + result_record_count
                 if not feature_response.get("exceededTransferLimit"):
                     break
@@ -1011,7 +1015,7 @@ def download_arcgis_feature_data(
         else:
             out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
             json_response = parse_arcgis_feature_response(out_file)
-        with open(out_file) as f:
+        with open(out_file, "w") as f:
             json.dump(json_response, f)
     except Exception as e:
         if json_response:
@@ -1046,7 +1050,7 @@ def download_chunks(
             result = session.get(service_url, params={"f": "json"})
             result.raise_for_status()
             service_description = result.json()
-        except requests.exceptions.HTTPError as err:
+        except requests.exceptions.HTTPError:
             if service_url:
                 logger.error("Could not get service description for %s", service_url)
             else:
@@ -1057,8 +1061,15 @@ def download_chunks(
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_arcgis_feature_data if feature_data else download_data
-        download_function(task_uid, url, outfile, task_points=(task_points * len(tile_bboxes)),
-                          service_description=service_description, *args, **kwargs)
+        download_function(
+            task_uid,
+            url,
+            outfile,
+            task_points=(task_points * len(tile_bboxes)),
+            service_description=service_description,
+            *args,
+            **kwargs,
+        )
         chunks.append(outfile)
     return chunks
 
