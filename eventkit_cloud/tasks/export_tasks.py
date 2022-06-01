@@ -1445,10 +1445,8 @@ def arcgis_feature_service_export_task(
     if not (out and geopackage.check_content_exists(out)):
         raise Exception("The service returned no data for the selected area.")
 
-    layer_file = open(layer_filename, 'w')
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(group_template_json, layer_file, ensure_ascii=False, indent=4)
-    layer_file.close()
+    with open(layer_filename, 'w') as layer_file:
+        json.dump(group_template_json, layer_file)
 
     result["driver"] = "gpkg"
     result["result"] = out
