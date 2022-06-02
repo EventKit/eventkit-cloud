@@ -662,7 +662,7 @@ def get_arcgis_metadata(metadata):
     return arcgis_metadata
 
 
-def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
+def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> dict:
     """
     :param api_url: The http api url including authentication values.
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
@@ -685,7 +685,7 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
                 rabbit_objects += response.json()["items"]
             else:
                 raise Exception(f"Failed to fetch {rabbit_class}")
-        return rabbit_objects
+        return list_to_dict(rabbit_objects, "name")
     except Exception as e:
         if response:
             logger.error(response.content.decode())
@@ -1371,6 +1371,21 @@ def cd(newdir):
         yield
     finally:
         os.chdir(prevdir)
+
+
+def list_to_dict(list_to_convert: dict, key_name: str):
+    """
+    USed to convert a list of dictionaries to a dictionary using some common properties (i.e. name)
+    Careful as data will be lost for duplicate entries, this assumes the list is a "set".
+    :param list_to_convert: A list of dictionaries
+    :param key_name: A value from each dict to use as the key.
+    :return: A dictionary.
+    """
+    converted_dict = dict()
+    if list_to_convert:
+        for item in list_to_convert:
+            converted_dict[item[key_name]] = item
+    return converted_dict
 
 
 def get_file_paths(directory):

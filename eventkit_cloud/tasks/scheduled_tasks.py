@@ -23,7 +23,7 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, list_to_dict
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import kill_workers
@@ -154,14 +154,22 @@ def scale_by_runs(max_tasks_memory):
     celery_task_details = get_celery_task_details(client, app_name)
     running_tasks_memory = int(celery_task_details["memory"])
     celery_tasks = get_celery_tasks_scale_by_run()
+
+    # Check if we need to scale for default system tasks.
+    scale_default_tasks(client, app_name, celery_tasks)
+
     # Get run in progress
     runs = ExportRun.objects.filter(status=TaskState.SUBMITTED.value, deleted=False)
     total_tasks = 0
     running_tasks = client.get_running_tasks(app_name)
     logger.info(f"Running tasks: {running_tasks}")
+
     if running_tasks:
         total_tasks = running_tasks["pagination"].get("total_results", 0)
-        running_task_names = [resource.get("name") for resource in running_tasks.get("resources")]
+        # Get a list of running task names excluding the default celery tasks.
+        running_task_names = [
+            resource.get("name") for resource in running_tasks.get("resources") if resource.get("name") != "celery"
+        ]
         finished_runs = ExportRun.objects.filter(
             Q(uid__in=running_task_names)
             & (Q(status__in=[state.value for state in TaskState.get_finished_states()]) | Q(deleted=True))
@@ -177,13 +185,15 @@ def scale_by_runs(max_tasks_memory):
         kill_workers(task_names=finished_run_uids, client=client)
 
     for run in runs:
+        celery_run_task = copy.deepcopy(celery_tasks["run"])
+
         logger.info(f"Checking to see if submitted run {run.uid} needs a new worker.")
         max_runs = int(os.getenv("RUNS_CONCURRENCY", 3))
 
         if max_runs and total_tasks >= max_runs:
             logger.info(f"total_tasks ({total_tasks}) >= max_runs ({max_runs})")
             break
-        if running_tasks_memory + celery_tasks["memory"] >= max_tasks_memory:
+        if running_tasks_memory + celery_run_task["memory"] >= max_tasks_memory:
             logger.info("Not enough available memory to scale another run.")
             break
         task_name = run.uid
@@ -205,10 +215,31 @@ def scale_by_runs(max_tasks_memory):
         pick_up_run_task.s(run_uid=str(run.uid), session_token=session_token, user_details=user_details).apply_async(
             queue=str(task_name), routing_key=str(task_name)
         )
-        task = copy.deepcopy(celery_tasks)
-        task["command"] = task["command"].format(celery_group_name=task_name)
-        run_task_command(client, app_name, str(task_name), task)
+        celery_run_task["command"] = celery_run_task["command"].format(celery_group_name=task_name)
+        run_task_command(client, app_name, str(task_name), celery_run_task)
+        # Keep track of new resources being used.
         total_tasks += 1
+        running_tasks_memory += celery_run_task["memory"]
+
+
+def scale_default_tasks(client, app_name, celery_tasks):
+    broker_api_url = getattr(settings, "BROKER_API_URL")
+    queues = get_all_rabbitmq_objects(broker_api_url, "queues")
+    queue = queues.get("celery")
+    queue_name = queue.get("name")
+    pending_messages = queue.get("messages", 0)
+    logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
+
+    running_default_tasks = client.get_running_tasks(app_name, "celery")
+    total_default_tasks = running_default_tasks["pagination"].get("total_results", 0)
+    logger.info("Running default tasks: {}".format(running_default_tasks))
+    if pending_messages and total_default_tasks < celery_tasks["celery"].get("limit", 0):
+        logger.info(f"Scaling up a worker for queue {queue_name}.")
+        celery_run_task = copy.deepcopy(celery_tasks["celery"])
+        run_task_command(client, app_name, "celery", celery_run_task)
+        logger.info("Running default tasks: {}".format(running_default_tasks))
+    elif total_default_tasks and not pending_messages:
+        kill_workers(["celery"], client)
 
 
 def scale_by_tasks(celery_tasks, max_tasks_memory):
@@ -333,21 +364,6 @@ def run_task_command(client: ScaleClient, app_name: str, queue_name: str, task: 
     client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
 
-def list_to_dict(list_to_convert: dict, key_name: str):
-    """
-    USed to convert a list of dictionaries to a dictionary using some common properties (i.e. name)
-    Careful as data will be lost for duplicate entries, this assumes the list is a "set".
-    :param list_to_convert: A list of dictionaries
-    :param key_name: A value from each dict to use as the key.
-    :return: A dictionary.
-    """
-    converted_dict = dict()
-    if list_to_convert:
-        for item in list_to_convert:
-            converted_dict[item[key_name]] = item
-    return converted_dict
-
-
 @app.task(
     name="Check Provider Availability",
     base=EventKitBaseTask,
@@ -424,16 +440,11 @@ def get_celery_health_check_command(node_type: str):
     Constructs a health check command for celery workers.
     :param node_type: A string with the name of the node type to add to hostnames.
     """
-    hostnames = ["priority@$HOSTNAME"]
-    if node_type != "priority":
-        hostnames.append(f"{node_type}@$HOSTNAME")
 
-    ping_command = " && ".join(
-        [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames]
-    )
     health_check_command = (
-        f" & sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
-        "echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+        " & sleep 30;"
+        f"while celery -A eventkit_cloud inspect --timeout=20 --destination={node_type}@$HOSTNAME ping >/dev/null 2>&1;"
+        "do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
     )
 
     return health_check_command
@@ -443,18 +454,26 @@ def get_celery_tasks_scale_by_run():
     default_command = (
         "echo '************STARTING NEW WORKER****************' && hostname && echo {celery_group_name} & "
         "CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --concurrency=1 "
-        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large & CELERY_GROUP_NAME={celery_group_name} "
-        "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "--loglevel=$LOG_LEVEL -n large@%h -Q {celery_group_name}.large "
         "& CELERY_GROUP_NAME={celery_group_name} exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL "
         "-n priority@%h -Q {celery_group_name}.priority,$HOSTNAME.priority & CELERY_GROUP_NAME={celery_group_name} "
         "exec celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n worker@%h -Q {celery_group_name}"
     )
 
     celery_tasks = {
-        "command": default_command,
-        # NOQA
-        "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
-        "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
+        "run": {
+            "command": default_command,
+            # NOQA
+            "disk": int(os.getenv("CELERY_TASK_DISK", 12288)),
+            "memory": int(os.getenv("CELERY_TASK_MEMORY", 8192)),
+        },
+        "celery": {
+            "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery,celery.priority "
+            + get_celery_health_check_command("celery"),
+            "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+            "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
+            "limit": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_MAX_DEFAULT_TASKS"]),
+        },
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
@@ -479,31 +498,31 @@ def get_celery_tasks_scale_by_task():
                 + priority_queue_command
                 + get_celery_health_check_command("worker"),
                 # NOQA
-                "disk": 2048,
-                "memory": 2048,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
             },
             f"{celery_group_name}.large": {
                 "command": "celery -A eventkit_cloud worker --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
                 + priority_queue_command
                 + get_celery_health_check_command("large"),
                 # NOQA
-                "disk": 2048,
-                "memory": 4096,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]) * 2,
             },
             "celery": {
                 "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
                 + priority_queue_command
                 + get_celery_health_check_command("celery"),
-                "disk": 2048,
-                "memory": 2048,
-                "limit": 6,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
+                "limit": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_MAX_DEFAULT_TASKS"]),
             },
             f"{celery_group_name}.priority": {
                 "command": "celery -A eventkit_cloud worker --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
                 + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
-                "disk": 2048,
-                "memory": 2048,
+                "disk": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_DISK_SIZE"]),
+                "memory": int(settings.CELERY_DEFAULT_TASK_SETTINGS["CELERY_DEFAULT_MEMORY_SIZE"]),
                 "limit": 2,
             },
         }
