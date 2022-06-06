@@ -457,7 +457,8 @@ def create_finalize_run_task_collection(
         data_provider_task_uid=run_provider_task_record_uid,
         status=TaskState.COMPLETED.value,
         locking_task_key=run_uid,
-    )
+    ).set(**apply_args)
+
     all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)
     all_task_sigs = itertools.chain(all_task_sigs_list)

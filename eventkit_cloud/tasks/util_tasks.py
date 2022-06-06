@@ -19,6 +19,7 @@ from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.utils.scaling import get_scale_client
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.types.django_helpers import DjangoUserType
@@ -41,7 +42,7 @@ def shutdown_celery_workers(self):
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
-def kill_workers(task_names=None, client=None, timeout=60):
+def kill_workers(task_names: list = None, client: ScaleClient = None, timeout: int = 60) -> None:
     if not task_names:
         return
 
@@ -65,7 +66,7 @@ def kill_workers(task_names=None, client=None, timeout=60):
             raise MultipleTaskTerminationErrors(errors)
 
 
-def kill_worker(task_name=None, client=None, timeout=60):
+def kill_worker(task_name: str = None, client: ScaleClient = None, timeout: int = 60) -> None:
     if not task_name:
         return
 
@@ -79,7 +80,7 @@ def kill_worker(task_name=None, client=None, timeout=60):
     # allow time for soft kill to try to work
     time.sleep(timeout)
 
-    # hard kill task if it hasn't already terminated
+    # hard kill task if it hasn't already terminated, this can cause your docker logs to stop
     client.terminate_task(str(task_name))
 
 

@@ -603,8 +603,8 @@ def kml_export_task(
         import qgis  # noqa
 
         qgs_file = generate_qgs_style(metadata)
-        # TODO: mypy caught this, does this work at all?
-        kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)  # type: ignore
+        qgis_file_path = list(qgs_file.keys())[0]
+        kml = convert_qgis_gpkg_to_kml(qgis_file_path, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
         logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")

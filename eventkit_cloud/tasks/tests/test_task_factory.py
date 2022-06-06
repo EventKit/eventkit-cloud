@@ -163,7 +163,7 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # which unmocked would be a task signature, should be passed to celery.chain
         expected_chain_inputs = (
             mock_zip_chain,
-            finalize_export_provider_task.s.return_value,
+            finalize_export_provider_task.s().set.return_value,
             finalize_run_task.si().set.return_value,
         )
         self.assertEqual(chain_inputs, expected_chain_inputs)

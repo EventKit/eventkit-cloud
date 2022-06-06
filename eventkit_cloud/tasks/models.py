@@ -384,9 +384,6 @@ class UserDownload(UIDMixin):
     def job(self):
         if self.downloadable.export_task:
             return self.downloadable.export_task.export_provider_task.run.job
-        # TODO: mypy caught this? what is downloadable.run, seems not to exist
-        if self.downloadable.run:  # type: ignore
-            return self.downloadable.run.job  # type: ignore
 
     @property
     def provider(self):

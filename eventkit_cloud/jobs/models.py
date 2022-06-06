@@ -766,8 +766,7 @@ class RegionMask(models.Model):
     def __init__(self, *args, **kwargs):
         if not args:  # Fixture loading happens with args, so don't do this if that.
             kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        # TODO: mypy caught this, invalid super call?
-        super(Region, self).__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)
     the_geom = models.MultiPolygonField(verbose_name="Mask for export regions", srid=4326)

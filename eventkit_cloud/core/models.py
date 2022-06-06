@@ -321,7 +321,6 @@ def validate_object(filter: Union[List[Any], bool], object_dict: dict) -> bool:
     [["MyGroup", "in", "groups"], "or", ["student", "==", "employmentStatus"]]
     """
     if isinstance(filter, bool):
-        # TODO: mypy caught this, previously returned the *type* bool, change to the filter value?
         return filter
     else:
         try:
@@ -359,7 +358,6 @@ def validate_filter(filter: Union[List[Any], bool]) -> bool:
     where the center element is a valid operation.
     """
     if isinstance(filter, bool):
-        # TODO: mypy caught this, previously retuned the *type* bool, change to the filter value?
         return filter
     else:
         try:

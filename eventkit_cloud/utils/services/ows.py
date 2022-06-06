@@ -64,6 +64,7 @@ class OWS(GisClient):
             for event, element in iterator:
                 if "}" in element.tag:
                     element.tag = element.tag.split("}", 1)[1]
+            # mypy doesn't know that root exists
             root = iterator.root  # type: ignore
             try:
                 layer_elements = self.find_layers(root)
@@ -100,8 +101,7 @@ class OWS(GisClient):
 
     def download_geometry(self) -> Optional[Polygon]:
         if not self.layer_elements:
-            # TODO: double check that this is valid
-            self.check(self.aoi)  # type: ignore
+            self.check(self.aoi)
         bboxes = self.get_bboxes(self.layer_elements)
         polygon = Polygon()
         for bbox in bboxes:

@@ -3,7 +3,7 @@ import base64
 import copy
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Union, cast
 from typing import Optional
 
 import requests
@@ -43,21 +43,20 @@ class GisClient(abc.ABC):
 
         self.set_aoi(aoi_geojson)
 
-    def set_aoi(self, aoi_geojson: dict):
+    def set_aoi(self, aoi_geojson: Optional[Union[str, dict, GeometryCollection]]):
         if aoi_geojson is not None and aoi_geojson != "":
             if isinstance(aoi_geojson, str):
-                aoi_geojson = json.loads(aoi_geojson)
+                aoi: dict = json.loads(aoi_geojson)
+            else:
+                aoi = copy.deepcopy(cast(Dict[Any, Any], aoi_geojson))
 
             geoms = tuple(
-                [
-                    GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326)
-                    for feature in aoi_geojson.get("features")
-                ]
+                [GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326) for feature in aoi.get("features")]
             )
 
             geom_collection = GeometryCollection(geoms, srid=4326)
 
-            logger.debug("AOI: {}".format(json.dumps(aoi_geojson)))
+            logger.debug("AOI: %s", json.dumps(aoi))
 
             self.aoi = geom_collection
         else:
@@ -141,7 +140,7 @@ class GisClient(abc.ABC):
         cache_key = cache_key[:200]
         return cache_key  # Some caches only support keys <250
 
-    def check(self, aoi_geojson: Optional[dict] = None) -> dict:
+    def check(self, aoi_geojson: Optional[Union[dict, GeometryCollection]] = None) -> dict:
         """
         Main call to check the status of the service. Returns JSON with a status string and more detailed message.
         :param aoi: A geojson as a dict representing an AOI to check within the service instance.

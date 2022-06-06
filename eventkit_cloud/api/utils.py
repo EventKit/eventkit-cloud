@@ -136,8 +136,8 @@ def stringify(item):
         logger.error("Exceptions should have a title and description per message not multiple.")
         logger.error("Exception: {0}".format(str(item)))
     if isinstance(item, dict):
-        # TODO: mypy caught this, str cannot do "get" -- bug?
-        return "{0}: {1}".get(next(iter(item.items())))  # type: ignore
+        k, v = next(iter(item.items()))
+        return f"{k}: {v}"
     elif isinstance(item, list):
         return "{0}".format(item[0])
     elif isinstance(item, str):
