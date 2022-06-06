@@ -3,7 +3,7 @@ import base64
 import copy
 import json
 import logging
-from typing import Dict
+from typing import Dict, Any
 from typing import Optional
 
 import requests
@@ -33,7 +33,7 @@ class GisClient(abc.ABC):
         """
 
         self.service_url = service_url
-        self.query = None
+        self.query: Optional[Dict[str, Any]] = None
         self.layer = layer
         self.slug = slug
         self.max_area = max_area
@@ -137,7 +137,7 @@ class GisClient(abc.ABC):
     def get_cache_key(self, aoi: GeometryCollection = None):
         cache_key = f"provider-status-{normalize_name(self.service_url)}"
         if aoi:
-            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
+            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"  # type: ignore
         cache_key = cache_key[:200]
         return cache_key  # Some caches only support keys <250
 

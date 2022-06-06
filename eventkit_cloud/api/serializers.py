@@ -11,7 +11,7 @@ import logging
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Any, Dict
 from urllib.parse import urlsplit, ParseResult
 
 from audit_logging.models import AuditEvent
@@ -715,7 +715,7 @@ class UserDataSerializer(serializers.Serializer):
         read_only_fields = ("user",)
 
     def get_accepted_licenses(self, instance):
-        licenses = dict()
+        licenses: Dict[str, bool] = dict()
         request = self.context["request"]
         if request.user != instance:
             return licenses
@@ -725,7 +725,7 @@ class UserDataSerializer(serializers.Serializer):
         return licenses
 
     def get_accepted_policies(self, instance):
-        policies = dict()
+        policies: Dict[str, bool] = dict()
         request = self.context["request"]
         if request.user != instance:
             return policies
@@ -945,7 +945,7 @@ def filtered_basic_data_provider_serializer(
     if not data_providers:
         return [{}]
 
-    if not isinstance(data_providers, (List, QuerySet)):
+    if not isinstance(data_providers, (list, QuerySet)):  # type: ignore
         data_providers = [data_providers]
 
     if not many and len(data_providers) > 1:
@@ -956,8 +956,9 @@ def filtered_basic_data_provider_serializer(
         for data_provider in data_providers
     ]
     if not many:
-        serialized_data_providers = serialized_data_providers[0]
-    return serialized_data_providers
+        return serialized_data_providers[0]
+    else:
+        return serialized_data_providers
 
 
 class FilteredDataProviderSerializer(serializers.ModelSerializer):
@@ -1069,7 +1070,7 @@ def basic_data_provider_list_serializer(
     if not data_providers:
         return [{}]
 
-    if not isinstance(data_providers, (List, QuerySet)):
+    if not isinstance(data_providers, (list, QuerySet)):  # type: ignore
         data_providers = [data_providers]
 
     if not many and len(data_providers) > 1:
@@ -1077,7 +1078,7 @@ def basic_data_provider_list_serializer(
 
     format_fields = ["uid", "name", "slug", "description"]
 
-    proxy_formats = {}
+    proxy_formats: Dict[str, List[str]] = {}
     for export_format in ExportFormat.objects.exclude(options={}).values("options", *format_fields):
         options = export_format.pop("options")
         for provider_slug in options.get("providers", []):
@@ -1113,7 +1114,7 @@ def basic_geojson_serializer(serialized_object: dict, geometry_field: str, *args
 
 
 def basic_geojson_list_serializer(serialized_objects: List[dict], geometry_field: str, many=False, *args, **kwargs):
-    if not isinstance(serialized_objects, (List, QuerySet)):
+    if not isinstance(serialized_objects, (list, QuerySet)):  # type: ignore
         serialized_objects = [serialized_objects]
 
     if not many and len(serialized_objects) > 1:
@@ -1422,10 +1423,12 @@ class JobSerializer(serializers.Serializer):
 
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
-        providers, filtered_providers = attribute_class_filter(obj.providers.all(), self.context["request"].user)
-        providers = [provider_format for provider_format in providers]
+        providers_query_set, filtered_providers_query_set = attribute_class_filter(
+            obj.providers.all(), self.context["request"].user
+        )
+        providers = [provider_format for provider_format in providers_query_set]
         provider_serializer = DataProviderSerializer(providers, many=True, context={"request": self.context["request"]})
-        filtered_providers = [provider_format for provider_format in filtered_providers]
+        filtered_providers = [provider_format for provider_format in filtered_providers_query_set]
         filtered_providers_serializer = FilteredDataProviderSerializer(
             filtered_providers, many=True, context={"request": self.context["request"]}
         )
@@ -1664,7 +1667,7 @@ def get_extent_geojson(obj):
         name = ""
     geom = obj.the_geom
     geometry = json.loads(GEOSGeometry(geom).geojson)
-    feature = OrderedDict()
+    feature: OrderedDict[str, Any] = OrderedDict()
     feature["type"] = "Feature"
     feature["properties"] = {"uid": uid, "name": name}
     feature["geometry"] = geometry
@@ -1676,15 +1679,17 @@ def get_selection_dict(obj):
     geom_collection = obj.original_selection
     if not geom_collection:
         return None
-    feature_collection = OrderedDict()
-    feature_collection["type"] = "FeatureCollection"
-    feature_collection["features"] = []
+    feature_collection: OrderedDict[str, Any] = OrderedDict()
+
+    features = []
     for geom in geom_collection:
         geojson_geom = json.loads(geom.geojson)
         feature = OrderedDict()
         feature["type"] = "Feature"
         feature["geometry"] = geojson_geom
-        feature_collection["features"].append(feature)
+        features.append(feature)
+    feature_collection["features"] = features
+    feature_collection["type"] = "FeatureCollection"
     return feature_collection
 
 

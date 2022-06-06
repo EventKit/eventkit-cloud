@@ -227,7 +227,7 @@ class Pcf(ScaleClient):
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
 
-    def terminate_task(self, task_name: str) -> dict:
+    def terminate_task(self, task_name: str):
         """
         Get running tasks memory for a single app.
         :param app_name: Name of app running tasks

@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 from logging import getLogger
+from typing import cast
 from urllib.parse import parse_qs
 
-from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.tasks.models import DataProvider
 from eventkit_cloud.utils.map_query import get_map_query
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
+from eventkit_cloud.utils.types.requests import AuthenticatedHttpRequest
 
 logger = getLogger(__file__)
 
 
-def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
+def map(request: AuthenticatedHttpRequest, slug: str, path: str) -> HttpResponse:
     """
     Makes a proxy request to mapproxy used to get map tiles.
     :param request: The httprequest.
@@ -32,7 +33,7 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     for header, value in mp_response.headers.items():
         response[header] = value
     if params.get("REQUEST") == ["GetFeatureInfo"]:
-        provider = get_cached_model(DataProvider, "slug", slug)
+        provider = cast(DataProvider, get_cached_model(DataProvider, "slug", slug))
         if response.status_code in [200, 202]:
             try:
                 map_query = get_map_query(provider.metadata.get("type"))

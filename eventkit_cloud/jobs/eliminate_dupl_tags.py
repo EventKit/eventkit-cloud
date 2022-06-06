@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any, Tuple, Dict
 
 import django
 
@@ -17,7 +18,7 @@ def merge_dups(dmp):
     # geom: []}
     # This is indended to make it easy to eliminate duplicates in the json_tags field of DatamodelPreset instances.
     previous_count = len(dmp.json_tags)
-    dmp_tags = dict()
+    dmp_tags: Dict[Tuple[str, str], Any] = dict()
     for tag in dmp.json_tags:
         if type(tag) != dict:
             print("Invalid tag, ignoring: {}".format(tag))
