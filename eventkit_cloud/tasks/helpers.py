@@ -7,6 +7,7 @@ import pickle
 import re
 import shutil
 import signal
+import tempfile
 import time
 import urllib.parse
 import uuid
@@ -33,7 +34,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from gdal_utils import convert, get_band_statistics, get_meta
 from numpy import linspace
-from requests import Response
+from requests import Response, Session
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
@@ -946,9 +947,39 @@ def download_concurrently(layers: ValuesView, concurrency=None, feature_data=Fal
     return layers
 
 
+def parse_arcgis_feature_response(file_path: str) -> dict:
+    with open(file_path) as f:
+        try:
+            json_response = json.load(f)
+        except JSONDecodeError:
+            logger.error("Unable to read JSON from file")
+            logger.info("The file contents are:")
+            logger.info(f.read())
+            raise
+
+        if json_response.get("error"):
+            logger.error(json_response)
+            raise Exception("The service did not receive a valid response.")
+
+        if "features" not in json_response:
+            # If no features are returned it would be good to let user know, but failing and retrying here
+            # doesn't seem to be the best approach.
+            # Without features and fields gdal will blow up.
+            json_response["features"] = []
+            json_response["fields"] = []
+    return json_response
+
+
 @retry
 def download_arcgis_feature_data(
-    task_uid: str, input_url: str, out_file: str, task_points=100, session=None, *args, **kwargs
+    task_uid: str,
+    input_url: str,
+    out_file: str,
+    task_points: int = 100,
+    session: Session = None,
+    service_description: dict = None,
+    *args,
+    **kwargs,
 ):
     # This function is necessary because ArcGIS servers often either
     # respond with a 200 status code but also return an error message in the response body,
@@ -957,31 +988,35 @@ def download_arcgis_feature_data(
     logger.debug("Downloading feature data for %s", task_uid)
     if session:
         logger.debug("session %s", session.adapters)
+    service_description = service_description or dict()
+    pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
+    max_record_count = service_description.get("maxRecordCount", 1000)
     try:
         json_response = None
-        out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
-        with open(out_file) as f:
-            try:
-                json_response = json.load(f)
-            except JSONDecodeError:
-                logger.error("Unable to read JSON from file")
-                logger.info("The file contents are:")
-                logger.info(f.read())
-                raise
+        if pagination:
+            result_offset = 0
+            result_record_count = max_record_count
+            while True:
+                input_url = f"{input_url}?resultOffset={result_offset}&resultRecordCount={result_record_count}"
 
-            if json_response.get("error"):
-                logger.error(json_response)
-                raise Exception("The service did not receive a valid response.")
+                with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
+                    download_data(
+                        task_uid, input_url, arcgis_response_file.name, session=session, task_points=task_points
+                    )
+                    feature_response = parse_arcgis_feature_response(arcgis_response_file.name)
+                    if not json_response:
+                        json_response = feature_response
 
-            if "features" not in json_response:
-                # If no features are returned it would be good to let user know, but failing and retrying here
-                # doesn't seem to be the best approach.
-                logger.error(f"No features were returned for {input_url}")
-                # Without features and fields gdal will blow up.
-                json_response["features"] = []
-                json_response["fields"] = []
-                json.dump(json_response, f)
+                json_response["features"].extend(feature_response["features"])
+                result_offset = result_offset + result_record_count
+                if not feature_response.get("exceededTransferLimit"):
+                    break
 
+        else:
+            out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
+            json_response = parse_arcgis_feature_response(out_file)
+        with open(out_file, "w") as f:
+            json.dump(json_response, f)
     except Exception as e:
         if json_response:
             logger.info(json_response)
@@ -1000,18 +1035,41 @@ def download_chunks(
     feature_data=False,
     level=15,
     size=None,
+    session=None,
     *args,
     **kwargs,
 ):
     tile_bboxes = get_chunked_bbox(bbox, size=size, level=level)
     chunks = []
+    service_description = {}
+    if feature_data:
+        service_url = None
+        try:
+            parsed_url = urllib.parse.urlparse(base_url)
+            service_url = parsed_url._replace(path=parsed_url.path.removesuffix("/query")).geturl()
+            result = session.get(service_url, params={"f": "json"})
+            result.raise_for_status()
+            service_description = result.json()
+        except requests.exceptions.HTTPError:
+            if service_url:
+                logger.error("Could not get service description for %s", service_url)
+            else:
+                logger.error("There was an error parsing the url to get a description for %s", base_url)
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_arcgis_feature_data if feature_data else download_data
-        download_function(task_uid, url, outfile, task_points=(task_points * len(tile_bboxes)), *args, **kwargs)
+        download_function(
+            task_uid,
+            url,
+            outfile,
+            task_points=(task_points * len(tile_bboxes)),
+            service_description=service_description,
+            *args,
+            **kwargs,
+        )
         chunks.append(outfile)
     return chunks
 
