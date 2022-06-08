@@ -24,6 +24,7 @@ image:
 
 build_deps:
   stage: build
+  timeout: 3h
   tags:
     - dind
   script:
@@ -44,8 +45,9 @@ build_deps:
     expire_in: 4 hrs
   only:
     refs:
-      - branches
+      - master
     changes:
+      - conda/**
       - requirements.txt
       - requirements-dev.txt
       - environment.yml
