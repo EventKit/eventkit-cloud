@@ -42,12 +42,11 @@ build_deps:
     paths:
       - /home/eventkit/miniconda3/envs/eventkit-cloud
     expire_in: 4 hrs
-  when:
-    rules:
-      - changes:
-          - requirements.txt
-          - requirements-dev.txt
-          - environment.yml
+  only:
+    changes:
+      - requirements.txt
+      - requirements-dev.txt
+      - environment.yml
 
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
