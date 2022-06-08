@@ -22,11 +22,17 @@ image:
 .default:
   when: always
 
+pending-tests:
+  when: always
+  stage: pending
+  script:
+    - python scripts/github.py pending "Waiting for tests."
+
 detect_changes:
   when: always
-  stage: build
-  script: git diff -s --exit-code master environment.yml requirements.txt requirements-dev.txt
-  allow_failure: true
+  stage: pending
+  script:
+    - git diff -s --exit-code master environment.yml requirements.txt requirements-dev.txt
 
 build_deps:
   stage: build
@@ -139,11 +145,7 @@ unit-front:
 #    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
 #    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
 
-pending-tests:
-  when: always
-  stage: pending
-  script:
-    - python scripts/github.py pending "Waiting for tests."
+
 
 pass-tests:
   when: on_success
