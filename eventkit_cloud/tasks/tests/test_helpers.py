@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import signal
-from unittest.mock import patch, call, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, call, patch
 
 import requests
 import requests_mock
@@ -14,22 +14,22 @@ from django.utils import timezone
 
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
-    get_style_files,
+    cd,
+    delete_rabbit_objects,
+    find_in_zip,
+    get_all_rabbitmq_objects,
+    get_arcgis_metadata,
+    get_data_package_manifest,
     get_file_paths,
     get_last_update,
+    get_message_count,
+    get_metadata,
     get_metadata_url,
     get_osm_last_update,
-    cd,
-    get_arcgis_metadata,
-    get_metadata,
-    get_message_count,
-    get_all_rabbitmq_objects,
-    delete_rabbit_objects,
-    get_data_package_manifest,
+    get_style_files,
+    progressive_kill,
     update_progress,
-    find_in_zip,
 )
-from eventkit_cloud.tasks.helpers import progressive_kill
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,11 @@ class TestHelpers(TestCase):
     ):
         run_uid = "1234"
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
-        expected_layers = ["layer1", "layer2"]
+        example_layers = {
+            "layer1": {"name": "layer1", "url": "https://some.url/layer1"},
+            "layer2": {"name": "layer2", "url": "https://some.url/layer2"},
+        }
+        expected_layers = [lyr_name for lyr_name, lyr in example_layers.items()]
         expected_type = "vector"
         mock_create_license_file.return_value = expected_license_file = {"/license.txt": "/license.txt"}
         mock_isfile.return_value = True
@@ -162,7 +166,7 @@ class TestHelpers(TestCase):
         mocked_data_provider.service_copyright = expected_copyright = "mocked_copyright"
         mocked_data_provider.config = f"cert_var: {expected_provider_slug}"
         mocked_data_provider.service_description = expected_data_provider_desc = "example_description"
-        mocked_data_provider.layers = expected_layers
+        mocked_data_provider.layers = example_layers
         mocked_data_provider.get_data_type.return_value = expected_type
         mocked_data_provider.level_from = expected_level_from = 0
         mocked_data_provider.level_to = expected_level_to = 12
@@ -255,7 +259,7 @@ class TestHelpers(TestCase):
     def test_get_all_rabbitmq_objects(self, requests_mocker):
         example_api = "http://example/api/"
         queues = "queues"
-        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
+        expected_queues = {"queue1": {"name": "queue1"}, "queue2": {"name": "queue2"}}
         res1 = {"page_count": 2, "page": 1, "items": [{"name": "queue1"}]}
         res2 = {"page_count": 2, "page": 2, "items": [{"name": "queue2"}]}
 

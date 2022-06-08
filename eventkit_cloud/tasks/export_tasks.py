@@ -12,7 +12,7 @@ import traceback
 from pathlib import Path
 from typing import List
 from urllib.parse import urlencode, urljoin
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import yaml
 from billiard.einfo import ExceptionInfo
@@ -32,56 +32,69 @@ from django.utils import timezone
 from gdal_utils import convert
 from yaml import CLoader
 
-from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.celery import TaskPriority, app
+from eventkit_cloud.core.helpers import (
+    NotificationLevel,
+    NotificationVerb,
+    sendnotification,
+)
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot, ExportFormat
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    ExportFormat,
+    MapImageSnapshot,
+    clean_config,
+    load_provider_config,
+)
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     add_export_run_files_to_zip,
     check_cached_task_failures,
+    download_concurrently,
+    download_data,
+    extract_metadata_files,
+    find_in_zip,
     generate_qgs_style,
+    get_arcgis_templates,
+    get_celery_queue_group,
     get_data_package_manifest,
     get_export_filepath,
-    get_metadata,
     get_export_task_record,
+    get_geometry,
+    get_human_readable_metadata_document,
+    get_metadata,
     get_provider_staging_dir,
     get_run_staging_dir,
     get_style_files,
+    make_file_downloadable,
+    merge_chunks,
     pickle_exception,
     progressive_kill,
-    download_data,
-    download_concurrently,
-    merge_chunks,
-    find_in_zip,
-    get_celery_queue_group,
-    extract_metadata_files,
-    get_geometry,
     update_progress,
-    get_arcgis_templates,
-    make_file_downloadable,
-    get_human_readable_metadata_document,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
-    ExportTaskRecord,
-    ExportTaskException,
     DataProviderTaskRecord,
-    FileProducingTaskResult,
     ExportRun,
+    ExportTaskException,
+    ExportTaskRecord,
+    FileProducingTaskResult,
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
-from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
+from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
 from eventkit_cloud.utils.client import EventKitClient
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.generic import retry
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
+from eventkit_cloud.utils.helpers import make_dirs
+from eventkit_cloud.utils.ogcapi_process import (
+    OgcApiProcess,
+    get_format_field_from_config,
+)
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -225,7 +238,6 @@ class ExportTask(EventKitBaseTask):
             3. create an export task exception
             4. save the export task with the task exception
             5. run export_task_error_handler if the run should be aborted
-               - this is only for initial tasks on which subsequent export tasks depend
         """
         # TODO: If there is a failure before the task was created this will fail to run.
         status = TaskState.FAILED.value
@@ -247,7 +259,7 @@ class ExportTask(EventKitBaseTask):
         export_task_record.status = status
         export_task_record.save()
         logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
-        if self.abort_on_error or True:
+        if self.abort_on_error:
             try:
                 data_provider_task_record = export_task_record.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
@@ -1209,7 +1221,8 @@ def wfs_export_task(
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
     configuration = load_provider_config(config)
-
+    if configuration.get("layers"):
+        configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data = configuration.get("vector_layers", [])
     if len(vector_layer_data):
         layers = {}
@@ -1223,14 +1236,15 @@ def wfs_export_task(
                 "path": path,
                 "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
                 "bbox": bbox,
-                "cert_info": configuration.get("cert_info"),
                 "layer_name": layer["name"],
                 "projection": projection,
             }
 
-        download_concurrently(layers.values(), configuration.get("concurrency"))
+        download_concurrently(layers.values(), **configuration)
 
         for layer_name, layer in layers.items():
+            if not os.path.exists(layer["path"]):
+                continue
             task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver="gpkg",
@@ -1246,13 +1260,13 @@ def wfs_export_task(
     else:
         out = merge_chunks(
             output_file=gpkg,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            layer_name=list(export_task_record.export_provider_task.provider.layers.keys())[0],
             projection=projection,
             task_uid=task_uid,
             bbox=bbox,
             stage_dir=stage_dir,
             base_url=get_wfs_query_url(name, service_url, layer, projection),
-            cert_info=configuration.get("cert_info"),
+            **configuration,
         )
 
     result["driver"] = "gpkg"
@@ -1369,18 +1383,17 @@ def arcgis_feature_service_export_task(
     bbox=None,
     service_url=None,
     projection=4326,
-    config=str(),
     **kwargs,
 ):
     """
-    Function defining sqlite export for ArcFeatureService service.
+    Function defining geopackage export for ArcFeatureService service.
     """
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
+
     layer_filename =  os.path.splitext(gpkg)[0] + ".lyrx"
-    configuration = load_provider_config(config)
 
     group_template_file = open(os.path.join(settings.ARCGIS_DIR, 'group_template.json'), 'r')
     group_template_json = json.load(group_template_file)
@@ -1390,59 +1403,50 @@ def arcgis_feature_service_export_task(
     layer_template_json = json.load(layer_template_file)
     layer_template_file.close()
 
-    vector_layer_data = configuration.get("vector_layers", [])
+    configuration = load_provider_config(export_task_record.export_provider_task.provider.config)
+    if configuration.get("layers"):
+        configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
+
     out = None
-    if len(vector_layer_data):
-        layers = {}
-        for layer in vector_layer_data:
-            group_template_json['layerDefinitions'].append(layer_template_json)
-            # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
-            path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
-            url = get_arcgis_query_url(layer.get("url"))
-            layers[layer["name"]] = {
-                "task_uid": task_uid,
-                "url": url,
-                "path": path,
-                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
-                "bbox": bbox,
-                "cert_info": configuration.get("cert_info"),
-                "layer_name": layer.get("name"),
-                "projection": projection,
-                "distinct_field": layer.get("distinct_field"),
-            }
+    layers = {}
+    vector_layer_data = export_task_record.export_provider_task.provider.layers
+    logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
+    for layer_name, layer in vector_layer_data.items():
+        # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
+        path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
+        url = get_arcgis_query_url(layer.get("url"))
+        layers[layer["name"]] = {
+            "task_uid": task_uid,
+            "url": url,
+            "path": path,
+            "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+            "bbox": bbox,
+            "layer_name": layer.get("name"),
+            "projection": projection,
+            "distinct_field": layer.get("distinct_field", "OBJECTID"),
+        }
 
-        try:
-            download_concurrently(layers.values(), configuration.get("concurrency"), feature_data=True)
-        except Exception as e:
-            logger.error(f"ArcGIS provider download error: {e}")
-            raise e
-        for layer_name, layer in layers.items():
-            task_process = TaskProcess(task_uid=task_uid)
-            out = convert(
-                driver="gpkg",
-                input_files=layer.get("path"),
-                output_file=gpkg,
-                boundary=bbox,
-                projection=projection,
-                layer_name=layer_name,
-                access_mode="append",
-                executor=task_process.start_process,
-            )
-
-    else:
-        out = merge_chunks(
+    try:
+        download_concurrently(list(layers.values()), feature_data=True, **configuration)
+    except Exception as e:
+        logger.error(f"ArcGIS provider download error: {e}")
+        raise e
+    for layer_name, layer in layers.items():
+        if not os.path.exists(layer["path"]):
+            continue
+        task_process = TaskProcess(task_uid=task_uid)
+        out = convert(
+            driver="gpkg",
+            input_files=layer["path"],
             output_file=gpkg,
-            layer_name=export_task_record.export_provider_task.provider.layers[0],
+            boundary=bbox,
             projection=projection,
-            task_uid=task_uid,
-            bbox=bbox,
-            stage_dir=stage_dir,
-            base_url=get_arcgis_query_url(service_url),
-            cert_info=configuration.get("cert_info"),
-            feature_data=True,
+            layer_name=layer_name,
+            access_mode="append",
+            executor=task_process.start_process,
         )
 
-    if not (out and geopackage.check_content_exists(out)):
+    if not geopackage.check_content_exists(out):
         raise Exception("The service returned no data for the selected area.")
 
     with open(layer_filename, 'w') as layer_file:
@@ -1510,7 +1514,7 @@ def vector_file_export_task(
         input_files=gpkg,
         output_file=gpkg,
         projection=projection,
-        layer_name=export_task_record.export_provider_task.provider.layers[0],
+        layer_name=list(export_task_record.export_provider_task.provider.layers.keys())[0],
         boundary=bbox,
         is_raster=False,
         executor=task_process.start_process,
@@ -1686,7 +1690,8 @@ def pick_up_run_task(
                 data_provider_task_record.save()
         run.save()
         logger.error(str(e))
-        raise
+        export_task_error_handler(run_uid=run_uid)
+        raise e
 
 
 def wait_for_run(run_uid: str = None) -> None:
@@ -2034,7 +2039,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     try:
         run = ExportRun.objects.get(uid=run_uid)
         try:
-            if os.path.isdir(stage_dir):
+            if stage_dir is not None and os.path.isdir(stage_dir):
                 if not os.getenv("KEEP_STAGE", False):
                     shutil.rmtree(stage_dir)
         except IOError:
@@ -2090,7 +2095,10 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
     """
     result = result or {}
     try:
-        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, fit_to_area
+        from eventkit_cloud.utils.image_snapshot import (
+            fit_to_area,
+            get_wmts_snapshot_image,
+        )
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 

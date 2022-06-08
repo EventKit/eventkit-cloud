@@ -6,36 +6,41 @@ import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING
-from typing import Union, List
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.gis.geos import (
+    GeometryCollection,
+    GEOSGeometry,
+    MultiPolygon,
+    Polygon,
+)
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
-from django.db.models import Q, QuerySet, Case, Value, When
+from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from yaml import CLoader, CDumper
+from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
+    AttributeClass,
     CachedModelMixin,
     DownloadableMixin,
-    TimeStampedModelMixin,
-    UIDMixin,
-    AttributeClass,
     GroupPermissionLevel,
     LowerCaseCharField,
+    TimeStampedModelMixin,
+    UIDMixin,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
+from eventkit_cloud.utils.services.types import LayerDescription
 
 if TYPE_CHECKING:
     from eventkit_cloud.utils.services.base import GisClient
@@ -367,7 +372,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
             url = settings.OVERPASS_API_URL
         Client = get_client(self.export_provider_type.type_name)
-        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config))
+        config = None
+        if self.config:
+            config = load_provider_config(self.config)
+        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=config)
 
     def check_status(self, aoi_geojson: dict = None):
         try:
@@ -449,29 +457,37 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return get_mapproxy_footprint_url(self.slug)
 
     @property
-    def layers(self) -> List[str]:
+    def layers(self) -> Dict[LayerDescription]:
         """
         Used to populate the list of vector layers, typically for contextual or styling information.
         :return: A list of layer names.
         """
         if self.data_type != GeospatialDataType.VECTOR.value:
-            return []
-        if not self.config:
-            # Often layer names are configured using an index number but this number is not very
-            # useful when using the data so fall back to the slug which should be more meaningful.
-            if not self.layer:  # check for NoneType or empty string
-                return [self.slug]
-            try:
-                int(self.layer)
-                return [self.slug]  # self.layer is an integer, so use the slug for better context.
-            except ValueError:
-                return [self.layer]  # If we got here, layer is not None or an integer so use that.
-        config = clean_config(self.config, return_dict=True)
-        # As of EK 1.9.0 only vectors support multiple layers in a single provider
-        if self.export_provider_type.type_name in ["osm", "osm-generic"]:
-            return list(config.keys())
-        else:
-            return [layer.get("name") for layer in config.get("vector_layers", [])]
+            return {}
+        if self.config:
+            config = clean_config(str(self.config), return_dict=True)
+            # As of EK 1.9.0 only vectors support multiple layers in a single provider
+            if self.export_provider_type.type_name in ["osm", "osm-generic"]:
+                return config
+            elif config.get("vector_layers"):
+                return {layer.get("name"): layer for layer in config.get("vector_layers", [])}
+        # Often layer names are configured using an index number but this number is not very
+        # useful when using the data so fall back to the slug which should be more meaningful.
+        if not self.layer:  # check for NoneType or empty string
+            # TODO: support other service types
+            if self.export_provider_type.type_name in ["arcgis-feature"]:
+                return self.get_service_client().get_layers()
+            else:
+                return {self.slug: {"url": self.url, "name": self.slug}}
+        try:
+            int(self.layer)  # noqa
+            return {
+                self.slug: {"url": self.url, "name": self.slug}
+            }  # self.layer is an integer, so use the slug for better context.
+        except ValueError:
+            return {
+                self.layer: {"url": self.url, "name": self.layer}
+            }  # If we got here, layer is not None or an integer so use that.
 
     def get_use_bbox(self):
         if self.export_provider_type is not None:
@@ -1042,7 +1058,7 @@ def delete(self, *args, **kwargs):
 Group.delete = delete
 
 
-def load_provider_config(config: str) -> dict:
+def load_provider_config(config: Optional[str, dict]) -> dict:
     """
     Function deserializes a yaml object from a given string.
     """
@@ -1050,7 +1066,7 @@ def load_provider_config(config: str) -> dict:
     try:
         if isinstance(config, dict):
             return config
-        configuration = yaml.safe_load(config) or dict()
+        configuration = yaml.safe_load(config) if config else dict()
     except yaml.YAMLError as e:
         logger.error(f"Unable to load provider configuration: {e}")
         raise Exception(e)

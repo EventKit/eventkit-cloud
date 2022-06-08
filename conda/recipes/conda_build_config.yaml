@@ -7,7 +7,7 @@ _sysroot_linux_64_curr_repodata_hack:
 amqp:
 - 5.1.1
 asgiref:
-- 3.5.0
+- 3.5.2
 attrs:
 - 21.4.0
 backports:
@@ -33,13 +33,13 @@ bzip2:
 c_ares:
 - 1.18.1
 ca_certificates:
-- 2021.10.8
+- 2022.5.18.1
 cairo:
 - 1.16.0
 celery:
-- 5.1.2
+- 5.2.6
 certifi:
-- 2021.10.8
+- 2022.5.18.1
 cffi:
 - 1.15.0
 cfitsio:
@@ -47,7 +47,7 @@ cfitsio:
 charset_normalizer:
 - 2.0.12
 click:
-- 7.1.2
+- 8.1.3
 click_didyoumean:
 - 0.3.0
 click_plugins:
@@ -110,6 +110,8 @@ freexl:
 - 1.0.6
 gdal:
 - 3.4.2
+gdalutils:
+- 1.0.0
 gdbm:
 - '1.18'
 geos:
@@ -135,9 +137,9 @@ hdf5:
 icu:
 - '69.1'
 idna:
-- '3.3'
+- '2.10'
 importlib_metadata:
-- 4.11.3
+- 4.11.4
 importlib_resources:
 - 5.7.1
 jbig:
@@ -189,13 +191,13 @@ libevent:
 libffi:
 - 3.4.2
 libgcc_ng:
-- 11.2.0
+- 12.1.0
 libgdal:
 - 3.4.2
 libgfortran5:
-- 11.2.0
+- 12.1.0
 libgfortran_ng:
-- 11.2.0
+- 12.1.0
 libglib:
 - 2.70.2
 libglvnd_cos7_x86_64:
@@ -203,7 +205,7 @@ libglvnd_cos7_x86_64:
 libglvnd_glx_cos7_x86_64:
 - 1.0.1
 libgomp:
-- 11.2.0
+- 12.1.0
 libiconv:
 - '1.16'
 libidn2:
@@ -235,7 +237,7 @@ libspatialite:
 libssh2:
 - 1.10.0
 libstdcxx_ng:
-- 11.2.0
+- 12.1.0
 libtiff:
 - 4.3.0
 libunistring:
@@ -271,7 +273,7 @@ ncurses:
 nspr:
 - '4.32'
 nss:
-- '3.77'
+- '3.78'
 numpy:
 - 1.22.3
 openjpeg:
@@ -309,13 +311,13 @@ pyasn1:
 pyasn1_modules:
 - 0.2.7
 pycparser:
-- '2.21'
+- '2.20'
 pyjwt:
 - 2.3.0
 pymemcache:
 - 3.5.2
 pyopenssl:
-- 22.0.0
+- 20.0.0
 pyparsing:
 - 3.0.8
 pyproj:
@@ -353,17 +355,17 @@ ruby:
 s3transfer:
 - 0.5.2
 setuptools:
-- 62.1.0
+- 62.3.2
 shapely:
 - 1.8.0
 six:
 - 1.16.0
 snappy:
-- 1.1.8
+- 1.1.9
 soupsieve:
 - 2.3.1
 sqlite:
-- 3.38.3
+- 3.38.5
 sqlparse:
 - 0.4.2
 swapper:
@@ -379,15 +381,15 @@ typing_extensions:
 tzcode:
 - 2022a
 tzdata:
-- 2022a
+- 2020d
 uritemplate:
 - 4.1.1
 urllib3:
-- 1.26.9
+- 1.25.11
 vine:
 - 5.0.0
 waitress:
-- 2.1.1
+- 2.1.2
 wcwidth:
 - 0.2.5
 webob:
@@ -397,7 +399,7 @@ webtest:
 wget:
 - 1.20.3
 wheel:
-- 0.37.1
+- 0.36.1
 whitenoise:
 - 5.3.0
 xerces_c:

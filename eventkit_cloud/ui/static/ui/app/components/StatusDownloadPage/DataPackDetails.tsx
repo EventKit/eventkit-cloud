@@ -43,6 +43,7 @@ export interface Props {
     classes: { [className: string]: string };
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    adminPermissions: boolean;
 }
 
 export interface State {
@@ -281,6 +282,7 @@ export class DataPackDetails extends Component<Props, State> {
                                 job={this.props.job}
                                 selectProvider={this.selectPreview}
                                 providers={this.props.providers}
+                                adminPermissions={this.props.adminPermissions}
                             />
                         ))}
                     </div>

@@ -224,6 +224,10 @@ In order to specify the desired layers, a YAML configuration must be supplied. T
 Additionally (currently for ArcgGIS FeatureServices) specify a "distinct_field" to ensure group features on that field.
 
 ##### Example ArcGIS Configuration
+
+Arcgis-feature service (FeatureService), or MapServices with feature layers will automatically configure. 
+If wanting to override the default configuration then you can pass in configuration like below.
+
 ```yaml
 vector_layers:
   - name: 'WBDLine'
