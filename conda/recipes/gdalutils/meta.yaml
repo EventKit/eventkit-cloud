@@ -24,6 +24,7 @@ requirements:
     - python {% if python is defined %} {{ python }} {% endif %}
     - pyproj {% if pyproj is defined %} {{ pyproj }} {% endif %}
     - gdal {% if gdal is defined %} {{ gdal }} {% endif %}
+    - pip {% if pip is defined %} {{ pip }} {% endif %}
 
 test:
   imports:

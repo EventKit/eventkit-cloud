@@ -1,5 +1,5 @@
 {% set name = "django-timezone-field" %}
-{% set version = "5.0" %}
+{% set version = "4.1.2" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/mfogel/django-timezone-field/archive/refs/tags/{{ version }}.tar.gz
-  sha256: f3e80c01753a9396cd0d8e8a79b696dfbd7be467040247e4e94fc3b380c504d8
+  sha256: c618945413e48776dd35a5bfbe476c7dfb3a5523e0d92769bc111f0d02a6d6d1
 
 build:
   script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
