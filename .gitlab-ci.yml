@@ -43,6 +43,8 @@ build_deps:
       - /home/eventkit/miniconda3/envs/eventkit-cloud
     expire_in: 4 hrs
   only:
+    refs:
+      - branches
     changes:
       - requirements.txt
       - requirements-dev.txt
