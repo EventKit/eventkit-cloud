@@ -19,7 +19,7 @@ from functools import reduce
 from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Union, ValuesView, Tuple, Dict
+from typing import Dict, List, Optional, Tuple, Union
 from xml.dom import minidom
 from zipfile import ZipFile
 
@@ -39,16 +39,24 @@ from requests import Response, Session
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
-from eventkit_cloud.tasks.enumerations import Directory, PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS
+from eventkit_cloud.tasks.enumerations import (
+    PREVIEW_TAIL,
+    UNSUPPORTED_CARTOGRAPHY_FORMATS,
+    Directory,
+)
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord, ExportRun
+from eventkit_cloud.tasks.models import (
+    DataProviderTaskRecord,
+    ExportRun,
+    ExportRunFile,
+    ExportTaskRecord,
+)
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 from eventkit_cloud.utils.s3 import download_folder_from_s3
-
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
 
@@ -546,7 +554,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
-            "layers": data_provider.layers,
+            "layers": list(data_provider.layers.keys()),
             "level_from": data_provider.level_from,
             "level_to": data_provider.level_to,
         }
@@ -913,7 +921,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
     )
 
 
-def download_concurrently(layers: ValuesView, concurrency=None, feature_data=False, *args, **kwargs):
+def download_concurrently(layers: list, concurrency=None, feature_data=False, *args, **kwargs):
     """
     Function concurrently downloads data from a given list URLs and download paths.
     """
@@ -1041,6 +1049,7 @@ def download_chunks(
 ):
     tile_bboxes = get_chunked_bbox(bbox, size=size, level=level)
     chunks = []
+    # TODO: Pass in service description from export_task.
     service_description = {}
     if feature_data:
         service_url = None
