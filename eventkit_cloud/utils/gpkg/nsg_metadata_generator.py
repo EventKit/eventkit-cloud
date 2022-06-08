@@ -5,7 +5,13 @@ from enum import Enum
 from os.path import join
 from xml.dom import minidom
 from xml.etree import ElementTree
-from xml.etree.ElementTree import QName, Element, SubElement, register_namespace, tostring
+from xml.etree.ElementTree import (
+    Element,
+    QName,
+    SubElement,
+    register_namespace,
+    tostring,
+)
 
 from eventkit_cloud.utils.gpkg.metadata import Metadata
 from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection

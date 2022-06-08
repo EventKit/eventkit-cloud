@@ -4,6 +4,7 @@ import os
 import requests
 from django.conf import settings
 from django.core.cache import cache
+
 from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)

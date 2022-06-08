@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import statistics
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from time import sleep
 
 import requests

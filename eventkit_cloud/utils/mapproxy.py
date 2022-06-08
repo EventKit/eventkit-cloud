@@ -8,19 +8,15 @@ from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
 from typing import Tuple
 
-import mapproxy
 import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
-from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
-from mapproxy.grid import tile_grid
-from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
+import mapproxy
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
@@ -28,20 +24,33 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import (
-    get_tile_table_names,
-    set_gpkg_contents_bounds,
     get_table_tile_matrix_information,
+    get_tile_table_names,
     get_zoom_levels_table,
     remove_empty_zoom_levels,
+    set_gpkg_contents_bounds,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from mapproxy.config.config import load_config, load_default_config
+from mapproxy.config.loader import (
+    ConfigurationError,
+    ProxyConfiguration,
+    validate_references,
+)
+from mapproxy.grid import tile_grid
+from mapproxy.wsgiapp import MapProxyApp
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
 # a dummy process which relies on threads.  This fixes a bunch of deadlock issues which happen when using billiard.
 multiprocessing.Process = DummyProcess
 from mapproxy.seed import seeder  # noqa: E402
 from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore  # noqa: E402
+from mapproxy.seed.util import (  # noqa: E402
+    ProgressLog,
+    ProgressStore,
+    exp_backoff,
+    timestamp,
+)
 
 multiprocessing.Process = Process
 

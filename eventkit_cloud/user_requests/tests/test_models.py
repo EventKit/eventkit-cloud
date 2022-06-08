@@ -1,6 +1,6 @@
-from django.test import TestCase
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.test import TestCase
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest

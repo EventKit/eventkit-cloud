@@ -6,10 +6,10 @@ from django.contrib.sessions.models import Session
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import BadSignature
-from django.urls import reverse
 from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
+from django.urls import reverse
 from social import utils
 from social.exceptions import InvalidEmail
 from social.pipeline.partial import partial

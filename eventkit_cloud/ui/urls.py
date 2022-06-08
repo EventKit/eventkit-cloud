@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-from django.urls import re_path
 from django.contrib.auth.decorators import login_required
+from django.urls import re_path
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 
 from eventkit_cloud.ui.views import (
-    logout,
     auth,
+    convert,
+    convert_to_geojson,
     geocode,
     get_config,
-    convert_to_geojson,
-    user_active,
+    logout,
     reverse_geocode,
-    convert,
     search,
+    user_active,
 )
 
 urlpatterns = [

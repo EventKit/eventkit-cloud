@@ -129,8 +129,8 @@ def perf_benchmark(slug="osm", num_iters=500, seed=None):
     :param seed: The seed to the prng generating bboxes
     :return: total_time and time_per_estimate measured in seconds
     """
-    import time
     import random
+    import time
 
     random.seed(seed)
 

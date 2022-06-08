@@ -2,7 +2,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 from django.conf import settings
-from gdal_utils import is_valid_bbox, expand_bbox, bbox2polygon
+from gdal_utils import bbox2polygon, expand_bbox, is_valid_bbox
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.utils.geocoding.geocode_auth import get_geocode_cert_info

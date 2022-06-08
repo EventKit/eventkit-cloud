@@ -1,6 +1,6 @@
 import os
 from unittest import SkipTest
-from unittest.mock import call, Mock, patch
+from unittest.mock import Mock, call, patch
 
 from django.conf import settings
 from django.test import TestCase

@@ -1,3 +1,4 @@
+import logging
 import re
 import unicodedata
 
@@ -7,9 +8,6 @@ from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from .sql import SQLValidator
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 stages:
   - pending
+  - build
   - lint
   - test
   - results
@@ -20,6 +21,33 @@ image:
 
 .default:
   when: always
+
+build_deps:
+  stage: build
+  tags:
+    - dind
+  script:
+    - cd conda
+    - docker-compose run --rm -T conda
+    - >
+      conda config --remove channels defaults && \
+      conda config --add channels conda-forge && \
+      conda config --add channels file://var/lib/eventkit/conda/repo && \
+      # TODO: get build to work with strict priority
+      conda config --set channel_priority flexible
+    - conda env create --force --file environment.yml -n eventkit-cloud python=3.10 && pip install -r requirements-dev.txt
+    - mkdir -p /home/eventkit/miniconda3/envs/
+    - cp "$(which python | sed -e "s/bin\/python//")envs/eventkit-cloud" /home/eventkit/miniconda3/envs/eventkit-cloud
+  artifacts:
+    paths:
+      - /home/eventkit/miniconda3/envs/eventkit-cloud
+    expire_in: 4 hrs
+  when:
+    rules:
+      - changes:
+          - requirements.txt
+          - requirements-dev.txt
+          - environment.yml
 
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
@@ -49,7 +77,14 @@ black:
     - .back
     - .lint
   script:
-    - black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
+    - black --config config/pyproject.toml --check eventkit_cloud
+
+isort:
+  extends:
+    - .back
+    - .lint
+  script:
+    - isort eventkit_cloud --check
 
 flake8:
   extends:

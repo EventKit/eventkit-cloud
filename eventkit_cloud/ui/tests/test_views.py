@@ -3,10 +3,9 @@ import json
 import logging
 from unittest.mock import Mock, patch
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 
 logger = logging.getLogger(__name__)
 

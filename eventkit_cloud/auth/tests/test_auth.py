@@ -12,16 +12,16 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from eventkit_cloud.auth.auth import (
-    get_user,
-    Unauthorized,
-    InvalidOauthResponse,
-    request_access_tokens,
-    get_user_data_from_schema,
-    fetch_user_from_token,
-    OAuthServerUnreachable,
-    OAuthError,
     Error,
+    InvalidOauthResponse,
+    OAuthError,
+    OAuthServerUnreachable,
+    Unauthorized,
+    fetch_user_from_token,
+    get_user,
+    get_user_data_from_schema,
     refresh_access_tokens,
+    request_access_tokens,
 )
 
 logger = logging.getLogger(__name__)

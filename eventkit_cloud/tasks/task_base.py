@@ -107,7 +107,7 @@ class LockingTask(Task):
         else:
             lock_key = self.get_lock_key()
 
-        if self.acquire_lock(lock_key=lock_key, value=self.request.id):
+        if self.acquire_lock(lock_key=lock_key, value=self.request.id) or settings.DEBUG_CELERY:
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
             result = super(LockingTask, self).__call__(*args, **kwargs)

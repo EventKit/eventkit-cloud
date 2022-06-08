@@ -6,9 +6,8 @@ from io import BytesIO
 from typing import Union
 from urllib.parse import urlparse
 
-from PIL import Image
 from django.conf import settings
-from mapproxy.grid import tile_grid
+from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
@@ -17,9 +16,10 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_path,
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
+from mapproxy.grid import tile_grid
 
 logger = logging.getLogger(__name__)
 

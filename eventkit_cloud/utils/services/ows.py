@@ -3,7 +3,7 @@ import logging
 import re
 import xml.etree.ElementTree as ET
 from io import StringIO
-from typing import Optional, List
+from typing import List, Optional
 
 import requests
 from django.contrib.gis.geos import Polygon
@@ -11,10 +11,10 @@ from django.contrib.gis.geos import Polygon
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.check_result import CheckResult
 from eventkit_cloud.utils.services.errors import (
-    UnsupportedFormatError,
     MissingLayerError,
-    ServiceError,
     ProviderCheckError,
+    ServiceError,
+    UnsupportedFormatError,
 )
 
 logger = logging.getLogger(__name__)

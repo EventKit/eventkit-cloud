@@ -7,19 +7,19 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
-from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.context_processors import csrf
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
 from eventkit_cloud.ui.helpers import (
     file_to_geojson,
-    set_session_user_last_active_at,
-    is_mgrs,
     is_lat_lon,
+    is_mgrs,
+    set_session_user_last_active_at,
     write_uploaded_file,
 )
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter

@@ -1,12 +1,12 @@
 import logging
 
+from django import forms
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
-from django import forms
 
-from eventkit_cloud.core.models import GroupPermission, AttributeClass, validate_filter
+from eventkit_cloud.core.models import AttributeClass, GroupPermission, validate_filter
 
 logger = logging.getLogger(__name__)
 

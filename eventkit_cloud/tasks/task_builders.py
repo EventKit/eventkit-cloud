@@ -6,17 +6,16 @@ from typing import List
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat, DataProvider
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
+from eventkit_cloud.tasks.export_tasks import create_datapack_preview, reprojection_task
 from eventkit_cloud.tasks.helpers import (
-    normalize_name,
-    get_default_projection,
     get_celery_queue_group,
+    get_default_projection,
+    normalize_name,
 )
-from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
-
 
 logger = logging.getLogger(__name__)
 
@@ -95,10 +94,8 @@ class TaskChainBuilder(object):
         created: bool
         data_provider_task_record, created = DataProviderTaskRecord.objects.get_or_create(
             run=run,
-            name=data_provider.name,
             provider=data_provider,
-            status=TaskState.PENDING.value,
-            display=True,
+            defaults={"name": data_provider.name, "status": TaskState.PENDING.value, "display": True},
         )
 
         projections = [projection.srid for projection in run.job.projections.all()]
@@ -283,10 +280,12 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
     try:
         export_task, created = ExportTaskRecord.objects.get_or_create(
             export_provider_task=export_provider_task,
-            status=TaskState.PENDING.value,
-            name=task_name,
-            worker=worker,
-            display=display,
+            defaults={
+                "status": TaskState.PENDING.value,
+                "name": task_name,
+                "worker": worker,
+                "display": display,
+            },
         )
         logger.debug("Saved task: {0}".format(task_name))
     except DatabaseError as e:

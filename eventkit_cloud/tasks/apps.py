@@ -7,7 +7,7 @@ class EventKitTasks(AppConfig):
 
     def ready(self):
         from eventkit_cloud.tasks.signals import (  # NOQA
+            export_run_file_delete,
             exportrun_delete_exports,
             exporttaskresult_delete_exports,
-            export_run_file_delete,
         )

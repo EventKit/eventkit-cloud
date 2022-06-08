@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+
 from celery.schedules import crontab
 
 from eventkit_cloud.celery import app
@@ -30,7 +31,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
-BEAT_SCHEDULE = {
+beat_schedule = {
     "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0")},
     "provider-statuses": {
         "task": "Check Provider Availability",
@@ -68,7 +69,7 @@ CELERY_DEFAULT_TASK_SETTINGS = (
 )
 CELERY_MAX_DEFAULT_TASKS = int(os.getenv("CELERY_MAX_DEFAULT_TASKS", 3))
 
-app.conf.beat_schedule = BEAT_SCHEDULE
+app.conf.beat_schedule = beat_schedule
 
 CELERYD_USER = CELERYD_GROUP = "eventkit"
 if os.getenv("VCAP_SERVICES"):
@@ -111,3 +112,5 @@ MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 # Default to 8 hours
 TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
 app.conf.task_soft_time_limit = TASK_TIMEOUT
+DEBUG_CELERY = is_true(os.getenv("DEBUG_CELERY", False))
+app.conf.task_always_eager = DEBUG_CELERY

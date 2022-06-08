@@ -3,29 +3,28 @@ import logging
 import os
 
 from django import forms
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
 from django.urls import re_path
 from django.utils.html import format_html
-from django_celery_beat.models import IntervalSchedule, CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, IntervalSchedule
 
-from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
+from eventkit_cloud.jobs.forms import RegionalPolicyForm, RegionForm
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
-    Job,
-    Region,
-    RegionalPolicy,
-    RegionalJustification,
-    DataProvider,
-    DataProviderType,
     DatamodelPreset,
-    License,
+    DataProvider,
     DataProviderStatus,
     DataProviderTask,
+    DataProviderType,
+    ExportFormat,
+    Job,
     JobPermission,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
     clean_config,
 )
 
@@ -157,8 +156,8 @@ class DataProviderForm(forms.ModelForm):
 
         if service_type in ["wms", "wmts", "tms", "arcgis-raster"]:
             from eventkit_cloud.utils.mapproxy import (
-                MapproxyGeopackage,
                 ConfigurationError,
+                MapproxyGeopackage,
             )
 
             service = MapproxyGeopackage(
@@ -174,7 +173,9 @@ class DataProviderForm(forms.ModelForm):
         elif service_type in ["osm", "osm-generic"]:
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
-            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+            from eventkit_cloud.feature_selection.feature_selection import (
+                FeatureSelection,
+            )
 
             cleaned_config = clean_config(config)
             feature_selection = FeatureSelection(cleaned_config)

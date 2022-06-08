@@ -5,10 +5,10 @@ from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import (
+    DataProviderSerializer,
+    basic_data_provider_list_serializer,
     basic_field_serializer,
     filtered_basic_data_provider_serializer,
-    basic_data_provider_list_serializer,
-    DataProviderSerializer,
 )
 from eventkit_cloud.jobs.models import DataProvider
 

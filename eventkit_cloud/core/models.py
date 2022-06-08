@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 import datetime
+import logging
+import os
 import unicodedata
 import uuid
-
-import os
+from enum import Enum
+from typing import Callable, List, Tuple, Union
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet, Case, Value, When, Q, Count
+from django.db.models import Case, Count, Q, QuerySet, Value, When
 from django.utils import timezone
-from enum import Enum
-
 from django.utils.text import slugify
 from notifications.models import Notification
-import logging
-from typing import List, Callable, Tuple
-
-from typing import Union
 
 from eventkit_cloud.tasks.enumerations import Directory
 

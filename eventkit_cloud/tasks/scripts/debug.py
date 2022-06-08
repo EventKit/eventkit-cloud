@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from time import sleep
 
 # from eventkit_cloud.celery import app
-from celery import task, Task
+from celery import Task, task
 
 
 class TestTask(Task):

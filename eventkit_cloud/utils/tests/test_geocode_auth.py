@@ -7,14 +7,14 @@ from django.conf import settings
 from django.test import TestCase, override_settings
 
 from eventkit_cloud.utils.geocoding.geocode_auth import (
-    get_auth_headers,
     CACHE_COOKIE_KEY,
     CACHE_TOKEN_KEY,
     CACHE_TOKEN_TIMEOUT,
-    update_session_cookies,
-    update_auth_headers,
-    get_session_cookies,
     authenticate,
+    get_auth_headers,
+    get_session_cookies,
+    update_auth_headers,
+    update_session_cookies,
 )
 
 logger = logging.getLogger(__name__)

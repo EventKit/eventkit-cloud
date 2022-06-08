@@ -1,10 +1,9 @@
+import logging
+import os
 import shlex
 import uuid
 
 import requests
-import os
-import logging
-
 from docker.errors import APIError
 
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError

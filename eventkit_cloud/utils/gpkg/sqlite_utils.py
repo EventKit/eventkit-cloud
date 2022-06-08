@@ -1,4 +1,4 @@
-from sqlite3 import connect, Row
+from sqlite3 import Row, connect
 
 
 class SQL(object):

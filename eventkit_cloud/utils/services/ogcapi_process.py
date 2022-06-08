@@ -2,15 +2,15 @@
 import copy
 import json
 import logging
-from typing import Optional, Dict
+from typing import Dict, Optional
 from urllib.parse import urljoin
 
 import requests
+from jsonschema import ValidationError, validate
 
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.check_result import CheckResult
 from eventkit_cloud.utils.services.errors import ProviderCheckError
-from jsonschema import validate, ValidationError
 
 logger = logging.getLogger(__name__)
 

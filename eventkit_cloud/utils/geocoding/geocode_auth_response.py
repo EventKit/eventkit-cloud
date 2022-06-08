@@ -1,12 +1,13 @@
 import logging
 import os
-from eventkit_cloud.utils.geocoding.geocode_auth import (
-    get_session_cookies,
-    get_auth_headers,
-    update_session_cookies,
-    get_geocode_cert_info,
-)
+
 from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.utils.geocoding.geocode_auth import (
+    get_auth_headers,
+    get_geocode_cert_info,
+    get_session_cookies,
+    update_session_cookies,
+)
 
 logger = logging.getLogger(__name__)
 

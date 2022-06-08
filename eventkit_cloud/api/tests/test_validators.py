@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 import logging
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from django.contrib.auth.models import User, Group
-from django.contrib.gis.geos import GeometryCollection, Point, LineString, Polygon, GEOSGeometry
+from django.contrib.auth.models import Group, User
+from django.contrib.gis.geos import (
+    GeometryCollection,
+    GEOSGeometry,
+    LineString,
+    Point,
+    Polygon,
+)
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import (
-    validate_bbox,
-    validate_selection,
-    validate_bbox_params,
-    validate_original_selection,
     get_area_in_sqkm,
     get_bbox_area_in_sqkm,
+    validate_bbox,
+    validate_bbox_params,
+    validate_original_selection,
+    validate_selection,
 )
 from eventkit_cloud.jobs.models import bbox_to_geojson
 

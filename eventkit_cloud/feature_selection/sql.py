@@ -1,16 +1,16 @@
 from pyparsing import (
-    Word,
-    delimitedList,
-    Group,
-    alphas,
-    nums,
-    alphanums,
-    ParseException,
     Forward,
+    Group,
+    Keyword,
+    ParseException,
+    Word,
+    ZeroOrMore,
+    alphanums,
+    alphas,
+    delimitedList,
+    nums,
     oneOf,
     quotedString,
-    ZeroOrMore,
-    Keyword,
 )
 
 

@@ -2,18 +2,18 @@ import logging
 from collections import OrderedDict
 from datetime import date, datetime
 from functools import reduce
-from typing import Optional, Union, List, Dict, Any
+from typing import Any, Dict, List, Optional, Union
 
 import rest_framework.status
 from audit_logging.models import AuditEvent
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, QuerySet, OuterRef, Subquery, Func, Q
+from django.db.models import Count, Func, OuterRef, Q, QuerySet, Subquery
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from eventkit_cloud.jobs.models import Region, DataProvider
+from eventkit_cloud.jobs.models import DataProvider, Region
 from eventkit_cloud.tasks.models import RunZipFile, UserDownload
 
 logger = logging.getLogger(__name__)

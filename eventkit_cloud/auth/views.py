@@ -14,11 +14,11 @@ from django.shortcuts import redirect
 from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import (
-    request_access_tokens,
-    fetch_user_from_token,
     OAuthError,
     Unauthorized,
+    fetch_user_from_token,
     refresh_access_tokens,
+    request_access_tokens,
 )
 from eventkit_cloud.core.helpers import get_id
 

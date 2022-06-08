@@ -3,11 +3,14 @@ import os
 
 from django.conf import settings
 
-from eventkit_cloud.utils.scaling import Pcf, Docker
+from eventkit_cloud.utils.scaling import Docker, Pcf
+from eventkit_cloud.utils.scaling.dummy import Dummy
 
 
 def get_scale_client():
-    if os.getenv("PCF_SCALING"):
+    if os.getenv("DEBUG_CELERY"):
+        return Dummy(), "Dummy"
+    elif os.getenv("PCF_SCALING"):
         client = Pcf()
         client.login()
         if os.getenv("CELERY_TASK_APP"):

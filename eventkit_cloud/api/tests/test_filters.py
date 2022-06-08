@@ -9,8 +9,14 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from eventkit_cloud.core.models import AttributeClass, attribute_class_filter
-from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask, Projection
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    DataProviderTask,
+    ExportFormat,
+    Job,
+    Projection,
+)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 
 logger = logging.getLogger(__name__)
 

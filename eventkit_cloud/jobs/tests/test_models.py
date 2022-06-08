@@ -6,25 +6,24 @@ from unittest.mock import call, patch
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.db.models.functions import Area
-from django.contrib.gis.db.models.functions import Intersection
+from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.test import TestCase
 from yaml import CDumper
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
+    DatamodelPreset,
+    DataProvider,
+    DataProviderTask,
+    DataProviderType,
     ExportFormat,
     ExportProfile,
     Job,
-    Region,
-    DataProvider,
-    DataProviderTask,
-    DatamodelPreset,
     JobPermission,
     JobPermissionLevel,
-    DataProviderType,
+    Region,
 )
 
 logger = logging.getLogger(__name__)
@@ -451,32 +450,37 @@ class TestDataProvider(TestCase):
 
         # Test single layer vector source
         expected_layer = "test"
+        expected_layers = {expected_layer: {"name": expected_layer, "url": self.data_provider.url}}
         self.data_provider.layer = expected_layer
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = None
-        self.assertEqual(self.data_provider.layers, [expected_layer])
+        self.assertEqual(self.data_provider.layers, expected_layers)
 
         # Test that layer names are better than integers
         expected_layer = "slug"
+        expected_layers = {expected_layer: {"name": expected_layer, "url": self.data_provider.url}}
         self.data_provider.layer = "1"
         self.data_provider.slug = expected_layer
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = None
-        self.assertEqual(self.data_provider.layers, [expected_layer])
+        self.assertEqual(self.data_provider.layers, expected_layers)
 
         # Test OSM configuration
-        expected_layers = ["layer1", "layer2"]
+        layers = ["layer1", "layer2"]
+        example_layers = yaml.dump({layer: "data" for layer in layers}, Dumper=CDumper)
+        expected_layers = {"layer1": "data", "layer2": "data"}
         self.data_provider.type = GeospatialDataType.VECTOR.value
-        self.data_provider.config = yaml.dump({layer: "data" for layer in expected_layers}, Dumper=CDumper)
+        self.data_provider.config = example_layers
         self.assertEqual(self.data_provider.layers, expected_layers)
 
         # Test multilayer feature service
-        expected_layers = ["layer1", "layer2"]
+        layers = ["layer1", "layer2"]
+        example_layers = yaml.dump({"vector_layers": [{"name": layer} for layer in layers]}, Dumper=CDumper)
+        expected_layers = {"layer1": {"name": "layer1"}, "layer2": {"name": "layer2"}}
+
         self.data_provider.export_provider_type.type_name = "wfs"
         self.data_provider.type = GeospatialDataType.VECTOR.value
-        self.data_provider.config = yaml.dump(
-            {"vector_layers": [{"name": layer} for layer in expected_layers]}, Dumper=CDumper
-        )
+        self.data_provider.config = example_layers
         self.assertEqual(self.data_provider.layers, expected_layers)
 
     def test_get_use_bbox_no_export_type(self):

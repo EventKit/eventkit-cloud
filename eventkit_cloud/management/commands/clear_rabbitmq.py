@@ -1,5 +1,6 @@
-from django.core.management import BaseCommand
 from django.conf import settings
+from django.core.management import BaseCommand
+
 from eventkit_cloud.tasks.helpers import delete_rabbit_objects
 
 

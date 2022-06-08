@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from unittest.mock import patch, MagicMock
+import json
+import logging
+from unittest.mock import MagicMock, patch
 
-from django.db.models import Count, Case, When, Q
+from django.contrib.auth.models import Group, User
+from django.db.models import Case, Count, Q, When
+from django.test import TestCase
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import (
     AttributeClass,
-    update_all_attribute_classes_with_user,
-    update_all_users_with_attribute_class,
-    get_users_from_attribute_class,
-    validate_user_attribute_class,
-    annotate_users_restricted,
-    get_unrestricted_users,
     GroupPermission,
     GroupPermissionLevel,
+    annotate_users_restricted,
     get_group_counts,
+    get_unrestricted_users,
+    get_users_from_attribute_class,
+    update_all_attribute_classes_with_user,
+    update_all_users_with_attribute_class,
+    validate_user_attribute_class,
 )
-
-import json
-import logging
-from django.contrib.auth.models import User, Group
-
-from django.test import TestCase
 
 logger = logging.getLogger(__name__)
 

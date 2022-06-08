@@ -20,12 +20,20 @@ from requests import Response
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.helpers import (
+    NotificationLevel,
+    NotificationVerb,
+    sendnotification,
+)
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects, list_to_dict
+from eventkit_cloud.tasks.helpers import (
+    delete_rabbit_objects,
+    get_all_rabbitmq_objects,
+    list_to_dict,
+)
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
-from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
+from eventkit_cloud.tasks.task_base import EventKitBaseTask, LockingTask
 from eventkit_cloud.tasks.util_tasks import kill_workers
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.scaling.util import get_scale_client

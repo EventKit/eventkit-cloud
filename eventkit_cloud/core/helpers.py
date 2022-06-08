@@ -8,15 +8,14 @@ from enum import Enum
 from functools import wraps
 from typing import Type
 
-import requests_pkcs12
-from django.db import models
-
 import dj_database_url
 import requests
+import requests_pkcs12
 from django.conf import settings
-from django.core.cache import cache
-from notifications.signals import notify
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.db import models
+from notifications.signals import notify
 
 from eventkit_cloud.utils import auth_requests
 
