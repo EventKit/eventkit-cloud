@@ -91,7 +91,7 @@ flake8:
     - .back
     - .lint
   script:
-    - flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
+    - flake8 --config config/setup.cfg eventkit_cloud
 
 migrations:
   extends:

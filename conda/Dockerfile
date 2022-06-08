@@ -12,13 +12,12 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     rm miniconda.sh && \
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
     export root=$root && \
-    echo "y" | conda install python=3.10 && \
     conda config --remove channels defaults && \
     conda config --add channels conda-forge && \
     conda config --add channels local && \
+    echo "y" | conda install python=3.10 && \
     conda init bash && \
-    echo "y" | conda update -n root --all && \
-    echo "y" | conda install "conda-build" "mamba"
+    echo "y" | conda install "conda-build=3.21.9"
 
 COPY ./ /root/
 
