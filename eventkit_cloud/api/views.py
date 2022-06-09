@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
+from typing import Dict, List, Any, Tuple, Type, Union
+
 import itertools
 import json
 import logging
@@ -12,10 +14,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -141,7 +143,7 @@ from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
-renderer_classes = (BrowsableAPIRenderer, JSONRenderer)
+renderer_classes: Tuple[Type, ...] = (BrowsableAPIRenderer, JSONRenderer)
 
 DEFAULT_TIMEOUT = 60 * 60 * 24  # One Day
 ESTIMATE_CACHE_TIMEOUT = 60 * 60 * 12
@@ -416,7 +418,7 @@ class JobViewSet(EventkitViewSet):
                             )
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
-                            error_data = {"errors": []}
+                            error_data: Dict[str, List[Any]] = {"errors": []}
                             for provider_task in job.data_provider_tasks.all():
                                 provider = provider_task.provider
                                 bbox = job.extents
@@ -659,7 +661,7 @@ class JobViewSet(EventkitViewSet):
             for index, set in enumerate([users, groups]):
                 for key in set:
                     if index == 0:
-                        record = User.objects.filter(username=key)
+                        record: Union[QuerySet[Group], QuerySet[User]] = User.objects.filter(username=key)
                     else:
                         record = Group.objects.filter(name=key)
 
@@ -900,8 +902,11 @@ class DataProviderViewSet(EventkitViewSet):
             or self.request.headers.get("content-type") == "application/geo+json"
         ):
             return (
+                # mypy thinks that this incorrectly passes the include_geometry twice
                 lambda queryset, *args, **kwargs: basic_geojson_list_serializer(
-                    basic_data_provider_list_serializer(queryset, include_geometry=True, *args, **kwargs),
+                    basic_data_provider_list_serializer(
+                        queryset, include_geometry=True, *args, **kwargs
+                    ),  # type: ignore
                     "the_geom",
                     *args,
                     **kwargs,
@@ -2478,7 +2483,7 @@ class MetricsView(views.APIView):
 
         user_logins = get_logins_per_day(users, events)
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         # Average number of users per day
         total_users_per_duration = users.count()
@@ -2503,7 +2508,7 @@ class MetricsView(views.APIView):
 
 
 def get_models(model_list, model_object, model_index):
-    models = []
+    models: List[Dict] = []
     if not model_list:
         return models
     for model_id in model_list:

@@ -21,19 +21,19 @@ class Overpass(GisClient):
     def get_layer_name(self):
         raise NotImplementedError("Method is specific to service type")
 
-    def get_response(self) -> requests.Response:
-        query = "out meta;"
+    def get_response(self, *args, **kwargs) -> requests.Response:
+        initial_query = "out meta;"
 
-        response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
+        response = self.session.post(url=self.service_url, data=initial_query, timeout=self.timeout)
 
         if not response.ok:
             # Workaround for https://bugs.python.org/issue27777
-            query = {"data": query}
+            query = {"data": initial_query}
             response = self.session.post(url=self.service_url, data=query, timeout=self.timeout)
 
         return response
 
-    def check_response(self) -> requests.Response:
+    def check_response(self, head_only=False) -> requests.Response:
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """

@@ -8,6 +8,7 @@ import urllib.parse
 from functools import wraps
 from http.cookiejar import CookieJar
 from tempfile import NamedTemporaryFile
+from typing import Any
 
 from django.conf import settings
 from mapproxy.client import http as mapproxy_http
@@ -95,7 +96,7 @@ def get_cred(cred_var=None, url=None, params=None):
     :return: (username, password) or None
     """
     # Check for environment variable
-    cred = None
+    cred: Any = None
     if cred_var:
         env_slug = cred_var.replace("-", "_")
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED") or os.getenv(env_slug)
@@ -145,7 +146,8 @@ def patch_https(cert_info: dict = None):
             kwargs["context"] = create_pyopenssl_sslcontext(pkcs12_data, cert_pass)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
-    http.client.HTTPSConnection.__init__ = _new_init
+    # mypy does not like patching
+    http.client.HTTPSConnection.__init__ = _new_init  # type: ignore
 
 
 def patch_mapproxy_opener_cache(slug=None, cred_var=None):
@@ -202,4 +204,5 @@ def unpatch_https():
     Remove the patch applied by patch_https, restoring the original initializer for HTTPSConnection.
     :return: None
     """
-    http.client.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
+    # mypy does not like patching
+    http.client.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT  # type: ignore

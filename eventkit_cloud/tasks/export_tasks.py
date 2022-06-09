@@ -10,7 +10,7 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List
+from typing import List, Union, Type
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -29,6 +29,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from eventkit_cloud.utils.services.types import LayersDescription
 from gdal_utils import convert
 from yaml import CLoader
 
@@ -208,7 +209,9 @@ class ExportTask(EventKitBaseTask):
             file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(filename=file_name, size=size, download_url=download_url)
+            result = FileProducingTaskResult.objects.create(
+                filename=str(file_name), size=size, download_url=download_url
+            )
 
             task.result = result
             task.status = TaskState.SUCCESS.value
@@ -225,8 +228,7 @@ class ExportTask(EventKitBaseTask):
             from billiard.einfo import ExceptionInfo
 
             einfo = ExceptionInfo()
-            result = self.task_failure(e, task_uid, args, kwargs, einfo)
-            return result
+            return self.task_failure(e, task_uid, args, kwargs, einfo)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
@@ -608,14 +610,15 @@ def kml_export_task(
     kml_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "kml")
 
     dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
-    metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+    metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
     metadata["projections"] = [4326]
 
     try:
         import qgis  # noqa
 
         qgs_file = generate_qgs_style(metadata)
-        kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
+        qgis_file_path = list(qgs_file.keys())[0]
+        kml = convert_qgis_gpkg_to_kml(qgis_file_path, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
         logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
@@ -738,7 +741,7 @@ def ogcapi_process_export_task(
     else:
         output_file = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
         driver = "gpkg"
-    ogc_config = clean_config(config, return_dict=True).get("ogcapi_process", dict())
+    ogc_config = clean_config(config).get("ogcapi_process", dict())
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
 
     # TODO: The download path might not be a zip, use the mediatype to determine the file format.
@@ -1145,7 +1148,7 @@ def reprojection_task(
         dptr: DataProviderTaskRecord = DataProviderTaskRecord.objects.select_related("run__job").get(
             tasks__uid__exact=task_uid
         )
-        metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+        metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
         provider_slug = export_task_record.export_provider_task.provider.slug
         data_type = metadata["data_sources"][provider_slug].get("type")
 
@@ -1240,7 +1243,7 @@ def wfs_export_task(
                 "projection": projection,
             }
 
-        download_concurrently(layers.values(), **configuration)
+        download_concurrently(list(layers.values()), **configuration)
 
         for layer_name, layer in layers.items():
             if not os.path.exists(layer["path"]):
@@ -1408,7 +1411,7 @@ def arcgis_feature_service_export_task(
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
 
     out = None
-    layers = {}
+    layers: LayersDescription = {}
     vector_layer_data = export_task_record.export_provider_task.provider.layers
     logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
     for layer_name, layer in vector_layer_data.items():
@@ -1752,7 +1755,7 @@ def create_zip_task(
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
         data_provider_task_records = data_provider_task_record.run.data_provider_task_records.exclude(slug="run")
         data_provider_task_record_uids = [
-            data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+            str(data_provider_task_record.uid) for data_provider_task_record in data_provider_task_records
         ]
 
     if len(data_provider_task_record_uids) > 1:
@@ -1780,7 +1783,7 @@ def create_zip_task(
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
             for file in path.rglob("*"):
-                meta_files[file] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
+                meta_files[str(file)] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
 
         meta_files.update(get_style_files())
         meta_files.update(get_arcgis_templates(metadata))
@@ -2119,7 +2122,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
         filename, download_path = make_file_downloadable(filepath, skip_copy=False)
         filesize = os.stat(filepath).st_size
         data_provider_task_record.preview = MapImageSnapshot.objects.create(
-            download_url=download_path, filename=filename, size=filesize
+            download_url=download_path, filename=str(filename), size=filesize
         )
         data_provider_task_record.save()
 
@@ -2162,7 +2165,7 @@ def cancel_export_provider_task(
     # Loop through both the tasks in the DataProviderTaskRecord model, as well as the Task Chain in celery
     for export_task in export_tasks.all():
         if delete:
-            exception_class = DeleteException
+            exception_class: Union[Type[CancelException], Type[DeleteException]] = DeleteException
         else:
             exception_class = CancelException
         if TaskState[export_task.status] not in TaskState.get_finished_states():
@@ -2341,8 +2344,7 @@ def get_ogcapi_data(
             getattr(settings, "SITE_URL"),
             username=username,
             password=password,
-        )
-        session = session.client
+        ).client
     download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
     extract_metadata_files(download_path, stage_dir)
 

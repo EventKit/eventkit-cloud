@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, cast, Type, Union, List
 
 import yaml
 from django.contrib.auth.models import Group, User
@@ -39,8 +40,9 @@ from eventkit_cloud.core.models import (
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
-from eventkit_cloud.utils.services.types import LayerDescription
+from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+from eventkit_cloud.utils.services.types import LayersDescription
+from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 if TYPE_CHECKING:
     from eventkit_cloud.utils.services.base import GisClient
@@ -180,7 +182,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
 
     def get_supported_projection_list(self) -> List[int]:
         supported_projections = self.supported_projections.all().values_list("srid", flat=True)
-        return supported_projections
+        return list(supported_projections)
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -457,7 +459,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return get_mapproxy_footprint_url(self.slug)
 
     @property
-    def layers(self) -> Dict[LayerDescription]:
+    def layers(self) -> LayersDescription:
         """
         Used to populate the list of vector layers, typically for contextual or styling information.
         :return: A list of layer names.
@@ -465,7 +467,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if self.data_type != GeospatialDataType.VECTOR.value:
             return {}
         if self.config:
-            config = clean_config(str(self.config), return_dict=True)
+            config = clean_config(str(self.config))
             # As of EK 1.9.0 only vectors support multiple layers in a single provider
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
@@ -781,7 +783,7 @@ class RegionMask(models.Model):
     def __init__(self, *args, **kwargs):
         if not args:  # Fixture loading happens with args, so don't do this if that.
             kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        super(Region, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)
     the_geom = models.MultiPolygonField(verbose_name="Mask for export regions", srid=4326)
@@ -874,7 +876,10 @@ class JobPermission(TimeStampedModelMixin):
         ]
 
     @staticmethod
-    def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
+    def get_orderable_queryset_for_job(job: Job, model: Union[Type[User], Type[Group]]) -> QuerySet:
+        admin: ListOrQuerySet
+        shared: ListOrQuerySet
+        unshared: ListOrQuerySet
         admin = shared = unshared = []
         if job:
             job_permissions = job.permissions.prefetch_related("content_object").filter(
@@ -887,11 +892,13 @@ class JobPermission(TimeStampedModelMixin):
                     admin_ids += [job_permission.content_object.id]
                 else:
                     shared_ids += [job_permission.content_object.id]
-            admin = model.objects.filter(pk__in=admin_ids)
-            shared = model.objects.filter(pk__in=shared_ids)
+            admin_queryset = model.objects.filter(pk__in=admin_ids)
+            shared_queryset = model.objects.filter(pk__in=shared_ids)
             total = admin_ids + shared_ids
-            unshared = model.objects.exclude(pk__in=total)
-            queryset = admin | shared | unshared
+            unshared_queryset = model.objects.exclude(pk__in=total)
+            queryset = (
+                cast(QuerySet, admin_queryset) | cast(QuerySet, shared_queryset) | cast(QuerySet, unshared_queryset)
+            )
         else:
             queryset = model.objects.all()
         # https://docs.djangoproject.com/en/3.0/ref/models/conditional-expressions/#case
@@ -916,7 +923,7 @@ class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
     def jobpermissions(job: Job) -> dict:
-        permissions = {"groups": {}, "members": {}}
+        permissions: Dict[str, Dict] = {"groups": {}, "members": {}}
         for jp in job.permissions.prefetch_related("content_object"):
             if isinstance(jp.content_object, User):
                 permissions["members"][jp.content_object.username] = jp.permission
@@ -1055,17 +1062,18 @@ def delete(self, *args, **kwargs):
     super(Group, self).delete(*args, **kwargs)
 
 
-Group.delete = delete
+# https://github.com/python/mypy/issues/2427
+Group.delete = delete  # type: ignore
 
 
-def load_provider_config(config: Optional[str, dict]) -> dict:
+def load_provider_config(config: Union[str, dict]) -> dict:
     """
     Function deserializes a yaml object from a given string.
     """
 
     try:
         if isinstance(config, dict):
-            return config
+            return copy.deepcopy(config)
         configuration = yaml.safe_load(config) if config else dict()
     except yaml.YAMLError as e:
         logger.error(f"Unable to load provider configuration: {e}")
@@ -1073,12 +1081,11 @@ def load_provider_config(config: Optional[str, dict]) -> dict:
     return configuration
 
 
-def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+def clean_config(config: Union[str, dict]) -> dict:
     """
     Used to remove adhoc service related values from the configuration.
     :param config: A yaml structured string.
-    :param return_dict: True if wishing to return config as dictionary.
-    :return: A yaml as a str.
+    :return: A yaml as a dict.
     """
     service_keys = [
         "cert_info",
@@ -1091,10 +1098,22 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
         "tile_size",
     ]
 
-    conf = yaml.safe_load(config) or dict()
+    if isinstance(config, str):
+        conf = yaml.safe_load(config)
+    else:
+        conf = copy.deepcopy(config)
 
     for service_key in service_keys:
         conf.pop(service_key, None)
-    if return_dict:
-        return conf
-    return yaml.dump(conf, Dumper=CDumper)
+
+    return conf
+
+
+def clean_config_as_str(config: str) -> str:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    return yaml.dump(clean_config(config), Dumper=CDumper)

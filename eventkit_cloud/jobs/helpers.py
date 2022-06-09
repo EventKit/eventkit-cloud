@@ -2,8 +2,9 @@ import logging
 import os
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.utils import timezone
+
+from eventkit_cloud.utils.types.django_helpers import DjangoUserType
 
 logger = logging.getLogger()
 
@@ -49,7 +50,7 @@ def get_provider_image_download_path(provider_uid):
     )
 
 
-def get_valid_regional_justification(regional_policy, user: get_user_model()):
+def get_valid_regional_justification(regional_policy, user: DjangoUserType):
     """
     Checks if a user has an active regional justification for a specific regional policy.
     Returns the regional justification or None.

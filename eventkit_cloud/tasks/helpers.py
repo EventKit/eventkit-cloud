@@ -19,7 +19,7 @@ from functools import reduce
 from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Union, Tuple, Dict, Any
 from xml.dom import minidom
 from zipfile import ZipFile
 
@@ -57,6 +57,7 @@ from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
 from eventkit_cloud.utils.s3 import download_folder_from_s3
+from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
 
@@ -448,7 +449,7 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
+def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -> Dict[str, Any]:
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
@@ -514,8 +515,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
     run = data_provider_task_records.first().run
 
     projections = []
-    for projection in run.job.projections.all():
-        projections.append(projection.srid)
+    for _projection in run.job.projections.all():
+        projections.append(_projection.srid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
@@ -583,9 +584,11 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
         query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
-        export_tasks = data_provider_task_record.tasks.filter(query)
+        export_tasks_query = data_provider_task_record.tasks.filter(query)
         if source_only:
-            export_tasks = [export_tasks.first()]
+            export_tasks: ListOrQuerySet[ExportTaskRecord] = [export_tasks_query.first()]
+        else:
+            export_tasks = export_tasks_query
         for export_task in export_tasks:
 
             if TaskState[export_task.status] in TaskState.get_incomplete_states():
@@ -719,7 +722,7 @@ def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force
                 if res.ok:
                     logger.info(f"Removed {rabbit_class}: {object_name}")
                 else:
-                    logger.info(f"Could not remove {rabbit_class} {object_name}: {res.content}")
+                    logger.info(f"Could not remove {rabbit_class} {object_name}: {res.content}")  # type: ignore
             else:
                 logger.info(f"Cannot remove {rabbit_class}: {rabbit_object}")
                 if consumers:
@@ -878,9 +881,11 @@ def merge_chunks(
     **kwargs,
 ):
     session = get_or_update_session(session=session, *args, **kwargs)
+    # mypy complains when keyword arguments are passed alongside a **kwargs
+    # it believes that session could be getting passed in twice (it could, but shouldn't)
     chunks = download_chunks(
         task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args, **kwargs
-    )
+    )  # type: ignore
     task_process = TaskProcess(task_uid=task_uid)
     try:
         out = convert(
@@ -935,6 +940,7 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
         task_points = len(layers) * 100
 
         futures_list = [
+            # mypy thinks that this incorrectly passes layer, task_points, feature_data twice
             executor.submit(
                 download_chunks_concurrently,
                 layer=layer,
@@ -942,7 +948,7 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
                 feature_data=feature_data,
                 *args,
                 **kwargs,
-            )
+            )  # type: ignore
             for layer in layers
         ]
         futures.wait(futures_list)
@@ -1220,7 +1226,7 @@ def find_in_zip(
                 with open(nested, "wb") as f:
                     f.write(zip_file.read(filepath))
 
-                return find_in_zip(nested.absolute(), stage_dir, extension=extension, matched_files=matched_files)
+                return find_in_zip(str(nested.absolute()), stage_dir, extension=extension, matched_files=matched_files)
 
 
 def extract_metadata_files(
