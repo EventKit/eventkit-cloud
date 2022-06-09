@@ -12,16 +12,10 @@ pytest-forked==1.3.0
 pytest-xdist==2.2.1
 pytest-django==4.5.2
 requests-mock==1.9.2
-<<<<<<< HEAD
-# test
-=======
-mkdocs==1.1.2
-black==22.3.0
-docker==5.0.0
+
 # MyPy
 mypy==0.950
 django-stubs==1.11.0
 django-stubs-ext==0.4.0
 types-requests==2.27.29
 types-python-dateutil==2.8.17
->>>>>>> master
