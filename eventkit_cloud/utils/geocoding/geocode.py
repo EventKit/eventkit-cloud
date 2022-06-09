@@ -184,7 +184,8 @@ class Nominatim(GeocodeAdapter):
         if bbox and is_valid_bbox(bbox):
             feature["bbox"] = bbox
             if not feature.get("geometry"):
-                feature["geometry"] = self.bbox2polygon(bbox)
+                # TODO: Check if this is a valid fix
+                feature["geometry"] = bbox2polygon(bbox)
         properties["source"] = "osm"
         # Can't have type because front end confuses it as a geojson type
         properties["class_type"] = properties.pop("type", None)

@@ -1,3 +1,5 @@
+from typing import List
+
 from pyparsing import (
     Forward,
     Group,
@@ -76,7 +78,7 @@ class SQLValidator(object):
     def column_names(self):
         # takes a dictionary, returns a list
         def column_names_in_dict(d):
-            result = []
+            result: List[str] = []
             for column_name, value in d.items():
                 if "columnName" == column_name:
                     result = result + [value]

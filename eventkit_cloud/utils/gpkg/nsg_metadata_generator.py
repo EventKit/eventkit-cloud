@@ -3,6 +3,7 @@ import os
 import sqlite3
 from enum import Enum
 from os.path import join
+from typing import Any, Callable, List, Type, Union, cast
 from xml.dom import minidom
 from xml.etree import ElementTree
 from xml.etree.ElementTree import (
@@ -128,7 +129,7 @@ class Generator:
             self.existing_metadata[_entry["id"]] = _entry
 
         # register the namespaces we will be using as we manipulate the data
-        [register_namespace(namespace.value[0], namespace.value[1]) for namespace in NameSpaces]
+        [register_namespace(namespace.value[0], namespace.value[1]) for namespace in NameSpaces]  # type: ignore
         # check to see if there is existing data or not
         if len(self.existing_metadata):
             try:
@@ -136,11 +137,13 @@ class Generator:
             except Exception:  # metadata is invalid or not what we want
                 self.tree = ElementTree.parse(source=MD_TREE).getroot()  # Load base MD XML
                 # set the creation date
-                self.tree.set(QName(NameSpaces.ISM.value[1], "createDate"), datetime.date.today().isoformat())
+                self.tree.set(
+                    cast(str, QName(NameSpaces.ISM.value[1], "createDate")), datetime.date.today().isoformat()
+                )
         else:
             self.tree = ElementTree.parse(source=MD_TREE).getroot()  # Load base MD XML
             # set the creation date
-            self.tree.set(QName(NameSpaces.ISM.value[1], "createDate"), datetime.date.today().isoformat())
+            self.tree.set(cast(str, (QName(NameSpaces.ISM.value[1], "createDate"))), datetime.date.today().isoformat())
 
         # Fill out our DateStamp elem
         date_element = self.__build_tag(namespace=NameSpaces.GMD.value[1], tag=Tags.DATE_STAMP)
@@ -614,15 +617,15 @@ class Generator:
         :return: the Element that was created with the properties given appended to the parent element given (or just
         the new element if no parent element was given)
         """
-        args = [QName(namespace, tag)]
-        element_type = Element
+        args: List[Any] = [QName(namespace, tag)]
+        element_type: Union[Type[Element], Callable] = Element
         if parent is not None:
             element_type = SubElement
             args.insert(0, parent)
-        element = element_type(*args)
+        new_element = element_type(*args)
         if text:
-            element.text = str(text)
-        return element
+            new_element.text = str(text)
+        return new_element
 
     @staticmethod
     def generate_namespace_map():

@@ -8,12 +8,14 @@ import os
 import statistics
 import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import List
+from typing import Any, Dict, List, Type, Union
 
 from django import db
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query import QuerySet
+from mapproxy import grid as mapproxy_grid
+from mapproxy import srs as mapproxy_srs
 
 from eventkit_cloud.jobs.models import DataProvider, load_provider_config
 from eventkit_cloud.tasks.enumerations import TaskState
@@ -28,8 +30,6 @@ from eventkit_cloud.utils.stats.geomutils import (
     get_bbox_intersect,
     get_geometry_description,
 )
-from mapproxy import grid as mapproxy_grid
-from mapproxy import srs as mapproxy_srs
 
 logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
@@ -139,15 +139,15 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
         )
         .order_by("-finished_at")
         .select_related("result", "export_provider_task__run__job", "export_provider_task__provider")
-        .all()[:max_estimate_export_task_records]
+        .all()[: int(max_estimate_export_task_records)]
     )
 
-    processed_runs = {}
-    processed_dptr = {}
+    processed_runs: Dict[str, Any] = {}
+    processed_dptr: Dict[str, Any] = {}
     export_task_count = 0
     total_count = len(export_task_records)  # This should be the first and only DB hit.
 
-    all_stats = {}
+    all_stats: Dict[str, Any] = {}
 
     logger.debug("Prefetching geometry data from all Jobs")
 
@@ -186,7 +186,7 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
         with open(filename, "w") as file:
             json.dump(all_stats, file)
 
-    totals = {
+    totals: Dict[str, Union[int, dict]] = {
         "run_count": len(processed_runs),
         "data_provider_task_count": len(processed_dptr),
         "export_task_count": export_task_count,
@@ -213,7 +213,7 @@ def process_totals(provider_slug: str, stats: dict) -> dict:
         elif task_name.startswith("tile_"):
             # Two-level map, index by y then x+z
             y_s = stats[provider_slug][task_name]
-            total_ys = {}
+            total_ys: Dict[str, Any] = {}
             totals[provider_slug][task_name] = total_ys
             for xz_s in y_s:
                 total_ys[xz_s] = get_summary_stats(y_s[xz_s], ("area", "duration", "size", "mpp"))
@@ -230,7 +230,7 @@ def process_totals(provider_slug: str, stats: dict) -> dict:
 
 def process_totals_concurrently(provider_slugs, stats):
     thread = threading.current_thread()
-    executor = ThreadPoolExecutor
+    executor: Union[Type[ProcessPoolExecutor], Type[ThreadPoolExecutor]] = ThreadPoolExecutor
     if thread.daemon:
         executor = ProcessPoolExecutor
     with executor() as pool:
@@ -569,7 +569,7 @@ def query(
                 # (e.g. tile1 accounts for 50% of bbox area, its stats should be weighted at 50%
                 total_weight = 0
                 values = []
-                stat_value = 0
+                stat_value = 0.0
 
                 for tile_stat in affected_tiles:
                     t_val = get_value(tile_stat)

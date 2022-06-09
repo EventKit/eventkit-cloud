@@ -48,7 +48,7 @@ class WMTS(OWS):
         bbox_element = element.find("wgs84boundingbox")
 
         if bbox_element is None:
-            return
+            return None
 
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]

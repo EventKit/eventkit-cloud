@@ -40,10 +40,12 @@ class WMS(OWS):
 
         requested_layer = self.get_layer_name()
         layers = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
+
+        # TODO: Verify this fix is correct
         if not layers:
             raise MissingLayerError(
                 f"Unable to find requested WMS layer '{requested_layer}'"
-                f" in layer list: {' '.join(str(ln.text) for ln in layer_names)}"
+                f" in layer list: {' '.join(str(ln.text) for ln, _ in layer_names)}"
             )
 
         return layers

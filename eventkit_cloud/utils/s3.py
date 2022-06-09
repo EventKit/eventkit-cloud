@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+from typing import Union
 from urllib.parse import urlparse
 
 import boto3
@@ -22,7 +23,12 @@ def get_s3_resource():
     )
 
 
-def upload_to_s3(source_path: pathlib.Path, destination_filename: pathlib.Path = None, client=None, user_details=None):
+def upload_to_s3(
+    source_path: Union[str, pathlib.Path],
+    destination_filename: Union[str, pathlib.Path] = None,
+    client=None,
+    user_details=None,
+):
     """
     Upload a file to Amazon S3.
     :param source_path: The local file path.

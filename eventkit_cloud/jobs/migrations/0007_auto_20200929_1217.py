@@ -6,20 +6,23 @@ import eventkit_cloud.jobs.models
 
 
 class Migration(migrations.Migration):
-
     def insert_export_formats(apps, schema_editor):  # NOQA
-        DataProviderType = apps.get_model('jobs', 'DataProviderType') # NOQA
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')  # NOQA
-        Projection = apps.get_model('jobs', 'Projection')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")  # NOQA
+        ExportFormat = apps.get_model("jobs", "ExportFormat")  # NOQA
+        Projection = apps.get_model("jobs", "Projection")
 
         # New Formats.
-        mbtiles, created = ExportFormat.objects.get_or_create(name='MBTiles Format', description='MBTiles', slug='mbtiles')
-        gpx, created = ExportFormat.objects.get_or_create(name='GPX Format', description='GPS Exchange Format', slug='gpx')
-        sqlite = ExportFormat.objects.get(slug='sqlite')
+        mbtiles, created = ExportFormat.objects.get_or_create(
+            name="MBTiles Format", description="MBTiles", slug="mbtiles"
+        )
+        gpx, created = ExportFormat.objects.get_or_create(
+            name="GPX Format", description="GPS Exchange Format", slug="gpx"
+        )
+        sqlite = ExportFormat.objects.get(slug="sqlite")
 
         # Currently available Provider Types.
-        vector_data_provider_types = ['osm', 'osm-generic', 'wfs', 'arcgis-feature']
-        raster_data_provider_types = ['tms', 'arcgis-raster', 'wmts', 'wms']
+        vector_data_provider_types = ["osm", "osm-generic", "wfs", "arcgis-feature"]
+        raster_data_provider_types = ["tms", "arcgis-raster", "wmts", "wms"]
 
         # Set the known supported export formats per provider type.
         for provider_type in DataProviderType.objects.all():
@@ -36,13 +39,13 @@ class Migration(migrations.Migration):
         gpx.supported_projections.add(projection_4326, projection_3857)
 
     def remove_export_formats(apps, schema_editor):  # NOQA
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')  # NOQA
-        ExportFormat.objects.filter(slug='mbtiles').delete()
-        ExportFormat.objects.filter(slug='sqlite').delete()
-        ExportFormat.objects.filter(slug='gpx').delete()
+        ExportFormat = apps.get_model("jobs", "ExportFormat")  # NOQA
+        ExportFormat.objects.filter(slug="mbtiles").delete()
+        ExportFormat.objects.filter(slug="sqlite").delete()
+        ExportFormat.objects.filter(slug="gpx").delete()
 
     dependencies = [
-        ('jobs', '0006_remove_job_provider_tasks'),
+        ("jobs", "0006_remove_job_provider_tasks"),
     ]
 
     operations = [

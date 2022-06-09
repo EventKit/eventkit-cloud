@@ -73,6 +73,7 @@ build_deps:
   stage: lint
   extends: .default
 
+
 eslint:
   extends:
     - .front
@@ -99,7 +100,14 @@ flake8:
     - .back
     - .lint
   script:
-    - flake8 --config config/setup.cfg eventkit_cloud
+    - flake8 eventkit_cloud
+
+mypy:
+  extends:
+    - .back
+    - .lint
+  script:
+    - mypy eventkit_cloud --no-strict-optional
 
 migrations:
   extends:
@@ -107,7 +115,6 @@ migrations:
     - .lint
   script:
     - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
-
 
 .test:
   stage: test

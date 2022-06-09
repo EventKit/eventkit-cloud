@@ -43,7 +43,12 @@ class TestExportTaskFactory(TestCase):
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name="TestJob", description="Test description", user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
         provider = DataProvider.objects.get(slug="osm")
         self.license = License.objects.create(slug="odbl-test", name="test_osm_license")
         provider.license = self.license
@@ -94,7 +99,10 @@ class TestExportTaskFactory(TestCase):
         del task.tasks
 
         task_factory = TaskFactory()
-        task_factory.type_task_map = {"osm-generic": mock_osm_task, "osm": mock_osm_task}
+        task_factory.type_task_map = {
+            "osm-generic": mock_osm_task,
+            "osm": mock_osm_task,
+        }
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
@@ -155,7 +163,9 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # This should return a chain of tasks ending in the finalize_run_task, plus a task sig for just the
         #    finalize_run_task.
         finalize_chain = create_finalize_run_task_collection(
-            run_uid=run_uid, run_zip_task_chain=mock_zip_chain, apply_args=expected_task_settings
+            run_uid=run_uid,
+            run_zip_task_chain=mock_zip_chain,
+            apply_args=expected_task_settings,
         )
 
         finalize_run_task.si.assert_called_once_with(run_uid=run_uid)

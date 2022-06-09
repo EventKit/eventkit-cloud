@@ -6,36 +6,41 @@ import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING
-from typing import Union, List
+from typing import TYPE_CHECKING, Dict, List, Type, Union, cast
 
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.gis.geos import (
+    GeometryCollection,
+    GEOSGeometry,
+    MultiPolygon,
+    Polygon,
+)
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
-from django.db.models import Q, QuerySet, Case, Value, When
+from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from yaml import CLoader, CDumper
+from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
+    AttributeClass,
     CachedModelMixin,
     DownloadableMixin,
-    TimeStampedModelMixin,
-    UIDMixin,
-    AttributeClass,
     GroupPermissionLevel,
     LowerCaseCharField,
+    TimeStampedModelMixin,
+    UIDMixin,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
+from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 if TYPE_CHECKING:
     from eventkit_cloud.utils.services.base import GisClient
@@ -175,7 +180,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
 
     def get_supported_projection_list(self) -> List[int]:
         supported_projections = self.supported_projections.all().values_list("srid", flat=True)
-        return supported_projections
+        return list(supported_projections)
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -238,7 +243,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     )
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(
-        DataProviderType, verbose_name="Service Type", null=True, on_delete=models.CASCADE
+        DataProviderType,
+        verbose_name="Service Type",
+        null=True,
+        on_delete=models.CASCADE,
     )
     max_selection = models.DecimalField(
         verbose_name="Max selection area",
@@ -289,9 +297,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         help_text="The type of data provided (e.g. elevation, raster, vector)",
     )
-    user = models.ForeignKey(User, related_name="+", null=True, default=None, blank=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        related_name="+",
+        null=True,
+        default=None,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     license = models.ForeignKey(
-        License, related_name="data_providers", null=True, blank=True, default=None, on_delete=models.CASCADE
+        License,
+        related_name="data_providers",
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.CASCADE,
     )
 
     zip = models.BooleanField(default=False)
@@ -367,7 +387,13 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
             url = settings.OVERPASS_API_URL
         Client = get_client(self.export_provider_type.type_name)
-        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config))
+        return Client(
+            url,
+            self.layer,
+            aoi_geojson=None,
+            slug=self.slug,
+            config=load_provider_config(self.config),
+        )
 
     def check_status(self, aoi_geojson: dict = None):
         try:
@@ -377,7 +403,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         except Exception as e:
             logger.error(e, exc_info=True)
             response = get_status_result(CheckResult.UNKNOWN_ERROR)
-            logger.error(f"An exception occurred while checking the {self.name} provider.", exc_info=True)
+            logger.error(
+                f"An exception occurred while checking the {self.name} provider.",
+                exc_info=True,
+            )
             logger.info(f"Status of provider '{self.name}': {response}")
 
         return response
@@ -410,7 +439,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             if created:
                 # Use the value from process format which might be case sensitive,
                 # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
+                export_format.options = {
+                    "value": process_format.get("slug"),
+                    "providers": [self.slug],
+                    "proxy": True,
+                }
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             else:
                 providers = export_format.options.get("providers")
@@ -418,7 +451,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                     providers = list(set(providers + [self.slug]))
                     export_format.options["providers"] = providers
                 else:
-                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+                    export_format.options = {
+                        "value": export_format.slug,
+                        "providers": [self.slug],
+                        "proxy": True,
+                    }
             export_format.save()
 
     def __str__(self):
@@ -466,7 +503,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 return [self.slug]  # self.layer is an integer, so use the slug for better context.
             except ValueError:
                 return [self.layer]  # If we got here, layer is not None or an integer so use that.
-        config = clean_config(self.config, return_dict=True)
+        config = clean_config(self.config)
         # As of EK 1.9.0 only vectors support multiple layers in a single provider
         if self.export_provider_type.type_name in ["osm", "osm-generic"]:
             return list(config.keys())
@@ -496,7 +533,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
         if user:
             user_size_rule = list(
-                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
+                filter(
+                    lambda user_size_rule: user_size_rule.user == user,
+                    self.usersizerule_set.all(),
+                )
             )
             if user_size_rule:
                 return user_size_rule[0].max_data_size
@@ -511,7 +551,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
         if user:
             user_size_rule = list(
-                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
+                filter(
+                    lambda user_size_rule: user_size_rule.user == user,
+                    self.usersizerule_set.all(),
+                )
             )
             if user_size_rule:
                 return user_size_rule[0].max_selection_size
@@ -655,13 +698,20 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom_webmercator = models.MultiPolygonField(verbose_name="Mercator extent for export", srid=3857, default="")
     the_geog = models.MultiPolygonField(verbose_name="Geographic extent for export", geography=True, default="")
     original_selection = models.GeometryCollectionField(
-        verbose_name="The original map selection", srid=4326, default=GeometryCollection, null=True, blank=True
+        verbose_name="The original map selection",
+        srid=4326,
+        default=GeometryCollection,
+        null=True,
+        blank=True,
     )
 
     include_zipfile = models.BooleanField(default=False)
     json_tags = models.JSONField(default=dict)
     last_export_run = models.ForeignKey(
-        "tasks.ExportRun", on_delete=models.DO_NOTHING, null=True, related_name="last_export_run"
+        "tasks.ExportRun",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        related_name="last_export_run",
     )
     projections = models.ManyToManyField(Projection, related_name="projections")
 
@@ -765,7 +815,7 @@ class RegionMask(models.Model):
     def __init__(self, *args, **kwargs):
         if not args:  # Fixture loading happens with args, so don't do this if that.
             kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        super(Region, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)
     the_geom = models.MultiPolygonField(verbose_name="Mask for export regions", srid=4326)
@@ -853,12 +903,16 @@ class JobPermission(TimeStampedModelMixin):
         db_table = "jobpermission"
         constraints = [
             models.UniqueConstraint(
-                fields=["job", "content_type", "object_id", "permission"], name="unique_object_permission_per_job"
+                fields=["job", "content_type", "object_id", "permission"],
+                name="unique_object_permission_per_job",
             ),
         ]
 
     @staticmethod
-    def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
+    def get_orderable_queryset_for_job(job: Job, model: Union[Type[User], Type[Group]]) -> QuerySet:
+        admin: ListOrQuerySet
+        shared: ListOrQuerySet
+        unshared: ListOrQuerySet
         admin = shared = unshared = []
         if job:
             job_permissions = job.permissions.prefetch_related("content_object").filter(
@@ -871,11 +925,13 @@ class JobPermission(TimeStampedModelMixin):
                     admin_ids += [job_permission.content_object.id]
                 else:
                     shared_ids += [job_permission.content_object.id]
-            admin = model.objects.filter(pk__in=admin_ids)
-            shared = model.objects.filter(pk__in=shared_ids)
+            admin_queryset = model.objects.filter(pk__in=admin_ids)
+            shared_queryset = model.objects.filter(pk__in=shared_ids)
             total = admin_ids + shared_ids
-            unshared = model.objects.exclude(pk__in=total)
-            queryset = admin | shared | unshared
+            unshared_queryset = model.objects.exclude(pk__in=total)
+            queryset = (
+                cast(QuerySet, admin_queryset) | cast(QuerySet, shared_queryset) | cast(QuerySet, unshared_queryset)
+            )
         else:
             queryset = model.objects.all()
         # https://docs.djangoproject.com/en/3.0/ref/models/conditional-expressions/#case
@@ -900,7 +956,7 @@ class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
     def jobpermissions(job: Job) -> dict:
-        permissions = {"groups": {}, "members": {}}
+        permissions: Dict[str, Dict] = {"groups": {}, "members": {}}
         for jp in job.permissions.prefetch_related("content_object"):
             if isinstance(jp.content_object, User):
                 permissions["members"][jp.content_object.username] = jp.permission
@@ -987,7 +1043,8 @@ class JobPermission(TimeStampedModelMixin):
 
         # Get all the ADMIN level group permissions for the user
         users_groups = Group.objects.filter(
-            group_permissions__user=user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+            group_permissions__user=user,
+            group_permissions__permission=GroupPermissionLevel.ADMIN.value,
         )
 
         # Check if any of the groups the user is an admin of have group-admin permission to the job.
@@ -1039,10 +1096,11 @@ def delete(self, *args, **kwargs):
     super(Group, self).delete(*args, **kwargs)
 
 
-Group.delete = delete
+# https://github.com/python/mypy/issues/2427
+Group.delete = delete  # type: ignore
 
 
-def load_provider_config(config: str) -> dict:
+def load_provider_config(config: Union[str, dict]) -> dict:
     """
     Function deserializes a yaml object from a given string.
     """
@@ -1057,12 +1115,11 @@ def load_provider_config(config: str) -> dict:
     return configuration
 
 
-def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+def clean_config(config: str) -> dict:
     """
     Used to remove adhoc service related values from the configuration.
     :param config: A yaml structured string.
-    :param return_dict: True if wishing to return config as dictionary.
-    :return: A yaml as a str.
+    :return: A yaml as a dict.
     """
     service_keys = [
         "cert_info",
@@ -1079,6 +1136,15 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
 
     for service_key in service_keys:
         conf.pop(service_key, None)
-    if return_dict:
-        return conf
-    return yaml.dump(conf, Dumper=CDumper)
+
+    return conf
+
+
+def clean_config_as_str(config: str) -> str:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    return yaml.dump(clean_config(config), Dumper=CDumper)

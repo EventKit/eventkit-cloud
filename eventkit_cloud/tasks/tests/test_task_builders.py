@@ -1,16 +1,29 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db.utils import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
-from eventkit_cloud.tasks.export_tasks import osm_data_collection_task, mapproxy_export_task, wcs_export_task
-from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    DataProviderTask,
+    ExportFormat,
+    Job,
+    Region,
+)
+from eventkit_cloud.tasks.export_tasks import (
+    mapproxy_export_task,
+    osm_data_collection_task,
+    wcs_export_task,
+)
+from eventkit_cloud.tasks.task_builders import (
+    TaskChainBuilder,
+    create_export_task_record,
+)
 from eventkit_cloud.tasks.task_factory import create_run
 
 logger = logging.getLogger(__name__)
@@ -29,10 +42,17 @@ class TestTaskBuilder(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
 
         self.shp_task, _ = ExportFormat.objects.get_or_create(
-            name="ESRI Shapefile Format", description="Esri Shapefile (OSM Schema)", slug="shp"
+            name="ESRI Shapefile Format",
+            description="Esri Shapefile (OSM Schema)",
+            slug="shp",
         )
 
-        self.job = Job.objects.create(name="TestJob", description="Test description", user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
         self.region, created = Region.objects.get_or_create(name="Africa", the_geom=the_geom)
         self.job.region = self.region
         self.job.save()
@@ -124,7 +144,10 @@ class TestTaskBuilder(TestCase):
         expected_result = MagicMock(display=False)
         mock_export_task.objects.get_or_create.return_value = (expected_result, True)
         task_result = create_export_task_record(
-            task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=False
+            task_name=task_name,
+            export_provider_task=export_provider_task_name,
+            worker=worker,
+            display=False,
         )
 
         self.assertEqual(task_result, expected_result)
@@ -140,7 +163,10 @@ class TestTaskBuilder(TestCase):
         mock_export_task.objects.get_or_create.return_value = (expected_result, True)
 
         task_result = create_export_task_record(
-            task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True
+            task_name=task_name,
+            export_provider_task=export_provider_task_name,
+            worker=worker,
+            display=True,
         )
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
@@ -154,5 +180,8 @@ class TestTaskBuilder(TestCase):
         mock_export_task.objects.get_or_create.side_effect = DatabaseError("SomeError")
         with self.assertRaises(DatabaseError):
             create_export_task_record(
-                task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True
+                task_name=task_name,
+                export_provider_task=export_provider_task_name,
+                worker=worker,
+                display=True,
             )

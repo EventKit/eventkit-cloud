@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', 'add_map_image_snapshot'),
+        ("jobs", "add_map_image_snapshot"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataprovider',
-            name='label',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Label'),
+            model_name="dataprovider",
+            name="label",
+            field=models.CharField(
+                blank=True, max_length=100, null=True, verbose_name="Label"
+            ),
         ),
     ]

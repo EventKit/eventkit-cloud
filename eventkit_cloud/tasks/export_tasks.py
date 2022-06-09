@@ -10,9 +10,9 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List
+from typing import List, Type, Union
 from urllib.parse import urlencode, urljoin
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import yaml
 from billiard.einfo import ExceptionInfo
@@ -32,56 +32,69 @@ from django.utils import timezone
 from gdal_utils import convert
 from yaml import CLoader
 
-from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.celery import TaskPriority, app
+from eventkit_cloud.core.helpers import (
+    NotificationLevel,
+    NotificationVerb,
+    sendnotification,
+)
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, load_provider_config, clean_config, MapImageSnapshot, ExportFormat
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    ExportFormat,
+    MapImageSnapshot,
+    clean_config,
+    load_provider_config,
+)
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     add_export_run_files_to_zip,
     check_cached_task_failures,
+    download_concurrently,
+    download_data,
+    extract_metadata_files,
+    find_in_zip,
     generate_qgs_style,
+    get_arcgis_templates,
+    get_celery_queue_group,
     get_data_package_manifest,
     get_export_filepath,
-    get_metadata,
     get_export_task_record,
+    get_geometry,
+    get_human_readable_metadata_document,
+    get_metadata,
     get_provider_staging_dir,
     get_run_staging_dir,
     get_style_files,
+    make_file_downloadable,
+    merge_chunks,
     pickle_exception,
     progressive_kill,
-    download_data,
-    download_concurrently,
-    merge_chunks,
-    find_in_zip,
-    get_celery_queue_group,
-    extract_metadata_files,
-    get_geometry,
     update_progress,
-    get_arcgis_templates,
-    make_file_downloadable,
-    get_human_readable_metadata_document,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.models import (
-    ExportTaskRecord,
-    ExportTaskException,
     DataProviderTaskRecord,
-    FileProducingTaskResult,
     ExportRun,
+    ExportTaskException,
+    ExportTaskRecord,
+    FileProducingTaskResult,
     RunZipFile,
 )
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
-from eventkit_cloud.utils import overpass, pbf, mapproxy, wcs, geopackage, auth_requests
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
+from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
 from eventkit_cloud.utils.client import EventKitClient
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.generic import retry
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
+from eventkit_cloud.utils.helpers import make_dirs
+from eventkit_cloud.utils.ogcapi_process import (
+    OgcApiProcess,
+    get_format_field_from_config,
+)
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -195,7 +208,9 @@ class ExportTask(EventKitBaseTask):
             file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(filename=file_name, size=size, download_url=download_url)
+            result = FileProducingTaskResult.objects.create(
+                filename=str(file_name), size=size, download_url=download_url
+            )
 
             task.result = result
             task.status = TaskState.SUCCESS.value
@@ -212,8 +227,7 @@ class ExportTask(EventKitBaseTask):
             from billiard.einfo import ExceptionInfo
 
             einfo = ExceptionInfo()
-            result = self.task_failure(e, task_uid, args, kwargs, einfo)
-            return result
+            return self.task_failure(e, task_uid, args, kwargs, einfo)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
@@ -595,14 +609,15 @@ def kml_export_task(
     kml_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "kml")
 
     dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
-    metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+    metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
     metadata["projections"] = [4326]
 
     try:
         import qgis  # noqa
 
         qgs_file = generate_qgs_style(metadata)
-        kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
+        qgis_file_path = list(qgs_file.keys())[0]
+        kml = convert_qgis_gpkg_to_kml(qgis_file_path, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
         logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
@@ -725,7 +740,7 @@ def ogcapi_process_export_task(
     else:
         output_file = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
         driver = "gpkg"
-    ogc_config = clean_config(config, return_dict=True).get("ogcapi_process", dict())
+    ogc_config = clean_config(config).get("ogcapi_process", dict())
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
 
     # TODO: The download path might not be a zip, use the mediatype to determine the file format.
@@ -1132,7 +1147,7 @@ def reprojection_task(
         dptr: DataProviderTaskRecord = DataProviderTaskRecord.objects.select_related("run__job").get(
             tasks__uid__exact=task_uid
         )
-        metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+        metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
         provider_slug = export_task_record.export_provider_task.provider.slug
         data_type = metadata["data_sources"][provider_slug].get("type")
 
@@ -1738,7 +1753,7 @@ def create_zip_task(
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
         data_provider_task_records = data_provider_task_record.run.data_provider_task_records.exclude(slug="run")
         data_provider_task_record_uids = [
-            data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+            str(data_provider_task_record.uid) for data_provider_task_record in data_provider_task_records
         ]
 
     if len(data_provider_task_record_uids) > 1:
@@ -1766,7 +1781,7 @@ def create_zip_task(
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
             for file in path.rglob("*"):
-                meta_files[file] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
+                meta_files[str(file)] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
 
         meta_files.update(get_style_files())
         meta_files.update(get_arcgis_templates(metadata))
@@ -2081,7 +2096,10 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
     """
     result = result or {}
     try:
-        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, fit_to_area
+        from eventkit_cloud.utils.image_snapshot import (
+            fit_to_area,
+            get_wmts_snapshot_image,
+        )
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 
@@ -2102,7 +2120,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
         filename, download_path = make_file_downloadable(filepath, skip_copy=False)
         filesize = os.stat(filepath).st_size
         data_provider_task_record.preview = MapImageSnapshot.objects.create(
-            download_url=download_path, filename=filename, size=filesize
+            download_url=download_path, filename=str(filename), size=filesize
         )
         data_provider_task_record.save()
 
@@ -2145,7 +2163,7 @@ def cancel_export_provider_task(
     # Loop through both the tasks in the DataProviderTaskRecord model, as well as the Task Chain in celery
     for export_task in export_tasks.all():
         if delete:
-            exception_class = DeleteException
+            exception_class: Union[Type[CancelException], Type[DeleteException]] = DeleteException
         else:
             exception_class = CancelException
         if TaskState[export_task.status] not in TaskState.get_finished_states():
@@ -2324,8 +2342,7 @@ def get_ogcapi_data(
             getattr(settings, "SITE_URL"),
             username=username,
             password=password,
-        )
-        session = session.client
+        ).client
     download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
     extract_metadata_files(download_path, stage_dir)
 

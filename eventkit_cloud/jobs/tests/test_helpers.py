@@ -41,7 +41,10 @@ class TestRegionalJustificationHelpers(TestCase):
         bbox = Polygon.from_bbox((23.378906, -3.074695, 110.830078, 44.087585))
         the_geom = GEOSGeometry(bbox, srid=4326)
         Job.objects.create(
-            name="TestRegionalJustificationHelpers", description="Test description", user=user, the_geom=the_geom
+            name="TestRegionalJustificationHelpers",
+            description="Test description",
+            user=user,
+            the_geom=the_geom,
         )
 
     def setUp(self):
@@ -50,7 +53,10 @@ class TestRegionalJustificationHelpers(TestCase):
         self.run = ExportRun.objects.create(job=self.job, user=self.job.user)
 
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
+            run=self.run,
+            name="Shapefile Export",
+            provider=self.provider,
+            status=TaskState.PENDING.value,
         )
 
         self.task_uid = uuid.uuid4()

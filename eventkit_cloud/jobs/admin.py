@@ -26,6 +26,7 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     clean_config,
+    clean_config_as_str,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class JobAdmin(OSMGeoAdmin):
         """
         Select exports to update.
         """
-        selected = ",".join(request.POST.getlist(admin.ACTION_CHECKBOX_NAME))
+        selected = ",".join(request.POST.getlist(admin.ACTION_CHECKBOX_NAME))  # type: ignore
         regions = Region.objects.all()
 
         # noinspection PyProtectedMember
@@ -74,7 +75,8 @@ class JobAdmin(OSMGeoAdmin):
             {"regions": regions, "selected": selected, "opts": self.model._meta},
         )
 
-    select_exports.short_description = "Assign a region to the selected exports"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    select_exports.short_description = "Assign a region to the selected exports"  # type: ignore
 
     def update_exports(self, request):
         """
@@ -94,7 +96,11 @@ class JobAdmin(OSMGeoAdmin):
         return render(
             request,
             self.update_complete_template,
-            {"num_selected": len(selected.split(",")), "region": region.name, "opts": self.model._meta},
+            {
+                "num_selected": len(selected.split(",")),
+                "region": region.name,
+                "opts": self.model._meta,
+            },
         )
 
     def get_urls(self):
@@ -177,15 +183,14 @@ class DataProviderForm(forms.ModelForm):
                 FeatureSelection,
             )
 
-            cleaned_config = clean_config(config)
-            feature_selection = FeatureSelection(cleaned_config)
-            feature_selection.valid
+            feature_selection = FeatureSelection(clean_config_as_str(config))
             if feature_selection.errors:
                 raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
         elif service_type in ["ogcapi-process"]:
             if not config:
                 raise forms.ValidationError("Configuration is required for OGC API Process")
-            cleaned_config = clean_config(config, return_dict=True)
+            cleaned_config = clean_config(config)
+            assert isinstance(cleaned_config, dict)
             ogcapi_process = cleaned_config.get("ogcapi_process")
             if not ogcapi_process:
                 raise forms.ValidationError("OGC API Process requires an ogcapi_process key with valid configuration")
@@ -216,7 +221,15 @@ class DataProviderAdmin(admin.ModelAdmin):
     """
 
     form = DataProviderForm
-    list_display = ["name", "slug", "label", "export_provider_type", "attribute_class", "license", "display"]
+    list_display = [
+        "name",
+        "slug",
+        "label",
+        "export_provider_type",
+        "attribute_class",
+        "license",
+        "display",
+    ]
     search_fields = [
         "name",
         "slug",
@@ -265,7 +278,8 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
             '<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status
         )
 
-    color_status.short_description = "status"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    color_status.short_description = "status"  # type: ignore
 
     model = DataProviderStatus
     readonly_fields = (
@@ -338,7 +352,13 @@ class RegionalPolicyAdmin(admin.ModelAdmin):
 
 class RegionalJustificationAdmin(admin.ModelAdmin):
     model = RegionalJustification
-    list_display = ("uid", "justification_id", "justification_name", "regional_policy", "user")
+    list_display = (
+        "uid",
+        "justification_id",
+        "justification_name",
+        "regional_policy",
+        "user",
+    )
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

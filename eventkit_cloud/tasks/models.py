@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
+from typing import List, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -30,6 +31,7 @@ from eventkit_cloud.jobs.models import (
     Job,
     JobPermission,
     JobPermissionLevel,
+    MapImageSnapshot,
     RegionalPolicy,
 )
 from eventkit_cloud.tasks import (
@@ -173,7 +175,11 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
 
     job = models.ForeignKey(Job, related_name="runs", on_delete=models.CASCADE)
     parent_run = models.ForeignKey(
-        "ExportRun", related_name="child_runs", null=True, default=None, on_delete=models.SET_NULL
+        "ExportRun",
+        related_name="child_runs",
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
     )
     user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default="", null=True)
@@ -267,7 +273,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         )
 
         for data_provider_task_record in data_provider_task_records:
-            file_models = [data_provider_task_record.preview]
+            file_models: List[Union[Optional[FileProducingTaskResult], Optional[MapImageSnapshot]]] = [
+                data_provider_task_record.preview
+            ]
             export_task_record: ExportTaskRecord
             for export_task_record in data_provider_task_record.tasks.all():
                 file_models.append(export_task_record.result)
@@ -277,7 +285,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                     continue
                 # strip the old run uid off the filename and add a new one.
                 filename = Path(str(self.uid)).joinpath(Path(file_model.filename).relative_to(str(previous_run.uid)))
-                file_model.filename = filename
+                file_model.filename = str(filename)
                 filename, download_url = make_file_downloadable(file_model.get_file_path(staging=True))
                 file_model.download_url = download_url
                 file_model.save()
@@ -295,11 +303,17 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     if settings.USE_S3:
         storage = S3Boto3Storage()
     else:
-        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
+        storage = FileSystemStorage(
+            location=settings.EXPORT_RUN_FILES,
+            base_url=settings.EXPORT_RUN_FILES_DOWNLOAD,
+        )
 
     file = models.FileField(verbose_name="File", storage=storage)
     directory = models.CharField(
-        max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="An optional directory name to store the file in.",
     )
     provider = models.ForeignKey(
         DataProvider,
@@ -328,7 +342,11 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default="")
     provider = models.ForeignKey(
-        DataProvider, on_delete=models.CASCADE, related_name="task_record_providers", null=True, blank=True
+        DataProvider,
+        on_delete=models.CASCADE,
+        related_name="task_record_providers",
+        null=True,
+        blank=True,
     )
     run = models.ForeignKey(ExportRun, related_name="data_provider_task_records", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
@@ -336,7 +354,11 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     estimated_size = models.FloatField(null=True, blank=True)
     estimated_duration = models.FloatField(null=True, blank=True)
     preview = models.ForeignKey(
-        MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL, help_text="A preview for a provider task."
+        MapImageSnapshot,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="A preview for a provider task.",
     )
 
     class Meta:
@@ -346,7 +368,9 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         constraints = [
             models.UniqueConstraint(fields=["run", "provider"], name="unique_provider_run_per_task_record"),
             models.UniqueConstraint(
-                fields=["run", "slug"], condition=Q(slug="run"), name="unique_run_slug_per_task_record"
+                fields=["run", "slug"],
+                condition=Q(slug="run"),
+                name="unique_run_slug_per_task_record",
             ),
         ]
 
@@ -391,8 +415,6 @@ class UserDownload(UIDMixin):
     def job(self):
         if self.downloadable.export_task:
             return self.downloadable.export_task.export_provider_task.run.job
-        if self.downloadable.run:
-            return self.downloadable.run.job
 
     @property
     def provider(self):
@@ -421,7 +443,11 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
     display = models.BooleanField(default=False)
     result = models.OneToOneField(
-        "FileProducingTaskResult", on_delete=models.CASCADE, null=True, blank=True, related_name="export_task"
+        "FileProducingTaskResult",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="export_task",
     )
     hide_download = models.BooleanField(default=False)
 
@@ -431,7 +457,8 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         db_table = "export_task_records"
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "export_provider_task"], name="unique_name_per_export_provider_task"
+                fields=["name", "export_provider_task"],
+                name="unique_name_per_export_provider_task",
             ),
         ]
 
@@ -528,7 +555,13 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     Model to store zip files associated with ExportRun objects.
     """
 
-    run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
+    run = models.ForeignKey(
+        ExportRun,
+        on_delete=models.CASCADE,
+        related_name="zip_files",
+        null=True,
+        blank=True,
+    )
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
     downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, null=True, blank=True)
 

@@ -69,7 +69,7 @@ def partial_pipeline_data(backend, user=None, *args, **kwargs):  # pragma: no co
             signed_details = signing.loads(data["signature"], key=settings.SECRET_KEY)
             session = Session.objects.get(pk=signed_details["session_key"])
         except BadSignature as xxx_todo_changeme:
-            Session.DoesNotExist = xxx_todo_changeme
+            Session.DoesNotExist = xxx_todo_changeme  # type: ignore
             raise InvalidEmail(backend)
 
         session_details = session.get_decoded()

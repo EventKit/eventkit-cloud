@@ -2,6 +2,7 @@ import logging
 import os
 import shlex
 import uuid
+from typing import Any, Dict
 
 import requests
 from docker.errors import APIError
@@ -38,7 +39,10 @@ class Docker(ScaleClient):
             raise Exception("You must set BIND_MOUNT_LOCATION in order to use the Docker Scaling Client.")
 
         volumes = {
-            os.getenv("BIND_MOUNT_LOCATION"): {"bind": "/var/lib/eventkit/", "mode": "rw"},
+            os.getenv("BIND_MOUNT_LOCATION"): {
+                "bind": "/var/lib/eventkit/",
+                "mode": "rw",
+            },
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
         }
 
@@ -82,7 +86,7 @@ class Docker(ScaleClient):
                 containers += self.client.containers.list(filters={"label": f"task_name={name}"})
         else:
             containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
-        result = {"resources": [], "pagination": {}}
+        result: Dict[str, Any] = {"resources": [], "pagination": {}}
         result["pagination"]["total_results"] = len(containers)
         for container in containers:
             stats = container.stats(stream=False)
@@ -109,7 +113,7 @@ class Docker(ScaleClient):
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
 
-    def terminate_task(self, task_name: str) -> dict:
+    def terminate_task(self, task_name: str):
         containers = self.client.containers.list(filters={"label": f"task_name={task_name}"})
         for container in containers:
             try:

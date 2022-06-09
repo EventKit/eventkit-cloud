@@ -6,17 +6,25 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Tuple
+from typing import Any, Dict, Tuple, cast
 
+import mapproxy
 import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
+from mapproxy.config.config import load_config, load_default_config
+from mapproxy.config.loader import (
+    ConfigurationError,
+    ProxyConfiguration,
+    validate_references,
+)
+from mapproxy.grid import tile_grid
+from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
-import mapproxy
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
@@ -31,18 +39,11 @@ from eventkit_cloud.utils.geopackage import (
     set_gpkg_contents_bounds,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
-from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import (
-    ConfigurationError,
-    ProxyConfiguration,
-    validate_references,
-)
-from mapproxy.grid import tile_grid
-from mapproxy.wsgiapp import MapProxyApp
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
 # a dummy process which relies on threads.  This fixes a bunch of deadlock issues which happen when using billiard.
-multiprocessing.Process = DummyProcess
+# mypy does not generally handle patching well
+multiprocessing.Process = DummyProcess  # type: ignore
 from mapproxy.seed import seeder  # noqa: E402
 from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
 from mapproxy.seed.util import (  # noqa: E402
@@ -52,7 +53,7 @@ from mapproxy.seed.util import (  # noqa: E402
     timestamp,
 )
 
-multiprocessing.Process = Process
+multiprocessing.Process = Process  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,9 @@ def get_mapproxy_config_template(slug, user=None):
 
 
 class CustomLogger(ProgressLog):
+    # mypy cannot determine the base type, define it here
+    _laststep: float
+
     def __init__(self, task_uid=None, *args, **kwargs):
         self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
@@ -94,7 +98,11 @@ class CustomLogger(ProgressLog):
 
             if self.log_step_counter == 0:
                 if (
-                    get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
+                    get_cache_value(
+                        uid=self.task_uid,
+                        attribute="status",
+                        model_name="ExportTaskRecord",
+                    )
                     == TaskState.CANCELED.value
                 ):
                     logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
@@ -186,12 +194,26 @@ class MapproxyGeopackage(object):
 
         if not conf_dict.get("grids"):
             conf_dict["grids"] = {
-                "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
-                "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
+                "default": {
+                    "srs": "EPSG:4326",
+                    "tile_size": [256, 256],
+                    "origin": "nw",
+                },
+                "webmercator": {
+                    "srs": "EPSG:3857",
+                    "tile_size": [256, 256],
+                    "origin": "nw",
+                },
             }
         elif self.projection:
             conf_dict["grids"].update(
-                {str(self.projection): {"srs": f"EPSG:{self.projection}", "tile_size": [256, 256], "origin": "nw"}}
+                {
+                    str(self.projection): {
+                        "srs": f"EPSG:{self.projection}",
+                        "tile_size": [256, 256],
+                        "origin": "nw",
+                    }
+                }
             )
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
@@ -331,7 +353,11 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
         sources = []
     return {
         "sources": sources,
-        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name},
+        "cache": {
+            "type": "geopackage",
+            "filename": str(geopackage),
+            "table_name": table_name,
+        },
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
         "request_format": "image/png",
@@ -342,7 +368,7 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
     out_projection = 4326
     if projection:
         out_projection = projection
-    seed_template = {
+    seed_template: Dict[str, Any] = {
         "coverages": {"geom": {"srs": "EPSG:4326"}},
         "seeds": {
             "seed": {
@@ -416,19 +442,28 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
     if not mapproxy_config:
         # TODO: place this somewhere else consolidate settings.
-        base_config = {
+        base_config: Dict[str, Any] = {
             "services": {
                 "demo": None,
                 "tms": None,
                 "wmts": {
                     "featureinfo_formats": [
                         {"mimetype": "application/json", "suffix": "json"},
-                        {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
+                        {
+                            "mimetype": "application/gml+xml; version=3.1",
+                            "suffix": "gml",
+                        },
                     ]
                 },
             },
             # Cache based on slug so that the caches don't overwrite each other.
-            "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
+            "caches": {
+                slug: {
+                    "cache": {"type": "file"},
+                    "sources": ["default"],
+                    "grids": ["default"],
+                }
+            },
             "layers": [{"name": slug, "title": slug, "sources": [slug]}],
             "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
         }
@@ -493,7 +528,7 @@ def get_conf_dict(slug: str) -> dict:
     from eventkit_cloud.jobs.models import DataProvider  # Circular reference
 
     try:
-        provider = get_cached_model(model=DataProvider, prop="slug", value=slug)
+        provider = cast(DataProvider, get_cached_model(model=DataProvider, prop="slug", value=slug))
     except Exception:
         raise Exception(f"Unable to find provider for slug {slug}")
 
@@ -510,7 +545,12 @@ def get_conf_dict(slug: str) -> dict:
         else:
             conf_dict["globals"] = {"http": {"ssl_ca_certs": ssl_verify}}
         conf_dict.update(
-            {"globals": {"cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"}, "tiles": {"expires_hours": 0}}}
+            {
+                "globals": {
+                    "cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"},
+                    "tiles": {"expires_hours": 0},
+                }
+            }
         )
     except Exception as e:
         logger.error(e)
@@ -548,7 +588,10 @@ def add_restricted_regions_to_config(
         # If no user no need to set up regional policy.
         if user and not get_valid_regional_justification(policy, user):
             config["sources"]["default"]["coverage"]["difference"].append(
-                {"bbox": GEOSGeometry(policy.region.the_geom).extent, "srs": "EPSG:4326"}
+                {
+                    "bbox": GEOSGeometry(policy.region.the_geom).extent,
+                    "srs": "EPSG:4326",
+                }
             )
             for current_cache in base_config.get("caches", {}):
                 base_config["caches"][current_cache]["disable_storage"] = True

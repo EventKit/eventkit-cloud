@@ -6,28 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0011_auto_20211004_1622'),
+        ("tasks", "0011_auto_20211004_1622"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='dataprovidertaskrecord',
+            name="dataprovidertaskrecord",
             unique_together=set(),
         ),
         migrations.AlterUniqueTogether(
-            name='exporttaskrecord',
+            name="exporttaskrecord",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='dataprovidertaskrecord',
-            constraint=models.UniqueConstraint(fields=('run', 'provider'), name='unique_provider_run_per_task_record'),
+            model_name="dataprovidertaskrecord",
+            constraint=models.UniqueConstraint(
+                fields=("run", "provider"), name="unique_provider_run_per_task_record"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='dataprovidertaskrecord',
-            constraint=models.UniqueConstraint(condition=models.Q(('slug', 'run')), fields=('run', 'slug'), name='unique_run_slug_per_task_record'),
+            model_name="dataprovidertaskrecord",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("slug", "run")),
+                fields=("run", "slug"),
+                name="unique_run_slug_per_task_record",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='exporttaskrecord',
-            constraint=models.UniqueConstraint(fields=('name', 'export_provider_task'), name='unique_name_per_export_provider_task'),
+            model_name="exporttaskrecord",
+            constraint=models.UniqueConstraint(
+                fields=("name", "export_provider_task"),
+                name="unique_name_per_export_provider_task",
+            ),
         ),
     ]

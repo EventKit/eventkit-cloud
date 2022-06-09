@@ -1,3 +1,6 @@
+from typing import List
+
+
 def row_to_dict(sqlite_row):
     return {_key: sqlite_row[_key] for _key in sqlite_row.keys()}
 
@@ -11,7 +14,7 @@ class TableNames(object):
 
 class TableRow(object):
     NAME = ""
-    COLUMNS = []
+    COLUMNS: List[str] = []
 
     def __init__(self, **kwargs):
         self.columns = {_key: None for _key in self.COLUMNS}

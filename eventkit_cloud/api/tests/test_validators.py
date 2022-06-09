@@ -59,10 +59,16 @@ class TestValidators(TestCase):
         geojson = {
             "type": "FeatureCollection",
             "features": [
-                {"type": "Feature", "geometry": {"type": "Point", "coordinates": [1, 1]}},
                 {
                     "type": "Feature",
-                    "geometry": {"type": "LineString", "coordinates": [[5.625, 48.458], [0.878, 44.339]]},
+                    "geometry": {"type": "Point", "coordinates": [1, 1]},
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [[5.625, 48.458], [0.878, 44.339]],
+                    },
                 },
             ],
         }
@@ -112,7 +118,12 @@ class TestValidators(TestCase):
 
     def test_validate_bbox_params(self):
 
-        data = {"xmin": self.extents[0], "ymin": self.extents[1], "xmax": self.extents[2], "ymax": self.extents[3]}
+        data = {
+            "xmin": self.extents[0],
+            "ymin": self.extents[1],
+            "xmax": self.extents[2],
+            "ymax": self.extents[3],
+        }
 
         (xmin, ymin, xmax, ymax) = validate_bbox_params(data)
         self.assertEqual(xmin, data["xmin"])

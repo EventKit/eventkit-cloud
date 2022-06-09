@@ -7,13 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0009_auto_20210830_1947'),
+        ("tasks", "0009_auto_20210830_1947"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='exportrunfile',
-            name='file',
-            field=models.FileField(storage=django.core.files.storage.FileSystemStorage(base_url='/export_run_files/', location='/var/lib/eventkit/exports_stage/export_run_files'), upload_to='', verbose_name='File'),
+            model_name="exportrunfile",
+            name="file",
+            field=models.FileField(
+                storage=django.core.files.storage.FileSystemStorage(
+                    base_url="/export_run_files/",
+                    location="/var/lib/eventkit/exports_stage/export_run_files",
+                ),
+                upload_to="",
+                verbose_name="File",
+            ),
         ),
     ]

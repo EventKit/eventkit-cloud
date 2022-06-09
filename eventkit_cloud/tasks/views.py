@@ -38,12 +38,14 @@ def download(request):
     download_uid = request.GET.get("uid")
     try:
         downloadable = FileProducingTaskResult.objects.select_related(
-            "export_task__export_provider_task__provider", "export_task__export_provider_task__run"
+            "export_task__export_provider_task__provider",
+            "export_task__export_provider_task__run",
         ).get(uid=download_uid)
 
         if not downloadable.user_can_download(current_user):
             return HttpResponse(
-                status=401, content=f"The user: {current_user.username} does not have permission to download it."
+                status=401,
+                content=f"The user: {current_user.username} does not have permission to download it.",
             )
     except FileProducingTaskResult.DoesNotExist:
         return HttpResponse(status=400, content="Download not found for requested id value.")
@@ -88,7 +90,8 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
         data_provider_task_record_uid=run.data_provider_task_records.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
-        stage_dir=stage_dir,
+        # TODO: mypy called out that this is an unexpected param. verify before removal?
+        # stage_dir=stage_dir,
     )
 
 

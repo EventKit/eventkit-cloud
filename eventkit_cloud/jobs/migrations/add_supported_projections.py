@@ -6,14 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', 'add_projections'),
+        ("jobs", "add_projections"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='exportformat',
-            name='supported_projections',
+            model_name="exportformat",
+            name="supported_projections",
             field=models.ManyToManyField(
-                related_name='supported_projections', to='jobs.Projection'),
+                related_name="supported_projections", to="jobs.Projection"
+            ),
         ),
     ]

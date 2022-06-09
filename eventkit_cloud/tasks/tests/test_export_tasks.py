@@ -6,7 +6,7 @@ import os
 import pickle
 import sys
 import uuid
-from unittest.mock import Mock, PropertyMock, patch, MagicMock, ANY
+from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch
 
 import celery
 import yaml
@@ -17,44 +17,49 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-from yaml import CLoader, CDumper
+from yaml import CDumper, CLoader
 
 from eventkit_cloud.celery import TaskPriority, app
-from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job, DataProviderType
+from eventkit_cloud.jobs.models import (
+    DatamodelPreset,
+    DataProvider,
+    DataProviderType,
+    Job,
+)
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
     ExportTask,
+    FormatTask,
+    arcgis_feature_service_export_task,
+    bounds_export_task,
+    cancel_export_provider_task,
+    create_zip_task,
     export_task_error_handler,
+    finalize_export_provider_task,
     finalize_run_task,
+    geopackage_export_task,
+    geotiff_export_task,
+    get_ogcapi_data,
+    gpx_export_task,
+    kill_task,
     kml_export_task,
     mapproxy_export_task,
-    geopackage_export_task,
-    shp_export_task,
-    arcgis_feature_service_export_task,
-    pick_up_run_task,
-    cancel_export_provider_task,
-    kill_task,
-    geotiff_export_task,
-    nitf_export_task,
-    bounds_export_task,
-    parse_result,
-    finalize_export_provider_task,
-    FormatTask,
-    wait_for_providers_task,
-    create_zip_task,
-    pbf_export_task,
-    sqlite_export_task,
-    gpx_export_task,
     mbtiles_export_task,
-    wfs_export_task,
-    vector_file_export_task,
-    raster_file_export_task,
-    osm_data_collection_pipeline,
-    reprojection_task,
+    nitf_export_task,
     ogcapi_process_export_task,
-    get_ogcapi_data,
+    osm_data_collection_pipeline,
+    parse_result,
+    pbf_export_task,
+    pick_up_run_task,
+    raster_file_export_task,
+    reprojection_task,
+    shp_export_task,
+    sqlite_export_task,
+    vector_file_export_task,
+    wait_for_providers_task,
+    wfs_export_task,
+    zip_files,
 )
-from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,

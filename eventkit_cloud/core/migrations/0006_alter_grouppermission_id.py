@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_auto_20210519_2024'),
+        ("core", "0005_auto_20210519_2024"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='grouppermission',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="grouppermission",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
     ]

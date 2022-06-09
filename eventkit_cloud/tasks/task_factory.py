@@ -3,6 +3,7 @@
 
 import itertools
 import logging
+from typing import Tuple
 
 from celery import chain
 from django.contrib.auth import get_user_model
@@ -42,6 +43,7 @@ from eventkit_cloud.tasks.task_builders import (
     TaskChainBuilder,
     create_export_task_record,
 )
+from eventkit_cloud.utils.types.django_helpers import DjangoUserType
 
 User = get_user_model()
 
@@ -149,7 +151,10 @@ class TaskFactory:
         finalized_provider_task_chain_list = []
         # Create a task record which can hold tasks for the run (datapack)
         run_task_record, created = DataProviderTaskRecord.objects.get_or_create(
-            run=run, name="run", slug="run", defaults={"status": TaskState.PENDING.value, "display": False}
+            run=run,
+            name="run",
+            slug="run",
+            defaults={"status": TaskState.PENDING.value, "display": False},
         )
         if created:
             logger.info("New data provider task record created")
@@ -258,7 +263,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job: Job, user: User = None, clone: ExportRun = None, download_data=True):
+def create_run(job: Job, user: DjangoUserType = None, clone: ExportRun = None, download_data=True):
     """
     This will create a new Run based on the provided job.
     :param job: The Job model on which to create a new run.
@@ -294,7 +299,13 @@ def create_run(job: Job, user: User = None, clone: ExportRun = None, download_da
                 job.save()
 
             sendnotification(
-                run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, ""
+                run,
+                run.user,
+                NotificationVerb.RUN_STARTED.value,
+                None,
+                None,
+                NotificationLevel.INFO.value,
+                "",
             )
             logger.debug("Saved run with id: {0}".format(str(run.uid)))
             return run.uid
@@ -303,7 +314,7 @@ def create_run(job: Job, user: User = None, clone: ExportRun = None, download_da
         raise e
 
 
-def check_job_permissions(job: Job, user: User = None) -> (Job, User):
+def check_job_permissions(job: Job, user: DjangoUserType = None) -> Tuple[Job, DjangoUserType]:
     # get the number of existing runs for this job
 
     if not job.data_provider_tasks.all():

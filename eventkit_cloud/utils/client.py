@@ -6,6 +6,7 @@ import re
 import statistics
 from datetime import datetime, timedelta
 from time import sleep
+from typing import Any, Dict, cast
 
 import requests
 
@@ -170,7 +171,7 @@ class EventKitClient(object):
                                "subtaskA", "duration"}
            }
         """
-        providers = {}
+        providers: Dict[str, Any] = {}
         total_runs = len(runs)
         failed_runs = 0
         for run in runs:
@@ -200,7 +201,7 @@ class EventKitClient(object):
                     if duration:
                         providers[pt_name][task_name]["times"] += [duration / area]
 
-        totals = {"total_runs": total_runs, "failed_runs": failed_runs}
+        totals: Dict[str, Any] = {"total_runs": total_runs, "failed_runs": failed_runs}
 
         for provider in providers:
             totals[provider] = {}
@@ -263,7 +264,7 @@ class EventKitClient(object):
 
     def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT):
         finished = False
-        response = None
+        response_json = None
         first_check = datetime.now()
         errors = []
         while not finished:
@@ -276,12 +277,12 @@ class EventKitClient(object):
             if not response.ok:
                 logger.info(response.content.decode())
                 raise Exception("Unable to get status of run {}".format(run_uid))
-            response = response.json()
-            status = response[0].get("status")
+            response_json = response.json()
+            status = response_json[0].get("status")
             if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
                 finished = True
             last_check = datetime.now()
-            for run_details in response:
+            for run_details in response_json:
                 for provider_task in run_details["provider_tasks"]:
                     for task in provider_task["tasks"]:
                         if task["status"] == "FAILED":
@@ -292,7 +293,8 @@ class EventKitClient(object):
                 raise Exception("Run timeout ({}s) exceeded".format(run_timeout))
         if errors:
             raise Exception("The run failed with errors: {}".format("\n".join(errors)))
-        return response[0]
+        assert response_json is not None
+        return response_json[0]
 
     def wait_for_task_pickup(self, job_uid):
         picked_up = False
@@ -317,11 +319,11 @@ class EventKitClient(object):
         if not response.ok:
             logger.error(response.content.decode())
             raise Exception("Failed to get the status of {}".format(provider_slug))
-        response = response.json()
-        if type(response) == str:
+        response_json = response.json()
+        if type(response_json) == str:
             # This is because the API is outputting the wrong type. It should return a JSON and proper error code.
-            response = json.loads(response)
-        if response.get("status") in ["SUCCESS", "WARN"]:
+            response_json = json.loads(response_json)
+        if cast(Dict, response_json).get("status") in ["SUCCESS", "WARN"]:
             return True
         return False
 

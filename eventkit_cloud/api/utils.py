@@ -15,6 +15,7 @@ from rest_framework.views import exception_handler
 
 from eventkit_cloud.jobs.models import DataProvider, Region
 from eventkit_cloud.tasks.models import RunZipFile, UserDownload
+from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,8 @@ def stringify(item):
         logger.error("Exceptions should have a title and description per message not multiple.")
         logger.error("Exception: {0}".format(str(item)))
     if isinstance(item, dict):
-        return "{0}: {1}".get(next(iter(item.items())))
+        k, v = next(iter(item.items()))
+        return f"{k}: {v}"
     elif isinstance(item, list):
         return "{0}".format(item[0])
     elif isinstance(item, str):
@@ -168,7 +170,7 @@ def get_run_zip_file(field=None, values=[]):
 
 def get_binned_groups(users: dict, user_group_bins: List[str]):
 
-    groups = OrderedDict()
+    groups: OrderedDict[str, Any] = OrderedDict()
 
     # Bin the users by groups and aggregate login counts.
     for user_data in users.values():
@@ -198,7 +200,7 @@ def get_download_counts_by_area(
 ):
 
     region_filter = region_filter or dict()
-    query = dict()
+    query: Dict[str, Any] = dict()
     if users:
         query["user__in"] = users
     if start_date:
@@ -228,7 +230,7 @@ def get_download_counts_by_product(
     start_date: Optional[Union[date, datetime]] = None,
 ):
 
-    query = dict()
+    query: Dict[str, Any] = dict()
     if users:
         query["user__in"] = users
     if start_date:
@@ -258,11 +260,12 @@ def get_download_counts_by_product(
     return {product.name: product.downloads for product in products}
 
 
-def get_logins_per_day(users: List[User], events: List[AuditEvent]):
-    user_cache = {user.username: {"user": user, "logins": dict()} for user in users}
+def get_logins_per_day(users: ListOrQuerySet[User], events: ListOrQuerySet[AuditEvent]):
+    user_cache: Dict[str, Any] = {user.username: {"user": user, "logins": dict()} for user in users}
     # Could filter again by date, but here its probably faster to just
     # loop the dates instead of querying the DB again.
     for event in events:
         date = event.datetime.date()
+        # TODO: mypy wasn't happy with this, does it actually do anything???
         user_cache[event.username]["logins"][date] = user_cache.get(date, 0) + 1
     return user_cache

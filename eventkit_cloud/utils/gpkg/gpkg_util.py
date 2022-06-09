@@ -1,10 +1,12 @@
+from typing import List
+
 from eventkit_cloud.utils.gpkg.sqlite_utils import Table
 from eventkit_cloud.utils.gpkg.tables import LayerEntry
 
 
 class Geopackage(object):
     @staticmethod
-    def get_layers(cursor) -> [LayerEntry]:
+    def get_layers(cursor) -> List[LayerEntry]:
         """
         Returns a list of LayerEntry's built from the contents of the geopackage.
 

@@ -46,7 +46,11 @@ router.register(r"runs", ExportRunViewSet, basename="runs")
 router.register(r"provider_tasks", DataProviderTaskRecordViewSet, basename="provider_tasks")
 router.register(r"tasks", ExportTaskViewSet, basename="tasks")
 router.register(r"regions/policies", RegionalPolicyViewSet, basename="regional_policies")
-router.register(r"regions/justifications", RegionalJustificationViewSet, basename="regional_justifications")
+router.register(
+    r"regions/justifications",
+    RegionalJustificationViewSet,
+    basename="regional_justifications",
+)
 router.register(r"regions", RegionViewSet, basename="regions")
 router.register(r"users", UserDataViewSet, basename="users")
 router.register(r"user/activity/jobs", UserJobActivityViewSet, basename="user_job_activity")
@@ -59,7 +63,11 @@ urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
-        get_schema_view(title="EventKit", description="Documentation for the EventKit API.", version=settings.VERSION),
+        get_schema_view(
+            title="EventKit",
+            description="Documentation for the EventKit API.",
+            version=settings.VERSION,
+        ),
         name="openapi-schema",
     ),
     re_path(r"^api/", include(router.urls)),

@@ -7,31 +7,45 @@ import eventkit_cloud.jobs.models
 
 class Migration(migrations.Migration):
     def add_ogc_process_provider(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
 
         # Create the DataProvider objects if they don't exist.
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process')
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process"
+        )
 
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process-raster')
-        ogc_provider.supported_formats.set(DataProviderType.objects.get(type_name='wms').supported_formats.all())
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process-raster"
+        )
+        ogc_provider.supported_formats.set(
+            DataProviderType.objects.get(type_name="wms").supported_formats.all()
+        )
 
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process-vector')
-        ogc_provider.supported_formats.set(DataProviderType.objects.get(type_name='wfs').supported_formats.all())
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process-vector"
+        )
+        ogc_provider.supported_formats.set(
+            DataProviderType.objects.get(type_name="wfs").supported_formats.all()
+        )
 
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process-elevation')
-        ogc_provider.supported_formats.set(DataProviderType.objects.get(type_name='wcs').supported_formats.all())
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process-elevation"
+        )
+        ogc_provider.supported_formats.set(
+            DataProviderType.objects.get(type_name="wcs").supported_formats.all()
+        )
 
     def remove_ogc_process_provider(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
 
         # Create the DataProvider objects if they don't exist.
-        DataProviderType.objects.filter(type_name='ogcapi-process').delete()
-        DataProviderType.objects.filter(type_name='ogcapi-process-raster').delete()
-        DataProviderType.objects.filter(type_name='ogcapi-process-vector').delete()
-        DataProviderType.objects.filter(type_name='ogcapi-process-elevation').delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process").delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process-raster").delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process-vector").delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process-elevation").delete()
 
     dependencies = [
-        ('jobs', '0012_auto_20210519_2024'),
+        ("jobs", "0012_auto_20210519_2024"),
     ]
 
     operations = [

@@ -33,13 +33,21 @@ class TestAttributeClassFilter(APITestCase):
         )
         self.data_providers = DataProvider.objects.all()
         self.job = Job.objects.create(
-            name="test1", description="Test description", the_geom=the_geom, user=self.user, json_tags={}
+            name="test1",
+            description="Test description",
+            the_geom=the_geom,
+            user=self.user,
+            json_tags={},
         )
         self.data_provider_task = DataProviderTask.objects.create(provider=self.data_provider)
         self.job.data_provider_tasks.add(self.data_provider_task)
         run = ExportRun.objects.create(job=self.job, user=self.user, status="COMPLETED")
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(
-            name=self.data_provider.name, display=True, run=run, status="SUCCESS", provider=self.data_provider
+            name=self.data_provider.name,
+            display=True,
+            run=run,
+            status="SUCCESS",
+            provider=self.data_provider,
         )
 
     def check_filter_result(self, queryset):
@@ -91,13 +99,23 @@ class TestJobFilter(APITestCase):
             self.user1 = User.objects.create_user(username="demo1", email="demo@demo.com", password="demo")
             self.user2 = User.objects.create_user(username="demo2", email="demo@demo.com", password="demo")
         self.job1 = Job.objects.create(
-            name="TestJob1", description="Test description", user=self.user1, the_geom=the_geom
+            name="TestJob1",
+            description="Test description",
+            user=self.user1,
+            the_geom=the_geom,
         )
         self.job2 = Job.objects.create(
-            name="TestJob2", description="Test description", user=self.user2, the_geom=the_geom, featured=True
+            name="TestJob2",
+            description="Test description",
+            user=self.user2,
+            the_geom=the_geom,
+            featured=True,
         )
         self.job3 = Job.objects.create(
-            name="TestJob3", description="Test description", user=self.user1, the_geom=the_geom
+            name="TestJob3",
+            description="Test description",
+            user=self.user1,
+            the_geom=the_geom,
         )
         self.export_run1 = ExportRun.objects.create(job=self.job1, user=self.user1)
         self.export_run2 = ExportRun.objects.create(job=self.job2, user=self.user2)

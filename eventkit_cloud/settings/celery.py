@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from typing import Dict
 
 from celery.schedules import crontab
 
@@ -37,9 +38,18 @@ beat_schedule = {
         "task": "Check Provider Availability",
         "schedule": crontab(minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
     },
-    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0")},
-    "clear-tile-cache": {"task": "Clear Tile Cache", "schedule": crontab(minute="0", day_of_month="*/14")},
-    "clear-user-sessions": {"task": "Clear User Sessions", "schedule": crontab(minute="0", day_of_month="*/2")},
+    "clean-up-queues": {
+        "task": "Clean Up Queues",
+        "schedule": crontab(minute="0", hour="0"),
+    },
+    "clear-tile-cache": {
+        "task": "Clear Tile Cache",
+        "schedule": crontab(minute="0", day_of_month="*/14"),
+    },
+    "clear-user-sessions": {
+        "task": "Clear User Sessions",
+        "schedule": crontab(minute="0", day_of_month="*/2"),
+    },
     "update-statistics-cache": {
         "task": "Update Statistics Caches",
         "schedule": crontab(minute="0", day_of_month="*/4"),
@@ -59,7 +69,7 @@ beat_schedule = {
 
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
-celery_default_task_settings = {
+celery_default_task_settings: Dict[str, int] = {
     "CELERY_MAX_DEFAULT_TASKS": 3,
     "CELERY_DEFAULT_DISK_SIZE": 3072,
     "CELERY_DEFAULT_MEMORY_SIZE": 3072,

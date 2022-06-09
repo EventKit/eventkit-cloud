@@ -92,10 +92,14 @@ class TaskChainBuilder(object):
 
         data_provider_task_record: DataProviderTaskRecord
         created: bool
-        data_provider_task_record, created = DataProviderTaskRecord.objects.get_or_create(
+        (data_provider_task_record, created,) = DataProviderTaskRecord.objects.get_or_create(
             run=run,
             provider=data_provider,
-            defaults={"name": data_provider.name, "status": TaskState.PENDING.value, "display": True},
+            defaults={
+                "name": data_provider.name,
+                "status": TaskState.PENDING.value,
+                "display": True,
+            },
         )
 
         projections = [projection.srid for projection in run.job.projections.all()]
@@ -158,7 +162,10 @@ class TaskChainBuilder(object):
                     ).set(queue=queue_group, routing_key=queue_group)
                 )
 
-            for current_format, (export_task_record, export_task) in export_tasks.items():
+            for current_format, (
+                export_task_record,
+                export_task,
+            ) in export_tasks.items():
                 supported_projections = current_format.get_supported_projection_list()
                 default_projection = get_default_projection(supported_projections, selected_projections=projections)
 

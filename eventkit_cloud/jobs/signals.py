@@ -102,7 +102,10 @@ def provider_pre_save(sender, instance, **kwargs):
                 # Return a file system path to the image.
                 filepath = save_thumbnail(
                     instance.preview_url,
-                    os.path.join(provider_image_dir, f"{get_provider_thumbnail_name(instance.slug)}.jpg"),
+                    os.path.join(
+                        provider_image_dir,
+                        f"{get_provider_thumbnail_name(instance.slug)}.jpg",
+                    ),
                 )
 
                 # TODO: This is redundant to code in export_tasks.py after __call__
@@ -115,7 +118,7 @@ def provider_pre_save(sender, instance, **kwargs):
                     instance.thumbnail = None
                     prev_thumb.delete()
                 instance.thumbnail = MapImageSnapshot.objects.create(
-                    filename=filename, size=size, download_url=download_url
+                    filename=str(filename), size=size, download_url=download_url
                 )
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if

@@ -187,10 +187,10 @@ class FeatureSelection(object):
         return " OR ".join(['"' + x + '" IS NOT NULL' for x in theme["select"]])
 
     def zip_readme(self, theme):
-        columns = []
+        columns_list = []
         for key in self.key_selections(theme):
-            columns.append("{0} http://wiki.openstreetmap.org/wiki/Key:{0}".format(key))
-        columns = "\n".join(columns)
+            columns_list.append("{0} http://wiki.openstreetmap.org/wiki/Key:{0}".format(key))
+        columns = "\n".join(columns_list)
         criteria = self.filter_clause(theme)
         return ZIP_README.format(columns=columns, criteria=criteria)
 

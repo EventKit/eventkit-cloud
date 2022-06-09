@@ -35,6 +35,7 @@ THE SOFTWARE.
 
 import logging
 import numbers
+from typing import Any, Dict, Literal, cast
 
 
 def points_equal(a, b):
@@ -207,7 +208,7 @@ def convert(arcgis):
     Convert an ArcGIS JSON object to a GeoJSON object
     """
 
-    geojson = {}
+    geojson: Dict[str, Any] = {}
 
     for iterable_name in ["features", "results"]:
         if iterable_name in arcgis and arcgis[iterable_name]:
@@ -225,7 +226,7 @@ def convert_feature(esri_feature):
     # Fields and fieldAliases provides schema information about the attributes and won't neatly fit into geojson.
     keywords = ["geometry", "geometryType", "attributes", "fields", "fieldAliases"]
 
-    feature = {"type": "Feature"}
+    feature: Dict[str, Any] = {"type": "Feature"}
 
     if "geometry" in esri_feature:
         if "geometry" in esri_feature:
@@ -263,7 +264,7 @@ def convert_feature(esri_feature):
 
 
 def convert_geometry(esri_geometry):
-    geometry = {}
+    geometry: Dict[str, Any] = {}
 
     if (
         "x" in esri_geometry
@@ -271,7 +272,7 @@ def convert_geometry(esri_geometry):
         and "y" in esri_geometry
         and isinstance(esri_geometry["y"], numbers.Number)
     ):
-        geometry["type"] = "Point"
+        geometry["type"] = cast(Literal["Point"], "Point")
         geometry["coordinates"] = [esri_geometry["x"], esri_geometry["y"]]
         if "z" in esri_geometry and isinstance(esri_geometry["z"], numbers.Number):
             geometry["coordinates"].append(esri_geometry["z"])

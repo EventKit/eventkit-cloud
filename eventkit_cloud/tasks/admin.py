@@ -1,9 +1,11 @@
 import logging
 import pickle
 import traceback
-from typing import List
 
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
@@ -81,7 +83,7 @@ class ExportTaskRecordAdmin(admin.ModelAdmin):
                 exc_info = pickle.loads(exc.exception.encode()).exc_info
             except Exception as te:
                 logger.warning(te)
-            exceptions += [" ".join(traceback.format_exception(*exc_info))]
+            exceptions += [" ".join(traceback.format_exception(*exc_info))]  # type: ignore
         return "\n".join(exceptions)
 
     list_display = ["uid", "name", "progress", "status", "display"]
@@ -90,22 +92,38 @@ class ExportTaskRecordAdmin(admin.ModelAdmin):
         return False
 
 
-def soft_delete_runs(modeladmin, request, queryset: List[ExportRun]):
+def soft_delete_runs(modeladmin: ModelAdmin, request: HttpRequest, queryset: "QuerySet[ExportRun]"):
     for run in queryset:
         run.soft_delete()
 
 
 class ExportRunAdmin(admin.ModelAdmin):
-    readonly_fields = ("delete_user", "user", "status", "created_at", "started_at", "finished_at")
-    list_display = ["uid", "get_name", "status", "user", "notified", "expiration", "deleted"]
+    readonly_fields = (
+        "delete_user",
+        "user",
+        "status",
+        "created_at",
+        "started_at",
+        "finished_at",
+    )
+    list_display = [
+        "uid",
+        "get_name",
+        "status",
+        "user",
+        "notified",
+        "expiration",
+        "deleted",
+    ]
 
     actions = [soft_delete_runs]
 
     def get_name(self, obj):
         return obj.job.name
 
-    get_name.short_description = "Job Name"
-    get_name.admin_order_field = "job__name"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    get_name.short_description = "Job Name"  # type: ignore
+    get_name.admin_order_field = "job__name"  # type: ignore
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -120,13 +138,18 @@ class UserDownloadAdmin(admin.ModelAdmin):
     User download records
     """
 
+    from eventkit_cloud.jobs.models import DataProvider
+
+    provider: DataProvider
+
     def list_display_provider(self):
         if self.provider is None:
             return "DataPack Zip"
         else:
             return self.provider.slug
 
-    list_display_provider.short_description = "Provider"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    list_display_provider.short_description = "Provider"  # type: ignore
     model = UserDownload
 
     readonly_fields = ("user", "provider", "job", "downloaded_at")

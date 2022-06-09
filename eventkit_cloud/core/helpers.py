@@ -29,11 +29,11 @@ def get_id(user: User):
         return user.username
 
 
-def get_model_by_params(model_class: models.Model, **kwargs):
+def get_model_by_params(model_class: Type[models.Model], **kwargs):
     return model_class.objects.get(**kwargs)
 
 
-def get_cached_model(model: Type[models.Model], prop: str, value: str) -> Type[models.Model]:
+def get_cached_model(model: Type[models.Model], prop: str, value: str) -> models.Model:
     return cache.get_or_set(f"{model.__name__}-{prop}-{value}", get_model_by_params(model, **{prop: value}), 360)
 
 

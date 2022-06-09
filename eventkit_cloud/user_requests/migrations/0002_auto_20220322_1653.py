@@ -6,16 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user_requests', '0001_alter_usersizerule_id'),
+        ("user_requests", "0001_alter_usersizerule_id"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='usersizerule',
+            name="usersizerule",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='usersizerule',
-            constraint=models.UniqueConstraint(fields=('provider', 'user'), name='unique_user_size_rule_per_provider'),
+            model_name="usersizerule",
+            constraint=models.UniqueConstraint(
+                fields=("provider", "user"), name="unique_user_size_rule_per_provider"
+            ),
         ),
     ]

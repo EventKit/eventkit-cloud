@@ -22,7 +22,7 @@ class EventKitBaseTask(Task):
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
         pcf_scaling = os.getenv("PCF_SCALING", False)
         if pcf_scaling:
-            from eventkit_cloud.tasks.scheduled_tasks import kill_worker
+            from eventkit_cloud.tasks.scheduled_tasks import kill_worker  # type: ignore
 
             queue_type, hostname = self.request.hostname.split("@")
 
@@ -44,7 +44,8 @@ class EventKitBaseTask(Task):
                 print(f"RUNNING TASKS BY QUEUE: {running_tasks_by_queue}")
                 running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
                 export_tasks = ExportTaskRecord.objects.filter(
-                    worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
+                    worker=hostname,
+                    status__in=[task_state.value for task_state in TaskState.get_not_finished_states()],
                 )
 
                 if not export_tasks:
