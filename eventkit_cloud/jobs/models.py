@@ -5,6 +5,9 @@ import json
 import logging
 import multiprocessing
 import uuid
+from enum import Enum
+from typing import TYPE_CHECKING, Dict, cast, Type, Union, List
+
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -21,10 +24,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
-from typing import TYPE_CHECKING, Dict, cast, Type
-from typing import Union, List
 from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
@@ -40,9 +39,8 @@ from eventkit_cloud.core.models import (
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
-from eventkit_cloud.utils.services.types import LayerDescription
+from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 if TYPE_CHECKING:
@@ -460,7 +458,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return get_mapproxy_footprint_url(self.slug)
 
     @property
-    def layers(self) -> Dict[LayerDescription]:
+    def layers(self) -> LayersDescription:
         """
         Used to populate the list of vector layers, typically for contextual or styling information.
         :return: A list of layer names.
@@ -468,7 +466,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if self.data_type != GeospatialDataType.VECTOR.value:
             return {}
         if self.config:
-            config = clean_config(str(self.config), return_dict=True)
+            config = clean_config(str(self.config))
             # As of EK 1.9.0 only vectors support multiple layers in a single provider
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
@@ -1065,7 +1063,6 @@ def delete(self, *args, **kwargs):
 
 # https://github.com/python/mypy/issues/2427
 Group.delete = delete  # type: ignore
-
 
 
 def load_provider_config(config: Union[str, dict]) -> dict:

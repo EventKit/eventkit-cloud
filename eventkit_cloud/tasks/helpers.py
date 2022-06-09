@@ -5,7 +5,6 @@ import logging
 import os
 import pickle
 import re
-import requests
 import shutil
 import signal
 import tempfile
@@ -13,10 +12,19 @@ import time
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
-import yaml
 from concurrent import futures
 from contextlib import contextmanager
 from distutils import dir_util
+from functools import reduce
+from json import JSONDecodeError
+from operator import itemgetter
+from pathlib import Path
+from typing import List, Optional, Union, Tuple, Dict, Any
+from xml.dom import minidom
+from zipfile import ZipFile
+
+import requests
+import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.cache import cache
@@ -24,17 +32,9 @@ from django.db import connection
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
-from functools import reduce
 from gdal_utils import convert, get_band_statistics, get_meta
-from json import JSONDecodeError
 from numpy import linspace
-from operator import itemgetter
-from pathlib import Path
 from requests import Response, Session
-from typing import Dict, List, Optional, Tuple, Union
-from typing import List, Optional, Union, ValuesView, Tuple, Dict, Any
-from xml.dom import minidom
-from zipfile import ZipFile
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType

@@ -29,6 +29,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+from eventkit_cloud.utils.services.types import LayersDescription
 from gdal_utils import convert
 from yaml import CLoader
 
@@ -1242,7 +1243,7 @@ def wfs_export_task(
                 "projection": projection,
             }
 
-        download_concurrently(layers.values(), **configuration)
+        download_concurrently(list(layers.values()), **configuration)
 
         for layer_name, layer in layers.items():
             if not os.path.exists(layer["path"]):
@@ -1400,7 +1401,7 @@ def arcgis_feature_service_export_task(
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
 
     out = None
-    layers = {}
+    layers: LayersDescription = {}
     vector_layer_data = export_task_record.export_provider_task.provider.layers
     logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
     for layer_name, layer in vector_layer_data.items():

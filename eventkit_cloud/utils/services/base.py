@@ -3,12 +3,11 @@ import base64
 import copy
 import json
 import logging
+from typing import Dict, Any, Union, cast, Optional
+
 import requests
 from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Polygon
 from django.core.cache import cache
-from typing import Dict, Any, Union, cast
-from typing import Dict, Optional
-from typing import Optional
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import normalize_name
