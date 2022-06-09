@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
+from typing import Optional, Union, List
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -21,7 +22,14 @@ from eventkit_cloud.core.models import (
     DownloadableMixin,
 )
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
-from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission, RegionalPolicy
+from eventkit_cloud.jobs.models import (
+    Job,
+    DataProvider,
+    JobPermissionLevel,
+    JobPermission,
+    RegionalPolicy,
+    MapImageSnapshot,
+)
 from eventkit_cloud.tasks import get_cache_value, set_cache_value, DEFAULT_CACHE_EXPIRATION
 from eventkit_cloud.tasks.enumerations import TaskState
 
@@ -250,7 +258,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         )
 
         for data_provider_task_record in data_provider_task_records:
-            file_models = [data_provider_task_record.preview]
+            file_models: List[Union[Optional[FileProducingTaskResult], Optional[MapImageSnapshot]]] = [
+                data_provider_task_record.preview
+            ]
             export_task_record: ExportTaskRecord
             for export_task_record in data_provider_task_record.tasks.all():
                 file_models.append(export_task_record.result)
@@ -260,7 +270,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                     continue
                 # strip the old run uid off the filename and add a new one.
                 filename = Path(str(self.uid)).joinpath(Path(file_model.filename).relative_to(str(previous_run.uid)))
-                file_model.filename = filename
+                file_model.filename = str(filename)
                 filename, download_url = make_file_downloadable(file_model.get_file_path(staging=True))
                 file_model.download_url = download_url
                 file_model.save()
@@ -374,8 +384,6 @@ class UserDownload(UIDMixin):
     def job(self):
         if self.downloadable.export_task:
             return self.downloadable.export_task.export_provider_task.run.job
-        if self.downloadable.run:
-            return self.downloadable.run.job
 
     @property
     def provider(self):

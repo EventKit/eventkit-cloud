@@ -1,10 +1,12 @@
+from typing import List, Union
+
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.urls import re_path
+from django.urls import re_path, URLPattern, URLResolver
 from django.views.generic.base import RedirectView
 
 from eventkit_cloud.core.urls import urlpatterns as eventkit_cloud_urlpatterns
 
-urlpatterns = [
+urlpatterns: List[Union[URLPattern, URLResolver]] = [
     re_path(
         r"^favicon.png$",
         RedirectView.as_view(url=staticfiles_storage.url("images/favicon.png"), permanent=False),

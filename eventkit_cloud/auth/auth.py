@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from typing import Tuple
 
 import dateutil.parser
 import pytz
@@ -64,7 +65,7 @@ def fetch_user_from_token(token):
     try:
         session = get_or_update_session(token=token)
         logger.debug("Session headers: %s", session.headers)
-        response = session.get(settings.OAUTH_PROFILE_URL)
+        response = session.get(getattr(settings, "OAUTH_PROFILE_URL"))
         logger.debug("Received response: %s", response.text)
         response.raise_for_status()
     except requests.ConnectionError as err:
@@ -175,7 +176,7 @@ def get_user_data_from_schema(data):
     """
     user_data = dict()
     try:
-        mapping = json.loads(settings.OAUTH_PROFILE_SCHEMA)
+        mapping = json.loads(getattr(settings, "OAUTH_PROFILE_SCHEMA"))
     except AttributeError:
         logger.error("AN OAUTH_PROFILE_SCHEMA was not added to the environment variables.")
         raise
@@ -205,13 +206,13 @@ def get_user_data_from_schema(data):
     return user_data
 
 
-def request_access_tokens(auth_code: str) -> (str, str):
+def request_access_tokens(auth_code: str) -> Tuple[str, str]:
     return get_access_tokens(
-        {"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI}
+        {"grant_type": "authorization_code", "code": auth_code, "redirect_uri": getattr(settings, "OAUTH_REDIRECT_URI")}
     )
 
 
-def refresh_access_tokens(refresh_token: str) -> (str, str):
+def refresh_access_tokens(refresh_token: str) -> Tuple[str, str]:
     return get_access_tokens({"grant_type": "refresh_token", "refresh_token": refresh_token})
 
 
@@ -219,8 +220,8 @@ def get_access_tokens(data):
     try:
         session = get_or_update_session()
         response = session.post(
-            settings.OAUTH_TOKEN_URL,
-            auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
+            getattr(settings, "OAUTH_TOKEN_URL"),
+            auth=(getattr(settings, "OAUTH_CLIENT_ID"), getattr(settings, "OAUTH_CLIENT_SECRET")),
             data=data,
         )
         logger.debug(f"Received response: {response.text}")
@@ -235,12 +236,13 @@ def get_access_tokens(data):
             raise Unauthorized("OAuth server rejected refresh token.")
         logger.error(f"OAuth server returned HTTP {status_code}", err.response.text)
         raise OAuthError(status_code)
+    oauth_token_key = getattr(settings, "OAUTH_TOKEN_KEY")
     access = response.json()
-    access_token = access.get(settings.OAUTH_TOKEN_KEY)
-    refresh_token = access.get(settings.OAUTH_REFRESH_KEY)
+    access_token = access.get(oauth_token_key)
+    refresh_token = access.get(getattr(settings, "OAUTH_REFRESH_KEY"))
     if not access_token:
-        logger.error(f"OAuth server response missing `{settings.OAUTH_TOKEN_KEY}`.  Response Text:\n{response.text}")
-        raise InvalidOauthResponse(f"missing `{settings.OAUTH_TOKEN_KEY}`", response.text)
+        logger.error(f"OAuth server response missing `{oauth_token_key}`.  Response Text:\n{1}")
+        raise InvalidOauthResponse(f"missing `{oauth_token_key}`", response.text)
     return access_token, refresh_token
 
 

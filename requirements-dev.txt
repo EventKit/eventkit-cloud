@@ -11,3 +11,9 @@ requests-mock==1.9.2
 mkdocs==1.1.2
 black==22.3.0
 docker==5.0.0
+# MyPy
+mypy==0.950
+django-stubs==1.11.0
+django-stubs-ext==0.4.0
+types-requests==2.27.29
+types-python-dateutil==2.8.17

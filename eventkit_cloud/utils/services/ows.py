@@ -64,7 +64,8 @@ class OWS(GisClient):
             for event, element in iterator:
                 if "}" in element.tag:
                     element.tag = element.tag.split("}", 1)[1]
-            root = iterator.root
+            # mypy doesn't know that root exists
+            root = iterator.root  # type: ignore
             try:
                 layer_elements = self.find_layers(root)
             except UnsupportedFormatError:

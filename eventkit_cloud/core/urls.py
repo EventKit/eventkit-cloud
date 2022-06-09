@@ -4,6 +4,7 @@
 """
 URL Configuration
 """
+from typing import List
 
 from django.contrib import admin
 from eventkit_cloud.ui import urls as ui_urls
@@ -12,11 +13,11 @@ from eventkit_cloud.api import urls as api_urls
 from eventkit_cloud.tasks import urls as task_urls
 from eventkit_cloud.utils import urls as util_urls
 
-from django.urls import include, re_path
+from django.urls import include, re_path, URLResolver
 
 admin.autodiscover()
 
-urlpatterns = []
+urlpatterns: List[URLResolver] = []
 
 urlpatterns += [
     re_path(r"^", include(auth_urls)),

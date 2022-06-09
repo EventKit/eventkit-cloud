@@ -176,7 +176,7 @@ def convert_geometry(config, geometry):
 
 
 def get_process(provider, session):
-    config = clean_config(provider.config, return_dict=True)
+    config = clean_config(provider.config)
     service_url = provider.url.rstrip("/")
 
     process = config.get("ogcapi_process").get("id")

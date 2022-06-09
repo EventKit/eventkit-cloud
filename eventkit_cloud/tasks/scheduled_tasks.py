@@ -262,11 +262,11 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
     running_tasks_memory = celery_pcf_task_details["memory"]
     while running_tasks_memory + smallest_memory_required <= max_tasks_memory:
         queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
-        queues = list_to_dict(queues, "name")
+        dicts = list_to_dict(queues, "name")
         # If no tasks were run, give up... otherwise try to run another task.
         has_run_task = False
         running_tasks = client.get_running_tasks(app_name)
-        if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
+        if not any([queue.get("messages", 0) for queue_name, queue in dicts.items()]):
             running_task_names = []
             for running_task in running_tasks.get("resources"):
                 running_task_name = running_task.get("name")
@@ -277,7 +277,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
 
         queues_to_kill = []
         for celery_task_name, celery_task in celery_tasks.items():
-            queue = queues.get(celery_task_name)
+            queue = dicts.get(celery_task_name)
             if not queue:
                 continue
             queue_name = queue.get("name")
@@ -384,7 +384,7 @@ def check_provider_availability_task():
         except Exception as e:
             logger.error(f"Cannot read index from {status}")
             if isinstance(status, Response):
-                logger.error(f"Status content: {status.content}")
+                logger.error(f"Status content: {status.content}")  # type: ignore
             raise e
 
 
