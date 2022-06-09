@@ -283,7 +283,7 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
     try:
         export_task, created = ExportTaskRecord.objects.get_or_create(
             export_provider_task=export_provider_task,
-            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": display},
+            defaults={"status": "PENDING", "name": task_name, "worker": worker, "display": display},
         )
         logger.debug("Saved task: {0}".format(task_name))
     except DatabaseError as e:
