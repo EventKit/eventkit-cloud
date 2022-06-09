@@ -37,7 +37,7 @@ class CustomUserAdmin(UserAdmin):
 
     inlines = [OAuthInline, UserLicenseInline]
 
-    readonly_fields = UserAdmin.readonly_fields + ("last_login", "date_joined", "attribute_class_list")
+    readonly_fields = UserAdmin.readonly_fields + ("last_login", "date_joined", "attribute_class_list")  # type: ignore
 
     def attribute_class_list(self, obj):
         attribute_classes = obj.attribute_classes.all()
@@ -46,7 +46,7 @@ class CustomUserAdmin(UserAdmin):
             return ""
         return ", ".join([attribute_class.name for attribute_class in attribute_classes])
 
-    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_class_list",)}),)
+    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_class_list",)}),)  # type: ignore
 
 
 admin.site.unregister(User)

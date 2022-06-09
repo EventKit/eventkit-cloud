@@ -85,7 +85,8 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
         data_provider_task_record_uid=run.data_provider_task_records.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
-        stage_dir=stage_dir,
+        # TODO: mypy called out that this is an unexpected param. verify before removal?
+        # stage_dir=stage_dir,
     )
 
 

@@ -1,6 +1,7 @@
 import importlib
+from typing import Dict, Optional, List
 
-client_type_map = {
+client_type_map: Dict[str, str] = {
     "arcgis-feature": "eventkit_cloud.utils.services.arcgis.ArcGIS",
     "arcgis-raster": "eventkit_cloud.utils.services.arcgis.ArcGIS",
     "wfs": "eventkit_cloud.utils.services.wfs.WFS",
@@ -25,7 +26,7 @@ DEFAULT_CACHE_TIMEOUT = 60 * 30  # 30 minutes
 def get_client(provider_type_name):
     provider_type_class = client_type_map.get(provider_type_name) or client_type_map.get("default")
     # instantiate the required class.
-    parts = provider_type_class.split(".")
+    parts: Optional[List[str]] = provider_type_class.split(".")
     module_path, class_name = ".".join(parts[:-1]), parts[-1]
     module = importlib.import_module(module_path)
     return getattr(module, class_name)

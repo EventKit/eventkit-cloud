@@ -112,7 +112,7 @@ def provider_pre_save(sender, instance, **kwargs):
                     instance.thumbnail = None
                     prev_thumb.delete()
                 instance.thumbnail = MapImageSnapshot.objects.create(
-                    filename=filename, size=size, download_url=download_url
+                    filename=str(filename), size=size, download_url=download_url
                 )
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if

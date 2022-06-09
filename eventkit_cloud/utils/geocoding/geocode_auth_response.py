@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class GeocodeAuthResponse(object):
+    def __int__(self):
+        self.url = ""
+
     def get_response(self, payload):
         error_message = (
             "The Geocoding service received an error. Please try again or contact an Eventkit administrator."

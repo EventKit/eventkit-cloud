@@ -22,7 +22,7 @@ class EventKitBaseTask(Task):
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
         pcf_scaling = os.getenv("PCF_SCALING", False)
         if pcf_scaling:
-            from eventkit_cloud.tasks.scheduled_tasks import kill_worker
+            from eventkit_cloud.tasks.scheduled_tasks import kill_worker  # type: ignore
 
             queue_type, hostname = self.request.hostname.split("@")
 

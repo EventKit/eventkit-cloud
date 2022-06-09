@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from typing import Tuple
 
 from django.utils.translation import gettext_lazy as _
 
@@ -79,7 +79,7 @@ ROOT_URLCONF = "eventkit_cloud.urls"
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = "eventkit_cloud.wsgi.application"
 
-INSTALLED_APPS = (
+INSTALLED_APPS: Tuple[str, ...] = (
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -100,7 +100,7 @@ STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
 
-AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
+AUTHENTICATION_BACKENDS: Tuple[str, ...] = ("django.contrib.auth.backends.ModelBackend",)
 
 # Turn on Soft Deletes for Notifications
 NOTIFICATIONS_SOFT_DELETE = True
