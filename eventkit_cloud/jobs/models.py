@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import multiprocessing
@@ -1072,7 +1073,7 @@ def load_provider_config(config: Union[str, dict]) -> dict:
 
     try:
         if isinstance(config, dict):
-            return config
+            return copy.deepcopy(config)
         configuration = yaml.safe_load(config) if config else dict()
     except yaml.YAMLError as e:
         logger.error(f"Unable to load provider configuration: {e}")
@@ -1080,7 +1081,7 @@ def load_provider_config(config: Union[str, dict]) -> dict:
     return configuration
 
 
-def clean_config(config: str) -> dict:
+def clean_config(config: Union[str, dict]) -> dict:
     """
     Used to remove adhoc service related values from the configuration.
     :param config: A yaml structured string.
@@ -1097,7 +1098,10 @@ def clean_config(config: str) -> dict:
         "tile_size",
     ]
 
-    conf = yaml.safe_load(config) or dict()
+    if isinstance(config, str):
+        conf = yaml.safe_load(config)
+    else:
+        conf = copy.deepcopy(config)
 
     for service_key in service_keys:
         conf.pop(service_key, None)
