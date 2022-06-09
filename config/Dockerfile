@@ -1,7 +1,7 @@
 FROM cloudfoundry/cflinuxfs3:0.196.0
 
 
-RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && groupadd -g 998 docker && \
+RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && groupadd -g 1001 docker && \
     sudo usermod -a -G docker eventkit && mkdir -p /var/lib/eventkit/config && chown eventkit:eventkit /var/lib/eventkit
 
 USER eventkit
