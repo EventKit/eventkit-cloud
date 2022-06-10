@@ -284,7 +284,6 @@ class TestExportTasks(ExportTaskBase):
 
     @patch("eventkit_cloud.tasks.models.DataProvider.layers", new_callable=PropertyMock)
     @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
-    @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
@@ -297,7 +296,6 @@ class TestExportTasks(ExportTaskBase):
         mock_convert,
         mock_download_concurrently,
         mock_get_export_filepath,
-        mock_merge_chunks,
         mock_exists,
         mock_layers,
     ):
@@ -313,7 +311,6 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
-        mock_merge_chunks.return_value = expected_output_path
         mock_exists.return_value = True
 
         layer = "foo"

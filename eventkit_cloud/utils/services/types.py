@@ -11,7 +11,7 @@ class LayerConfiguration(TypedDict, total=False):
     distinct_field: str
 
 
-class LayerDescription(TypedDict):
+class LayerDescription(TypedDict, total=False):
     name: str
     url: str
 
