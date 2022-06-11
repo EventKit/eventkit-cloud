@@ -29,7 +29,6 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
-from eventkit_cloud.utils.services.types import LayersDescription
 from gdal_utils import convert
 from yaml import CLoader
 
@@ -71,7 +70,6 @@ from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_style_files,
     make_file_downloadable,
-    merge_chunks,
     pickle_exception,
     progressive_kill,
     update_progress,
@@ -98,6 +96,7 @@ from eventkit_cloud.utils.ogcapi_process import (
 )
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
@@ -127,8 +126,8 @@ class ExportTask(EventKitBaseTask):
                 .select_related("export_provider_task__provider")
                 .get(uid=task_uid)
             )
-            if self.hide_download:
-                task.hide_download = True
+
+            task.hide_download = self.hide_download
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -1226,50 +1225,36 @@ def wfs_export_task(
     configuration = load_provider_config(config)
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
-    vector_layer_data = configuration.get("vector_layers", [])
-    if len(vector_layer_data):
-        layers = {}
+    vector_layer_data: LayersDescription = export_task_record.export_provider_task.provider.layers
+    layers = {}
+    for layer_name, layer in vector_layer_data.items():
+        path = get_export_filepath(stage_dir, export_task_record, f"{layer_name}-{projection}", "gpkg")
+        url = get_wfs_query_url(name, layer["url"], layer_name, projection)
+        layers[layer_name] = {
+            "task_uid": task_uid,
+            "url": url,
+            "path": path,
+            "base_path": os.path.join(stage_dir, f"{layer_name}-{projection}"),
+            "bbox": bbox,
+            "layer_name": layer_name,
+            "projection": projection,
+        }
 
-        for layer in vector_layer_data:
-            path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
-            url = get_wfs_query_url(name, layer.get("url"), layer.get("name"), projection)
-            layers[layer["name"]] = {
-                "task_uid": task_uid,
-                "url": url,
-                "path": path,
-                "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
-                "bbox": bbox,
-                "layer_name": layer["name"],
-                "projection": projection,
-            }
+    download_concurrently(list(layers.values()), **configuration)
 
-        download_concurrently(list(layers.values()), **configuration)
-
-        for layer_name, layer in layers.items():
-            if not os.path.exists(layer["path"]):
-                continue
-            task_process = TaskProcess(task_uid=task_uid)
-            out = convert(
-                driver="gpkg",
-                input_files=layer.get("path"),
-                output_file=gpkg,
-                projection=projection,
-                boundary=bbox,
-                layer_name=layer_name,
-                access_mode="append",
-                executor=task_process.start_process,
-            )
-
-    else:
-        out = merge_chunks(
+    for layer_name, layer in layers.items():
+        if not os.path.exists(layer["path"]):
+            continue
+        task_process = TaskProcess(task_uid=task_uid)
+        out = convert(
+            driver="gpkg",
+            input_files=layer.get("path"),
             output_file=gpkg,
-            layer_name=list(export_task_record.export_provider_task.provider.layers.keys())[0],
             projection=projection,
-            task_uid=task_uid,
-            bbox=bbox,
-            stage_dir=stage_dir,
-            base_url=get_wfs_query_url(name, service_url, layer, projection),
-            **configuration,
+            boundary=bbox,
+            layer_name=layer_name,
+            access_mode="append",
+            executor=task_process.start_process,
         )
 
     result["driver"] = "gpkg"
@@ -1418,13 +1403,13 @@ def arcgis_feature_service_export_task(
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
         path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
         url = get_arcgis_query_url(layer.get("url"))
-        layers[layer["name"]] = {
+        layers[layer_name] = {
             "task_uid": task_uid,
             "url": url,
             "path": path,
             "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
             "bbox": bbox,
-            "layer_name": layer.get("name"),
+            "layer_name": layer_name,
             "projection": projection,
             "distinct_field": layer.get("distinct_field", "OBJECTID"),
         }
@@ -1440,7 +1425,7 @@ def arcgis_feature_service_export_task(
         task_process = TaskProcess(task_uid=task_uid)
         out = convert(
             driver="gpkg",
-            input_files=layer["path"],
+            input_files=layer.get("path"),
             output_file=gpkg,
             boundary=bbox,
             projection=projection,
