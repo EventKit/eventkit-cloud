@@ -3,6 +3,7 @@ import glob
 import json
 import logging
 import os
+import pathlib
 import pickle
 import re
 import shutil
@@ -79,7 +80,7 @@ def get_download_path(folder_name):
     """
     The download dir is where all files are stored after they are processed.
     It is a unique space to ensure that files aren't being improperly modified.
-    :param file_path: The unique value to store the directory for the data.
+    :param folder_name: The unique value to store the directory for the data.
     :return: The path to the directory.
     """
     return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(folder_name))
@@ -88,7 +89,7 @@ def get_download_path(folder_name):
 def get_download_url(file_name):
     """
     A URL path to the run data
-    :param run_uid: The unique identifier for the run data.
+    :param file_name: The unique identifier for the data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
     return f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(file_name)}"
@@ -180,10 +181,9 @@ def get_export_filepath(
     """
     Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
-    :param job_name: The name of the job being processed.
+    :param export_task_record: The name of the job being processed.
     :param descriptor: A projection (or other description) as an int or string referencing an EPSG code
     (e.g. 4326 = EPSG:4326)
-    :param export_task: The provider slug (e.g. osm) for the filename.
     :param extension: The file extension for the filename.
     """
     provider = export_task_record.export_provider_task.provider if export_task_record else None
@@ -281,7 +281,7 @@ def get_arcgis_templates(metadata: dict) -> dict:
     if not os.path.dirname(stage_dir):
         os.makedirs(stage_dir)
 
-    with cd(os.path.join(os.path.dirname(__file__), "arcgis")):
+    with cd(os.path.join(os.path.dirname(__file__), "../utils/arcgis")):
         for dirpath, _, arcgis_template_files in os.walk("./"):
             if not os.path.isdir(stage_dir):
                 os.mkdir(stage_dir)
@@ -312,9 +312,20 @@ def get_arcgis_templates(metadata: dict) -> dict:
                         files[os.path.abspath(os.path.join(dirpath, arcgis_template_file))] = os.path.join(
                             Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
                         )
-
     arcgis_metadata_file = os.path.join(stage_dir, "metadata.json")
     arcgis_metadata = get_arcgis_metadata(metadata)
+
+    # Add layer files
+    logger.error("Searching for layer_path")
+
+    for data_source_name, data_source in arcgis_metadata['data_sources'].items():
+        for file_description in data_source['files']:
+            if file_description.get("layer_file"):
+                logger.error("Adding layer_path %s", file_description.get("layer_file"))
+                files[os.path.abspath(file_description.get("layer_file"))] = os.path.join(
+                    Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(file_description.get("layer_path"))
+                )
+
 
     with open(arcgis_metadata_file, "w") as open_md_file:
         json.dump(arcgis_metadata, open_md_file)
@@ -555,7 +566,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
-            "layers": list(data_provider.layers.keys()),
+            "layers": ["airports"],
+            # "layers": list(data_provider.layers.keys()),
             "level_from": data_provider.level_from,
             "level_to": data_provider.level_to,
         }
@@ -597,7 +609,14 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
             try:
                 staging_filepath = export_task.result.get_file_path(staging=True)
                 archive_filepath = export_task.result.get_file_path(archive=True)
-                layer_filepath = os.path.splitext(archive_filepath)[0] + ".lyrx"
+                # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
+                if provider_type == "arcgis-feature":
+
+                    layer_filepath_stage = pathlib.Path(staging_filepath).parent.joinpath(
+                        f"{data_provider_task_record.provider.slug}.lyrx")
+                    layer_filepath_archive = pathlib.Path(archive_filepath).parent.joinpath(
+                        f"{data_provider_task_record.provider.slug}.lyrx")
+                    include_files[layer_filepath_stage] = layer_filepath_archive
             except Exception:
                 continue
 
@@ -612,7 +631,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
                     if matches:
                         projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
-                        "layer_file": layer_filepath,
+                        "layer_file": layer_filepath if layer_filepath else None,
                         "file_path": archive_filepath,
                         "full_file_path": staging_filepath,
                         "file_ext": os.path.splitext(staging_filepath)[1],

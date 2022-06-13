@@ -25,6 +25,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
+from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
 from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
@@ -446,6 +447,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if url:
             return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
 
+    # def create_style_file(self, file_path:str=None) -> dict:
+    #     style_file = {}
+    #     if self.export_provider_type.type_name == "arcgis-feature":
+    #         style_file["arcgis"] = create_arcgis_layer_file(layer_filename, service_capabilities)
+
     @property
     def footprint_url(self):
         from eventkit_cloud.utils.mapproxy import get_mapproxy_footprint_url
@@ -478,6 +484,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if not self.layer:  # check for NoneType or empty string
             # TODO: support other service types
             if self.export_provider_type.type_name in ["arcgis-feature"]:
+                logger.info("getting layers from service")
                 return self.get_service_client().get_layers()
             else:
                 return {self.slug: {"url": self.url, "name": self.slug}}

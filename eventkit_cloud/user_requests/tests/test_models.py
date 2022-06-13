@@ -31,7 +31,7 @@ class TestDataProviderRequest(TestCase):
         provider_request = DataProviderRequest.objects.all()[0]
         self.assertEqual(provider_request.name, "Test Data Provider Request")
         self.assertEqual(provider_request.url, "http://www.test.com")
-        self.assertEqual(provider_request.service_description, "Test Service Description")
+        self.assertEqual(provider_request.service_capabilities, "Test Service Description")
         self.assertEqual(provider_request.layer_names, "[Test1, Test2, Test3]")
         self.assertEqual(provider_request.comment, "Test Comment")
         self.assertEqual(provider_request.status, "pending")

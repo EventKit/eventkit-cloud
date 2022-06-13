@@ -274,7 +274,7 @@ def get_aprx_template(datapack_path):
     :return: A file path to the correct arcgis project template.
     """
     template_file_name = "template-2-7.aprx"
-    template_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "templates", template_file_name))
+    template_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "", template_file_name))
     if not os.path.isfile(template_file):
         arcpy.AddError("This script requires an aprx template file which was not found.")
         raise Exception(f"File Not Found: {template_file}")
@@ -292,7 +292,7 @@ def get_layer_file(datapack_path, type, version=CURRENT_VERSION):
     version = "10.6"
     for lyr_ext in ["lyrx", "lyr"]:
         layer_basename = f"{type}-{version.replace('.', '-')}.{lyr_ext}"
-        layer_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "templates", layer_basename))
+        layer_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "", layer_basename))
         if os.path.isfile(layer_file):
             arcpy.AddMessage(f"Fetching layer template: {layer_file}")
             return layer_file

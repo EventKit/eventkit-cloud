@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import pathlib
 import re
 import shutil
 import socket
@@ -10,7 +11,7 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Union, Type
+from typing import List, Union, Type, cast
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -29,6 +30,11 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
+
+from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
+from eventkit_cloud.utils.services.arcgis import ArcGIS
+from eventkit_cloud.utils.services.types import LayersDescription
+
 from gdal_utils import convert
 from yaml import CLoader
 
@@ -1381,70 +1387,70 @@ def arcgis_feature_service_export_task(
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
-    layer_filename =  os.path.splitext(gpkg)[0] + ".lyrx"
 
-    group_template_file = open(os.path.join(settings.ARCGIS_DIR, 'group_template.json'), 'r')
-    group_template_json = json.load(group_template_file)
-    group_template_file.close()
+    data_provider = export_task_record.export_provider_task.provider
+    layer_filename = pathlib.Path(gpkg).parent.joinpath(
+        f"{data_provider.slug}.lyrx")
 
-    layer_template_file = open(os.path.join(settings.ARCGIS_DIR, 'layer_template.json'), 'r')
-    layer_template_json = json.load(layer_template_file)
-    layer_template_file.close()
+    service_client = data_provider.get_service_client()
+    service_capabilities = service_client.get_capabilities()
+    layer_file = create_arcgis_layer_file(layer_filename, service_capabilities)
 
-    configuration = load_provider_config(export_task_record.export_provider_task.provider.config)
-    if configuration.get("layers"):
-        configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
+    # TODO: for testing only remove.
+    out = create_arcgis_layer_file(gpkg, service_capabilities)
+    # configuration = load_provider_config(data_provider.config)
+    # if configuration.get("layers"):
+    #     configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
+    #
+    # out = None
+    #
+    # layers: LayersDescription = {}
+    # vector_layer_data = data_provider.layers
 
-    out = None
-    layers: LayersDescription = {}
-    vector_layer_data = export_task_record.export_provider_task.provider.layers
-    logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
-    for layer_name, layer in vector_layer_data.items():
-        # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
-        path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
-        url = get_arcgis_query_url(layer.get("url"))
-        layers[layer_name] = {
-            "task_uid": task_uid,
-            "url": url,
-            "path": path,
-            "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
-            "bbox": bbox,
-            "layer_name": layer_name,
-            "projection": projection,
-            "distinct_field": layer.get("distinct_field", "OBJECTID"),
-        }
+    # logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
+    # for layer_name, layer in vector_layer_data.items():
+    #     # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
+    #     path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
+    #     url = get_arcgis_query_url(layer.get("url"))
+    #     layers[layer_name] = {
+    #         "task_uid": task_uid,
+    #         "url": url,
+    #         "path": path,
+    #         "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+    #         "bbox": bbox,
+    #         "layer_name": layer_name,
+    #         "projection": projection,
+    #         "distinct_field": layer.get("distinct_field", "OBJECTID"),
+    #     }
+    #
+    # try:
+    #     download_concurrently(list(layers.values()), feature_data=True, **configuration)
+    # except Exception as e:
+    #     logger.error(f"ArcGIS provider download error: {e}")
+    #     raise e
+    # for layer_name, layer in layers.items():
+    #     if not os.path.exists(layer["path"]):
+    #         continue
+    #     task_process = TaskProcess(task_uid=task_uid)
+    #     out = convert(
+    #         driver="gpkg",
+    #         input_files=layer.get("path"),
+    #         output_file=gpkg,
+    #         boundary=bbox,
+    #         projection=projection,
+    #         layer_name=layer_name,
+    #         access_mode="append",
+    #         executor=task_process.start_process,
+    #     )
 
-    try:
-        download_concurrently(list(layers.values()), feature_data=True, **configuration)
-    except Exception as e:
-        logger.error(f"ArcGIS provider download error: {e}")
-        raise e
-    for layer_name, layer in layers.items():
-        if not os.path.exists(layer["path"]):
-            continue
-        task_process = TaskProcess(task_uid=task_uid)
-        out = convert(
-            driver="gpkg",
-            input_files=layer.get("path"),
-            output_file=gpkg,
-            boundary=bbox,
-            projection=projection,
-            layer_name=layer_name,
-            access_mode="append",
-            executor=task_process.start_process,
-        )
-
-    if not geopackage.check_content_exists(out):
-        raise Exception("The service returned no data for the selected area.")
-
-    with open(layer_filename, 'w') as layer_file:
-        json.dump(group_template_json, layer_file)
+    # if not geopackage.check_content_exists(out):
+    #     raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
     result["gpkg"] = out
-    result["layer_file"] = layer_file
+    logger.error("Adding layer file to result %s", layer_file)
 
     return result
 

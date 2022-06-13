@@ -22,7 +22,7 @@ class ArcGIS(GisClient):
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
         super(ArcGIS, self).__init__(*args, **kwargs)
-        self.service_description = None
+        self.service_capabilities = None
         self.layer = self.layer.lower() if self.layer else None
 
     def download_geometry(self) -> Optional[Polygon]:
@@ -35,23 +35,23 @@ class ArcGIS(GisClient):
     def find_layers(self, root):
         raise NotImplementedError("Method is specific to service type")
 
-    @cacheable(key_fields=["layer_id"])
+    @cacheable(timeout=86400, key_fields=["layer_id"])  # timeout: 1 day
     def get_capabilities(
         self, layer_id: Optional[Union[str, int]] = None, layers: dict = None, get_sublayers: bool = True
     ):
         # If there is not a layer_id provided then the service url is used
         # that implies that it is the general service description for the instantiated client.
-        if not layer_id and self.service_description:
-            return self.service_description
+        if self.service_capabilities:
+            return self.service_capabilities
         url = f"{self.service_url.removesuffix('/')}/{layer_id}" if layer_id is not None else self.service_url
         try:
             logger.info("Getting service description from %s", url)
             result = self.session.get(url, params={"f": "json"})
             result.raise_for_status()
-            service_description = result.json()
+            service_capabilities = result.json()
             layers = copy.deepcopy(layers) or {}
             sub_layers = {}
-            for layer in service_description.get("layers", {}):
+            for layer in service_capabilities.get("layers", {}):
                 # The top level service description will have the definition for all of the layers
                 # We can make a request for all of those layers now, then when we get the sublayers we can just pass
                 # in the "prefetched" version.
@@ -59,21 +59,19 @@ class ArcGIS(GisClient):
                 new_layer = self.get_capabilities(layer_id=layer.get("id"), layers=layers, get_sublayers=False)
                 logger.debug("setting layer id: %s with new layer %s", layer.get("id"), new_layer)
                 layers[layer["id"]] = new_layer
-            # from celery.contrib import rdb;
-            # rdb.set_trace()
             if get_sublayers:
-                for sub_layer in service_description.get("subLayers", {}):
+                for sub_layer in service_capabilities.get("subLayers", {}):
                     logger.debug("Getting layer %s sublayer: %s", layer_id, sub_layer.get("id"))
                     new_sub_layer = layers.get(sub_layer["id"]) or [
                         self.get_capabilities(layer_id=sub_layer.get("id"), layers=layers)
                     ]
                     logger.debug("setting sublayer id: %s with new layer %s", sub_layer.get("id"), new_layer)
                     sub_layers[sub_layer["id"]] = new_sub_layer
-            service_description["subLayers"] = list(sub_layers.values()) or list(layers.values())
-            service_description["url"] = url  # Not in spec but helpful for calling the layer for data.
+            service_capabilities["subLayers"] = list(sub_layers.values()) or list(layers.values())
+            service_capabilities["url"] = url  # Not in spec but helpful for calling the layer for data.
             if not layer_id:
-                self.service_description = service_description
-            return service_description
+                self.service_capabilities = service_capabilities
+            return service_capabilities
         except requests.exceptions.HTTPError:
             if url:
                 logger.error("Could not get service description for %s", url)
