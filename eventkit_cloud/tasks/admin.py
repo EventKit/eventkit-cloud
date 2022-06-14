@@ -99,7 +99,10 @@ def soft_delete_runs(modeladmin: ModelAdmin, request: HttpRequest, queryset: "Qu
 
 class ExportRunAdmin(admin.ModelAdmin):
     readonly_fields = ("delete_user", "user", "status", "created_at", "started_at", "finished_at")
-    list_display = ["uid", "get_name", "status", "user", "notified", "expiration", "deleted"]
+    list_display = ["uid", "get_name", "status", "user", "notified", "created_at", "deleted"]
+    list_filter = ("status",)
+    # Searching by date (created_at) supports string like "2022-06-09" to search for June 9, 2022
+    search_fields = ("job__name", "created_at", "user__username")
 
     actions = [soft_delete_runs]
 
