@@ -9,7 +9,6 @@ docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && isort --check eventkit_cloud'
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && mypy eventkit_cloud'
 
-
 echo "Running Tests..."
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py test -v 3 --noinput eventkit_cloud'
 docker-compose exec -T webpack npm test

@@ -159,10 +159,12 @@ class TestTaskBuilder(TestCase):
         mock_export_task.objects.get_or_create.return_value = (expected_result, True)
 
         task_result = create_export_task_record(
-            task_name=task_name,
-            export_provider_task=export_provider_task_name,
-            worker=worker,
-            display=True,
+            task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True
+        )
+        self.assertEqual(task_result, expected_result)
+        mock_export_task.objects.get_or_create.assert_called_with(
+            export_provider_task="ExportProviderTaskName",
+            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": True},
         )
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
