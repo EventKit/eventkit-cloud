@@ -5,32 +5,32 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     def add_supported_format_settings(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
+        ExportFormat = apps.get_model("jobs", "ExportFormat")
 
         # Create the DataProvider objects if they don't exist.
-        DataProviderType.objects.get_or_create(type_name='osm-generic')
-        DataProviderType.objects.get_or_create(type_name='osm')
-        DataProviderType.objects.get_or_create(type_name='wms')
-        DataProviderType.objects.get_or_create(type_name='wmts')
-        DataProviderType.objects.get_or_create(type_name='arcgis-raster')
-        DataProviderType.objects.get_or_create(type_name='wfs')
-        DataProviderType.objects.get_or_create(type_name='arcgis-feature')
-        DataProviderType.objects.get_or_create(type_name='wcs')
-        DataProviderType.objects.get_or_create(type_name='tms')
+        DataProviderType.objects.get_or_create(type_name="osm-generic")
+        DataProviderType.objects.get_or_create(type_name="osm")
+        DataProviderType.objects.get_or_create(type_name="wms")
+        DataProviderType.objects.get_or_create(type_name="wmts")
+        DataProviderType.objects.get_or_create(type_name="arcgis-raster")
+        DataProviderType.objects.get_or_create(type_name="wfs")
+        DataProviderType.objects.get_or_create(type_name="arcgis-feature")
+        DataProviderType.objects.get_or_create(type_name="wcs")
+        DataProviderType.objects.get_or_create(type_name="tms")
 
         # Currently available Provider Types.
-        vector_data_provider_types = ['osm', 'osm-generic', 'wfs', 'arcgis-feature']
-        raster_data_provider_types = ['tms', 'arcgis-raster', 'wmts', 'wms']
-        elevation_only_data_provider_types = ['wcs']
+        vector_data_provider_types = ["osm", "osm-generic", "wfs", "arcgis-feature"]
+        raster_data_provider_types = ["tms", "arcgis-raster", "wmts", "wms"]
+        elevation_only_data_provider_types = ["wcs"]
 
         # Currently available Export Formats.
-        hfa = ExportFormat.objects.get(slug='hfa')
-        nitf = ExportFormat.objects.get(slug='nitf')
-        gtiff = ExportFormat.objects.get(slug='gtiff')
-        kml = ExportFormat.objects.get(slug='kml')
-        shp = ExportFormat.objects.get(slug='shp')
-        gpkg = ExportFormat.objects.get(slug='gpkg')
+        hfa = ExportFormat.objects.get(slug="hfa")
+        nitf = ExportFormat.objects.get(slug="nitf")
+        gtiff = ExportFormat.objects.get(slug="gtiff")
+        kml = ExportFormat.objects.get(slug="kml")
+        shp = ExportFormat.objects.get(slug="shp")
+        gpkg = ExportFormat.objects.get(slug="gpkg")
 
         # Set the known supported export formats per provider type.
         for provider_type in DataProviderType.objects.all():
@@ -42,9 +42,7 @@ class Migration(migrations.Migration):
                 provider_type.supported_formats.add(gtiff, hfa)
 
     dependencies = [
-        ('jobs', 'add_additional_export_formats'),
+        ("jobs", "add_additional_export_formats"),
     ]
 
-    operations = [
-        migrations.RunPython(add_supported_format_settings)
-    ]
+    operations = [migrations.RunPython(add_supported_format_settings)]

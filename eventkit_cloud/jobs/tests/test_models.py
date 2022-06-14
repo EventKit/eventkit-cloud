@@ -6,25 +6,24 @@ from unittest.mock import call, patch
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.db.models.functions import Area
-from django.contrib.gis.db.models.functions import Intersection
+from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.test import TestCase
 from yaml import CDumper
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
+    DatamodelPreset,
+    DataProvider,
+    DataProviderTask,
+    DataProviderType,
     ExportFormat,
     ExportProfile,
     Job,
-    Region,
-    DataProvider,
-    DataProviderTask,
-    DatamodelPreset,
     JobPermission,
     JobPermissionLevel,
-    DataProviderType,
+    Region,
 )
 
 logger = logging.getLogger(__name__)
@@ -238,7 +237,12 @@ class TestJobRegionIntersection(TestCase):
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         bbox = Polygon.from_bbox((36.90, 13.54, 48.52, 20.24))  # overlaps africa / central asia
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name="TestJob", description="Test description", user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
@@ -284,7 +288,11 @@ class TestTag(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.job = Job.objects.create(
-            name="TestJob", description="Test description", user=self.user, the_geom=the_geom, json_tags=tags
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+            json_tags=tags,
         )
         self.uid = self.job.uid
         # add the formats to the job
@@ -344,7 +352,11 @@ class TestJobPermission(TestCase):
         self.data_provider = DataProvider.objects.create(name="test1", slug="test1")
         self.data_providers = DataProvider.objects.all()
         self.job = Job.objects.create(
-            name="test1", description="Test description", the_geom=the_geom, user=self.user1, json_tags={}
+            name="test1",
+            description="Test description",
+            the_geom=the_geom,
+            user=self.user1,
+            json_tags={},
         )
 
     def test_get_orderable_queryset_for_job(self):
@@ -414,8 +426,16 @@ class TestDataProvider(TestCase):
         self.data_provider.save()
 
         cache_calls = [
-            call(f"DataProvider-slug-{self.data_provider.slug}", self.data_provider, timeout=86400),
-            call(f"DataProvider-uid-{self.data_provider.uid}", self.data_provider, timeout=86400),
+            call(
+                f"DataProvider-slug-{self.data_provider.slug}",
+                self.data_provider,
+                timeout=86400,
+            ),
+            call(
+                f"DataProvider-uid-{self.data_provider.uid}",
+                self.data_provider,
+                timeout=86400,
+            ),
         ]
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)

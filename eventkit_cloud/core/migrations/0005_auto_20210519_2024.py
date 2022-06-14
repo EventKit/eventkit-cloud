@@ -6,23 +6,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0004_delete_jobpermission'),
+        ("core", "0004_delete_jobpermission"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='attributeclass',
-            name='complex',
-            field=models.JSONField(blank=True, help_text='This is a thruple of nested thruples represented as lists. Example: \'["blue","==","color"]\'.', null=True, unique=True),
+            model_name="attributeclass",
+            name="complex",
+            field=models.JSONField(
+                blank=True,
+                help_text='This is a thruple of nested thruples represented as lists. Example: \'["blue","==","color"]\'.',
+                null=True,
+                unique=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='attributeclass',
-            name='exclude',
-            field=models.JSONField(blank=True, help_text='This field should be a dict which is passed directly to the user model for excluding users. For help see django docs on excluding models.', null=True),
+            model_name="attributeclass",
+            name="exclude",
+            field=models.JSONField(
+                blank=True,
+                help_text="This field should be a dict which is passed directly to the user model for excluding users. For help see django docs on excluding models.",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='attributeclass',
-            name='filter',
-            field=models.JSONField(blank=True, help_text='This field should be a dict which is passed directly to the user model for filtering users. For help see django docs on filtering models.', null=True),
+            model_name="attributeclass",
+            name="filter",
+            field=models.JSONField(
+                blank=True,
+                help_text="This field should be a dict which is passed directly to the user model for filtering users. For help see django docs on filtering models.",
+                null=True,
+            ),
         ),
     ]

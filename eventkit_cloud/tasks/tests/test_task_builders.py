@@ -42,10 +42,17 @@ class TestTaskBuilder(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
 
         self.shp_task, _ = ExportFormat.objects.get_or_create(
-            name="ESRI Shapefile Format", description="Esri Shapefile (OSM Schema)", slug="shp"
+            name="ESRI Shapefile Format",
+            description="Esri Shapefile (OSM Schema)",
+            slug="shp",
         )
 
-        self.job = Job.objects.create(name="TestJob", description="Test description", user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
         self.region, created = Region.objects.get_or_create(name="Africa", the_geom=the_geom)
         self.job.region = self.region
         self.job.save()
@@ -136,7 +143,10 @@ class TestTaskBuilder(TestCase):
         expected_result = MagicMock(display=False)
         mock_export_task.objects.get_or_create.return_value = (expected_result, True)
         task_result = create_export_task_record(
-            task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=False
+            task_name=task_name,
+            export_provider_task=export_provider_task_name,
+            worker=worker,
+            display=False,
         )
 
         self.assertEqual(task_result, expected_result)
@@ -156,9 +166,17 @@ class TestTaskBuilder(TestCase):
             export_provider_task="ExportProviderTaskName",
             defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": True},
         )
+        self.assertEqual(task_result, expected_result)
+        mock_export_task.objects.get_or_create.assert_called_with(
+            export_provider_task="ExportProviderTaskName",
+            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": True},
+        )
 
         mock_export_task.objects.get_or_create.side_effect = DatabaseError("SomeError")
         with self.assertRaises(DatabaseError):
             create_export_task_record(
-                task_name=task_name, export_provider_task=export_provider_task_name, worker=worker, display=True
+                task_name=task_name,
+                export_provider_task=export_provider_task_name,
+                worker=worker,
+                display=True,
             )

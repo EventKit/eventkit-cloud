@@ -1,4 +1,4 @@
-from typing import List, Union, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, TypeVar, Union
 
 from django.db.models import QuerySet
 

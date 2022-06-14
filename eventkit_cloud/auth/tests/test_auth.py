@@ -12,16 +12,16 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from eventkit_cloud.auth.auth import (
-    get_user,
-    Unauthorized,
-    InvalidOauthResponse,
-    request_access_tokens,
-    get_user_data_from_schema,
-    fetch_user_from_token,
-    OAuthServerUnreachable,
-    OAuthError,
     Error,
+    InvalidOauthResponse,
+    OAuthError,
+    OAuthServerUnreachable,
+    Unauthorized,
+    fetch_user_from_token,
+    get_user,
+    get_user_data_from_schema,
     refresh_access_tokens,
+    request_access_tokens,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,7 +97,9 @@ class TestAuth(TestCase):
 
         # Test bad/unexpected responses
         self.mock_requests.post(
-            settings.OAUTH_TOKEN_URL, text=json.dumps({settings.OAUTH_TOKEN_KEY: None}), status_code=200
+            settings.OAUTH_TOKEN_URL,
+            text=json.dumps({settings.OAUTH_TOKEN_KEY: None}),
+            status_code=200,
         )
         with self.assertRaises(InvalidOauthResponse):
             request_access_tokens(example_auth_code)
@@ -106,7 +108,10 @@ class TestAuth(TestCase):
         self.mock_requests.post(
             settings.OAUTH_TOKEN_URL,
             text=json.dumps(
-                {settings.OAUTH_TOKEN_KEY: example_access_token, settings.OAUTH_REFRESH_KEY: example_refresh_token}
+                {
+                    settings.OAUTH_TOKEN_KEY: example_access_token,
+                    settings.OAUTH_REFRESH_KEY: example_refresh_token,
+                }
             ),
             status_code=200,
         )
@@ -144,7 +149,9 @@ class TestAuth(TestCase):
 
         # Test bad/unexpected responses
         self.mock_requests.post(
-            settings.OAUTH_TOKEN_URL, text=json.dumps({settings.OAUTH_REFRESH_KEY: None}), status_code=200
+            settings.OAUTH_TOKEN_URL,
+            text=json.dumps({settings.OAUTH_REFRESH_KEY: None}),
+            status_code=200,
         )
         with self.assertRaises(InvalidOauthResponse):
             refresh_access_tokens(example_refresh_token)
@@ -153,7 +160,10 @@ class TestAuth(TestCase):
         self.mock_requests.post(
             settings.OAUTH_TOKEN_URL,
             text=json.dumps(
-                {settings.OAUTH_TOKEN_KEY: example_access_token, settings.OAUTH_REFRESH_KEY: example_refresh_token}
+                {
+                    settings.OAUTH_TOKEN_KEY: example_access_token,
+                    settings.OAUTH_REFRESH_KEY: example_refresh_token,
+                }
             ),
             status_code=200,
         )

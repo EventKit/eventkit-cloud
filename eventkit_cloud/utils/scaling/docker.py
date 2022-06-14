@@ -1,11 +1,10 @@
+import logging
+import os
 import shlex
 import uuid
-from typing import Dict, Any
+from typing import Any, Dict
 
 import requests
-import os
-import logging
-
 from docker.errors import APIError
 
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
@@ -40,7 +39,10 @@ class Docker(ScaleClient):
             raise Exception("You must set BIND_MOUNT_LOCATION in order to use the Docker Scaling Client.")
 
         volumes = {
-            os.getenv("BIND_MOUNT_LOCATION"): {"bind": "/var/lib/eventkit/", "mode": "rw"},
+            os.getenv("BIND_MOUNT_LOCATION"): {
+                "bind": "/var/lib/eventkit/",
+                "mode": "rw",
+            },
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
         }
 

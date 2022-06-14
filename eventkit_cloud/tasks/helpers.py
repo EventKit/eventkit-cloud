@@ -20,7 +20,7 @@ from functools import reduce
 from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Union, Tuple, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.dom import minidom
 from zipfile import ZipFile
 

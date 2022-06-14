@@ -2,19 +2,26 @@
 import logging
 import os
 import uuid
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    DataProviderTask,
+    Job,
+    License,
+    Region,
+    UserLicense,
+)
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (
     TaskFactory,
-    create_run,
     create_finalize_run_task_collection,
+    create_run,
     get_invalid_licenses,
 )
 
@@ -36,7 +43,12 @@ class TestExportTaskFactory(TestCase):
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name="TestJob", description="Test description", user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(
+            name="TestJob",
+            description="Test description",
+            user=self.user,
+            the_geom=the_geom,
+        )
         provider = DataProvider.objects.get(slug="osm")
         self.license = License.objects.create(slug="odbl-test", name="test_osm_license")
         provider.license = self.license
@@ -87,7 +99,10 @@ class TestExportTaskFactory(TestCase):
         del task.tasks
 
         task_factory = TaskFactory()
-        task_factory.type_task_map = {"osm-generic": mock_osm_task, "osm": mock_osm_task}
+        task_factory.type_task_map = {
+            "osm-generic": mock_osm_task,
+            "osm": mock_osm_task,
+        }
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
@@ -148,7 +163,9 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # This should return a chain of tasks ending in the finalize_run_task, plus a task sig for just the
         #    finalize_run_task.
         finalize_chain = create_finalize_run_task_collection(
-            run_uid=run_uid, run_zip_task_chain=mock_zip_chain, apply_args=expected_task_settings
+            run_uid=run_uid,
+            run_zip_task_chain=mock_zip_chain,
+            apply_args=expected_task_settings,
         )
 
         finalize_run_task.si.assert_called_once_with(run_uid=run_uid)

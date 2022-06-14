@@ -10,16 +10,16 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponse, JsonResponse, HttpResponsePermanentRedirect
+from django.http import HttpResponse, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import (
-    request_access_tokens,
-    fetch_user_from_token,
     OAuthError,
     Unauthorized,
+    fetch_user_from_token,
     refresh_access_tokens,
+    request_access_tokens,
 )
 from eventkit_cloud.core.helpers import get_id
 
@@ -27,7 +27,12 @@ logger = getLogger(__name__)
 
 
 def validate_oath_vars():
-    oauth_vars = ["OAUTH_CLIENT_ID", "OAUTH_REDIRECT_URI", "OAUTH_RESPONSE_TYPE", "OAUTH_SCOPE"]
+    oauth_vars = [
+        "OAUTH_CLIENT_ID",
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_RESPONSE_TYPE",
+        "OAUTH_SCOPE",
+    ]
     oauth_values = [getattr(settings, _oauth_var) for _oauth_var in oauth_vars]
     if any([_value is None for _value in oauth_values]):
         first_index_of_none = oauth_values.index(None)
@@ -73,7 +78,12 @@ def oauth(request, redirect_url=None):
                     )
                 ]
             encoded_params = urlencode(params)
-            return redirect("{0}?{1}".format(getattr(settings, "OAUTH_AUTHORIZATION_URL").rstrip("/"), encoded_params))
+            return redirect(
+                "{0}?{1}".format(
+                    getattr(settings, "OAUTH_AUTHORIZATION_URL").rstrip("/"),
+                    encoded_params,
+                )
+            )
     else:
         return redirect("/login/error")
 

@@ -266,7 +266,10 @@ class TestFeatureSelection(unittest.TestCase):
         """
         f = FeatureSelection(y)
         self.assertFalse(f.valid)
-        self.assertEqual(f.errors[0], "SQL WHERE Invalid: identifier with colon : must be in double quotes.")
+        self.assertEqual(
+            f.errors[0],
+            "SQL WHERE Invalid: identifier with colon : must be in double quotes.",
+        )
 
     def test_enforces_subset_columns(self):
         y = """

@@ -4,31 +4,32 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     def add_ogc_process_providers(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
 
         # Create OGC API Process types for mesh and point cloud
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process-mesh')
-        ogc_provider, _ = DataProviderType.objects.get_or_create(type_name='ogcapi-process-point-cloud')
-
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process-mesh"
+        )
+        ogc_provider, _ = DataProviderType.objects.get_or_create(
+            type_name="ogcapi-process-point-cloud"
+        )
 
     def remove_providers(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
 
         # Delete data provider types.
-        DataProviderType.objects.filter(type_name='ogcapi-process-mesh').delete()
-        DataProviderType.objects.filter(type_name='ogcapi-process-point-cloud').delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process-mesh").delete()
+        DataProviderType.objects.filter(type_name="ogcapi-process-point-cloud").delete()
 
-        DataProvider = apps.get_model('jobs', 'DataProvider')
+        DataProvider = apps.get_model("jobs", "DataProvider")
         # Data types to remove
-        remove_types = ['mesh', 'point_cloud']
+        remove_types = ["mesh", "point_cloud"]
         # Delete providers that have the mesh or point cloud data types
         DataProvider.objects.filter(data_type__in=remove_types).delete()
 
-
     dependencies = [
-        ('jobs', '0020_alter_dataprovider_data_type'),
+        ("jobs", "0020_alter_dataprovider_data_type"),
     ]
 
     operations = [

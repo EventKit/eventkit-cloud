@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
-from unittest.mock import patch, mock_open, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 from django.conf import settings
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from eventkit_cloud.utils.s3 import delete_from_s3, upload_to_s3, get_presigned_url
+from eventkit_cloud.utils.s3 import delete_from_s3, get_presigned_url, upload_to_s3
 
 
 @override_settings(AWS_STORAGE_BUCKET_NAME="test-bucket")

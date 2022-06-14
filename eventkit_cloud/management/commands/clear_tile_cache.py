@@ -1,8 +1,9 @@
-from django.core.management import BaseCommand
-from django.conf import settings
-from logging import getLogger
 import os
 import shutil
+from logging import getLogger
+
+from django.conf import settings
+from django.core.management import BaseCommand
 
 logger = getLogger(__name__)
 

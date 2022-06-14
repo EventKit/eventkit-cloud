@@ -3,7 +3,7 @@
 
 import unittest
 
-from eventkit_cloud.feature_selection.sql import SQLValidator, OsmfilterRule
+from eventkit_cloud.feature_selection.sql import OsmfilterRule, SQLValidator
 
 
 class TestSQLValidator(unittest.TestCase):

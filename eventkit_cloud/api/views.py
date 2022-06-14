@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
 """Provides classes for handling API requests."""
-from typing import Dict, List, Any, Tuple, Type, Union
-
 import itertools
 import json
 import logging
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Tuple, Type, Union
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
@@ -23,33 +22,36 @@ from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
-from rest_framework import filters, permissions, status, views, viewsets, mixins
+from rest_framework import filters, mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
+from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.filters import (
     ExportRunFilter,
-    JobFilter,
-    UserFilter,
     GroupFilter,
-    UserJobActivityFilter,
+    JobFilter,
     LogFilter,
+    UserFilter,
+    UserJobActivityFilter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.api.permissions import IsOwnerOrReadOnly, HasValidAccessToken
+from eventkit_cloud.api.permissions import HasValidAccessToken, IsOwnerOrReadOnly
 from eventkit_cloud.api.renderers import GeojsonRenderer, PlainTextRenderer
 from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
+    DataProviderGeoFeatureSerializer,
     DataProviderRequestSerializer,
     DataProviderSerializer,
     DataProviderTaskRecordSerializer,
     ExportFormatSerializer,
+    ExportRunGeoFeatureSerializer,
     ExportRunSerializer,
     ExportTaskRecordSerializer,
+    FilteredDataProviderGeoFeatureSerializer,
     FilteredDataProviderSerializer,
     FilteredDataProviderTaskRecordSerializer,
     GroupSerializer,
@@ -60,65 +62,66 @@ from eventkit_cloud.api.serializers import (
     NotificationSerializer,
     ProjectionSerializer,
     ProviderTaskSerializer,
+    RegionalJustificationSerializer,
+    RegionalPolicySerializer,
     RegionMaskSerializer,
     RegionSerializer,
-    RegionalPolicySerializer,
-    RegionalJustificationSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
     UserJobActivitySerializer,
-    ExportRunGeoFeatureSerializer,
-    DataProviderGeoFeatureSerializer,
-    FilteredDataProviderGeoFeatureSerializer,
-    filtered_basic_data_provider_serializer,
     basic_data_provider_list_serializer,
     basic_geojson_list_serializer,
+    filtered_basic_data_provider_serializer,
 )
 from eventkit_cloud.api.utils import (
-    get_run_zip_file,
     get_binned_groups,
     get_download_counts_by_area,
-    get_logins_per_day,
     get_download_counts_by_product,
+    get_logins_per_day,
+    get_run_zip_file,
 )
-from eventkit_cloud.api.validators import get_area_in_sqkm, get_bbox_area_in_sqkm
-from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.api.validators import (
+    get_area_in_sqkm,
+    get_bbox_area_in_sqkm,
+    validate_bbox_params,
+    validate_search_bbox,
+)
 from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.core.helpers import (
-    sendnotification,
-    NotificationVerb,
     NotificationLevel,
+    NotificationVerb,
     get_query_cache_key,
+    sendnotification,
 )
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
+    annotate_groups_restricted,
     annotate_users_restricted,
     attribute_class_filter,
-    annotate_groups_restricted,
     get_group_counts,
 )
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
-    Job,
-    Region,
-    RegionMask,
-    RegionalPolicy,
-    RegionalJustification,
+    DatamodelPreset,
     DataProvider,
     DataProviderTask,
-    DatamodelPreset,
-    License,
-    VisibilityState,
-    UserJobActivity,
+    ExportFormat,
+    Job,
     JobPermission,
     JobPermissionLevel,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
+    RegionMask,
+    UserJobActivity,
+    VisibilityState,
 )
 from eventkit_cloud.tasks.export_tasks import (
-    pick_up_run_task,
     cancel_export_provider_task,
+    pick_up_run_task,
 )
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
@@ -128,11 +131,11 @@ from eventkit_cloud.tasks.models import (
     prefetch_export_runs,
 )
 from eventkit_cloud.tasks.task_factory import (
-    create_run,
-    check_job_permissions,
-    get_invalid_licenses,
-    InvalidLicense,
     Error,
+    InvalidLicense,
+    check_job_permissions,
+    create_run,
+    get_invalid_licenses,
 )
 from eventkit_cloud.tasks.util_tasks import rerun_data_provider_records
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest

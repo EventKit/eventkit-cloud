@@ -6,9 +6,8 @@ from io import BytesIO
 from typing import Union
 from urllib.parse import urlparse
 
-from PIL import Image
 from django.conf import settings
-from mapproxy.grid import tile_grid
+from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
@@ -17,9 +16,10 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_image_download_path,
 )
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
+from mapproxy.grid import tile_grid
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,13 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
         bbox = copy.copy(WGS84_FULL_WORLD)
     # Creates and returns a TileGrid object, allows us specify min_res instead of supplying the resolution list.
     min_res = 0.703125  # EPSG:4326 with two tiles at level 0
-    mapproxy_grid = tile_grid(srs=4326, min_res=min_res, bbox_srs=4326, bbox=copy.copy(WGS84_FULL_WORLD), origin="ul")
+    mapproxy_grid = tile_grid(
+        srs=4326,
+        min_res=min_res,
+        bbox_srs=4326,
+        bbox=copy.copy(WGS84_FULL_WORLD),
+        origin="ul",
+    )
 
     if zoom_level is None:
         resolution = get_resolution_for_extent(bbox)

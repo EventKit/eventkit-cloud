@@ -10,12 +10,15 @@ from django.shortcuts import redirect
 
 from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_download_path
-from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
+from eventkit_cloud.tasks.helpers import get_download_path, get_run_staging_dir
+from eventkit_cloud.tasks.models import (
+    ExportRun,
+    FileProducingTaskResult,
+    RunZipFile,
+    UserDownload,
+)
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
-
 
 logger = getLogger(__name__)
 
@@ -35,12 +38,14 @@ def download(request):
     download_uid = request.GET.get("uid")
     try:
         downloadable = FileProducingTaskResult.objects.select_related(
-            "export_task__export_provider_task__provider", "export_task__export_provider_task__run"
+            "export_task__export_provider_task__provider",
+            "export_task__export_provider_task__run",
         ).get(uid=download_uid)
 
         if not downloadable.user_can_download(current_user):
             return HttpResponse(
-                status=401, content=f"The user: {current_user.username} does not have permission to download it."
+                status=401,
+                content=f"The user: {current_user.username} does not have permission to download it.",
             )
     except FileProducingTaskResult.DoesNotExist:
         return HttpResponse(status=400, content="Download not found for requested id value.")

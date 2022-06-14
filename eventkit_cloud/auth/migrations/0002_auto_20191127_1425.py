@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('eventkit_cloud_auth', '0001_initial'),
+        ("eventkit_cloud_auth", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='oauth',
-            name='user_info',
+            model_name="oauth",
+            name="user_info",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
         ),
     ]

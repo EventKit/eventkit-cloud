@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from unittest.mock import patch, MagicMock
+import json
+import logging
+from unittest.mock import MagicMock, patch
 
-from django.db.models import Count, Case, When, Q
+from django.contrib.auth.models import Group, User
+from django.db.models import Case, Count, Q, When
+from django.test import TestCase
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import (
     AttributeClass,
-    update_all_attribute_classes_with_user,
-    update_all_users_with_attribute_class,
-    get_users_from_attribute_class,
-    validate_user_attribute_class,
-    annotate_users_restricted,
-    get_unrestricted_users,
     GroupPermission,
     GroupPermissionLevel,
+    annotate_users_restricted,
     get_group_counts,
+    get_unrestricted_users,
+    get_users_from_attribute_class,
+    update_all_attribute_classes_with_user,
+    update_all_users_with_attribute_class,
+    validate_user_attribute_class,
 )
-
-import json
-import logging
-from django.contrib.auth.models import User, Group
-
-from django.test import TestCase
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +88,10 @@ class TestCoreModels(TestCase):
         expected_response = list(User.objects.filter(id=self.user2.id))
         mock_validate_object.return_value = expected_response
         OAuth.objects.create(
-            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
+            user=self.user2,
+            identification="test_ident",
+            commonname="test_common",
+            user_info={"color": "blue"},
         )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
@@ -111,7 +112,10 @@ class TestCoreModels(TestCase):
 
         mock_validate_object.return_value = True
         OAuth.objects.create(
-            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
+            user=self.user2,
+            identification="test_ident",
+            commonname="test_common",
+            user_info={"color": "blue"},
         )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
@@ -154,7 +158,14 @@ class TestCoreModels(TestCase):
         # There are 4 member relationships, both users are member is 2 groups.
         self.assertEqual(
             groups.aggregate(
-                member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1)))
+                member=Count(
+                    Case(
+                        When(
+                            Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value),
+                            then=1,
+                        )
+                    )
+                )
             )["member"],
             4,
         )
@@ -162,7 +173,14 @@ class TestCoreModels(TestCase):
         # There are 3 admin relationships, 1 user is admin in 2 groups, 1 is admin in 1 group
         self.assertEqual(
             groups.aggregate(
-                admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1)))
+                admin=Count(
+                    Case(
+                        When(
+                            Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value),
+                            then=1,
+                        )
+                    )
+                )
             )["admin"],
             3,
         )

@@ -1,6 +1,6 @@
-from django.test import TestCase
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.test import TestCase
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
@@ -47,7 +47,11 @@ class TestSizeIncreaseRequest(TestCase):
         provider = DataProvider.objects.get(slug="osm-generic")
         self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         self.size_request = SizeIncreaseRequest(
-            provider=provider, the_geom=the_geom, requested_aoi_size=5000, requested_data_size=1000, user=self.user
+            provider=provider,
+            the_geom=the_geom,
+            requested_aoi_size=5000,
+            requested_data_size=1000,
+            user=self.user,
         )
         self.size_request.save()
         self.uid = self.size_request.uid

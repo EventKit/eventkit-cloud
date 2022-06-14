@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 from uuid import uuid4
 
 from django.test import TestCase
 
 from eventkit_cloud.ui.helpers import (
     file_to_geojson,
+    is_lat_lon,
+    is_mgrs,
     read_json_file,
     unzip_file,
     write_uploaded_file,
-    is_mgrs,
-    is_lat_lon,
 )
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,8 @@ class TestHelpers(TestCase):
             ret = write_uploaded_file(test_file)
             self.assertTrue(ret)
             m.assert_called_once_with(
-                f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}.txt", "wb+"
+                f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}.txt",
+                "wb+",
             )
 
             test_file.chunks.assert_called_once

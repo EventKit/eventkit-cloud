@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-import dj_database_url
-import os
 import json
+import os
 import socket
 
+import dj_database_url
+
 from eventkit_cloud.settings.celery import *  # noqa
-from eventkit_cloud.settings.celery import INSTALLED_APPS
-from eventkit_cloud.settings.celery import MIDDLEWARE
-from eventkit_cloud.settings.celery import is_true
+from eventkit_cloud.settings.celery import INSTALLED_APPS, MIDDLEWARE, is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 

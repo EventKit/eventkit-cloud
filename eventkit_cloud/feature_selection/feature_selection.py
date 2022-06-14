@@ -1,7 +1,7 @@
 import logging
 import re
-
 import unicodedata
+
 import yaml
 from yaml.constructor import ConstructorError
 from yaml.parser import ParserError

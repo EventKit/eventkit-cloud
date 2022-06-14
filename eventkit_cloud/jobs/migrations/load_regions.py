@@ -4,7 +4,7 @@
 import os
 
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.db import migrations
 
 

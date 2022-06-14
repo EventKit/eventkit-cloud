@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0007_auto_20200812_1533'),
+        ("tasks", "0007_auto_20200812_1533"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='exporttaskrecord',
-            name='hide_download',
+            model_name="exporttaskrecord",
+            name="hide_download",
             field=models.BooleanField(default=False),
         ),
     ]

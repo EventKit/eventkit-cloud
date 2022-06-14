@@ -5,10 +5,11 @@ import os
 from datetime import datetime
 from string import Template
 
+import yaml
 from django.conf import settings
 from requests import exceptions
+
 from eventkit_cloud.core.helpers import get_or_update_session
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,9 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
-        from eventkit_cloud.tasks.helpers import update_progress
         from audit_logging.file_logging import logging_open
+
+        from eventkit_cloud.tasks.helpers import update_progress
 
         # This is just to make it easier to trace when user_details haven't been sent
         if user_details is None:

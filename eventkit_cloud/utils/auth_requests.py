@@ -11,8 +11,9 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from django.conf import settings
-from mapproxy.client import http as mapproxy_http
 from requests_pkcs12 import create_pyopenssl_sslcontext
+
+from mapproxy.client import http as mapproxy_http
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,10 @@ def get_cred_token(kwargs_dict=None):
         return None
     token = os.getenv(cred_token)
     if not token:
-        logger.error("A token credential was configured for %s but the variable is not set.", cred_token)
+        logger.error(
+            "A token credential was configured for %s but the variable is not set.",
+            cred_token,
+        )
         raise Exception("The service token is improperly configured.")
     return token
 

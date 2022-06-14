@@ -11,7 +11,7 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Union, Type, cast
+from typing import List, Type, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -30,11 +30,6 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
-
-from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
-from eventkit_cloud.utils.services.arcgis import ArcGIS
-from eventkit_cloud.utils.services.types import LayersDescription
-
 from gdal_utils import convert
 from yaml import CLoader
 
@@ -93,6 +88,7 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
+from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs

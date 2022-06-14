@@ -8,23 +8,35 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0016_region_properties'),
+        ("jobs", "0016_region_properties"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataprovider',
-            name='the_geom',
-            field=django.contrib.gis.db.models.fields.MultiPolygonField(default='SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))', srid=4326, verbose_name='Covered Area'),
+            model_name="dataprovider",
+            name="the_geom",
+            field=django.contrib.gis.db.models.fields.MultiPolygonField(
+                default="SRID=4326;MultiPolygon (((-180 -90,180 -90,180 90,-180 90,-180 -90)))",
+                srid=4326,
+                verbose_name="Covered Area",
+            ),
         ),
         migrations.AlterField(
-            model_name='job',
-            name='original_selection',
-            field=django.contrib.gis.db.models.fields.GeometryCollectionField(blank=True, default=django.contrib.gis.geos.collections.GeometryCollection, null=True, srid=4326, verbose_name='The original map selection'),
+            model_name="job",
+            name="original_selection",
+            field=django.contrib.gis.db.models.fields.GeometryCollectionField(
+                blank=True,
+                default=django.contrib.gis.geos.collections.GeometryCollection,
+                null=True,
+                srid=4326,
+                verbose_name="The original map selection",
+            ),
         ),
         migrations.AlterField(
-            model_name='region',
-            name='the_geom',
-            field=django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326, verbose_name='Geometry'),
+            model_name="region",
+            name="the_geom",
+            field=django.contrib.gis.db.models.fields.MultiPolygonField(
+                default="", srid=4326, verbose_name="Geometry"
+            ),
         ),
     ]

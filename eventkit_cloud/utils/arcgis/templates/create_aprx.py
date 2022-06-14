@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import json
+import logging
+import os
+import shutil
+from multiprocessing import Pool
+
 import arcpy
 
 # This file is used to create an aprx file based on a datapack.  It needs to be run via the python application that is
@@ -7,11 +13,6 @@ import arcpy
 # For many users this is the default python, for other users they may have to specify this location
 # for example ('C:\Python27\ArcGIS10.5\python create_aprx.py').
 
-import json
-import logging
-import os
-import shutil
-from multiprocessing import Pool
 
 logging.basicConfig()
 logger = logging.getLogger("create_aprx")

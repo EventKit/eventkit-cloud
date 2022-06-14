@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0002_dataprovidertaskrecord_estimated_size'),
+        ("tasks", "0002_dataprovidertaskrecord_estimated_size"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataprovidertaskrecord',
-            name='estimated_duration',
+            model_name="dataprovidertaskrecord",
+            name="estimated_duration",
             field=models.FloatField(blank=True, null=True),
         ),
     ]

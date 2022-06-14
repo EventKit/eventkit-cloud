@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Tuple, Dict
+from typing import Any, Dict, Tuple
 
 import django
 

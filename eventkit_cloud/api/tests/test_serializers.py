@@ -5,10 +5,10 @@ from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import (
+    DataProviderSerializer,
+    basic_data_provider_list_serializer,
     basic_field_serializer,
     filtered_basic_data_provider_serializer,
-    basic_data_provider_list_serializer,
-    DataProviderSerializer,
 )
 from eventkit_cloud.jobs.models import DataProvider
 
@@ -33,10 +33,21 @@ class TestSerializers(TestCase):
 
     def test_filtered_basic_data_provider_serializer(self):
         expected_result = [
-            {"id": self.data_provider.id, "uid": self.data_provider.uid, "hidden": True, "display": False}
+            {
+                "id": self.data_provider.id,
+                "uid": self.data_provider.uid,
+                "hidden": True,
+                "display": False,
+            }
         ]
-        self.assertEqual(filtered_basic_data_provider_serializer(self.data_provider, many=True), expected_result)
-        self.assertEqual(filtered_basic_data_provider_serializer(self.data_provider), expected_result[0])
+        self.assertEqual(
+            filtered_basic_data_provider_serializer(self.data_provider, many=True),
+            expected_result,
+        )
+        self.assertEqual(
+            filtered_basic_data_provider_serializer(self.data_provider),
+            expected_result[0],
+        )
         self.assertEqual(filtered_basic_data_provider_serializer([]), [{}])
         with self.assertRaises(Exception):
             filtered_basic_data_provider_serializer([Mock(), Mock()])

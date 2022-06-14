@@ -1,7 +1,7 @@
 import os
+from enum import Enum
 
 from celery import Celery
-from enum import Enum
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 

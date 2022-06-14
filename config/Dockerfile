@@ -8,7 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini /var/lib/eventkit/
+COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini ./setup.cfg /var/lib/eventkit/
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 COPY --chown=eventkit ./config /var/lib/eventkit/config
 

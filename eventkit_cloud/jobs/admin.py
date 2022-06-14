@@ -3,29 +3,28 @@ import logging
 import os
 
 from django import forms
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
 from django.urls import re_path
 from django.utils.html import format_html
-from django_celery_beat.models import IntervalSchedule, CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, IntervalSchedule
 
-from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
+from eventkit_cloud.jobs.forms import RegionalPolicyForm, RegionForm
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
-    Job,
-    Region,
-    RegionalPolicy,
-    RegionalJustification,
-    DataProvider,
-    DataProviderType,
     DatamodelPreset,
-    License,
+    DataProvider,
     DataProviderStatus,
     DataProviderTask,
+    DataProviderType,
+    ExportFormat,
+    Job,
     JobPermission,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
     clean_config,
     clean_config_as_str,
 )
@@ -97,7 +96,11 @@ class JobAdmin(OSMGeoAdmin):
         return render(
             request,
             self.update_complete_template,
-            {"num_selected": len(selected.split(",")), "region": region.name, "opts": self.model._meta},
+            {
+                "num_selected": len(selected.split(",")),
+                "region": region.name,
+                "opts": self.model._meta,
+            },
         )
 
     def get_urls(self):
@@ -159,8 +162,8 @@ class DataProviderForm(forms.ModelForm):
 
         if service_type in ["wms", "wmts", "tms", "arcgis-raster"]:
             from eventkit_cloud.utils.mapproxy import (
-                MapproxyGeopackage,
                 ConfigurationError,
+                MapproxyGeopackage,
             )
 
             service = MapproxyGeopackage(
@@ -176,7 +179,9 @@ class DataProviderForm(forms.ModelForm):
         elif service_type in ["osm", "osm-generic"]:
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
-            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+            from eventkit_cloud.feature_selection.feature_selection import (
+                FeatureSelection,
+            )
 
             feature_selection = FeatureSelection(clean_config_as_str(config))
             if feature_selection.errors:
@@ -216,7 +221,15 @@ class DataProviderAdmin(admin.ModelAdmin):
     """
 
     form = DataProviderForm
-    list_display = ["name", "slug", "label", "export_provider_type", "attribute_class", "license", "display"]
+    list_display = [
+        "name",
+        "slug",
+        "label",
+        "export_provider_type",
+        "attribute_class",
+        "license",
+        "display",
+    ]
     search_fields = [
         "name",
         "slug",
@@ -339,7 +352,13 @@ class RegionalPolicyAdmin(admin.ModelAdmin):
 
 class RegionalJustificationAdmin(admin.ModelAdmin):
     model = RegionalJustification
-    list_display = ("uid", "justification_id", "justification_name", "regional_policy", "user")
+    list_display = (
+        "uid",
+        "justification_id",
+        "justification_name",
+        "regional_policy",
+        "user",
+    )
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

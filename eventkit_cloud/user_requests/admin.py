@@ -1,6 +1,10 @@
 from django.contrib import admin
 
-from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest, UserSizeRule
+from eventkit_cloud.user_requests.models import (
+    DataProviderRequest,
+    SizeIncreaseRequest,
+    UserSizeRule,
+)
 
 
 class DataProviderRequestAdmin(admin.ModelAdmin):
@@ -70,9 +74,20 @@ class UserSizeRuleAdmin(admin.ModelAdmin):
         "max_selection_size",
     ]
 
-    search_fields = ("user__last_name", "user__first_name", "user", "provider__slug", "provider__name")
+    search_fields = (
+        "user__last_name",
+        "user__first_name",
+        "user",
+        "provider__slug",
+        "provider__name",
+    )
 
-    ordering = ("user__last_name", "user__first_name", "user__username", "provider__name")
+    ordering = (
+        "user__last_name",
+        "user__first_name",
+        "user__username",
+        "provider__name",
+    )
 
     def get_last_name(self, obj):
         return obj.user.last_name
