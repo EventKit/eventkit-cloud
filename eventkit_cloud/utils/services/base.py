@@ -3,15 +3,15 @@ import base64
 import copy
 import json
 import logging
-from typing import Dict, Any, Union, cast
-from typing import Optional
+from typing import Dict, Any, Union, cast, Optional
 
 import requests
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Polygon
 from django.core.cache import cache
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.utils.generic import cacheable
 from eventkit_cloud.utils.services import DEFAULT_CACHE_TIMEOUT
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.errors import ProviderCheckError
@@ -198,6 +198,13 @@ class GisClient(abc.ABC):
         query_params = copy.deepcopy(query) or self.query
         service_url = url.rstrip("/\\")
         return self.session.get(url=service_url, params=query_params, timeout=self.timeout)
+
+    @cacheable()
+    def get_capabilities(self):
+        return self.get_response(url=self.service_url, query=self.query)
+
+    def get_layers(self):
+        raise NotImplementedError("Method is specific to service type")
 
     def check_intersection(self, geometry: GEOSGeometry):
         """

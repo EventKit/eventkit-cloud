@@ -1,15 +1,13 @@
+import logging
 import re
-import unicodedata
 
+import unicodedata
 import yaml
 from yaml.constructor import ConstructorError
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from .sql import SQLValidator
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +145,7 @@ class FeatureSelection(object):
         if self._doc:
             return self._doc
         try:
-            loaded_doc = yaml.safe_load(self._raw_doc)
+            loaded_doc = yaml.safe_load(self._raw_doc) if isinstance(self._raw_doc, str) else self._raw_doc
             if validate_schema(loaded_doc):
                 self._doc = loaded_doc
                 return self._doc

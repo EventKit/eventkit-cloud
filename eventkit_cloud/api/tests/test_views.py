@@ -1839,6 +1839,7 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertEqual(len(data), page_size)
 
     def test_create_viewed(self):
+
         # Get our current number of viewed jobs to compare against.
         url = reverse("api:user_job_activity-list")
         response = self.client.get(url + "?activity=viewed&page_size=10")
@@ -1894,6 +1895,7 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertNotEqual(viewed_jobs[0], viewed_jobs[1])
 
     def test_create_viewed_existing(self):
+
         # View job A.
         url = reverse("api:user_job_activity-list")
         job_a = self.create_job("UnviewedJobA")
