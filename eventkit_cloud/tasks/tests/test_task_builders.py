@@ -135,7 +135,6 @@ class TestTaskBuilder(TestCase):
 
     @patch("eventkit_cloud.tasks.task_builders.ExportTaskRecord")
     def test_create_export_task_record(self, mock_export_task):
-        from eventkit_cloud.tasks.enumerations import TaskState
 
         task_name = "TaskName"
         export_provider_task_name = "ExportProviderTaskName"
@@ -152,11 +151,8 @@ class TestTaskBuilder(TestCase):
 
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
-            export_provider_task=export_provider_task_name,
-            status=TaskState.PENDING.value,
-            name=task_name,
-            worker=worker,
-            display=False,
+            export_provider_task="ExportProviderTaskName",
+            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": False},
         )
 
         expected_result = MagicMock(display=True)
@@ -170,11 +166,8 @@ class TestTaskBuilder(TestCase):
         )
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
-            export_provider_task=export_provider_task_name,
-            status=TaskState.PENDING.value,
-            name=task_name,
-            worker=worker,
-            display=True,
+            export_provider_task="ExportProviderTaskName",
+            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": True},
         )
 
         mock_export_task.objects.get_or_create.side_effect = DatabaseError("SomeError")

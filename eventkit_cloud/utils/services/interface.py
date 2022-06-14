@@ -4,6 +4,8 @@ from typing import Optional
 import requests
 from django.contrib.gis.geos import Polygon
 
+from eventkit_cloud.utils.services.types import LayersDescription
+
 
 class IGisClient(abc.ABC):
     aoi = None
@@ -43,3 +45,11 @@ class IGisClient(abc.ABC):
     @abc.abstractmethod
     def check_response(self, head_only=False) -> requests.Response:
         pass
+
+    @abc.abstractmethod
+    def get_capabilities(self):
+        raise NotImplementedError("Method is specific to service type")
+
+    @abc.abstractmethod
+    def get_layers(self) -> LayersDescription:
+        raise NotImplementedError("Method is specific to service type")

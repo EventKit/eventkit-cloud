@@ -468,7 +468,6 @@ class TestDataProvider(TestCase):
         self.assertEqual(expected_url, self.data_provider.footprint_url)
 
     def test_layers(self):
-
         # Test single layer vector source
         expected_layer = "test"
         expected_layers = {expected_layer: {"name": expected_layer, "url": self.data_provider.url}}

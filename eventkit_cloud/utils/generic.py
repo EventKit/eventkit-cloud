@@ -1,8 +1,14 @@
+import copy
+import inspect
+import itertools
 import logging
 import time
 from functools import wraps
 
 from django.conf import settings
+from django.core.cache import cache
+
+from eventkit_cloud.feature_selection.feature_selection import slugify
 
 logger = logging.getLogger()
 
@@ -50,3 +56,29 @@ def retry(f):
         raise exc
 
     return wrapper
+
+
+DEFAULT_TIMEOUT = 60 * 60 * 24  # one day
+
+
+def cacheable(timeout: int = DEFAULT_TIMEOUT, key_fields=[]):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # handle if first arg is self.
+            arg = type(args[0]).__name__ if inspect.isclass(args[0]) else str(slugify(args[0]))
+            arg_string = ".".join([str(slugify(arg)) for arg in args[:1]])
+            keys = (
+                copy.deepcopy(kwargs)
+                if not key_fields
+                else {key_field: kwargs.get(key_field) for key_field in key_fields}
+            )
+            kwarg_string = ".".join([str(slugify(kwarg)) for kwarg in itertools.chain.from_iterable(keys.items())])
+            cache_key = f"{func.__name__}.{arg}.{arg_string}.{kwarg_string}"[:249]
+            logger.debug("Getting or setting the cache_key %s", cache_key)
+            return_value = cache.get_or_set(cache_key, lambda: func(*args, **kwargs), timeout=timeout)
+            return return_value
+
+        return wrapper
+
+    return decorator

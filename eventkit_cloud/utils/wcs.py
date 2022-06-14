@@ -219,7 +219,8 @@ class WCSConverter(object):
                 logger.error(e)
                 raise Exception("There was an error writing the file to disk.")
         if len(geotiffs) > 1:
-            self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
+            task_process = TaskProcess(self.task_uid)
+            self.out = merge_geotiffs(geotiffs, self.out, executor=task_process.start_process)
         else:
             shutil.copy(geotiffs[0], self.out)
 

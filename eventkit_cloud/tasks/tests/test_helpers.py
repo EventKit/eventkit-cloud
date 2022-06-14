@@ -121,7 +121,11 @@ class TestHelpers(TestCase):
     ):
         run_uid = "1234"
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
-        expected_layers = ["layer1", "layer2"]
+        example_layers = {
+            "layer1": {"name": "layer1", "url": "https://some.url/layer1"},
+            "layer2": {"name": "layer2", "url": "https://some.url/layer2"},
+        }
+        expected_layers = [lyr_name for lyr_name, lyr in example_layers.items()]
         expected_type = "vector"
         mock_create_license_file.return_value = expected_license_file = {"/license.txt": "/license.txt"}
         mock_isfile.return_value = True
@@ -165,7 +169,7 @@ class TestHelpers(TestCase):
         mocked_data_provider.service_copyright = expected_copyright = "mocked_copyright"
         mocked_data_provider.config = f"cert_var: {expected_provider_slug}"
         mocked_data_provider.service_description = expected_data_provider_desc = "example_description"
-        mocked_data_provider.layers = expected_layers
+        mocked_data_provider.layers = example_layers
         mocked_data_provider.get_data_type.return_value = expected_type
         mocked_data_provider.level_from = expected_level_from = 0
         mocked_data_provider.level_to = expected_level_to = 12

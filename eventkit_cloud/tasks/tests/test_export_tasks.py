@@ -282,8 +282,8 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
+    @patch("eventkit_cloud.tasks.models.DataProvider.layers", new_callable=PropertyMock)
     @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
-    @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.download_concurrently")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
@@ -296,8 +296,8 @@ class TestExportTasks(ExportTaskBase):
         mock_convert,
         mock_download_concurrently,
         mock_get_export_filepath,
-        mock_merge_chunks,
         mock_exists,
+        mock_layers,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -311,12 +311,12 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
-        mock_merge_chunks.return_value = expected_output_path
         mock_exists.return_value = True
 
         layer = "foo"
         service_url = "https://abc.gov/WFSserver/"
         query_url = "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=foo&SRSNAME=EPSG:4326&BBOX=BBOX_PLACEHOLDER"
+        mock_layers.return_value = {layer: {"name": layer, "url": query_url}}
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {"source": expected_output_path}
@@ -337,16 +337,6 @@ class TestExportTasks(ExportTaskBase):
             service_url=service_url,
             layer=layer,
             bbox=[1, 2, 3, 4],
-        )
-
-        mock_merge_chunks.assert_called_once_with(
-            output_file=expected_output_path,
-            layer_name=expected_provider_slug,
-            projection=projection,
-            task_uid=str(saved_export_task.uid),
-            bbox=[1, 2, 3, 4],
-            stage_dir=self.stage_dir,
-            base_url=f"{service_url}{query_url}",
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -370,13 +360,7 @@ class TestExportTasks(ExportTaskBase):
         layer_1 = "spam"
         layer_2 = "ham"
 
-        config = f"""
-        vector_layers:
-            - name: '{layer_1}'
-              url: '{url_1}'
-            - name: '{layer_2}'
-              url: '{url_2}'
-        """
+        mock_layers.return_value = {layer_1: {"name": layer_1, "url": url_1}, layer_2: {"name": layer_2, "url": url_2}}
 
         expected_path_1 = f"{layer_1}.gpkg"
         expected_path_2 = f"{layer_2}.gpkg"
@@ -410,8 +394,11 @@ class TestExportTasks(ExportTaskBase):
             },
         }
 
-        mock_download_concurrently.return_value = expected_layers
+        mock_download_concurrently.reset_mock()
         mock_convert.reset_mock()
+        mock_get_export_filepath.reset_mock()
+
+        mock_download_concurrently.return_value = expected_layers
         mock_get_export_filepath.side_effect = [expected_output_path, expected_path_1, expected_path_2]
 
         # test with multiple layers
@@ -422,7 +409,6 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            config=config,
             bbox=[1, 2, 3, 4],
         )
 
@@ -809,8 +795,8 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.models.DataProvider.layers", new_callable=PropertyMock)
     @patch("eventkit_cloud.tasks.export_tasks.os.path.exists")
-    @patch("eventkit_cloud.tasks.export_tasks.merge_chunks")
     @patch("eventkit_cloud.tasks.export_tasks.make_dirs")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
@@ -825,8 +811,8 @@ class TestExportTasks(ExportTaskBase):
         mock_geopackage,
         mock_get_export_filepath,
         mock_makedirs,
-        mock_merge_chunks,
         mock_exists,
+        mock_layers,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -845,7 +831,7 @@ class TestExportTasks(ExportTaskBase):
             "https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
-        mock_merge_chunks.return_value = expected_output_path
+        mock_convert.return_value = expected_output_path
         mock_exists.return_value = True
 
         previous_task_result = {"source": expected_input_url}
@@ -863,6 +849,19 @@ class TestExportTasks(ExportTaskBase):
         mock_geopackage.check_content_exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
 
+        # Need to override layers so that we don't make external call.
+        url_1 = "https://abc.gov/arcgis/services/x"
+        url_2 = "https://abc.gov/arcgis/services/y"
+
+        layer_name_1 = "foo"
+        layer_name_2 = "bar"
+        expected_field = "baz"
+
+        mock_layers.return_value = {
+            layer_name_1: {"name": layer_name_1, "url": url_1},
+            layer_name_2: {"name": layer_name_2, "url": url_2},
+        }
+
         # test without trailing slash
         result_a = arcgis_feature_service_export_task.run(
             result=previous_task_result,
@@ -871,17 +870,6 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             bbox=bbox,
-        )
-
-        mock_merge_chunks.assert_called_once_with(
-            output_file=expected_output_path,
-            layer_name=expected_provider_slug,
-            projection=projection,
-            task_uid=str(saved_export_task.uid),
-            bbox=bbox,
-            stage_dir=self.stage_dir,
-            base_url=f"{service_url}/{query_string}",
-            feature_data=True,
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
@@ -900,21 +888,12 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result_b["result"])
         self.assertEqual(expected_output_path, result_b["source"])
 
-        url_1 = "https://abc.gov/arcgis/services/x"
-        url_2 = "https://abc.gov/arcgis/services/y"
+        vector_layers = {
+            layer_name_1: {"name": layer_name_1, "url": url_1},
+            layer_name_2: {"name": layer_name_2, "url": url_2, "distinct_field": expected_field},
+        }
 
-        layer_name_1 = "foo"
-        layer_name_2 = "bar"
-        expected_field = "baz"
-
-        config = f"""
-        vector_layers:
-            - name: '{layer_name_1}'
-              url: '{url_1}'
-            - name: '{layer_name_2}'
-              url: '{url_2}'
-              distinct_field: '{expected_field}'
-        """
+        mock_layers.return_value = vector_layers
 
         expected_path_1 = f"{layer_name_1}.gpkg"
         expected_path_2 = f"{layer_name_2}.gpkg"
@@ -929,7 +908,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "projection": projection,
                 "layer_name": layer_name_1,
-                "distinct_field": None,
+                "distinct_field": "OBJECTID",
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -946,8 +925,10 @@ class TestExportTasks(ExportTaskBase):
         mock_download_concurrently.return_value = expected_layers
         mock_convert.reset_mock()
 
+        mock_get_export_filepath.reset_mock()
         mock_get_export_filepath.side_effect = [expected_output_path, expected_path_1, expected_path_2]
         mock_convert.return_value = expected_output_path
+        mock_download_concurrently.reset_mock()
 
         # test with multiple layers
         result_c = arcgis_feature_service_export_task.run(
@@ -957,12 +938,11 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=f"{service_url}/",
             bbox=bbox,
-            config=config,
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
-        self.assertEqual(list(args[0]), list(expected_layers.values()))
 
+        self.assertEqual(list(args[0]), list(expected_layers.values()))
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(

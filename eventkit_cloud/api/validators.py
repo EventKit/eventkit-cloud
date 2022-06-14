@@ -10,7 +10,7 @@ from collections import OrderedDict
 import magic
 from django.conf import settings
 from django.contrib.gis.gdal import GDALException
-from django.contrib.gis.geos import (
+from django.contrib.gis.geos import (  # type: ignore
     GeometryCollection,
     GEOSException,
     GEOSGeometry,
