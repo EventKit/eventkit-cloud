@@ -3,26 +3,13 @@
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    LineString,
-    Point,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, LineString, Point, Polygon
 from django.test import TestCase
 
 from eventkit_cloud.jobs.models import DataProvider, Job
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.util_tasks import (
-    kill_worker,
-    kill_workers,
-    rerun_data_provider_records,
-)
-from eventkit_cloud.utils.scaling.exceptions import (
-    MultipleTaskTerminationErrors,
-    TaskTerminationError,
-)
+from eventkit_cloud.tasks.util_tasks import kill_worker, kill_workers, rerun_data_provider_records
+from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
 
 
 class TestUtilTasks(TestCase):
@@ -59,11 +46,7 @@ class TestUtilTasks(TestCase):
         create_run_mock.assert_called_with(job=self.job, user=self.user, clone=self.parent_run, download_data=False)
 
         with self.settings(CELERY_SCALE_BY_RUN=False):
-            rerun_data_provider_records(
-                run_uid=self.run.uid,
-                user_id=self.user.id,
-                data_provider_slugs=expected_slugs,
-            )
+            rerun_data_provider_records(run_uid=self.run.uid, user_id=self.user.id, data_provider_slugs=expected_slugs)
 
     @patch("eventkit_cloud.tasks.util_tasks.shutdown_celery_workers")
     def test_kill_worker_softkill(self, shutdown_celery_mock):
@@ -78,11 +61,7 @@ class TestUtilTasks(TestCase):
 
     @patch("eventkit_cloud.tasks.util_tasks.shutdown_celery_workers")
     def test_kill_workers_raises_exception(self, shutdown_celery_mock):
-        example_task1, example_task2, example_task3 = [
-            "example_task1",
-            "example_task2",
-            "example_task3",
-        ]
+        example_task1, example_task2, example_task3 = ["example_task1", "example_task2", "example_task3"]
         tasks = [example_task1, example_task2, example_task3]
         async_mock = Mock()
         shutdown_celery_mock.s.return_value = async_mock

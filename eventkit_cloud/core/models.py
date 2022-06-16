@@ -216,10 +216,7 @@ class GroupPermission(TimeStampedModelMixin):
     # A user should only have one type of permission per group.
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["user", "group", "permission"],
-                name="unique_user_permission_per_group",
-            ),
+            models.UniqueConstraint(fields=["user", "group", "permission"], name="unique_user_permission_per_group"),
         ]
 
     def __str__(self):
@@ -395,10 +392,7 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
     query_exclude = getattr(attribute_class, "exclude") or dict()
     complex_filter: List[Any] = getattr(attribute_class, "complex") or []
     if query_filter or query_exclude:
-        user = cast(
-            User,
-            User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id),
-        )
+        user = cast(User, User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id))
         if user:
             return True
     elif complex_filter:
@@ -458,11 +452,7 @@ def get_unrestricted_users(users: QuerySet, job) -> QuerySet:
 def annotate_users_restricted(users: QuerySet, job):
     unrestricted = get_unrestricted_users(users, job)
     users = users.annotate(
-        restricted=Case(
-            When(id__in=unrestricted, then=False),
-            default=Value(True),
-            output_field=models.BooleanField(),
-        )
+        restricted=Case(When(id__in=unrestricted, then=False), default=Value(True), output_field=models.BooleanField())
     )
     return users
 
@@ -474,9 +464,7 @@ def annotate_groups_restricted(groups: QuerySet, job):
     )
     groups = groups.annotate(
         restricted=Case(
-            When(id__in=unrestricted_groups, then=False),
-            default=Value(True),
-            output_field=models.BooleanField(),
+            When(id__in=unrestricted_groups, then=False), default=Value(True), output_field=models.BooleanField()
         )
     )
     return groups
@@ -487,22 +475,8 @@ def get_group_counts(groups_queryset, user):
     # counts the number of filtered groups where the permission is ADMIN
     # counts the number of filtered groups where the permission is MEMBER
     return groups_queryset.filter(group_permissions__user=user).aggregate(
-        admin=Count(
-            Case(
-                When(
-                    Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value),
-                    then=1,
-                )
-            )
-        ),
-        member=Count(
-            Case(
-                When(
-                    Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value),
-                    then=1,
-                )
-            )
-        ),
+        admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1))),
+        member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1))),
     )
 
 

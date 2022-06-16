@@ -88,10 +88,7 @@ class TestCoreModels(TestCase):
         expected_response = list(User.objects.filter(id=self.user2.id))
         mock_validate_object.return_value = expected_response
         OAuth.objects.create(
-            user=self.user2,
-            identification="test_ident",
-            commonname="test_common",
-            user_info={"color": "blue"},
+            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
         )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
@@ -112,10 +109,7 @@ class TestCoreModels(TestCase):
 
         mock_validate_object.return_value = True
         OAuth.objects.create(
-            user=self.user2,
-            identification="test_ident",
-            commonname="test_common",
-            user_info={"color": "blue"},
+            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
         )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
@@ -158,14 +152,7 @@ class TestCoreModels(TestCase):
         # There are 4 member relationships, both users are member is 2 groups.
         self.assertEqual(
             groups.aggregate(
-                member=Count(
-                    Case(
-                        When(
-                            Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value),
-                            then=1,
-                        )
-                    )
-                )
+                member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1)))
             )["member"],
             4,
         )
@@ -173,14 +160,7 @@ class TestCoreModels(TestCase):
         # There are 3 admin relationships, 1 user is admin in 2 groups, 1 is admin in 1 group
         self.assertEqual(
             groups.aggregate(
-                admin=Count(
-                    Case(
-                        When(
-                            Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value),
-                            then=1,
-                        )
-                    )
-                )
+                admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1)))
             )["admin"],
             3,
         )

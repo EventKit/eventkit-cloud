@@ -82,10 +82,7 @@ def get_cred_token(kwargs_dict=None):
         return None
     token = os.getenv(cred_token)
     if not token:
-        logger.error(
-            "A token credential was configured for %s but the variable is not set.",
-            cred_token,
-        )
+        logger.error("A token credential was configured for %s but the variable is not set.", cred_token)
         raise Exception("The service token is improperly configured.")
     return token
 

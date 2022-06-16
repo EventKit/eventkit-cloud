@@ -41,8 +41,7 @@ class TestJob(TestCase):
             password = os.getenv("EVENTKIT_PASS", "@dm1n")
         verify = getattr(settings, "SSL_VERIFICATION", True)
         self.base_url = os.getenv(
-            "BASE_URL",
-            "http://{0}".format(getattr(settings, "SITE_NAME", "cloud.eventkit.test")),
+            "BASE_URL", "http://{0}".format(getattr(settings, "SITE_NAME", "cloud.eventkit.test"))
         )
         self.login_url = self.base_url + "/api/login/"
         self.create_export_url = self.base_url + "/status/create"
@@ -52,11 +51,7 @@ class TestJob(TestCase):
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir)
         self.client: EventKitClient = self.get_client(
-            self.base_url,
-            user=user,
-            password=password,
-            certificate=certificate,
-            verify=verify,
+            self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
         self.selection = {
             "type": "FeatureCollection",
@@ -85,23 +80,14 @@ class TestJob(TestCase):
             shutil.rmtree(self.download_dir)
 
     def get_client(
-        self,
-        url: str,
-        user: str = None,
-        password: str = None,
-        certificate: str = None,
-        verify: Union[str, bool] = True,
+        self, url: str, user: str = None, password: str = None, certificate: str = None, verify: Union[str, bool] = True
     ) -> EventKitClient:
         tries = 3
         client = None
         while tries:
             try:
                 client = EventKitClient(
-                    url.rstrip("/"),
-                    username=user,
-                    password=password,
-                    certificate=certificate,
-                    verify=verify,
+                    url.rstrip("/"), username=user, password=password, certificate=certificate, verify=verify
                 )
                 break
             except Exception as e:
@@ -134,13 +120,7 @@ class TestJob(TestCase):
             "project": "TestProject",
             "selection": self.selection,
             "tags": [],
-            "provider_tasks": [
-                {
-                    "provider": test_service_slug,
-                    "formats": ["gpkg"],
-                    "max_zoom": increased_zoom_level,
-                }
-            ],
+            "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"], "max_zoom": increased_zoom_level}],
         }
 
         run = self.run_job(job_data, wait_for_run=False)
@@ -357,28 +337,16 @@ class TestJob(TestCase):
             "selection": self.selection,
             "tags": [],
             "provider_tasks": [
-                {
-                    "provider": "eventkit-integration-test-wms",
-                    "formats": ["gpkg", "gtiff"],
-                },
+                {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "osm-generic",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
                 {"provider": "osm", "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {
-                    "provider": "eventkit-integration-test-wmts",
-                    "formats": ["gpkg", "gtiff"],
-                },
-                {
-                    "provider": "eventkit-integration-test-arc-raster",
-                    "formats": ["gpkg", "gtiff"],
-                },
+                {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
+                {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg", "gtiff"]},
                 # Commented out because the service is down.
                 # {"provider": "eventkit-integration-test-wfs",
                 #  "formats": ["shp", "gpkg", "kml"]},
-                {
-                    "provider": "eventkit-integration-test-wcs",
-                    "formats": ["gtiff", "hfa"],
-                }
+                {"provider": "eventkit-integration-test-wcs", "formats": ["gtiff", "hfa"]}
                 # {"provider": "eventkit-integration-test-arc-fs",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
             ],
@@ -388,14 +356,7 @@ class TestJob(TestCase):
         # This is to test rerunning that job.
         self.run_job(job_uid=run["job"]["uid"], run_timeout=1800)  # This needs more time to complete
 
-    def run_job(
-        self,
-        data=None,
-        wait_for_run=True,
-        run_timeout=DEFAULT_TIMEOUT,
-        job_uid=None,
-        keep_job=False,
-    ):
+    def run_job(self, data=None, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT, job_uid=None, keep_job=False):
 
         if job_uid:
             run = self.client.rerun_job(job_uid=job_uid)

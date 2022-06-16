@@ -1,11 +1,7 @@
 from logging import getLogger
 from typing import List, Optional
 
-from eventkit_cloud.utils.services.errors import (
-    MissingLayerError,
-    ServiceError,
-    UnsupportedFormatError,
-)
+from eventkit_cloud.utils.services.errors import MissingLayerError, ServiceError, UnsupportedFormatError
 from eventkit_cloud.utils.services.ows import OWS
 
 logger = getLogger("__name__")

@@ -119,8 +119,7 @@ class TestHelpers(TestCase):
             ret = write_uploaded_file(test_file)
             self.assertTrue(ret)
             m.assert_called_once_with(
-                f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}.txt",
-                "wb+",
+                f"/var/lib/eventkit/exports_stage/{example_uuid}/in_{test_file_stem_name}-{example_uuid}.txt", "wb+"
             )
 
             test_file.chunks.assert_called_once

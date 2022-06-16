@@ -37,10 +37,7 @@ class TestRegionalPolicyForm(TestCase):
     def test_justification_options_missing_display(self):
         form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name"}]})
 
-        self.assertEqual(
-            form.errors["justification_options"],
-            ["Every option must have a display boolean."],
-        )
+        self.assertEqual(form.errors["justification_options"], ["Every option must have a display boolean."])
 
     def test_justification_options_invalid_display(self):
         form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name", "display": "display"}]})
@@ -50,32 +47,19 @@ class TestRegionalPolicyForm(TestCase):
     def test_justification_options_suboption_invalid_type(self):
         form = RegionalPolicyForm(
             data={
-                "justification_options": [
-                    {
-                        "id": 1,
-                        "name": "name",
-                        "display": False,
-                        "suboption": {"type": "invalid"},
-                    }
-                ]
+                "justification_options": [{"id": 1, "name": "name", "display": False, "suboption": {"type": "invalid"}}]
             }
         )
 
         self.assertEqual(
-            form.errors["justification_options"],
-            ["Invalid suboption type, available types are dropdown and text."],
+            form.errors["justification_options"], ["Invalid suboption type, available types are dropdown and text."]
         )
 
     def test_justification_options_suboption_missing_options(self):
         form = RegionalPolicyForm(
             data={
                 "justification_options": [
-                    {
-                        "id": 1,
-                        "name": "name",
-                        "display": False,
-                        "suboption": {"type": "dropdown"},
-                    }
+                    {"id": 1, "name": "name", "display": False, "suboption": {"type": "dropdown"}}
                 ]
             }
         )
@@ -87,16 +71,7 @@ class TestRegionalPolicyForm(TestCase):
 
     def test_justification_options_suboption_missing_label(self):
         form = RegionalPolicyForm(
-            data={
-                "justification_options": [
-                    {
-                        "id": 1,
-                        "name": "name",
-                        "display": False,
-                        "suboption": {"type": "text"},
-                    }
-                ]
-            }
+            data={"justification_options": [{"id": 1, "name": "name", "display": False, "suboption": {"type": "text"}}]}
         )
 
         self.assertEqual(

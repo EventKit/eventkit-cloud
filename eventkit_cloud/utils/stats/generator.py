@@ -17,17 +17,9 @@ from django.db.models.query import QuerySet
 
 from eventkit_cloud.jobs.models import DataProvider, load_provider_config
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-    ExportRun,
-    ExportTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.utils.client import parse_duration
-from eventkit_cloud.utils.stats.geomutils import (
-    get_area_bbox,
-    get_bbox_intersect,
-    get_geometry_description,
-)
+from eventkit_cloud.utils.stats.geomutils import get_area_bbox, get_bbox_intersect, get_geometry_description
 from mapproxy import grid as mapproxy_grid
 from mapproxy import srs as mapproxy_srs
 

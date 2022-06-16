@@ -47,11 +47,7 @@ class TestSizeIncreaseRequest(TestCase):
         provider = DataProvider.objects.get(slug="osm-generic")
         self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         self.size_request = SizeIncreaseRequest(
-            provider=provider,
-            the_geom=the_geom,
-            requested_aoi_size=5000,
-            requested_data_size=1000,
-            user=self.user,
+            provider=provider, the_geom=the_geom, requested_aoi_size=5000, requested_data_size=1000, user=self.user
         )
         self.size_request.save()
         self.uid = self.size_request.uid

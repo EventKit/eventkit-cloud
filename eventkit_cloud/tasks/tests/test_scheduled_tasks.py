@@ -17,11 +17,7 @@ from notifications.models import Notification
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus, Job
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import list_to_dict
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-    ExportRun,
-    ExportTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.scheduled_tasks import (
     check_provider_availability_task,
     clean_up_queues_task,
@@ -76,16 +72,10 @@ class TestExpireRunsTask(TestCase):
             site_url = getattr(settings, "SITE_URL", "cloud.eventkit.test")
             expected_url = "{0}/status/{1}".format(site_url.rstrip("/"), job.uid)
             send_email.assert_any_call(
-                date=now_time + timezone.timedelta(days=1),
-                url=expected_url,
-                addr=job.user.email,
-                job_name=job.name,
+                date=now_time + timezone.timedelta(days=1), url=expected_url, addr=job.user.email, job_name=job.name
             )
             send_email.assert_any_call(
-                date=now_time + timezone.timedelta(days=6),
-                url=expected_url,
-                addr=job.user.email,
-                job_name=job.name,
+                date=now_time + timezone.timedelta(days=6), url=expected_url, addr=job.user.email, job_name=job.name
             )
             self.assertEqual(3, ExportRun.objects.filter(deleted=False).count())
             self.assertEqual(1, ExportRun.objects.filter(deleted=True).count())
@@ -130,11 +120,7 @@ class TestCleanUpStuckTasks(TestCase):
         etr1 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task, name="etr1", uid=uid1)
         etr2 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task, name="etr2", uid=uid2)
         etr3 = ExportTaskRecord.objects.create(export_provider_task=export_provider_task2, name="etr3", uid=uid3)
-        mock_etr.objects.prefetch_related().select_related().filter.return_value = [
-            etr1,
-            etr2,
-            etr3,
-        ]
+        mock_etr.objects.prefetch_related().select_related().filter.return_value = [etr1, etr2, etr3]
 
         clean_up_stuck_tasks.run()
         self.assertEqual(etr1.status, TaskState.CANCELED.value)
@@ -194,17 +180,10 @@ class TestScaleCeleryTask(TestCase):
         mock_get_scale_client.return_value = mock_scale_client, "app_name"
         example_memory_used = 2048
         mock_scale_client.get_running_tasks_memory.return_value = example_memory_used
-        mock_scale_client.get_running_tasks.return_value = {
-            "resources": [],
-            "pagination": {"total_results": 0},
-        }
+        mock_scale_client.get_running_tasks.return_value = {"resources": [], "pagination": {"total_results": 0}}
         example_memory_used = 2048
         example_disk_used = 3072
-        celery_task_details = {
-            "task_counts": {"celery": 1},
-            "memory": example_memory_used,
-            "disk": example_disk_used,
-        }
+        celery_task_details = {"task_counts": {"celery": 1}, "memory": example_memory_used, "disk": example_disk_used}
         mock_get_celery_task_details.return_value = celery_task_details
 
         # Test zero runs.
@@ -214,10 +193,7 @@ class TestScaleCeleryTask(TestCase):
 
         job = Job.objects.all()[0]
         run = ExportRun.objects.create(
-            job=job,
-            user=job.user,
-            expiration=timezone.now() + timezone.timedelta(days=8),
-            status="SUBMITTED",
+            job=job, user=job.user, expiration=timezone.now() + timezone.timedelta(days=8), status="SUBMITTED"
         )
 
         # If running_tasks_memory > max_tasks_memory do not scale.
@@ -246,12 +222,7 @@ class TestScaleCeleryTask(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.run_task_command")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
-    def test_scale_default_tasks(
-        self,
-        mock_get_scale_client,
-        mock_run_task_command,
-        mock_get_all_rabbitmq_objects,
-    ):
+    def test_scale_default_tasks(self, mock_get_scale_client, mock_run_task_command, mock_get_all_rabbitmq_objects):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "test_app"
         celery_tasks = get_celery_tasks_scale_by_run()
@@ -298,11 +269,7 @@ class TestScaleCeleryTask(TestCase):
         example_queues = [{"name": "celery", "messages": 2}]
         empty_queues = [{"name": "celery", "messages": 0}]
         mock_get_all_rabbitmq_objects.side_effect = [example_queues, empty_queues]
-        celery_task_details = {
-            "task_counts": {"celery": 1},
-            "memory": example_memory_used,
-            "disk": example_disk_used,
-        }
+        celery_task_details = {"task_counts": {"celery": 1}, "memory": example_memory_used, "disk": example_disk_used}
         mock_get_celery_task_details.return_value = celery_task_details
         ordered_celery_tasks = OrderedDict(
             {
@@ -359,11 +326,7 @@ class TestScaleCeleryTask(TestCase):
             "pagination": {"total_results": 1},
             "resources": pcf_task_resources,
         }
-        expected_value = {
-            "task_counts": {"celery": 1, "group.priority": 0},
-            "memory": 2048,
-            "disk": 3072,
-        }
+        expected_value = {"task_counts": {"celery": 1, "group.priority": 0}, "memory": 2048, "disk": 3072}
 
         returned_value = get_celery_task_details(mock_scale_client, example_app_name, celery_tasks)
         self.assertEquals(expected_value, returned_value)
@@ -398,18 +361,9 @@ class TestCheckProviderAvailabilityTask(TestCase):
         statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
         self.assertEqual(len(statuses), 2)
         most_recent_first_provider_status = statuses.last()
-        self.assertEqual(
-            most_recent_first_provider_status.status,
-            CheckResult.SUCCESS.value["status"],
-        )
-        self.assertEqual(
-            most_recent_first_provider_status.status_type,
-            CheckResult.SUCCESS.value["type"],
-        )
-        self.assertEqual(
-            most_recent_first_provider_status.message,
-            CheckResult.SUCCESS.value["message"],
-        )
+        self.assertEqual(most_recent_first_provider_status.status, CheckResult.SUCCESS.value["status"])
+        self.assertEqual(most_recent_first_provider_status.status_type, CheckResult.SUCCESS.value["type"])
+        self.assertEqual(most_recent_first_provider_status.message, CheckResult.SUCCESS.value["message"])
 
 
 class TestEmailNotifications(TestCase):
@@ -430,10 +384,7 @@ class TestEmailNotifications(TestCase):
             self.assertIsNotNone(text)
             send_warning_email(date=now, url=url, addr=addr, job_name=job_name)
             alternatives.assert_called_once_with(
-                "Your EventKit DataPack is set to expire.",
-                text,
-                to=[addr],
-                from_email="example@eventkit.test",
+                "Your EventKit DataPack is set to expire.", text, to=[addr], from_email="example@eventkit.test"
             )
             alternatives().send.assert_called_once()
 

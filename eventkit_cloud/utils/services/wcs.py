@@ -4,10 +4,7 @@ import logging
 import re
 from typing import TYPE_CHECKING, List
 
-from eventkit_cloud.utils.services.errors import (
-    MissingLayerError,
-    UnsupportedFormatError,
-)
+from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
 from eventkit_cloud.utils.services.ows import OWS
 
 if TYPE_CHECKING:

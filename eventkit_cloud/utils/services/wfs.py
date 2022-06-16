@@ -1,11 +1,7 @@
 import logging
 
-from eventkit_cloud.utils.services.errors import (
-    MissingLayerError,
-    UnsupportedFormatError,
-)
+from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
 from eventkit_cloud.utils.services.ows import OWS
-from eventkit_cloud.utils.services.types import LayersDescription
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +45,4 @@ class WFS(OWS):
         return bbox
 
     def get_layer_name(self):
-        raise NotImplementedError("Method is specific to provider type")
-
-    def get_layers(self) -> LayersDescription:
         raise NotImplementedError("Method is specific to provider type")

@@ -14,12 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    MultiPolygon,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, MultiPolygon, Polygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
@@ -245,10 +240,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     )
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(
-        DataProviderType,
-        verbose_name="Service Type",
-        null=True,
-        on_delete=models.CASCADE,
+        DataProviderType, verbose_name="Service Type", null=True, on_delete=models.CASCADE
     )
     max_selection = models.DecimalField(
         verbose_name="Max selection area",
@@ -299,21 +291,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         help_text="The type of data provided (e.g. elevation, raster, vector)",
     )
-    user = models.ForeignKey(
-        User,
-        related_name="+",
-        null=True,
-        default=None,
-        blank=True,
-        on_delete=models.CASCADE,
-    )
+    user = models.ForeignKey(User, related_name="+", null=True, default=None, blank=True, on_delete=models.CASCADE)
     license = models.ForeignKey(
-        License,
-        related_name="data_providers",
-        null=True,
-        blank=True,
-        default=None,
-        on_delete=models.CASCADE,
+        License, related_name="data_providers", null=True, blank=True, default=None, on_delete=models.CASCADE
     )
 
     zip = models.BooleanField(default=False)
@@ -389,7 +369,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
             url = settings.OVERPASS_API_URL
         Client = get_client(self.export_provider_type.type_name)
-
         config = None
         if self.config:
             config = load_provider_config(self.config)
@@ -403,10 +382,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         except Exception as e:
             logger.error(e, exc_info=True)
             response = get_status_result(CheckResult.UNKNOWN_ERROR)
-            logger.error(
-                f"An exception occurred while checking the {self.name} provider.",
-                exc_info=True,
-            )
+            logger.error(f"An exception occurred while checking the {self.name} provider.", exc_info=True)
             logger.info(f"Status of provider '{self.name}': {response}")
 
         return response
@@ -439,11 +415,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             if created:
                 # Use the value from process format which might be case sensitive,
                 # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                export_format.options = {
-                    "value": process_format.get("slug"),
-                    "providers": [self.slug],
-                    "proxy": True,
-                }
+                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             else:
                 providers = export_format.options.get("providers")
@@ -451,11 +423,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                     providers = list(set(providers + [self.slug]))
                     export_format.options["providers"] = providers
                 else:
-                    export_format.options = {
-                        "value": export_format.slug,
-                        "providers": [self.slug],
-                        "proxy": True,
-                    }
+                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
             export_format.save()
 
     def __str__(self):
@@ -541,10 +509,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
         if user:
             user_size_rule = list(
-                filter(
-                    lambda user_size_rule: user_size_rule.user == user,
-                    self.usersizerule_set.all(),
-                )
+                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
             )
             if user_size_rule:
                 return user_size_rule[0].max_data_size
@@ -559,10 +524,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         # the usersizerule set is looped instead of using a queryset filter so that it can be prefetched.
         if user:
             user_size_rule = list(
-                filter(
-                    lambda user_size_rule: user_size_rule.user == user,
-                    self.usersizerule_set.all(),
-                )
+                filter(lambda user_size_rule: user_size_rule.user == user, self.usersizerule_set.all())
             )
             if user_size_rule:
                 return user_size_rule[0].max_selection_size
@@ -706,20 +668,13 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom_webmercator = models.MultiPolygonField(verbose_name="Mercator extent for export", srid=3857, default="")
     the_geog = models.MultiPolygonField(verbose_name="Geographic extent for export", geography=True, default="")
     original_selection = models.GeometryCollectionField(
-        verbose_name="The original map selection",
-        srid=4326,
-        default=GeometryCollection,
-        null=True,
-        blank=True,
+        verbose_name="The original map selection", srid=4326, default=GeometryCollection, null=True, blank=True
     )
 
     include_zipfile = models.BooleanField(default=False)
     json_tags = models.JSONField(default=dict)
     last_export_run = models.ForeignKey(
-        "tasks.ExportRun",
-        on_delete=models.DO_NOTHING,
-        null=True,
-        related_name="last_export_run",
+        "tasks.ExportRun", on_delete=models.DO_NOTHING, null=True, related_name="last_export_run"
     )
     projections = models.ManyToManyField(Projection, related_name="projections")
 
@@ -911,8 +866,7 @@ class JobPermission(TimeStampedModelMixin):
         db_table = "jobpermission"
         constraints = [
             models.UniqueConstraint(
-                fields=["job", "content_type", "object_id", "permission"],
-                name="unique_object_permission_per_job",
+                fields=["job", "content_type", "object_id", "permission"], name="unique_object_permission_per_job"
             ),
         ]
 
@@ -1051,8 +1005,7 @@ class JobPermission(TimeStampedModelMixin):
 
         # Get all the ADMIN level group permissions for the user
         users_groups = Group.objects.filter(
-            group_permissions__user=user,
-            group_permissions__permission=GroupPermissionLevel.ADMIN.value,
+            group_permissions__user=user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
         )
 
         # Check if any of the groups the user is an admin of have group-admin permission to the job.

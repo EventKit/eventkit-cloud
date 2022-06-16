@@ -2,11 +2,7 @@ import logging
 
 from django.test import TestCase
 
-from eventkit_cloud.tasks.exceptions import (
-    CancelException,
-    DeleteException,
-    FailedException,
-)
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException, FailedException
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +35,7 @@ class TestExceptions(TestCase):
         message = "The task has failed"
 
         output = FailedException(task_name=task_name)
-        self.assertEqual(
-            str(output),
-            f"{task_name} has failed too many times and will not be retried.",
-        )
+        self.assertEqual(str(output), f"{task_name} has failed too many times and will not be retried.")
 
         output = FailedException(message=message)
         self.assertEqual(str(output), message)

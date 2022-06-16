@@ -32,11 +32,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
-from eventkit_cloud.core.models import (
-    GroupPermission,
-    GroupPermissionLevel,
-    attribute_class_filter,
-)
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,
@@ -446,10 +442,9 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_zipfile(self, obj):
         request = self.context["request"]
-        (
-            data_provider_task_records,
-            filtered_data_provider_task_records,
-        ) = attribute_class_filter(obj.data_provider_task_records.exclude(slug="run"), request.user)
+        data_provider_task_records, filtered_data_provider_task_records = attribute_class_filter(
+            obj.data_provider_task_records.exclude(slug="run"), request.user
+        )
 
         if filtered_data_provider_task_records:
             data = None
@@ -957,12 +952,7 @@ def filtered_basic_data_provider_serializer(
         raise Exception("Trying to serialize more than one providers without many=True.")
 
     serialized_data_providers = [
-        {
-            "id": data_provider.id,
-            "uid": data_provider.uid,
-            "hidden": True,
-            "display": False,
-        }
+        {"id": data_provider.id, "uid": data_provider.uid, "hidden": True, "display": False}
         for data_provider in data_providers
     ]
     if not many:
@@ -1409,12 +1399,7 @@ class JobSerializer(serializers.Serializer):
                 many=True,
                 context={"request": self.context["request"]},
             )
-            exports.append(
-                {
-                    "provider": data_provider_task.provider.name,
-                    "formats": serializer.data,
-                }
-            )
+            exports.append({"provider": data_provider_task.provider.name, "formats": serializer.data})
         for data_provider_task in filtered_tasks:
             exports.append({"provider": data_provider_task.uid})
         return exports

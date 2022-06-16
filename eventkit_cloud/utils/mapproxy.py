@@ -32,11 +32,7 @@ from eventkit_cloud.utils.geopackage import (
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import (
-    ConfigurationError,
-    ProxyConfiguration,
-    validate_references,
-)
+from mapproxy.config.loader import ConfigurationError, ProxyConfiguration, validate_references
 from mapproxy.grid import tile_grid
 from mapproxy.wsgiapp import MapProxyApp
 
@@ -46,12 +42,7 @@ from mapproxy.wsgiapp import MapProxyApp
 multiprocessing.Process = DummyProcess  # type: ignore
 from mapproxy.seed import seeder  # noqa: E402
 from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
-from mapproxy.seed.util import (  # noqa: E402
-    ProgressLog,
-    ProgressStore,
-    exp_backoff,
-    timestamp,
-)
+from mapproxy.seed.util import ProgressLog, ProgressStore, exp_backoff, timestamp  # noqa: E402
 
 multiprocessing.Process = Process  # type: ignore
 
@@ -98,11 +89,7 @@ class CustomLogger(ProgressLog):
 
             if self.log_step_counter == 0:
                 if (
-                    get_cache_value(
-                        uid=self.task_uid,
-                        attribute="status",
-                        model_name="ExportTaskRecord",
-                    )
+                    get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
                     == TaskState.CANCELED.value
                 ):
                     logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
@@ -194,26 +181,12 @@ class MapproxyGeopackage(object):
 
         if not conf_dict.get("grids"):
             conf_dict["grids"] = {
-                "default": {
-                    "srs": "EPSG:4326",
-                    "tile_size": [256, 256],
-                    "origin": "nw",
-                },
-                "webmercator": {
-                    "srs": "EPSG:3857",
-                    "tile_size": [256, 256],
-                    "origin": "nw",
-                },
+                "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
+                "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
             }
         elif self.projection:
             conf_dict["grids"].update(
-                {
-                    str(self.projection): {
-                        "srs": f"EPSG:{self.projection}",
-                        "tile_size": [256, 256],
-                        "origin": "nw",
-                    }
-                }
+                {str(self.projection): {"srs": f"EPSG:{self.projection}", "tile_size": [256, 256], "origin": "nw"}}
             )
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
@@ -353,11 +326,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
         sources = []
     return {
         "sources": sources,
-        "cache": {
-            "type": "geopackage",
-            "filename": str(geopackage),
-            "table_name": table_name,
-        },
+        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
         "request_format": "image/png",
@@ -449,21 +418,12 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
                 "wmts": {
                     "featureinfo_formats": [
                         {"mimetype": "application/json", "suffix": "json"},
-                        {
-                            "mimetype": "application/gml+xml; version=3.1",
-                            "suffix": "gml",
-                        },
+                        {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
                     ]
                 },
             },
             # Cache based on slug so that the caches don't overwrite each other.
-            "caches": {
-                slug: {
-                    "cache": {"type": "file"},
-                    "sources": ["default"],
-                    "grids": ["default"],
-                }
-            },
+            "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
             "layers": [{"name": slug, "title": slug, "sources": [slug]}],
             "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
         }
@@ -545,12 +505,7 @@ def get_conf_dict(slug: str) -> dict:
         else:
             conf_dict["globals"] = {"http": {"ssl_ca_certs": ssl_verify}}
         conf_dict.update(
-            {
-                "globals": {
-                    "cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"},
-                    "tiles": {"expires_hours": 0},
-                }
-            }
+            {"globals": {"cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"}, "tiles": {"expires_hours": 0}}}
         )
     except Exception as e:
         logger.error(e)
@@ -588,10 +543,7 @@ def add_restricted_regions_to_config(
         # If no user no need to set up regional policy.
         if user and not get_valid_regional_justification(policy, user):
             config["sources"]["default"]["coverage"]["difference"].append(
-                {
-                    "bbox": GEOSGeometry(policy.region.the_geom).extent,
-                    "srs": "EPSG:4326",
-                }
+                {"bbox": GEOSGeometry(policy.region.the_geom).extent, "srs": "EPSG:4326"}
             )
             for current_cache in base_config.get("caches", {}):
                 base_config["caches"][current_cache]["disable_storage"] = True

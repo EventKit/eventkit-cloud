@@ -18,10 +18,7 @@ from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 from eventkit_cloud.utils.scaling import get_scale_client
-from eventkit_cloud.utils.scaling.exceptions import (
-    MultipleTaskTerminationErrors,
-    TaskTerminationError,
-)
+from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.types.django_helpers import DjangoUserType
@@ -60,8 +57,7 @@ def kill_workers(task_names: list = None, client: ScaleClient = None, timeout: i
 
         # Collect any errors that occurred and raise an appropriate exception
         errors = cast(
-            List[TaskTerminationError],
-            [task.exception() for task in futures if task.exception() is not None],
+            List[TaskTerminationError], [task.exception() for task in futures if task.exception() is not None]
         )
         if len(errors) == 1:
             raise errors[0]
@@ -102,12 +98,7 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 
 def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
-    from eventkit_cloud.tasks.task_factory import (
-        Error,
-        InvalidLicense,
-        Unauthorized,
-        create_run,
-    )
+    from eventkit_cloud.tasks.task_factory import Error, InvalidLicense, Unauthorized, create_run
 
     with transaction.atomic():
         old_run: ExportRun = ExportRun.objects.select_related("job__user", "parent_run__job__user").get(uid=run_uid)
@@ -128,8 +119,7 @@ def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
             new_run_uid = create_run(job=old_run.job, user=user, clone=old_run, download_data=False)
         except Unauthorized:
             raise PermissionDenied(
-                code="permission_denied",
-                detail="ADMIN permission is required to run this DataPack.",
+                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
             )
         except (InvalidLicense, Error) as err:
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)

@@ -27,12 +27,7 @@ logger = getLogger(__name__)
 
 
 def validate_oath_vars():
-    oauth_vars = [
-        "OAUTH_CLIENT_ID",
-        "OAUTH_REDIRECT_URI",
-        "OAUTH_RESPONSE_TYPE",
-        "OAUTH_SCOPE",
-    ]
+    oauth_vars = ["OAUTH_CLIENT_ID", "OAUTH_REDIRECT_URI", "OAUTH_RESPONSE_TYPE", "OAUTH_SCOPE"]
     oauth_values = [getattr(settings, _oauth_var) for _oauth_var in oauth_vars]
     if any([_value is None for _value in oauth_values]):
         first_index_of_none = oauth_values.index(None)
@@ -78,12 +73,7 @@ def oauth(request, redirect_url=None):
                     )
                 ]
             encoded_params = urlencode(params)
-            return redirect(
-                "{0}?{1}".format(
-                    getattr(settings, "OAUTH_AUTHORIZATION_URL").rstrip("/"),
-                    encoded_params,
-                )
-            )
+            return redirect("{0}?{1}".format(getattr(settings, "OAUTH_AUTHORIZATION_URL").rstrip("/"), encoded_params))
     else:
         return redirect("/login/error")
 

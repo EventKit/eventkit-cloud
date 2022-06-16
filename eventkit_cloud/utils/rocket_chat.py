@@ -40,11 +40,7 @@ class RocketChat(object):
             self.user_id = user_id
         else:
             raise Exception("Unable to login without a username/password or user_id/auth_token.")
-        self.headers = {
-            "X-Auth-Token": self.auth_token,
-            "X-User-Id": self.user_id,
-            "Content-type": "application/json",
-        }
+        self.headers = {"X-Auth-Token": self.auth_token, "X-User-Id": self.user_id, "Content-type": "application/json"}
         # Make a request to ensure that the credentials are ok.
         response = requests.get(self.profile_url, headers=self.headers, verify=False)
         if not response.ok:

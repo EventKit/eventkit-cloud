@@ -56,7 +56,7 @@ black:
     - .back
     - .lint
   script:
-    - black --config config/pyproject.toml --check eventkit_cloud
+    - black --check eventkit_cloud
 
 isort:
   extends:

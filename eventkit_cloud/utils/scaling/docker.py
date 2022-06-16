@@ -39,10 +39,7 @@ class Docker(ScaleClient):
             raise Exception("You must set BIND_MOUNT_LOCATION in order to use the Docker Scaling Client.")
 
         volumes = {
-            os.getenv("BIND_MOUNT_LOCATION"): {
-                "bind": "/var/lib/eventkit/",
-                "mode": "rw",
-            },
+            os.getenv("BIND_MOUNT_LOCATION"): {"bind": "/var/lib/eventkit/", "mode": "rw"},
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
         }
 

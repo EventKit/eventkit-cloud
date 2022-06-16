@@ -1,10 +1,5 @@
 from eventkit_cloud.utils.gpkg.sqlite_utils import SQL, Table
-from eventkit_cloud.utils.gpkg.tables import (
-    ExtensionEntry,
-    MetadataEntry,
-    MetadataReferenceEntry,
-    TableNames,
-)
+from eventkit_cloud.utils.gpkg.tables import ExtensionEntry, MetadataEntry, MetadataReferenceEntry, TableNames
 
 
 class Metadata(object):

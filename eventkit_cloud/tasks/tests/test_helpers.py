@@ -159,10 +159,7 @@ class TestHelpers(TestCase):
         expected_stage_file = f"{stage_dir}/{expected_provider_slug}/{sample_file}"
         expected_archive_file = f"data/{expected_provider_slug}/{sample_file}"
         # This is *look* backwards because the value will get called and resolved before the key in the method.
-        mps.result.get_file_path.side_effect = [
-            expected_stage_file,
-            expected_archive_file,
-        ]
+        mps.result.get_file_path.side_effect = [expected_stage_file, expected_archive_file]
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
         mocked_data_provider.export_provider_type.type_name = "osm"
@@ -255,10 +252,7 @@ class TestHelpers(TestCase):
             "include_files": "files",
             "data_sources": {"osm": {"files": [{"data": "here", "full_file_path": "here"}]}},
         }
-        expected_metadata = {
-            "stuff": "test",
-            "data_sources": {"osm": {"files": [{"data": "here"}]}},
-        }
+        expected_metadata = {"stuff": "test", "data_sources": {"osm": {"files": [{"data": "here"}]}}}
         self.assertEqual(expected_metadata, get_arcgis_metadata(example_metadata))
 
     @requests_mock.Mocker()
@@ -269,22 +263,13 @@ class TestHelpers(TestCase):
         res1 = {"page_count": 2, "page": 1, "items": [{"name": "queue1"}]}
         res2 = {"page_count": 2, "page": 2, "items": [{"name": "queue2"}]}
 
-        requests_mocker.get(
-            example_api + queues + "?page=1&page_size=100&pagination=true",
-            text=json.dumps(res1),
-        )
-        requests_mocker.get(
-            example_api + queues + "?page=2&page_size=100&pagination=true",
-            text=json.dumps(res2),
-        )
+        requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text=json.dumps(res1))
+        requests_mocker.get(example_api + queues + "?page=2&page_size=100&pagination=true", text=json.dumps(res2))
         result = get_all_rabbitmq_objects(example_api, queues)
         self.assertEqual(result, expected_queues)
 
         with self.assertRaises(Exception):
-            requests_mocker.get(
-                example_api + queues + "?page=1&page_size=100&pagination=true",
-                text="ERROR",
-            )
+            requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text="ERROR")
             get_all_rabbitmq_objects(example_api, "WRONG")
 
     @patch("eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects")
@@ -411,18 +396,8 @@ class TestHelpers(TestCase):
         mock_close.assert_called_once()
         mock_set_cache_value.assert_has_calls(
             [
-                call(
-                    uid=uid,
-                    attribute="progress",
-                    model_name="ExportTaskRecord",
-                    value=50,
-                ),
-                call(
-                    uid=uid,
-                    attribute="estimated_finish",
-                    model_name="ExportTaskRecord",
-                    value=estimated,
-                ),
+                call(uid=uid, attribute="progress", model_name="ExportTaskRecord", value=50),
+                call(uid=uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated),
             ]
         )
 
@@ -441,24 +416,13 @@ class TestHelpers(TestCase):
     def test_find_in_zip_no_extension(self):
         zip_filepath = os.path.join(os.path.dirname(__file__), "files/test_zip_1.zip")
         found_file = find_in_zip(
-            zip_filepath=zip_filepath,
-            stage_dir="example/dir",
-            archive_extension="zip",
-            matched_files=[],
-            extract=False,
+            zip_filepath=zip_filepath, stage_dir="example/dir", archive_extension="zip", matched_files=[], extract=False
         )
         self.assertEqual(found_file, f"/vsizip/{zip_filepath}/test_csv.csv")
 
     def test_find_in_zip_no_extension_nested_folder(self):
         zip_filepath = os.path.join(os.path.dirname(__file__), "files/test_zip_2.zip")
         found_file = find_in_zip(
-            zip_filepath=zip_filepath,
-            stage_dir="example/dir",
-            archive_extension="zip",
-            matched_files=[],
-            extract=False,
+            zip_filepath=zip_filepath, stage_dir="example/dir", archive_extension="zip", matched_files=[], extract=False
         )
-        self.assertEqual(
-            found_file,
-            f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json",
-        )
+        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json")

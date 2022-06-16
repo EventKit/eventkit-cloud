@@ -20,18 +20,10 @@ from requests import Response
 
 from eventkit_cloud.auth.models import UserSession
 from eventkit_cloud.celery import app
-from eventkit_cloud.core.helpers import (
-    NotificationLevel,
-    NotificationVerb,
-    sendnotification,
-)
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task
-from eventkit_cloud.tasks.helpers import (
-    delete_rabbit_objects,
-    get_all_rabbitmq_objects,
-    list_to_dict,
-)
+from eventkit_cloud.tasks.helpers import delete_rabbit_objects, get_all_rabbitmq_objects, list_to_dict
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.task_base import EventKitBaseTask, LockingTask
 from eventkit_cloud.tasks.util_tasks import kill_workers
@@ -369,13 +361,7 @@ def run_task_command(client: ScaleClient, app_name: str, queue_name: str, task: 
     memory = task["memory"]
 
     logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
-    client.run_task(
-        name=queue_name,
-        command=command,
-        disk_in_mb=disk,
-        memory_in_mb=memory,
-        app_name=app_name,
-    )
+    client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
 
 @app.task(
