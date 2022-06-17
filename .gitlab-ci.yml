@@ -63,16 +63,7 @@ isort:
     - .back
     - .lint
   script:
-    - whoami
-    - ls -al
-    - cat setup.cfg
-    - python --version
-    - isort --version
-    - ls -al eventkit_cloud/utils/
-    - pwd
-    - cat eventkit_cloud/utils/auth_requests.py
-    - cat eventkit_cloud/utils/image_snapshot.py
-    - isort eventkit_cloud --check || isort eventkit_cloud && git diff eventkit_cloud && exit 1
+    - isort eventkit_cloud
 
 flake8:
   extends:

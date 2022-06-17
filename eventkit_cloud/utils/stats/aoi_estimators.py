@@ -4,12 +4,12 @@ from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 
 from django.core.exceptions import ObjectDoesNotExist
+from mapproxy import grid as mapproxy_grid
+from mapproxy import srs as mapproxy_srs
 
 import eventkit_cloud.utils.stats.generator as ek_stats
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
-from mapproxy import grid as mapproxy_grid
-from mapproxy import srs as mapproxy_srs
 
 logger = logging.getLogger(__name__)
 
