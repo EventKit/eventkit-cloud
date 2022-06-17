@@ -63,7 +63,7 @@ isort:
     - .back
     - .lint
   script:
-    - la -al
+    - ls -al
     - cat setup.cfg
     - python --version
     - isort --version
