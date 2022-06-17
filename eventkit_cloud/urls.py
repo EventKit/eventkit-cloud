@@ -1,7 +1,7 @@
 from typing import List, Union
 
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.urls import re_path, URLPattern, URLResolver
+from django.urls import URLPattern, URLResolver, re_path
 from django.views.generic.base import RedirectView
 
 from eventkit_cloud.core.urls import urlpatterns as eventkit_cloud_urlpatterns

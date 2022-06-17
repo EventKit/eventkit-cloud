@@ -6,25 +6,24 @@ from unittest.mock import call, patch
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.db.models.functions import Area
-from django.contrib.gis.db.models.functions import Intersection
+from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
 from django.test import TestCase
 from yaml import CDumper
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import (
+    DatamodelPreset,
+    DataProvider,
+    DataProviderTask,
+    DataProviderType,
     ExportFormat,
     ExportProfile,
     Job,
-    Region,
-    DataProvider,
-    DataProviderTask,
-    DatamodelPreset,
     JobPermission,
     JobPermissionLevel,
-    DataProviderType,
+    Region,
 )
 
 logger = logging.getLogger(__name__)

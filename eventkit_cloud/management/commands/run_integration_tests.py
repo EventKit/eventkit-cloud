@@ -1,7 +1,8 @@
 import unittest
+
 from django.core.management import BaseCommand
 
-from eventkit_cloud.jobs.tests.integration_test_jobs import TestJob, load_providers, delete_providers
+from eventkit_cloud.jobs.tests.integration_test_jobs import TestJob, delete_providers, load_providers
 
 
 class Command(BaseCommand):

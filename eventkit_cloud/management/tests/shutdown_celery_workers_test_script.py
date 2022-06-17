@@ -1,13 +1,12 @@
 import os
 import sys
 
-from celery.result import AsyncResult
-
 import django
+from celery.result import AsyncResult
 from django.core.management import call_command
 
-from eventkit_cloud.tasks import test_chain
 from eventkit_cloud.celery import app
+from eventkit_cloud.tasks import test_chain
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()

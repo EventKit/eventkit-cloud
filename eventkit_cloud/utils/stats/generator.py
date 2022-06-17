@@ -8,7 +8,7 @@ import os
 import statistics
 import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from typing import List, Type, Union, Any, Dict
+from typing import Any, Dict, List, Type, Union
 
 from django import db
 from django.core.cache import cache
@@ -19,7 +19,7 @@ from mapproxy import srs as mapproxy_srs
 
 from eventkit_cloud.jobs.models import DataProvider, load_provider_config
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.models import ExportTaskRecord, ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.utils.client import parse_duration
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox, get_bbox_intersect, get_geometry_description
 

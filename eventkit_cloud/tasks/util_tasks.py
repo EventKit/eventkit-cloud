@@ -1,9 +1,8 @@
 import socket
 import subprocess
-from typing import List, cast
-
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
+from typing import List, cast
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -17,10 +16,10 @@ from rest_framework.response import Response
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 from eventkit_cloud.utils.scaling import get_scale_client
-from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.types.django_helpers import DjangoUserType
 
@@ -99,7 +98,7 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 
 def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
-    from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
+    from eventkit_cloud.tasks.task_factory import Error, InvalidLicense, Unauthorized, create_run
 
     with transaction.atomic():
         old_run: ExportRun = ExportRun.objects.select_related("job__user", "parent_run__job__user").get(uid=run_uid)

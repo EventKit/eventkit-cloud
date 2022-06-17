@@ -6,17 +6,12 @@ from typing import List
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat, DataProvider
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
-from eventkit_cloud.tasks.helpers import (
-    normalize_name,
-    get_default_projection,
-    get_celery_queue_group,
-)
-from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.export_tasks import create_datapack_preview, reprojection_task
+from eventkit_cloud.tasks.helpers import get_celery_queue_group, get_default_projection, normalize_name
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
-
 
 logger = logging.getLogger(__name__)
 

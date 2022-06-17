@@ -1,5 +1,5 @@
 from eventkit_cloud.utils.gpkg.sqlite_utils import Table
-from eventkit_cloud.utils.gpkg.tables import TableNames, ExtensionEntry
+from eventkit_cloud.utils.gpkg.tables import ExtensionEntry, TableNames
 
 
 class Extension(object):

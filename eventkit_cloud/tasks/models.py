@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -13,24 +13,24 @@ from django.utils import timezone
 from notifications.models import Notification
 from storages.backends.s3boto3 import S3Boto3Storage
 
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.core.models import (
-    UIDMixin,
+    DownloadableMixin,
+    LowerCaseCharField,
     TimeStampedModelMixin,
     TimeTrackingModelMixin,
-    LowerCaseCharField,
-    DownloadableMixin,
+    UIDMixin,
 )
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
-    Job,
     DataProvider,
-    JobPermissionLevel,
+    Job,
     JobPermission,
-    RegionalPolicy,
+    JobPermissionLevel,
     MapImageSnapshot,
+    RegionalPolicy,
 )
-from eventkit_cloud.tasks import get_cache_value, set_cache_value, DEFAULT_CACHE_EXPIRATION
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, get_cache_value, set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 
 logger = logging.getLogger(__name__)

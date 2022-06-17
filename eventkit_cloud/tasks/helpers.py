@@ -19,7 +19,7 @@ from functools import reduce
 from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Union, Tuple, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.dom import minidom
 from zipfile import ZipFile
 
@@ -39,18 +39,9 @@ from requests import Response, Session
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
-from eventkit_cloud.tasks.enumerations import (
-    PREVIEW_TAIL,
-    UNSUPPORTED_CARTOGRAPHY_FORMATS,
-    Directory,
-)
+from eventkit_cloud.tasks.enumerations import PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS, Directory
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-    ExportRun,
-    ExportRunFile,
-    ExportTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.generic import retry

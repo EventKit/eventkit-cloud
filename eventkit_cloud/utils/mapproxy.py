@@ -6,7 +6,7 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Tuple, Dict, Any, cast
+from typing import Any, Dict, Tuple, cast
 
 import mapproxy
 import yaml
@@ -16,7 +16,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
+from mapproxy.config.loader import ConfigurationError, ProxyConfiguration, validate_references
 from mapproxy.grid import tile_grid
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
@@ -28,11 +28,11 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import (
-    get_tile_table_names,
-    set_gpkg_contents_bounds,
     get_table_tile_matrix_information,
+    get_tile_table_names,
     get_zoom_levels_table,
     remove_empty_zoom_levels,
+    set_gpkg_contents_bounds,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
@@ -42,7 +42,7 @@ from eventkit_cloud.utils.stats.eta_estimator import ETA
 multiprocessing.Process = DummyProcess  # type: ignore
 from mapproxy.seed import seeder  # noqa: E402
 from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore  # noqa: E402
+from mapproxy.seed.util import ProgressLog, ProgressStore, exp_backoff, timestamp  # noqa: E402
 
 multiprocessing.Process = Process  # type: ignore
 

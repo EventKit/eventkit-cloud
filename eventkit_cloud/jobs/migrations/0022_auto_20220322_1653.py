@@ -6,16 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0021_auto_20211214_1546'),
+        ("jobs", "0021_auto_20211214_1546"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='jobpermission',
+            name="jobpermission",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='jobpermission',
-            constraint=models.UniqueConstraint(fields=('job', 'content_type', 'object_id', 'permission'), name='unique_object_permission_per_job'),
+            model_name="jobpermission",
+            constraint=models.UniqueConstraint(
+                fields=("job", "content_type", "object_id", "permission"),
+                name="unique_object_permission_per_job",
+            ),
         ),
     ]

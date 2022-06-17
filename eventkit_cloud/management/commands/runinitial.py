@@ -1,5 +1,4 @@
-from django.core.management import BaseCommand
-from django.core.management import call_command
+from django.core.management import BaseCommand, call_command
 
 
 class Command(BaseCommand):

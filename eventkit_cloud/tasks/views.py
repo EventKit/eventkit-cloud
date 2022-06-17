@@ -10,12 +10,10 @@ from django.shortcuts import redirect
 
 from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_download_path
-from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
+from eventkit_cloud.tasks.helpers import get_download_path, get_run_staging_dir
+from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult, RunZipFile, UserDownload
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
-
 
 logger = getLogger(__name__)
 

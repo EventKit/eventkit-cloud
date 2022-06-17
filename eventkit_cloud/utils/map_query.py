@@ -2,7 +2,7 @@ import json
 import logging
 from abc import ABC
 from collections import defaultdict
-from typing import Type, Dict, Any
+from typing import Any, Dict, Type
 
 from eventkit_cloud.utils.arcgis2geojson import convert as convert_arcgis_to_geojson
 

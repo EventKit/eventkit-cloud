@@ -2,19 +2,19 @@
 import logging
 import os
 import uuid
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, Job, License, Region, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (
     TaskFactory,
-    create_run,
     create_finalize_run_task_collection,
+    create_run,
     get_invalid_licenses,
 )
 

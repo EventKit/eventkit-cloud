@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from django.test import TransactionTestCase
 
-from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection, Table
+from eventkit_cloud.utils.gpkg.sqlite_utils import Table, get_database_connection
 
 logger = logging.getLogger(__name__)
 

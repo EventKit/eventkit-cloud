@@ -2,7 +2,7 @@
 import logging
 import os
 from string import Template
-from unittest.mock import Mock, patch, ANY
+from unittest.mock import ANY, Mock, patch
 from uuid import uuid4
 
 from django.conf import settings

@@ -3,29 +3,28 @@ import logging
 import os
 
 from django import forms
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
 from django.urls import re_path
 from django.utils.html import format_html
-from django_celery_beat.models import IntervalSchedule, CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, IntervalSchedule
 
-from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
+from eventkit_cloud.jobs.forms import RegionalPolicyForm, RegionForm
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
-    Job,
-    Region,
-    RegionalPolicy,
-    RegionalJustification,
-    DataProvider,
-    DataProviderType,
     DatamodelPreset,
-    License,
+    DataProvider,
     DataProviderStatus,
     DataProviderTask,
+    DataProviderType,
+    ExportFormat,
+    Job,
     JobPermission,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
     clean_config,
     clean_config_as_str,
 )
@@ -158,10 +157,7 @@ class DataProviderForm(forms.ModelForm):
         service_type = self.cleaned_data.get("export_provider_type").type_name
 
         if service_type in ["wms", "wmts", "tms", "arcgis-raster"]:
-            from eventkit_cloud.utils.mapproxy import (
-                MapproxyGeopackage,
-                ConfigurationError,
-            )
+            from eventkit_cloud.utils.mapproxy import ConfigurationError, MapproxyGeopackage
 
             service = MapproxyGeopackage(
                 layer=self.cleaned_data.get("layer"),

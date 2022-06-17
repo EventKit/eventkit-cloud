@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Dict, List, Literal, TypedDict, Union
 
-
 Coordinates = List[Union[float, List[Union[float, List[float]]]]]
 
 

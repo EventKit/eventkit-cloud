@@ -8,8 +8,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
-
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 
 # from django.test import TestCase as APITestCase
 

@@ -6,13 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0009_regionaljustification'),
+        ("jobs", "0009_regionaljustification"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataprovider',
-            name='data_type',
-            field=models.CharField(blank=True, choices=[('vector', 'Vector'), ('raster', 'Raster'), ('elevation', 'Elevation')], default='', help_text='The type of data provided (e.g. elevation, raster, vector)', max_length=10, null=True, verbose_name='Data Type'),
+            model_name="dataprovider",
+            name="data_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("vector", "Vector"),
+                    ("raster", "Raster"),
+                    ("elevation", "Elevation"),
+                ],
+                default="",
+                help_text="The type of data provided (e.g. elevation, raster, vector)",
+                max_length=10,
+                null=True,
+                verbose_name="Data Type",
+            ),
         ),
     ]

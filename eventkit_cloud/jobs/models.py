@@ -7,19 +7,14 @@ import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, cast, Type, Union, List
+from typing import TYPE_CHECKING, Dict, List, Type, Union, cast
 
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    MultiPolygon,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, MultiPolygon, Polygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
@@ -40,7 +35,7 @@ from eventkit_cloud.core.models import (
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 

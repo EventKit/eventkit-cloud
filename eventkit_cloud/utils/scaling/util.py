@@ -4,7 +4,7 @@ from typing import Union
 
 from django.conf import settings
 
-from eventkit_cloud.utils.scaling import Pcf, Docker
+from eventkit_cloud.utils.scaling import Docker, Pcf
 
 
 def get_scale_client():

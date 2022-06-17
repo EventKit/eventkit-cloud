@@ -1,14 +1,14 @@
 import logging
 import os
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 
 from eventkit_cloud.utils.geocoding.geocode_auth_response import (
     GeocodeAuthResponse,
     check_data,
-    get_cached_response,
     get_auth_response,
+    get_cached_response,
 )
 
 logger = logging.getLogger(__name__)

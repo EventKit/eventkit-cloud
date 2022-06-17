@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 import logging
 import numbers
-from typing import Dict, Any, Literal, cast
+from typing import Any, Dict, Literal, cast
 
 
 def points_equal(a, b):

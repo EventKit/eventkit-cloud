@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from eventkit_cloud.jobs.admin import get_example_from_file
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
-from eventkit_cloud.jobs.models import DataProvider, Job, Region, RegionalPolicy, RegionalJustification
+from eventkit_cloud.jobs.models import DataProvider, Job, Region, RegionalJustification, RegionalPolicy
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,

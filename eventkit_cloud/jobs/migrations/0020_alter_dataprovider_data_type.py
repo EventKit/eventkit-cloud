@@ -6,13 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0019_auto_20211014_2210'),
+        ("jobs", "0019_auto_20211014_2210"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dataprovider',
-            name='data_type',
-            field=models.CharField(blank=True, choices=[('vector', 'Vector'), ('raster', 'Raster'), ('elevation', 'Elevation'), ('mesh', 'Mesh'), ('point_cloud', 'Point Cloud')], default='', help_text='The type of data provided (e.g. elevation, raster, vector)', max_length=20, null=True, verbose_name='Data Type'),
+            model_name="dataprovider",
+            name="data_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("vector", "Vector"),
+                    ("raster", "Raster"),
+                    ("elevation", "Elevation"),
+                    ("mesh", "Mesh"),
+                    ("point_cloud", "Point Cloud"),
+                ],
+                default="",
+                help_text="The type of data provided (e.g. elevation, raster, vector)",
+                max_length=20,
+                null=True,
+                verbose_name="Data Type",
+            ),
         ),
     ]

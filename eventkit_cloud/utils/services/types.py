@@ -1,4 +1,4 @@
-from typing import Dict, TypedDict, List
+from typing import Dict, List, TypedDict
 
 
 class LayerConfiguration(TypedDict, total=False):

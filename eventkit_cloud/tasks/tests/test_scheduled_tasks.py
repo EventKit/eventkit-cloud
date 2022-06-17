@@ -3,7 +3,7 @@ import copy
 import logging
 import uuid
 from collections import OrderedDict
-from unittest.mock import patch, call, Mock
+from unittest.mock import Mock, call, patch
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -14,26 +14,25 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from notifications.models import Notification
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
-from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus, Job
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
+from eventkit_cloud.tasks.helpers import list_to_dict
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.scheduled_tasks import (
-    expire_runs_task,
-    send_warning_email,
     check_provider_availability_task,
     clean_up_queues_task,
+    clean_up_stuck_tasks,
+    expire_runs_task,
     get_celery_task_details,
-    order_celery_tasks,
-    scale_by_tasks,
-    scale_default_tasks,
     get_celery_tasks_scale_by_run,
     get_celery_tasks_scale_by_task,
+    order_celery_tasks,
     scale_by_runs,
+    scale_by_tasks,
     scale_celery_task,
-    clean_up_stuck_tasks,
+    scale_default_tasks,
+    send_warning_email,
 )
-from eventkit_cloud.tasks.helpers import list_to_dict
 from eventkit_cloud.utils.services.check_result import CheckResult
 
 logger = logging.getLogger(__name__)

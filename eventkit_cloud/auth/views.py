@@ -10,16 +10,16 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponse, JsonResponse, HttpResponsePermanentRedirect
+from django.http import HttpResponse, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import (
-    request_access_tokens,
-    fetch_user_from_token,
     OAuthError,
     Unauthorized,
+    fetch_user_from_token,
     refresh_access_tokens,
+    request_access_tokens,
 )
 from eventkit_cloud.core.helpers import get_id
 

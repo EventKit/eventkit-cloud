@@ -11,12 +11,12 @@ import logging
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
-from typing import List, Union, Optional, Any, Dict
-from urllib.parse import urlsplit, ParseResult
+from typing import Any, Dict, List, Optional, Union
+from urllib.parse import ParseResult, urlsplit
 
 from audit_logging.models import AuditEvent
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
@@ -35,20 +35,20 @@ from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
     DatamodelPreset,
-    Job,
-    Region,
-    RegionMask,
-    RegionalPolicy,
-    RegionalJustification,
     DataProvider,
     DataProviderTask,
-    License,
-    UserLicense,
-    UserJobActivity,
+    ExportFormat,
+    Job,
     JobPermission,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
+    RegionMask,
+    UserJobActivity,
+    UserLicense,
 )
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_celery_queue_group
@@ -231,7 +231,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     def get_preview_url(self, obj):
-        from urllib.parse import urlsplit, ParseResult
+        from urllib.parse import ParseResult, urlsplit
 
         preview = obj.preview
         if preview is not None:
@@ -1179,7 +1179,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return export_formats.distinct()
 
     def get_thumbnail_url(self, obj):
-        from urllib.parse import urlsplit, ParseResult
+        from urllib.parse import ParseResult, urlsplit
 
         thumbnail = obj.thumbnail
         if thumbnail is not None:

@@ -12,7 +12,7 @@ import pytz
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from gdal_utils import get_meta, convert_vector, polygonize
+from gdal_utils import convert_vector, get_meta, polygonize
 
 logger = get_task_logger(__name__)
 

@@ -1,5 +1,5 @@
 import importlib
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 client_type_map: Dict[str, str] = {
     "arcgis-feature": "eventkit_cloud.utils.services.arcgis.ArcGIS",

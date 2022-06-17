@@ -4,10 +4,9 @@ import json
 import logging
 import re
 import statistics
-from datetime import timedelta, datetime
-from typing import Dict, Any, cast
-
+from datetime import datetime, timedelta
 from time import sleep
+from typing import Any, Dict, cast
 
 import requests
 

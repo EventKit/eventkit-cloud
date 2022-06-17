@@ -3,11 +3,11 @@
 
 import logging
 import os
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase, override_settings
 
-from eventkit_cloud.core.helpers import get_id, get_cached_model, get_model_by_params, get_or_update_session
+from eventkit_cloud.core.helpers import get_cached_model, get_id, get_model_by_params, get_or_update_session
 
 logger = logging.getLogger(__name__)
 

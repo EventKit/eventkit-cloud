@@ -21,6 +21,12 @@ image:
 .default:
   when: always
 
+pending-tests:
+  when: always
+  stage: pending
+  script:
+    - python scripts/github.py pending "Waiting for tests."
+
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
   before_script:
@@ -50,7 +56,14 @@ black:
     - .back
     - .lint
   script:
-    - black --config config/pyproject.toml --check eventkit_cloud
+    - black --check eventkit_cloud
+
+isort:
+  extends:
+    - .back
+    - .lint
+  script:
+    - isort eventkit_cloud
 
 flake8:
   extends:
@@ -109,11 +122,7 @@ unit-front:
 #    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
 #    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
 
-pending-tests:
-  when: always
-  stage: pending
-  script:
-    - python scripts/github.py pending "Waiting for tests."
+
 
 pass-tests:
   when: on_success

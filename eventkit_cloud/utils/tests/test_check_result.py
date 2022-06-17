@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import requests
 from django.conf import settings

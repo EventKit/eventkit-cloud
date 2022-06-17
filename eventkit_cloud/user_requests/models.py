@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import Polygon, MultiPolygon
+from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin
 from eventkit_cloud.jobs.models import DataProvider

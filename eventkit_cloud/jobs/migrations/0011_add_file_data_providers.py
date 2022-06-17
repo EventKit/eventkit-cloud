@@ -5,23 +5,23 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     def add_file_data_providers(apps, schema_editor):
-        DataProviderType = apps.get_model('jobs', 'DataProviderType')
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')
+        DataProviderType = apps.get_model("jobs", "DataProviderType")
+        ExportFormat = apps.get_model("jobs", "ExportFormat")
 
         # Create the DataProvider objects if they don't exist.
-        DataProviderType.objects.get_or_create(type_name='vector-file')
-        DataProviderType.objects.get_or_create(type_name='raster-file')
+        DataProviderType.objects.get_or_create(type_name="vector-file")
+        DataProviderType.objects.get_or_create(type_name="raster-file")
 
         # Currently available Provider Types.
-        vector_data_provider_types = ['vector-file']
-        raster_data_provider_types = ['raster-file']
+        vector_data_provider_types = ["vector-file"]
+        raster_data_provider_types = ["raster-file"]
 
         # Currently available Export Formats.
-        nitf = ExportFormat.objects.get(slug='nitf')
-        gtiff = ExportFormat.objects.get(slug='gtiff')
-        kml = ExportFormat.objects.get(slug='kml')
-        shp = ExportFormat.objects.get(slug='shp')
-        gpkg = ExportFormat.objects.get(slug='gpkg')
+        nitf = ExportFormat.objects.get(slug="nitf")
+        gtiff = ExportFormat.objects.get(slug="gtiff")
+        kml = ExportFormat.objects.get(slug="kml")
+        shp = ExportFormat.objects.get(slug="shp")
+        gpkg = ExportFormat.objects.get(slug="gpkg")
 
         # Set the known supported export formats per provider type.
         for provider_type in DataProviderType.objects.all():
@@ -31,9 +31,7 @@ class Migration(migrations.Migration):
                 provider_type.supported_formats.add(gpkg, gtiff, nitf)
 
     dependencies = [
-        ('jobs', '0010_dataprovider_data_type'),
+        ("jobs", "0010_dataprovider_data_type"),
     ]
 
-    operations = [
-        migrations.RunPython(add_file_data_providers)
-    ]
+    operations = [migrations.RunPython(add_file_data_providers)]
