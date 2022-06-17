@@ -63,6 +63,12 @@ isort:
     - .back
     - .lint
   script:
+    - la -al
+    - cat setup.cfg
+    - python --version
+    - isort --version
+    - ls -al eventkit_cloud/utils/
+    - pwd
     - isort eventkit_cloud --check
 
 flake8:
