@@ -969,11 +969,7 @@ class DataProviderViewSet(EventkitViewSet):
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
             data = serializer(providers, many=True, context={"request": request})
             filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
-            if isinstance(data, list):
-                data += filtered_data
-            else:
-                filtered_data.update(data)
-                data = filtered_data
+            data = data + filtered_data
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 DataProvider.update_cache_key_list(cache_key)
