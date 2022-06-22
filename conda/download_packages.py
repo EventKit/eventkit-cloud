@@ -1,6 +1,7 @@
-import requests
-import subprocess
 import os
+import subprocess
+
+import requests
 
 
 def download_packages(output_dir='.'):

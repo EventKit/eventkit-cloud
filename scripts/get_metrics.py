@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta
+
 from eventkit_cloud.tasks.models import ExportRun
-from datetime import timedelta, datetime
 
 
 def meters_to_sq_km(meters):
