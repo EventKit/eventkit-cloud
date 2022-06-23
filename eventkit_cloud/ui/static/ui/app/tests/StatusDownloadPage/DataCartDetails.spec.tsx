@@ -13,7 +13,7 @@ describe('DataCartDetails component', () => {
 
     const run = {
         uid: '12345',
-        url: 'http://cloud.eventkit.test/api/runs/123455',
+        url: 'http://host.docker.internal/api/runs/123455',
         started_at: '2017-05-22T18:35:01.400756Z',
         finished_at: '2017-05-22T18:35:22.292006Z',
         duration: '0:00:20.891250',
@@ -24,7 +24,7 @@ describe('DataCartDetails component', () => {
             name: 'test',
             event: 'test',
             description: 'test',
-            url: 'http://cloud.eventkit.test/api/jobs/67890',
+            url: 'http://host.docker.internal/api/jobs/67890',
             formats: [
                 'Geopackage',
             ],

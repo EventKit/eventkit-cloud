@@ -33,13 +33,13 @@ describe('DataPackDetails component', () => {
                     uid: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34',
                     result: {
                         size: '1.234 MB',
-                        url: 'http://cloud.eventkit.test/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
+                        url: 'http://host.docker.internal/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
                     },
                     display: true,
                 },
             ],
             uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
-            url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
+            url: 'http://host.docker.internal/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
             display: true,
             slug: 'osm',
         }];
@@ -47,7 +47,7 @@ describe('DataPackDetails component', () => {
     const providers = [
         {
             id: 2,
-            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            model_url: 'http://host.docker.internal/api/providers/osm',
             type: 'osm',
             license: {
                 slug: 'osm',

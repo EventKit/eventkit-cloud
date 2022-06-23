@@ -1437,7 +1437,7 @@ class TestExportTasks(ExportTaskBase):
             "name": "test",
             "project": "Test",
             "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
-            "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
+            "url": "http://host.docker.internal/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
         }
         data_provider_task_record_uids = ["0d08ddf6-35c1-464f-b271-75f6911c3f78"]
         mock_get_metadata.return_value = metadata

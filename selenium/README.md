@@ -13,6 +13,6 @@ To run the tests locally, perform the following steps:
   * `ek_url` The URL of eventkit to test. Three login pages are currently supported:
       * the geoaxis login page.
       * the api login page: /api/login/?next=dashboard
-      * the local instance login page i.e. http://cloud.eventkit.test/
+      * the local instance login page i.e. http://host.docker.internal/
 * From this `selenium` directory, run `docker-compose up` to run the tests.
 
