@@ -31,4 +31,4 @@ script:
     - docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.22.0 SITE_NAME=cloud.eventkit.test SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+  - DOCKER_COMPOSE_VERSION=1.22.0 SITE_NAME=host.docker.internal SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
