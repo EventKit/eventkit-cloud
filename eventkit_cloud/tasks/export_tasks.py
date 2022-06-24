@@ -1240,6 +1240,7 @@ def wfs_export_task(
             "bbox": bbox,
             "layer_name": layer_name,
             "projection": projection,
+            "level": layer.get("level", 15)
         }
 
     download_concurrently(list(layers.values()), **configuration)
@@ -1390,57 +1391,53 @@ def arcgis_feature_service_export_task(
 
     service_client = data_provider.get_service_client()
     service_capabilities = service_client.get_capabilities()
-    layer_file = create_arcgis_layer_file(layer_filename, service_capabilities)
+    layer_file = create_arcgis_layer_file(str(layer_filename), data_provider.name, service_capabilities)
 
-    # TODO: for testing only remove.
-    out = create_arcgis_layer_file(gpkg, service_capabilities)
-    # configuration = load_provider_config(data_provider.config)
-    # if configuration.get("layers"):
-    #     configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
-    #
-    # out = None
-    #
-    # layers: LayersDescription = {}
-    # vector_layer_data = data_provider.layers
+    out = None
 
-    # logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
-    # for layer_name, layer in vector_layer_data.items():
-    #     # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
-    #     path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
-    #     url = get_arcgis_query_url(layer.get("url"))
-    #     layers[layer_name] = {
-    #         "task_uid": task_uid,
-    #         "url": url,
-    #         "path": path,
-    #         "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
-    #         "bbox": bbox,
-    #         "layer_name": layer_name,
-    #         "projection": projection,
-    #         "distinct_field": layer.get("distinct_field", "OBJECTID"),
-    #     }
-    #
-    # try:
-    #     download_concurrently(list(layers.values()), feature_data=True, **configuration)
-    # except Exception as e:
-    #     logger.error(f"ArcGIS provider download error: {e}")
-    #     raise e
-    # for layer_name, layer in layers.items():
-    #     if not os.path.exists(layer["path"]):
-    #         continue
-    #     task_process = TaskProcess(task_uid=task_uid)
-    #     out = convert(
-    #         driver="gpkg",
-    #         input_files=layer.get("path"),
-    #         output_file=gpkg,
-    #         boundary=bbox,
-    #         projection=projection,
-    #         layer_name=layer_name,
-    #         access_mode="append",
-    #         executor=task_process.start_process,
-    #     )
+    configuration = load_provider_config(data_provider.config)
 
-    # if not geopackage.check_content_exists(out):
-    #     raise Exception("The service returned no data for the selected area.")
+    layers: LayersDescription = {}
+    vector_layer_data = data_provider.layers
+    logger.error(vector_layer_data)
+    logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
+    for layer_name, layer in vector_layer_data.items():
+        # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
+        path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
+        url = get_arcgis_query_url(layer.get("url"))
+        layers[layer_name] = {
+            "task_uid": task_uid,
+            "url": url,
+            "path": path,
+            "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+            "bbox": bbox,
+            "layer_name": layer_name,
+            "projection": projection,
+            "distinct_field": layer.get("distinct_field", "OBJECTID"),
+        }
+
+    try:
+        download_concurrently(list(layers.values()), feature_data=True, **configuration)
+    except Exception as e:
+        logger.error(f"ArcGIS provider download error: {e}")
+        raise e
+    for layer_name, layer in layers.items():
+        if not os.path.exists(layer["path"]):
+            continue
+        task_process = TaskProcess(task_uid=task_uid)
+        out = convert(
+            driver="gpkg",
+            input_files=layer.get("path"),
+            output_file=gpkg,
+            boundary=bbox,
+            projection=projection,
+            layer_name=layer_name,
+            access_mode="append",
+            executor=task_process.start_process,
+        )
+
+    if not geopackage.check_content_exists(out):
+        raise Exception("The service returned no data for the selected area.")
 
     result["driver"] = "gpkg"
     result["result"] = out

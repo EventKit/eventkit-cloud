@@ -1,7 +1,7 @@
-import json
-from typing import Literal, Optional
-
 import logging
+from typing import Optional
+
+from django.conf import settings
 from django.utils.text import slugify
 
 from eventkit_cloud.utils.arcgis.markers import get_marker_geometry
@@ -14,85 +14,99 @@ logging.basicConfig(level=logging.DEBUG)
 def get_geometry(service_symbol: service_types.Symbol) -> cim_types.Geometry:
     return get_marker_geometry(service_symbol)
 
+
 def get_cim_color(service_color: service_types.Color) -> cim_types.CIMRGBColor:
-    color:cim_types.CIMRGBColor = {"type": "CIMRGBColor",
-    "values": [
-        service_color[0],
-        service_color[1],
-        service_color[2],
-        int((service_color[3]/255) * 100)
-    ]}
+    color: cim_types.CIMRGBColor = {"type": "CIMRGBColor",
+                                    "values": [
+                                        service_color[0],
+                                        service_color[1],
+                                        service_color[2],
+                                        int((service_color[3] / 255) * 100)
+                                    ]}
     return color
 
-def get_symbol_layers(service_symbol: service_types.Symbol) -> list[cim_types.SymbolLayer]:
-    layers = []
-    outline: Optional[service_types.SimpleLineSymbol] = service_symbol.get("outline")
-    if outline:
-        layers += [
-            {
-                "type": "CIMSolidStroke",
-                "enable": True,
-                "capStyle": "Round",
-                "joinStyle": "Round",
-                "lineStyle3D": "Strip",
-                "miterLimit": 10,
-                "width": 0.69999999999999996,
-                "color": {
-                    "type": "CIMRGBColor",
-                    "values": [
-                        service_symbol['outline']['color'][0],
-                        service_symbol['outline'][1],
-                        service_symbol['outline'][2],
-                        100
-                    ]
-                }
-            }
-        ]
-    layers += [
+def get_dash_template(service_symbol: service_types.Symbol) -> Optional[list[int]]:
+    # The dashTemplate controls the line/spaceing (i.e. [line, space, line, space, line, space])
+    match service_symbol['style']:
+        case "esriSLSDash":
+            return [6, 6]
+        case "esriSLSDashDot":
+            return [6, 3, 1, 3]
+        case "esriSLSDashDotDot":
+            return [6, 3, 1, 3, 1, 3]
+        case "esriSLSDot":
+            return [2, 4]
+        case "esriSLSLongDash":
+            return [8, 4]
+        case "esriSLSLongDashDot":
+            return [8, 3, 1, 3]
+        case "esriSLSOptional[]":
+            return None
+        case "esriSLSShortDash":
+            return [4, 4]
+        case "esriSLSShortDashDot":
+            return [4, 2, 1, 2]
+        case "esriSLSShortDashDotDot":
+            return [4, 2, 1, 2, 1, 2]
+        case "esriSLSShortDot":
+            return [1, 2]
+        case "esriSLSSolid":
+            return None
 
-    ]
+def get_cim_solid_stroke(service_symbol: service_types.Symbol) -> cim_types.CIMSolidStroke:
+    line: cim_types.CIMSolidStroke = {
+        "type": "CIMSolidStroke",
+        "enable": True,
+        "capStyle": "Round",
+        "joinStyle": "Round",
+        "width": service_symbol.get("width", 1),
+        "color": get_cim_color(service_symbol.get('color', [0, 0, 0, 255]))
+    }
+    dash_template = get_dash_template(service_symbol)
+    if dash_template:
+        effect = {
+            "type": "CIMGeometricEffectDashes",
+            "dashTemplate": dash_template,
+            "lineDashEnding": "NoConstraint",
+            "controlPointEnding": "NoConstraint"
+        }
+        line["effects"] = [effect]
+    return line
+
+def get_cim_solid_fill(service_symbol: service_types.Symbol) -> cim_types.CIMSolidFill:
+    return {
+        "type": "CIMSolidFill",
+        "enable": True,
+        "color": get_cim_color(service_symbol.get('color', [0, 0, 0, 255]))
+    }
+
+def get_symbol_layers(service_symbol: service_types.Symbol) -> list[cim_types.SymbolLayer]:
+    match service_symbol['type']:
+        case "esriSLS":
+            return [get_cim_solid_stroke(service_symbol)]
+        case "esriSFS":
+            layers = []
+            if service_symbol.get("outline"):
+                layers += [get_cim_solid_stroke(service_symbol)]
+            layers += [get_cim_solid_fill(service_symbol)]
+            return layers
+        case _:
+            if settings.DEBUG:
+                raise NotImplementedError()
+            return []
+
+
 def get_cim_marker_graphic(service_symbol: service_types.Symbol) -> cim_types.CIMMarkerGraphic:
     graphic: cim_types.CIMMarkerGraphic = {
-                "type": "CIMMarkerGraphic",
-                "geometry": get_geometry(service_symbol),
-                "symbol": {
-                    "type": "CIMPolygonSymbol",
-                    "symbolLayers": [
-                        {
-                            "type": "CIMSolidStroke",
-                            "enable": True,
-                            "capStyle": "Round",
-                            "joinStyle": "Round",
-                            "lineStyle3D": "Strip",
-                            "miterLimit": 10,
-                            "width": 0.69999999999999996,
-                            "color": {
-                                "type": "CIMRGBColor",
-                                "values": [
-                                    service_symbol['outline']['color'][0],
-                                    service_symbol['outline'][1],
-                                    service_symbol['outline'][2],
-                                    100
-                                ]
-                            }
-                        },
-                        {
-                            "type": "CIMSolidFill",
-                            "enable": True,
-                            "color": {
-                                "type": "CIMRGBColor",
-                                "values": [
-                                    130,
-                                    130,
-                                    130,
-                                    100
-                                ]
-                            }
-                        }
-                    ]
-                }
-            }
+        "type": "CIMMarkerGraphic",
+        "geometry": get_geometry(service_symbol),
+        "symbol": {
+            "type": "CIMPolygonSymbol",
+            "symbolLayers": get_symbol_layers(service_symbol)
+        }
+    }
     return graphic
+
 
 def get_cim_vector_marker(service_symbol: service_types.Symbol) -> cim_types.CIMVectorMarker:
     marker: cim_types.CIMVectorMarker = {
@@ -113,40 +127,74 @@ def get_cim_vector_marker(service_symbol: service_types.Symbol) -> cim_types.CIM
     }
     return marker
 
+def get_cim_picture_marker(service_symbol: service_types.Symbol) -> cim_types.CIMPictureMarker:
+    marker: cim_types.CIMPictureMarker = {
+                        "type" : "CIMPictureMarker",
+                        "enable" : True,
+                        "anchorPoint" : {
+                          "x" : 0,
+                          "y" : 0,
+                          "z" : 0
+                        },
+                        "anchorPointUnits" : "Relative",
+                        "dominantSizeAxis3D" : "Y",
+                        "size" : 12,
+                        "billboardMode3D" : "FaceNearPlane",
+                        "invertBackfaceTexture" : True,
+                        "scaleX" : 1,
+                        "textureFilter" : "Draft",
+                        "tintColor" : {
+                          "type" : "CIMRGBColor",
+                          "values" : [
+                            255,
+                            255,
+                            255,
+                            100
+                          ]
+                        },
+                        "url" : f"data:{service_symbol['contentType']};base64,{service_symbol['imageData']}"
+                      }
+    return marker
 
 def get_symbol_layer(service_symbol: service_types.Symbol) -> cim_types.SymbolLayer:
     match service_symbol.get("type"):
         case "CIMSymbolReference":
-            return get_symbol(service_symbol.get("symbol"))
+            return get_symbol(service_symbol)
         case "esriSLS":
-            return get_cim_line_symbol()
+            return get_cim_line_symbol(service_symbol)
         case "esriSFS":
-            return get_cim_polygon_symbol()
+            return get_cim_polygon_symbol(service_symbol)
         case "esriSMS":
-            return get_cim_vector_marker()
+            return get_cim_vector_marker(service_symbol)
         case "esriPFS":
-            return get_cim_polygon_symbol()
+            return get_cim_polygon_symbol(service_symbol)
         case "esriPMS":
-            return get_cim_vector_marker()
+            return get_cim_picture_marker(service_symbol)
         case "esriTS":
-            return get_cim_text_symbol()
+            return get_cim_text_symbol(service_symbol)
         case _:
             logger.error("Unsupported Symbol %s was used")
-            return {}
+            return None
 
 
 def get_cim_line_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMLineSymbol:
-    raise NotImplementedError()
+    symbol: cim_types.CIMLineSymbol = {
+        "type": "CIMLineSymbol",
+        "symbolLayers": get_symbol_layers(service_symbol),
+    }
+    return symbol
 
 
 def get_cim_mesh_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMMeshSymbol:
-    raise NotImplementedError()
+    if settings.DEBUG:
+        raise NotImplementedError()
+    return None
 
 
 def get_cim_point_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMPointSymbol:
     symbol: cim_types.CIMPointSymbol = {
         "type": "CIMPointSymbol",
-        "symbolLayers": [get_symbol_layer(service_symbol.get("symbol"))],
+        "symbolLayers": [get_symbol_layer(service_symbol)],
         "haloSize": 1,
         "scaleX": 1,
         "angleAlignment": "Display"
@@ -155,14 +203,22 @@ def get_cim_point_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMP
 
 
 def get_cim_polygon_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMPolygonSymbol:
-    raise NotImplementedError()
+    symbol: cim_types.CIMPolygonSymbol = {
+        "type": "CIMPolygonSymbol",
+        "symbolLayers": get_symbol_layers(service_symbol),
+    }
+    return symbol
 
 
 def get_cim_text_symbol(service_symbol: service_types.Symbol) -> cim_types.CIMTextSymbol:
-    raise NotImplementedError()
+    if settings.DEBUG:
+        raise NotImplementedError()
+    return None
 
 
-def get_cim_symbol_reference(service_symbol: service_types.Symbol) -> cim_types.CIMSymbolReference:
+def get_cim_symbol_reference(service_symbol: Optional[service_types.Symbol]) -> Optional[cim_types.CIMSymbolReference]:
+    if not service_symbol:
+        return None
     symbol: cim_types.CIMSymbolReference = {
         "type": "CIMSymbolReference",
         "symbol": get_symbol(service_symbol)
@@ -170,7 +226,9 @@ def get_cim_symbol_reference(service_symbol: service_types.Symbol) -> cim_types.
     return symbol
 
 
-def get_symbol(service_symbol: service_types.Symbol) -> cim_types.Symbol:
+def get_symbol(service_symbol: Optional[service_types.Symbol]) -> Optional[cim_types.Symbol]:
+    if not service_symbol:
+        return None
     match service_symbol.get("type"):
         case "CIMSymbolReference":
             return get_symbol(service_symbol.get("symbol"))
@@ -188,40 +246,46 @@ def get_symbol(service_symbol: service_types.Symbol) -> cim_types.Symbol:
             return get_cim_text_symbol(service_symbol)
         case _:
             logger.error("Unsupported Symbol %s was used")
-            return {}
+            return None
+
 
 def get_cim_unique_value_class(value_info: service_types.UniqueValueInfo) -> cim_types.CIMUniqueValueClass:
     value_class: cim_types.CIMUniqueValueClass = {
-                "type" : "CIMUniqueValueClass",
-                "label" : value_info['label'],
-                "patch" : "Default",
-                "symbol" : get_cim_symbol_reference(value_info['symbol']),
-                "values" : [
-                  {
-                    "type" : "CIMUniqueValue",
-                    "fieldValues" : [str(value_info['value'])]
-                  }
-                ],
-                "visible" : True
-              }
+        "type": "CIMUniqueValueClass",
+        "label": value_info['label'],
+        "patch": "Default",
+        "symbol": get_cim_symbol_reference(value_info['symbol']),
+        "values": [
+            {
+                "type": "CIMUniqueValue",
+                "fieldValues": [str(value_info['value'])]
+            }
+        ],
+        "visible": True
+    }
     return value_class
+
 
 def get_cim_unique_value_group(service_renderer: service_types.Renderer) -> cim_types.CIMUniqueValueGroup:
     group: cim_types.CIMUniqueValueGroup = {
-            "type" : "CIMUniqueValueGroup",
-            "classes" : [get_cim_unique_value_class(info) for info in service_renderer.get("uniqueValueInfos", [])],
-            "heading" : "HEADING!"
-          }
+        "type": "CIMUniqueValueGroup",
+        "classes": [get_cim_unique_value_class(info) for info in service_renderer.get("uniqueValueInfos", [])],
+    }
     return group
 
 
+def get_simple_renderer(service_renderer: service_types.SimpleRenderer) -> cim_types.CIMSimpleRenderer:
+    renderer: cim_types.CIMSimpleRenderer = {
+        "type": "CIMSimpleRenderer",
+        "patch": "Default",
+        "symbol": get_cim_symbol_reference(service_renderer["symbol"]),
+        "label": service_renderer["label"],
+        "description": service_renderer["description"]
+    }
+    return renderer
 
-def get_simple_renderer(service_renderer: service_types.Renderer) -> cim_types.CIMSimpleRenderer:
-    raise NotImplementedError()
-    return {}
 
-
-def get_unique_value_renderer(service_renderer: service_types.Renderer) -> cim_types.CIMUniqueValueRenderer:
+def get_unique_value_renderer(service_renderer: service_types.UniqueValueRenderer) -> cim_types.CIMUniqueValueRenderer:
     fields = [field for field in
               [service_renderer.get("field1"), service_renderer.get("field2"), service_renderer.get("field3")] if field]
     renderer: cim_types.CIMUniqueValueRenderer = {
@@ -241,7 +305,7 @@ def get_unique_value_renderer(service_renderer: service_types.Renderer) -> cim_t
             "maxAlpha": 100
         },
         "defaultLabel": service_renderer.get("defaultLabel", "Other"),
-        "defaultSymbol": get_cim_symbol_reference(service_renderer.get("defaultSymbol")),
+        "defaultSymbol": get_cim_symbol_reference(service_renderer["defaultSymbol"]),
         "defaultSymbolPatch": "Default",
         "fields": fields,
         "groups": [get_cim_unique_value_group(service_renderer)],
@@ -251,10 +315,17 @@ def get_unique_value_renderer(service_renderer: service_types.Renderer) -> cim_t
     return renderer
 
 
-def get_cim_renderer(drawingInfo: service_types.DrawingInfo) -> cim_types.Renderer:
-    renderers = {"simple": get_simple_renderer, "uniqueValue": get_unique_value_renderer}
-    service_renderer = drawingInfo.get("renderer", {})
-    return renderers.get(service_renderer.get("type")) or {}
+def get_cim_renderer(drawingInfo: service_types.DrawingInfo) -> Optional[cim_types.Renderer]:
+    renderer = drawingInfo.get("renderer")
+    match renderer:
+        case {"type": "simple"}:
+            return get_simple_renderer(renderer)
+        case {"type": "uniqueValue"}:
+            return get_unique_value_renderer(renderer)
+        case _:
+            if settings.DEBUG:
+                raise NotImplementedError("The renderer type: %s is not supported", renderer.get("type"))
+            return None
 
 
 def get_cim_field_descriptions(service_spec: service_types.MapServiceSpecification) -> list[
@@ -296,10 +367,11 @@ def get_cim_feature_table(service_spec: service_types.MapServiceSpecification) -
     return cim_feature_table
 
 
-def get_cim_feature_layer(service_spec: service_types.MapServiceSpecification) -> dict[str, cim_types.CIMFeatureLayer]:
-    cim_path = f"internal_map/{service_spec['name']}"
-    cim_feature_layer: cim_types.CIMFeatureLayer = {cim_path: {
-        "type": Literal["CIMFeatureLayer"],
+def get_cim_feature_layer(service_spec: service_types.MapServiceSpecification) -> cim_types.CIMFeatureLayer:
+    cim_path = f"CIMPATH=internal_map/{service_spec['name']}.xml"
+
+    return {
+        "type": "CIMFeatureLayer",
         "name": service_spec["name"],
         "uRI": cim_path,
         "sourceModifiedTime": {
@@ -333,102 +405,92 @@ def get_cim_feature_layer(service_spec: service_types.MapServiceSpecification) -
         "featureCacheType": "Session",
         "displayFiltersType": "ByScale",
         "featureBlendingMode": "Alpha",
-        "renderer": {
-            "type": "CIMSimpleRenderer",
-            "patch": "Default",
-            "symbol": {
-                "type": "CIMSymbolReference",
-                "symbol": {
-                    "type": "CIMPointSymbol",
-                    "symbolLayers": [
-                        {
-                            "type": "CIMPictureMarker",
-                            "enable": True,
-                            "anchorPoint": {
-                                "x": 0,
-                                "y": 0,
-                                "z": 0
-                            },
-                            "anchorPointUnits": "Relative",
-                            "dominantSizeAxis3D": "Y",
-                            "size": 12,
-                            "billboardMode3D": "FaceNearPlane",
-                            "invertBackfaceTexture": True,
-                            "scaleX": 1,
-                            "textureFilter": "Draft",
-                            "tintColor": {
-                                "type": "CIMRGBColor",
-                                "values": [
-                                    255,
-                                    255,
-                                    255,
-                                    100
-                                ]
-                            },
-                            "url": ""
-                        }
-                    ],
-                    "haloSize": 1,
-                    "scaleX": 1,
-                    "angleAlignment": "Display"
-                }
-            }
-        },
+        "renderer": get_cim_renderer(service_spec.get("drawingInfo")),
         "scaleSymbols": True,
         "snappable": True}
-    }
-    return cim_feature_layer
 
 
-def get_cim_group_layer(name: str = None, layer: service_types.MapServiceSpecification = None) -> dict[
-                                                                                                  str: cim_types.CIMGroupLayer]:
+def get_cim_group_layer(name: str = None,
+                        layer: service_types.MapServiceSpecification = None) -> cim_types.CIMGroupLayer:
     layer_name = name or layer["name"]
-    cim_path = f"CIMPATH={layer_name}Group.xml"
-    cim_group_layer = {cim_path: {"type": "CIMGroupLayer",
-                                  "name": name or layer["name"],
-                                  "uRI": cim_path,
-                                  "sourceModifiedTime": {
-                                      "type": "TimeInstant"
-                                  },
-                                  # "metadataURI": "CIMPATH=Metadata/fa1f8760f6c9e4a003427e63495e5627.xml",
-                                  "useSourceMetadata": True,
-                                  "layerElevation": {
-                                      "type": "CIMLayerElevationSurface",
-                                      "mapElevationID": "{752ADD4F-A4BC-44F1-8B73-D03138DD2020}"
-                                  },
-                                  "expanded": True,
-                                  "layerType": "Operational",
-                                  "showLegends": True,
-                                  "visibility": True,
-                                  "displayCacheType": "Permanent",
-                                  "maxDisplayCacheAge": 5,
-                                  "showPopups": True,
-                                  "serviceLayerID": -1,
-                                  "refreshRate": -1,
-                                  "refreshRateUnit": "esriTimeUnitsSeconds",
-                                  "blendingMode": "Alpha",
-                                  "layers": []
-                                  }}
-    return cim_group_layer
+    cim_path = f"CIMPATH=internal_map/{layer_name}.xml"
+
+    # If called with a group layer from a service, then we need the sublayers, otherwise create an arbitrary group
+    # layer, and add the current layer to it.
+    if layer.get("layers"):
+        # If layers is present this is a root only add layers if they belong at root level (to avoid duplicates).
+        sublayers = [get_cim_layer(sublayer) for sublayer in layer["layers"] if not sublayer.get("parentLayer")]
+    elif layer.get("subLayers"):
+        sublayers = [get_cim_layer(sublayer) for sublayer in layer["subLayers"]]
+    else:
+        sublayers = [get_cim_layer(layer)]
+
+    layers = []
+    for sublayer in sublayers:
+        if layer.get("layers", {}) and not sublayer.get("parentLayer"):
+            layers.append(sublayer['uRI'])
+        else:
+            layers.append(sublayer['uRI'])
+
+    return {"type": "CIMGroupLayer",
+            "name": name or layer["name"],
+            "uRI": cim_path,
+            "sourceModifiedTime": {
+                "type": "TimeInstant"
+            },
+            "useSourceMetadata": True,
+            "layerElevation": {
+                "type": "CIMLayerElevationSurface",
+                "mapElevationID": "{752ADD4F-A4BC-44F1-8B73-D03138DD2020}"
+            },
+            "expanded": True,
+            "layerType": "Operational",
+            "showLegends": True,
+            "visibility": True,
+            "displayCacheType": "Permanent",
+            "maxDisplayCacheAge": 5,
+            "showPopups": True,
+            "serviceLayerID": layer.get("id", -1),
+            "refreshRate": -1,
+            "refreshRateUnit": "esriTimeUnitsSeconds",
+            "blendingMode": "Alpha",
+            "layers": layers,
+            "layerDefinitions": sublayers
+            }
 
 
-def get_cim_layer(service_specification: service_types.MapServiceSpecification):
+def get_cim_layer(service_specification: service_types.MapServiceSpecification) -> Optional[cim_types.LayerDefinition]:
     match service_specification.get("type"):
         case "Group Layer":
-            return get_cim_group_layer(service_specification)
+            return get_cim_group_layer(service_specification['name'], layer=service_specification)
         case "Feature Layer":
             return get_cim_feature_layer(service_specification)
+        case _:
+            return None
+
+
+def flatten_layers(layer_group: cim_types.LayerDefinition) -> list[cim_types.LayerDefinition]:
+    layers = []
+    layerDefinitions = layer_group.pop("layerDefinitions", [])
+    for layer in layerDefinitions:
+        layers += flatten_layers(layer)
+    layers += [layer_group]
+    return layers
 
 
 def get_cim_layer_document(layer_name: str,
                            service_specification: service_types.MapServiceSpecification) -> cim_types.CIMLayerDocument:
-    layers = get_cim_group_layer(layer_name, service_specification)
+    layer_group = get_cim_group_layer(layer_name, service_specification)
+    layer_definitions = flatten_layers(layer_group)
+    # Deduplicate the layers.
+    layer_definitions = list({layer['uRI']: layer for layer in layer_definitions}.values())
+
     cim_document = {
         "type": "CIMLayerDocument",
         "version": "2.7.0",
         "build": 26828,
-        "layers": list(layers.keys()),
-        "layerDefinitions": list(layers.values()),
+        "layers": [layer_group["uRI"]],
+        "layerDefinitions": layer_definitions,
         "binaryReferences": [],
         "elevationSurfaces": [],
         "rGBColorProfile": "sRGB IEC61966-2-1 noBPC",

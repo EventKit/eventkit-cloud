@@ -234,6 +234,8 @@ def scale_default_tasks(client, app_name, celery_tasks):
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queues = get_all_rabbitmq_objects(broker_api_url, "queues")
     queue = queues.get("celery")
+    if not queue:
+        return
     queue_name = queue.get("name")
     pending_messages = queue.get("messages", 0)
     logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")

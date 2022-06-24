@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal, TypedDict, Union, TypeAlias
 
 # https://github.com/Esri/cim-spec/blob/master/docs/v2/CIMEnumerations.md
 AltitudeMode = Literal["ClampToGround", "RelativeToGround", "Absolute"]
@@ -260,8 +260,8 @@ CIMSpotColorSpace = Any
 ColorSpace = Union[CIMICCColorSpace, CIMSpotColorSpace]
 
 
-class CIMColor(TypedDict):
-    colorSpace: ColorSpace
+class CIMColor(TypedDict, total=False):
+    colorSpace: ColorSpace  # Optional
     values: list[float]
 
 
@@ -304,14 +304,31 @@ class CIMSymbolLayerIdentifier(TypedDict, total=False):
     symbolLayerName: str
 
 
-class CIMSolidStroke(TypedDict):
-    type: Literal["CIMSolidStroke"]
+
+
+
+class CIMSymbolLayer(TypedDict, total=False):
+    effects: list["CIMGeometricEffect"]
     enable: bool
-    capStyle: str
-    joinStyle: str
-    lineStyle3D: str
-    miterLimit: int
-    width: int
+    name: str
+    colorLocked: bool
+    pritiveName: str
+    overprint: bool
+
+LineCapStyle = Literal["Butt", "Round", "Square"]
+LineJoinStyle = Literal["Bevel", "Round", "Miter"]
+Simple3DLineStyle = Literal["Tube", "Strip", "Wall"]
+
+class CIMStroke(TypedDict, total=False):
+    capStyle: LineCapStyle
+    joinStyle: LineJoinStyle
+    lineStyle3d: Simple3DLineStyle
+    miterLimit: float
+    width: float
+    closeCaps3d: bool
+
+class CIMSolidStroke(CIMSymbolLayer, CIMStroke):
+    type: Literal["CIMSolidStroke"]
     color: CIMRGBColor
 
 
@@ -319,19 +336,6 @@ class CIMSolidFill(TypedDict):
     type: Literal["CIMSolidFill"]
     enable: bool
     color: CIMRGBColor
-
-
-CIMGeometricEffect = Any
-
-
-class CIMSymbolLayer(TypedDict, total=False):
-    effects: list[CIMGeometricEffect]
-    enable: bool
-    name: str
-    colorLocked: bool
-    pritiveName: str
-    overprint: bool
-
 
 MarkerPlacement = Any
 
@@ -368,8 +372,6 @@ CIMObjectMarker3D = Any
 
 CIMPictureFill = Any
 
-CIMPictureMarker = Any
-
 CIMPictureStroke = Any
 
 CIMPieChartMarker = Any
@@ -397,7 +399,6 @@ Path = list[Point]
 CurvePath = list[Point]
 Ring = list[Point]
 CurveRing = list[Point]
-CurvePath = list[Point]
 
 
 class Multipoint(_Geometry, total=False):
@@ -437,13 +438,16 @@ class BezierCurve(TypedDict):
     b: list[Point]
 
 
+
+Curve: TypeAlias = Union[CircularArc, EllipticArc, BezierCurve]
+
 class GeometryBag(_Geometry):
-    points: list["Geometry"]
+    points: list[Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope,
+                 Area, Path, CurvePath, Ring, CurveRing, Curve]]  # It's a geometry type.
 
-
-Curve = Union[CircularArc, EllipticArc, BezierCurve]
-Geometry = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope,
+Geometry: TypeAlias = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope,
                  GeometryBag, Area, Path, CurvePath, Ring, CurveRing, Curve]
+
 
 CIMWaterFill = Any
 
@@ -521,7 +525,7 @@ CIMGeometricEffect = Union[
     CIMGeometricEffectWave,
 ]
 
-SymbolLayer = Union[
+SymbolLayer: TypeAlias = Union[
     "CIMBarChartMarker",
     "CIMCharacterMarker",
     "CIMGradientFill",
@@ -545,12 +549,12 @@ SymbolLayer = Union[
 
 
 class _CIMMultiLayerSymbol(TypedDict):
-    symbolLayers: list[SymbolLayer]
+    symbolLayers: list["SymbolLayer"]
 
 
 class CIMMultiLayerSymbol(TypedDict, total=False):
     effects: list[CIMGeometricEffect]
-    symbolLayers: list[SymbolLayer]
+    symbolLayers: list["SymbolLayer"]
     thumbnailURI: str
     useRealWorldSymbolSizes: bool
 
@@ -637,25 +641,32 @@ class CIMTextSymbol(TypedDict, total=False):
     billboardMode3D: BillboardMode
     overprint: bool
 
+class CIMColorSubstitution(TypedDict):
+    oldColor: Color
+    newColor: Color
 
-class CIMPictureMarker(TypedDict):
+CIMAnimatedSymbolProperties = Any
+
+TextureFilter = Any
+
+class _CIMPictureMarker(CIMSymbolLayer, CIMMarker):
     type: Literal["CIMPictureMarker"]
-    enable: bool
-    anchorPoint: Point
-    anchorPointUnits: Literal["Relative"]
-    dominantSizeAxis3D: Literal["Y"]
-    size: int
-    billboardMode3D: Literal["FaceNearPlane"]
+    scaleX: int  # 1
+
+class CIMPictureMarker(_CIMPictureMarker, total=False):
+    colorSubstitutions: list[CIMColorSubstitution]
+    depth3D: float
     invertBackfaceTexture: bool
-    scaleX: 1
-    textureFilter: Literal["Draft"]
-    tintColor: CIMRGBColor
+    textureFilter: Union[TextureFilter]
+    tintColor: Color
     url: str
+    verticalOrientation3D: bool
+    animatedSymbolProperties: CIMAnimatedSymbolProperties
 
 
 class CIMPointSymbol(TypedDict):
     type: Literal["CIMPointSymbol"]
-    symbolLayers: list[SymbolLayer]
+    symbolLayers: list["SymbolLayer"]
     haloSize: int
     scaleX: int
     angleAlignment: Literal["Display"]
@@ -669,29 +680,30 @@ class CIMScaleDependentSizeVariation(TypedDict):
 Symbol = Union[CIMLineSymbol, CIMMeshSymbol, CIMPointSymbol, CIMPolygonSymbol, CIMTextSymbol]
 
 
-class CIMMarkerGraphic(TypedDict, total=False):
-    geometry: Geometry
-    symbol: Symbol
-    textString: str
-    primitiveName: str
-
-
 class CIMClippingPath(TypedDict, total=False):
     clippingType: ClippingType
     path: Polygon
 
 
-class CIMVectorMarker(CIMSymbolLayer, CIMMarker, total=False):
+class _CIMVectorMarker(CIMSymbolLayer):
+    type: Literal["CIMVectorMarker"]
+
+
+class CIMVectorMarker(_CIMVectorMarker, CIMMarker, total=False):
     depth3D: int
     frame: Envelope
-    markerGraphics: list[CIMMarkerGraphic]
+    markerGraphics: list["CIMMarkerGraphic"]
     verticalOrientation3D: bool
     scaleSymbolsProportionally: bool
     respectFrame: bool
     clippingPath: CIMClippingPath
 
 
-class CIMMarkerGraphic(TypedDict, total=False):
+class _CIMMarkerGraphic(TypedDict):
+    type: Literal["CIMMarkerGraphic"]
+
+
+class CIMMarkerGraphic(_CIMMarkerGraphic, total=False):
     geometry: Geometry
     symbol: Symbol
     textString: str
@@ -736,10 +748,16 @@ class CIMVisualVariableRenderer(TypedDict, total=False):
     visualVariables: list[CIMVisualVariable]
 
 
-class CIMSimpleRenderer(TypedDict):
+class _CIMSimpleRenderer(CIMVisualVariableRenderer):
     type: Literal["CIMSimpleRenderer"]
-    patch: Literal["Default"]
-    symbol: CIMLineSymbol
+    symbol: CIMSymbolReference
+    patch: PatchShape  # "Default"
+
+
+class CIMSimpleRenderer(_CIMSimpleRenderer, total=False):
+    description: str
+    label: str
+    alternateSymbols: list[CIMSymbolReference]
 
 
 CIMFixedColorRamp = Any
@@ -1118,11 +1136,11 @@ class CIMLayerAction(TypedDict, total=False):
 
 
 SymbolSubstitutionType = Literal["Color", "IndividualSubordinate", "IndividualDominant"]
-Renderer = Union[CIMSimpleRenderer, CIMUniqueValueRenderer]
+Renderer: TypeAlias = Union[CIMSimpleRenderer, CIMUniqueValueRenderer]
 
 
 class CIMSymbolLayerMasking(TypedDict, total=False):
-    symbolLayers = list[CIMSymbolLayerIdentifier]
+    symbolLayers: list[CIMSymbolLayerIdentifier]
 
 
 CIMBinningFeatureReduction = Any
@@ -1177,7 +1195,7 @@ class CIMGroupLayer(CIMDefinition, CIMLayerDefinition, CIMStandaloneTableContain
     symbolLayerDrawing: CIMSymbolLayerDrawing
 
 
-LayerDefinition = Union[CIMFeatureLayer]  # There are many others currently only feature is supported in EK.
+LayerDefinition = Union[CIMFeatureLayer, CIMGroupLayer]  # There are many others currently only feature is supported in EK.
 
 
 class CIMVersion(TypedDict):
@@ -1187,8 +1205,6 @@ class CIMVersion(TypedDict):
 
 class CIMLayerDocument(CIMVersion):
     type: Literal["CIMLayerDocument"]
-    version: str
-    build: Literal[26828]
     layers: list[str]
     layerDefinitions: list[CIMDefinition]
     binaryReferences: list[CIMBinaryReference]

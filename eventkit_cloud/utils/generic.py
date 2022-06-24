@@ -69,20 +69,28 @@ def cacheable(timeout: int = DEFAULT_TIMEOUT, key_fields=[]):
         def wrapper(*args, **kwargs):
             # handle if first arg is self.
             cache_key = []
-            if args:
-                arg = type(args[0]).__name__ if args and inspect.isclass(args[0]) else str(slugify(args[0]))
-                cache_key.append(arg)
-            cache_key.extend([str(slugify(arg)) for arg in args[1:] if arg])
-            keys = (
-                copy.deepcopy(kwargs)
-                if not key_fields
-                else {key_field: kwargs.get(key_field) for key_field in key_fields if key_field}
-            )
-            cache_key.extend([str(slugify(kwarg)) for kwarg in itertools.chain.from_iterable(keys.items())])
-            cache_key = [func.__name__] + cache_key
-            cache_key_string = ".".join(cache_key)[:249]
+            keys = {}
+            for key_field in key_fields:
+                key = None
+                try:
+                    if key_field in kwargs and kwargs.get(key_field) is not None:
+                        key = kwargs.get(key_field)
+                    else:
+                        key = getattr(args[0], key_field)
+                except (AttributeError, IndexError):
+                    logger.info("The keyfield %s on %s was provided but is not accessible.", key_field,
+                                    func.__qualname__)
+                keys.update({key_field: key})
+            if not key_fields:
+                keys = copy.deepcopy(kwargs)
+            cache_key.extend([quote(str(kwarg)) for kwarg in itertools.chain.from_iterable(keys.items())])
+            cache_key = [func.__qualname__] + cache_key
+            cache_key_string = ":".join(cache_key)[:249]
             logger.debug("Getting or setting the cache_key %s", cache_key_string)
-            return_value = cache.get_or_set(cache_key_string, lambda: func(*args, **kwargs), timeout=timeout)
+            return_value = cache.get(cache_key_string)
+            if not return_value:
+                return_value = func(*args, **kwargs)
+                cache.set(cache_key_string, return_value, timeout=timeout)
             return return_value
 
         return wrapper

@@ -44,6 +44,8 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
 
 COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/eventkit_cloud
 
+RUN echo "conda activate eventkit-cloud" >> ~/.bashrc
+
 ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/scripts/wait-for-postgis.sh"]
 
 CMD ["echo", "This image has no default run command."]

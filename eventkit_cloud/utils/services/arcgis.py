@@ -1,15 +1,16 @@
 import copy
 from logging import getLogger
+from math import floor
 from typing import Optional, TypedDict, Union
 
 import requests
 from django.contrib.gis.geos import Polygon
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
+from eventkit_cloud.tasks.helpers import get_zoom_level_from_scale
 from eventkit_cloud.utils.generic import cacheable
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.types import LayersDescription
-
 logger = getLogger(__name__)
 
 
@@ -22,8 +23,7 @@ class ArcGIS(GisClient):
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
         super(ArcGIS, self).__init__(*args, **kwargs)
-        self.service_capabilities = None
-        self.layer = self.layer.lower() if self.layer else None
+        self.layer = str(self.layer).lower() if self.layer is not None else None
 
     def download_geometry(self) -> Optional[Polygon]:
         response = self.session.get(self.service_url, params={"f": "json"})
@@ -35,42 +35,31 @@ class ArcGIS(GisClient):
     def find_layers(self, root):
         raise NotImplementedError("Method is specific to service type")
 
-    @cacheable(timeout=86400, key_fields=["layer_id"])  # timeout: 1 day
+    @cacheable(timeout=86400, key_fields=["layer_id", "layer", "service_url"])  # timeout: 1 day
     def get_capabilities(
-        self, layer_id: Optional[Union[str, int]] = None, layers: dict = None, get_sublayers: bool = True
-    ):
+        self, layer_id: Optional[Union[str, int]] = None):
         # If there is not a layer_id provided then the service url is used
         # that implies that it is the general service description for the instantiated client.
-        if self.service_capabilities:
-            return self.service_capabilities
-        url = f"{self.service_url.removesuffix('/')}/{layer_id}" if layer_id is not None else self.service_url
+        layer_id = str(layer_id) if layer_id is not None else None
+        lyr_id = layer_id or self.layer
+        url = f"{self.service_url.removesuffix('/')}/{lyr_id}" if lyr_id else self.service_url
         try:
             logger.info("Getting service description from %s", url)
             result = self.session.get(url, params={"f": "json"})
             result.raise_for_status()
             service_capabilities = result.json()
-            layers = copy.deepcopy(layers) or {}
-            sub_layers = {}
-            for layer in service_capabilities.get("layers", {}):
-                # The top level service description will have the definition for all of the layers
-                # We can make a request for all of those layers now, then when we get the sublayers we can just pass
-                # in the "prefetched" version.
-                logger.debug("Getting service layer: %s", layer.get("id"))
-                new_layer = self.get_capabilities(layer_id=layer.get("id"), layers=layers, get_sublayers=False)
-                logger.debug("setting layer id: %s with new layer %s", layer.get("id"), new_layer)
-                layers[layer["id"]] = new_layer
-            if get_sublayers:
-                for sub_layer in service_capabilities.get("subLayers", {}):
-                    logger.debug("Getting layer %s sublayer: %s", layer_id, sub_layer.get("id"))
-                    new_sub_layer = layers.get(sub_layer["id"]) or [
-                        self.get_capabilities(layer_id=sub_layer.get("id"), layers=layers)
-                    ]
-                    logger.debug("setting sublayer id: %s with new layer %s", sub_layer.get("id"), new_layer)
-                    sub_layers[sub_layer["id"]] = new_sub_layer
-            service_capabilities["subLayers"] = list(sub_layers.values()) or list(layers.values())
+            layers = {}
+            for layer in service_capabilities.get("subLayers", []) or service_capabilities.get("layers", []):
+                logger.debug("Getting layer %s sublayer: %s", lyr_id, layer.get("id"))
+                new_sub_layer = self.get_capabilities(layer_id=layer["id"])
+                logger.debug("setting sublayer id: %s with new layer %s", layer.get("id"), new_sub_layer)
+                layers[layer["id"]] = new_sub_layer
+            if service_capabilities.get("layers"):
+                service_capabilities['layers'] = list(layers.values())
+            else:
+                service_capabilities["subLayers"] = list(layers.values())
             service_capabilities["url"] = url  # Not in spec but helpful for calling the layer for data.
-            if not layer_id:
-                self.service_capabilities = service_capabilities
+            service_capabilities["level"] = get_zoom_level_from_scale(floor((service_capabilities["maxScale"] + service_capabilities["minScale"])/2))
             return service_capabilities
         except requests.exceptions.HTTPError:
             if url:
@@ -82,11 +71,12 @@ class ArcGIS(GisClient):
 
         if cap_doc and self.layer:
             return {self.layer: {"name": str(self.layer), "url": str(cap_doc["url"])}}
-        if cap_doc.get("layers"):
+        if cap_doc.get("layers") or cap_doc.get("subLayers"):
             # TODO: This logic is specific for feature layers,
             #  this will need to change or be subclassed to separate raster/feature services.
             return {
-                slugify(layer["name"]): layer for layer in (cap_doc.get("subLayers", [])) if "Feature" in layer["type"]
+                slugify(layer["name"]): layer for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
+                if "Feature" in layer["type"]
             }
         return {self.layer: {"name": str(self.layer), "url": self.service_url}}
 

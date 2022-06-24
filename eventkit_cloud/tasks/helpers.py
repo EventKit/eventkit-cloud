@@ -281,7 +281,7 @@ def get_arcgis_templates(metadata: dict) -> dict:
     if not os.path.dirname(stage_dir):
         os.makedirs(stage_dir)
 
-    with cd(os.path.join(os.path.dirname(__file__), "../utils/arcgis")):
+    with cd(os.path.join(os.path.dirname(__file__), "../utils/arcgis/templates")):
         for dirpath, _, arcgis_template_files in os.walk("./"):
             if not os.path.isdir(stage_dir):
                 os.mkdir(stage_dir)
@@ -317,15 +317,6 @@ def get_arcgis_templates(metadata: dict) -> dict:
 
     # Add layer files
     logger.error("Searching for layer_path")
-
-    for data_source_name, data_source in arcgis_metadata['data_sources'].items():
-        for file_description in data_source['files']:
-            if file_description.get("layer_file"):
-                logger.error("Adding layer_path %s", file_description.get("layer_file"))
-                files[os.path.abspath(file_description.get("layer_file"))] = os.path.join(
-                    Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(file_description.get("layer_path"))
-                )
-
 
     with open(arcgis_metadata_file, "w") as open_md_file:
         json.dump(arcgis_metadata, open_md_file)
@@ -566,8 +557,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
             "last_update": get_last_update(data_provider.url, provider_type, cert_info=cert_info),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
-            "layers": ["airports"],
-            # "layers": list(data_provider.layers.keys()),
+            "layers": list(data_provider.layers.keys()),
             "level_from": data_provider.level_from,
             "level_to": data_provider.level_to,
         }
@@ -612,10 +602,10 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
                 # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
                 if provider_type == "arcgis-feature":
 
-                    layer_filepath_stage = pathlib.Path(staging_filepath).parent.joinpath(
-                        f"{data_provider_task_record.provider.slug}.lyrx")
-                    layer_filepath_archive = pathlib.Path(archive_filepath).parent.joinpath(
-                        f"{data_provider_task_record.provider.slug}.lyrx")
+                    layer_filepath_stage = str(pathlib.Path(staging_filepath).parent.joinpath(
+                        f"{data_provider_task_record.provider.slug}.lyrx"))
+                    layer_filepath_archive = str(pathlib.Path(archive_filepath).parent.joinpath(
+                        f"{data_provider_task_record.provider.slug}.lyrx"))
                     include_files[layer_filepath_stage] = layer_filepath_archive
             except Exception:
                 continue
@@ -631,7 +621,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
                     if matches:
                         projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
-                        "layer_file": layer_filepath if layer_filepath else None,
+                        "layer_file": layer_filepath_archive if layer_filepath_archive else None,
                         "file_path": archive_filepath,
                         "full_file_path": staging_filepath,
                         "file_ext": os.path.splitext(staging_filepath)[1],
@@ -894,6 +884,7 @@ def merge_chunks(
     base_url: str,
     task_points=100,
     feature_data=False,
+    level=15,
     distinct_field=None,
     session=None,
     *args,
@@ -903,7 +894,7 @@ def merge_chunks(
     # mypy complains when keyword arguments are passed alongside a **kwargs
     # it believes that session could be getting passed in twice (it could, but shouldn't)
     chunks = download_chunks(
-        task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args, **kwargs
+        task_uid, bbox, stage_dir, base_url, task_points, feature_data, level=level, session=session, *args, **kwargs
     )  # type: ignore
     task_process = TaskProcess(task_uid=task_uid)
     try:
@@ -942,6 +933,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
         cert_info=layer.get("cert_info"),
         task_points=task_points,
         feature_data=feature_data,
+        level=layer.get("level"),
         distinct_field=layer.get("distinct_field"),
         session=session,
     )
@@ -981,6 +973,14 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
 
     return layers
 
+
+def get_zoom_level_from_scale(scale: int) -> int:
+    zoom_level_scale = 559082264
+    zoom_level = 0
+    while zoom_level_scale > scale:
+        zoom_level_scale = zoom_level_scale/2
+        zoom_level += 1
+    return zoom_level
 
 def parse_arcgis_feature_response(file_path: str) -> dict:
     with open(file_path) as f:

@@ -21,7 +21,7 @@ def add_geopackage_metadata(filepath, job, provider):
     """Add metadata information to the geopackage at the specified location."""
     bbox = job.extents
     job_description = job.description
-    provider_description = provider.service_capabilities
+    provider_description = provider.service_description
     # Read layers from the geopackage, these all need to be added to the metadata
     # Layers are the entries in `gpkg_contents` -- each entry has a corresponding table with data.
     with get_database_connection(filepath) as conn:

@@ -474,11 +474,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if url:
             return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
 
-    # def create_style_file(self, file_path:str=None) -> dict:
-    #     style_file = {}
-    #     if self.export_provider_type.type_name == "arcgis-feature":
-    #         style_file["arcgis"] = create_arcgis_layer_file(layer_filename, service_capabilities)
-
     @property
     def footprint_url(self):
         from eventkit_cloud.utils.mapproxy import get_mapproxy_footprint_url
@@ -505,7 +500,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
             elif config.get("vector_layers"):
-                return {layer.get("name"): layer for layer in config.get("vector_layers", [])}
+                return {layer.get("name"): layer for layer in config.get("vector_layers", {})}
         # Often layer names are configured using an index number but this number is not very
         # useful when using the data so fall back to the slug which should be more meaningful.
         if not self.layer:  # check for NoneType or empty string

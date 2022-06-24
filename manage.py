@@ -4,7 +4,10 @@ import os
 import subprocess
 import sys
 
+import django
 from django.conf import settings
+from django.core.cache import cache
+
 
 if __name__ == "__main__":
 
@@ -15,8 +18,9 @@ if __name__ == "__main__":
         import time
 
         start_time = time.time()
-
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.tests")
+        django.setup()
+        cache.clear()
 
         logging.disable(logging.CRITICAL)
 
@@ -47,7 +51,7 @@ if __name__ == "__main__":
         end_time = time.time()
 
         logging.disable(logging.NOTSET)
-
+        cache.clear()
         print(("Testing completed in {0} seconds".format(round(end_time-start_time, 2))))
 
     else:

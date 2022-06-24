@@ -416,10 +416,11 @@ class UniqueValueRenderer(TypedDict, total=False):
     type: Literal["uniqueValue"]
     authoringInfo: dict
     backgroundFillSymbol: Union[SimpleFillSymbol, PictureFillSymbol]
-    defaultLabel: str
+    defaultSymbol: Optional[Symbol]
+    defaultLabel: Optional[str]
     field1: str
-    field2: str
-    field3: str
+    field2: Optional[str]
+    field3: Optional[str]
     fieldDelimiter: str
     legendOptions: LegendOptions
     rotationExpression: str
@@ -427,7 +428,7 @@ class UniqueValueRenderer(TypedDict, total=False):
     uniqueValueInfos: list[UniqueValueInfo]
     valueExpression: str
     valueExpressionTitle: str
-    visualVariables: str[VisualVariable]
+    visualVariables: list[VisualVariable]
 
 
 Renderer = Union[ClassBreaksRenderer, DictionaryRenderer, DotDensityRenderer, SimpleRenderer, UniqueValueRenderer]
@@ -521,7 +522,7 @@ class MapServiceSpecification(_MapServiceSpecification, total=False):
     indexes: list[Index]
     types: list[Type]
     subtypes: list[SubType]
-    relationships: []
+    relationships: list
     canModifyLayer: bool
     canScaleSymbols: bool
     hasLabels: bool
