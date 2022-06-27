@@ -63,6 +63,7 @@ def retry(f):
 
 DEFAULT_TIMEOUT = 60 * 60 * 24  # one day
 
+
 def cacheable(timeout: int = DEFAULT_TIMEOUT, key_fields=[]):
     def decorator(func):
         @wraps(func)
@@ -78,8 +79,9 @@ def cacheable(timeout: int = DEFAULT_TIMEOUT, key_fields=[]):
                     else:
                         key = getattr(args[0], key_field)
                 except (AttributeError, IndexError):
-                    logger.info("The keyfield %s on %s was provided but is not accessible.", key_field,
-                                    func.__qualname__)
+                    logger.info(
+                        "The keyfield %s on %s was provided but is not accessible.", key_field, func.__qualname__
+                    )
                 keys.update({key_field: key})
             if not key_fields:
                 keys = copy.deepcopy(kwargs)

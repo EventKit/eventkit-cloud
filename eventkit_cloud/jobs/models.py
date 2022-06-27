@@ -25,7 +25,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
 from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings

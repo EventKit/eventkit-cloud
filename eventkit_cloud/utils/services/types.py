@@ -16,6 +16,7 @@ class LayerDescription(TypedDict, total=False):
     url: str
     level: int
 
+
 class Layer(LayerConfiguration, LayerDescription):
     pass
 

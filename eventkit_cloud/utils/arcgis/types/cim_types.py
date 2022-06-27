@@ -90,7 +90,7 @@ RasterResamplingType = Literal[
     "Average",
     "Minimum",
     "Maximum",
-    "VectorAverage"
+    "VectorAverage",
 ]
 RasterStretchStatsType = Literal["AreaOfView", "Dataset", "GlobalStats"]
 RasterStretchType = Literal[
@@ -103,7 +103,7 @@ RasterStretchType = Literal[
     "HistogramSpecification",
     "PercentMinimumMaximum",
     "Count",
-    "ESRI"
+    "ESRI",
 ]
 RotationOrder = Literal["XYZ", "ZXY", "YXZ"]
 EsriTimeUnits = Literal[
@@ -117,7 +117,7 @@ EsriTimeUnits = Literal[
     "esriTimeUnitsMonths",
     "esriTimeUnitsYears",
     "esriTimeUnitsDecades",
-    "esriTimeUnitsCenturies"
+    "esriTimeUnitsCenturies",
 ]
 BlendingMode = Literal[
     "None",
@@ -142,7 +142,7 @@ BlendingMode = Literal[
     "LinearDodge",
     "LinearLight",
     "PinLight",
-    "VividLight"
+    "VividLight",
 ]
 StandardFeatureWeight = Literal["None", "Low", "Medium", "High"]
 StandardLabelWeight = Literal["Low", "Medium", "High"]
@@ -195,7 +195,7 @@ PatchShape = Literal[
     "AreaNaturalPoly",
     "AreaSquare",
     "AreaHexagonFlat",
-    "AreaHexagonPointy"
+    "AreaHexagonPointy",
 ]
 ExpressionReturnType = Literal["Default", "String", "Numeric"]
 
@@ -225,7 +225,7 @@ WorkspaceFactory = Literal[
     "NoSQL",
     "BigDataConnection",
     "KnowledgeGraph",
-    "NITF"
+    "NITF",
 ]
 
 
@@ -304,9 +304,6 @@ class CIMSymbolLayerIdentifier(TypedDict, total=False):
     symbolLayerName: str
 
 
-
-
-
 class CIMSymbolLayer(TypedDict, total=False):
     effects: list["CIMGeometricEffect"]
     enable: bool
@@ -315,9 +312,11 @@ class CIMSymbolLayer(TypedDict, total=False):
     pritiveName: str
     overprint: bool
 
+
 LineCapStyle = Literal["Butt", "Round", "Square"]
 LineJoinStyle = Literal["Bevel", "Round", "Miter"]
 Simple3DLineStyle = Literal["Tube", "Strip", "Wall"]
+
 
 class CIMStroke(TypedDict, total=False):
     capStyle: LineCapStyle
@@ -326,6 +325,7 @@ class CIMStroke(TypedDict, total=False):
     miterLimit: float
     width: float
     closeCaps3d: bool
+
 
 class CIMSolidStroke(CIMSymbolLayer, CIMStroke):
     type: Literal["CIMSolidStroke"]
@@ -336,6 +336,7 @@ class CIMSolidFill(TypedDict):
     type: Literal["CIMSolidFill"]
     enable: bool
     color: CIMRGBColor
+
 
 MarkerPlacement = Any
 
@@ -438,15 +439,30 @@ class BezierCurve(TypedDict):
     b: list[Point]
 
 
-
 Curve: TypeAlias = Union[CircularArc, EllipticArc, BezierCurve]
 
-class GeometryBag(_Geometry):
-    points: list[Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope,
-                 Area, Path, CurvePath, Ring, CurveRing, Curve]]  # It's a geometry type.
 
-Geometry: TypeAlias = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope,
-                 GeometryBag, Area, Path, CurvePath, Ring, CurveRing, Curve]
+class GeometryBag(_Geometry):
+    points: list[
+        Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope, Area, Path, CurvePath, Ring, CurveRing, Curve]
+    ]  # It's a geometry type.
+
+
+Geometry: TypeAlias = Union[
+    Point,
+    Multipoint,
+    Multipatch,
+    Polyline,
+    Polygon,
+    Envelope,
+    GeometryBag,
+    Area,
+    Path,
+    CurvePath,
+    Ring,
+    CurveRing,
+    Curve,
+]
 
 
 CIMWaterFill = Any
@@ -641,17 +657,21 @@ class CIMTextSymbol(TypedDict, total=False):
     billboardMode3D: BillboardMode
     overprint: bool
 
+
 class CIMColorSubstitution(TypedDict):
     oldColor: Color
     newColor: Color
+
 
 CIMAnimatedSymbolProperties = Any
 
 TextureFilter = Any
 
+
 class _CIMPictureMarker(CIMSymbolLayer, CIMMarker):
     type: Literal["CIMPictureMarker"]
     scaleX: int  # 1
+
 
 class CIMPictureMarker(_CIMPictureMarker, total=False):
     colorSubstitutions: list[CIMColorSubstitution]
@@ -1195,7 +1215,9 @@ class CIMGroupLayer(CIMDefinition, CIMLayerDefinition, CIMStandaloneTableContain
     symbolLayerDrawing: CIMSymbolLayerDrawing
 
 
-LayerDefinition = Union[CIMFeatureLayer, CIMGroupLayer]  # There are many others currently only feature is supported in EK.
+LayerDefinition = Union[
+    CIMFeatureLayer, CIMGroupLayer
+]  # There are many others currently only feature is supported in EK.
 
 
 class CIMVersion(TypedDict):

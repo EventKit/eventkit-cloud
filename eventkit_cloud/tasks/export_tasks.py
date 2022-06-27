@@ -3,7 +3,6 @@
 import json
 import logging
 import os
-import pathlib
 import re
 import shutil
 import socket
@@ -88,7 +87,6 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
-from eventkit_cloud.utils.arcgis.style import create_arcgis_layer_file
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
@@ -1240,7 +1238,7 @@ def wfs_export_task(
             "bbox": bbox,
             "layer_name": layer_name,
             "projection": projection,
-            "level": layer.get("level", 15)
+            "level": layer.get("level", 15),
         }
 
     download_concurrently(list(layers.values()), **configuration)
@@ -1384,14 +1382,9 @@ def arcgis_feature_service_export_task(
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
-
     data_provider = export_task_record.export_provider_task.provider
-    layer_filename = pathlib.Path(gpkg).parent.joinpath(
-        f"{data_provider.slug}.lyrx")
 
     service_client = data_provider.get_service_client()
-    service_capabilities = service_client.get_capabilities()
-    layer_file = create_arcgis_layer_file(str(layer_filename), data_provider.name, service_capabilities)
 
     out = None
 
@@ -1412,6 +1405,7 @@ def arcgis_feature_service_export_task(
             "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
             "bbox": bbox,
             "layer_name": layer_name,
+            "level": layer.get("level", 15),
             "projection": projection,
             "distinct_field": layer.get("distinct_field", "OBJECTID"),
         }
@@ -1443,7 +1437,6 @@ def arcgis_feature_service_export_task(
     result["result"] = out
     result["source"] = out
     result["gpkg"] = out
-    logger.error("Adding layer file to result %s", layer_file)
 
     return result
 

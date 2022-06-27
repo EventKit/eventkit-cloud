@@ -27,9 +27,9 @@ class TestArcGIS(TransactionTestCase):
 
         # Test using just the root url.
         expected_layer_1 = copy.deepcopy(layer_1)
-        expected_layer_1['url'] = f"{url}/{str(layer_1['id'])}"
+        expected_layer_1["url"] = f"{url}/{str(layer_1['id'])}"
         expected_layer_0 = copy.deepcopy(layer_0)
-        expected_layer_0.update({"subLayers": [expected_layer_1], 'url': f"{url}/{str(layer_0['id'])}"})
+        expected_layer_0.update({"subLayers": [expected_layer_1], "url": f"{url}/{str(layer_0['id'])}"})
         expected_result = copy.deepcopy(root_doc)
         expected_result["layers"] = [expected_layer_0, expected_layer_1]
         expected_result["url"] = url
@@ -45,8 +45,8 @@ class TestArcGIS(TransactionTestCase):
         arcgis.session.get().json.side_effect = [layer_0, layer_1]
 
         expected_layer_1 = copy.deepcopy(layer_1)
-        expected_layer_1['url'] = f"{url}/{str(layer_1['id'])}"
+        expected_layer_1["url"] = f"{url}/{str(layer_1['id'])}"
         expected_result = copy.deepcopy(layer_0)
-        expected_result.update({"subLayers": [expected_layer_1], 'url': f"{url}/{str(layer_0['id'])}"})
+        expected_result.update({"subLayers": [expected_layer_1], "url": f"{url}/{str(layer_0['id'])}"})
         result = arcgis.get_capabilities()
         self.assertEqual(expected_result, result)

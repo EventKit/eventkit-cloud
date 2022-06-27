@@ -11,6 +11,7 @@ from eventkit_cloud.tasks.helpers import get_zoom_level_from_scale
 from eventkit_cloud.utils.generic import cacheable
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.types import LayersDescription
+
 logger = getLogger(__name__)
 
 
@@ -36,8 +37,7 @@ class ArcGIS(GisClient):
         raise NotImplementedError("Method is specific to service type")
 
     @cacheable(timeout=86400, key_fields=["layer_id", "layer", "service_url"])  # timeout: 1 day
-    def get_capabilities(
-        self, layer_id: Optional[Union[str, int]] = None):
+    def get_capabilities(self, layer_id: Optional[Union[str, int]] = None):
         # If there is not a layer_id provided then the service url is used
         # that implies that it is the general service description for the instantiated client.
         layer_id = str(layer_id) if layer_id is not None else None
@@ -55,11 +55,13 @@ class ArcGIS(GisClient):
                 logger.debug("setting sublayer id: %s with new layer %s", layer.get("id"), new_sub_layer)
                 layers[layer["id"]] = new_sub_layer
             if service_capabilities.get("layers"):
-                service_capabilities['layers'] = list(layers.values())
+                service_capabilities["layers"] = list(layers.values())
             else:
                 service_capabilities["subLayers"] = list(layers.values())
             service_capabilities["url"] = url  # Not in spec but helpful for calling the layer for data.
-            service_capabilities["level"] = get_zoom_level_from_scale(floor((service_capabilities["maxScale"] + service_capabilities["minScale"])/2))
+            service_capabilities["level"] = get_zoom_level_from_scale(
+                floor((service_capabilities["maxScale"] + service_capabilities["minScale"]) / 2)
+            )
             return service_capabilities
         except requests.exceptions.HTTPError:
             if url:
@@ -75,7 +77,8 @@ class ArcGIS(GisClient):
             # TODO: This logic is specific for feature layers,
             #  this will need to change or be subclassed to separate raster/feature services.
             return {
-                slugify(layer["name"]): layer for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
+                slugify(layer["name"]): layer
+                for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
                 if "Feature" in layer["type"]
             }
         return {self.layer: {"name": str(self.layer), "url": self.service_url}}

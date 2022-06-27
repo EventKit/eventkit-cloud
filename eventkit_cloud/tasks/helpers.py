@@ -39,6 +39,7 @@ from requests import Response, Session
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import (
     PREVIEW_TAIL,
@@ -54,6 +55,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.arcgis.arcgis_layer import ArcGISLayer
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
@@ -61,7 +63,6 @@ from eventkit_cloud.utils.s3 import download_folder_from_s3
 from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
-
 
 logger = logging.getLogger(__name__)
 
@@ -599,14 +600,6 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
             try:
                 staging_filepath = export_task.result.get_file_path(staging=True)
                 archive_filepath = export_task.result.get_file_path(archive=True)
-                # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
-                if provider_type == "arcgis-feature":
-
-                    layer_filepath_stage = str(pathlib.Path(staging_filepath).parent.joinpath(
-                        f"{data_provider_task_record.provider.slug}.lyrx"))
-                    layer_filepath_archive = str(pathlib.Path(archive_filepath).parent.joinpath(
-                        f"{data_provider_task_record.provider.slug}.lyrx"))
-                    include_files[layer_filepath_stage] = layer_filepath_archive
             except Exception:
                 continue
 
@@ -621,7 +614,6 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
                     if matches:
                         projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
-                        "layer_file": layer_filepath_archive if layer_filepath_archive else None,
                         "file_path": archive_filepath,
                         "full_file_path": staging_filepath,
                         "file_ext": os.path.splitext(staging_filepath)[1],
@@ -660,12 +652,33 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
         if include_files:
             try:
                 include_files.update(create_license_file(data_provider_task_record))
+                # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
+                if provider_type == "arcgis-feature":
+                    include_files.update(create_arcgis_layer_file(data_provider_task_record, metadata))
             except FileNotFoundError:
                 # This fails if run at beginning of run.
                 pass
 
         metadata["include_files"] = include_files
     return metadata
+
+
+def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, metadata: dict) -> dict[str, str]:
+    file_info = metadata["data_sources"][data_provider_task_record.provider.slug]["files"][0]
+    layer_filepath_stage = str(
+        pathlib.Path(file_info["full_file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
+    )
+    layer_filepath_archive = str(
+        pathlib.Path(file_info["file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
+    )
+
+    service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
+    metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
+    arcgis_layer = ArcGISLayer(data_provider_task_record.provider.slug, service_capabilities, file_info["file_path"])
+    doc = arcgis_layer.get_cim_layer_document()
+    with open(layer_filepath_stage, "w") as layer_file:
+        layer_file.write(json.dumps(doc))
+    return {layer_filepath_stage: layer_filepath_archive}
 
 
 def get_arcgis_metadata(metadata):
@@ -978,9 +991,10 @@ def get_zoom_level_from_scale(scale: int) -> int:
     zoom_level_scale = 559082264
     zoom_level = 0
     while zoom_level_scale > scale:
-        zoom_level_scale = zoom_level_scale/2
+        zoom_level_scale = zoom_level_scale / 2
         zoom_level += 1
     return zoom_level
+
 
 def parse_arcgis_feature_response(file_path: str) -> dict:
     with open(file_path) as f:

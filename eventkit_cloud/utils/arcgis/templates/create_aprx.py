@@ -117,7 +117,7 @@ def add_layers_to_group(
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
                 arcpy.AddMessage(e)
-            layer_file = get_layer_file(datapack_path, layer_info["type"], version)
+            layer_file = layer_info.get("layer_file") or get_layer_file(datapack_path, layer_info["type"], version)
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 arcpy.AddWarning(
                     f"Skipping layer {vector_layer_name} because the file type is not supported for ArcPro {version}"
@@ -275,7 +275,7 @@ def get_aprx_template(datapack_path):
     :return: A file path to the correct arcgis project template.
     """
     template_file_name = "template-2-7.aprx"
-    template_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "", template_file_name))
+    template_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "templates", template_file_name))
     if not os.path.isfile(template_file):
         arcpy.AddError("This script requires an aprx template file which was not found.")
         raise Exception(f"File Not Found: {template_file}")
@@ -293,7 +293,7 @@ def get_layer_file(datapack_path, type, version=CURRENT_VERSION):
     version = "10.6"
     for lyr_ext in ["lyrx", "lyr"]:
         layer_basename = f"{type}-{version.replace('.', '-')}.{lyr_ext}"
-        layer_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "", layer_basename))
+        layer_file = os.path.abspath(os.path.join(datapack_path, "arcgis", "templates", layer_basename))
         if os.path.isfile(layer_file):
             arcpy.AddMessage(f"Fetching layer template: {layer_file}")
             return layer_file
@@ -356,11 +356,11 @@ def update_layer(layer: arcpy._mp.Layer, file_path: str, type: str, projection: 
             del lyr
 
 
-def create_aprx(datapack_path: str, aprx=None, metadata=None, verify=True):
+def create_aprx(datapack_path: str, aprx=None, metadata: dict = None, verify=True):
     """
     Updates the template aprx with a new gpkg datasource. If an aprx is provided the result is written to that file.
     :param aprx: An aprx to write the result to (optional).
-    :param metadata: The metadata file to use for updating the aprx.
+    :param metadata: The metadata dict to use for updating the aprx.
     :param verify: Raise an exception if there is an error in the aprx after adding the new gpkg.
     :return: The contents (binary) of the aprx file.
     """
@@ -415,12 +415,12 @@ def find_file(name, path):
     arcpy.AddError(f"Could not find file {name} in {path}")
 
 
-def create_aprx_process(datapack_path, aprx=None, metadata=None, verify=False):
+def create_aprx_process(datapack_path, aprx=None, metadata: dict = None, verify=False):
     """
     This wraps create_aprx to overcome issues with licensing by running in a unique process.
     Updates the template aprx with a new gpkg datasource. If an aprx is provided the result is written to that file.
     :param aprx: An aprx to write the result to (optional).
-    :param metadata: The metadata file to use for updating the aprx.
+    :param metadata: The metadata dict for updating the aprx.
     :param verify: Raise an exception if there is an error in the aprx after adding the new gpkg.
     :return: The contents (binary) of the aprx file.
     """
@@ -441,6 +441,7 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [CreateAPRX]
+
 
 class CreateAPRX(object):
     def __init__(self):
@@ -516,3 +517,13 @@ class CreateAPRX(object):
         except Exception as e:
             arcpy.AddError(e)
             raise e
+
+
+if __name__ == "__main__" and os.getenv("DEBUG"):
+    import sys
+
+    print(f"Running create aprx with {sys.argv[1:]}", flush=True)
+    _, datapack_path = sys.argv
+    metadata = load_metadata(datapack_path)
+
+    create_aprx_process(datapack_path, metadata=metadata)
