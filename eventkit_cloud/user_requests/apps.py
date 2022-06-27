@@ -6,7 +6,4 @@ class EventKitUserRequests(AppConfig):
     verbose_name = "Eventkit-Cloud User Requests"
 
     def ready(self):
-        from eventkit_cloud.user_requests.signals import (  # NOQA
-            data_provider_post_save,
-            size_request_post_save,
-        )
+        from eventkit_cloud.user_requests.signals import data_provider_post_save, size_request_post_save  # NOQA

@@ -20,12 +20,7 @@ from django.utils import timezone
 from yaml import CDumper, CLoader
 
 from eventkit_cloud.celery import TaskPriority, app
-from eventkit_cloud.jobs.models import (
-    DatamodelPreset,
-    DataProvider,
-    DataProviderType,
-    Job,
-)
+from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, DataProviderType, Job
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
     ExportTask,

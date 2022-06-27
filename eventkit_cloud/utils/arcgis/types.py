@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal, List
+from typing import List, Literal, TypedDict
 
 
 class CIMRGBColor(TypedDict):

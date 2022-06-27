@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypedDict, Union, TypeAlias
+from typing import Any, Literal, TypeAlias, TypedDict, Union
 
 # https://github.com/Esri/cim-spec/blob/master/docs/v2/CIMEnumerations.md
 AltitudeMode = Literal["ClampToGround", "RelativeToGround", "Absolute"]

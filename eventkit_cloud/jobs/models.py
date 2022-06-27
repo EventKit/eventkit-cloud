@@ -14,12 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    MultiPolygon,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, MultiPolygon, Polygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize

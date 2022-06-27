@@ -3,6 +3,7 @@ import json
 import os
 import sys
 
+
 def update_providers(file_path, skip_missing=False):
     print(f"Loading provider file {file_path}")
     with open(file_path, "rb") as fixture_file:
@@ -12,7 +13,9 @@ def update_providers(file_path, skip_missing=False):
     providers_settings = clean_fixtures(fixtures, skip_missing=skip_missing)
     for provider_settings in providers_settings:
         # Don't use update... calling save() will call signals which we need.
-        data_provider, created = DataProvider.objects.get_or_create(slug=provider_settings['slug'], defaults=provider_settings)
+        data_provider, created = DataProvider.objects.get_or_create(
+            slug=provider_settings["slug"], defaults=provider_settings
+        )
         if created:
             print(f"Created {data_provider}")
         else:
@@ -24,11 +27,11 @@ def update_providers(file_path, skip_missing=False):
 
 def clean_fixtures(fixtures, skip_missing=False):
     # Remove time fields and related tables, licenses will need to be added later.
-    exclude = ['created_at', 'updated_at', 'uid', 'thumbnail', 'user']
+    exclude = ["created_at", "updated_at", "uid", "thumbnail", "user"]
     providers_settings = []
     for fixture in fixtures:
         new_fixture = {}
-        for field, value in fixture['fields'].items():
+        for field, value in fixture["fields"].items():
             if field not in exclude:
                 if value:
                     new_fixture[field] = value
@@ -53,14 +56,15 @@ def clean_fixtures(fixtures, skip_missing=False):
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
     import django
+
     django.setup()
-    from eventkit_cloud.jobs.models import DataProvider, DataProviderType
     from eventkit_cloud.core.models import AttributeClass
+    from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 
-    parser = argparse.ArgumentParser(description='Load Fixtures for Data Providers.')
+    parser = argparse.ArgumentParser(description="Load Fixtures for Data Providers.")
 
-    parser.add_argument('file', help='The path to the fixture file')
-    parser.add_argument('-s', '--skip', action='store_true', help='Skip missing foreign key relationships.')
+    parser.add_argument("file", help="The path to the fixture file")
+    parser.add_argument("-s", "--skip", action="store_true", help="Skip missing foreign key relationships.")
 
     args = parser.parse_args()
     print("Updating providers...")

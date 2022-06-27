@@ -10,13 +10,7 @@ import yaml
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    LineString,
-    Point,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, LineString, Point, Polygon
 from django.core import serializers
 from django.utils import timezone
 from rest_framework import status
@@ -28,11 +22,7 @@ from yaml import CDumper, CLoader
 
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import ExportRunViewSet, get_models, get_provider_task
-from eventkit_cloud.core.models import (
-    AttributeClass,
-    GroupPermission,
-    GroupPermissionLevel,
-)
+from eventkit_cloud.core.models import AttributeClass, GroupPermission, GroupPermissionLevel
 from eventkit_cloud.jobs.admin import get_example_from_file
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,

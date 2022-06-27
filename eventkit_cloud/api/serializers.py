@@ -32,11 +32,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from eventkit_cloud.api import validators
 from eventkit_cloud.api.utils import get_run_zip_file
-from eventkit_cloud.core.models import (
-    GroupPermission,
-    GroupPermissionLevel,
-    attribute_class_filter,
-)
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,

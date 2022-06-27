@@ -2,7 +2,8 @@ import json
 import logging
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
+
 import requests
 import yaml
 
@@ -50,7 +51,7 @@ def setup_eventkit():
         docker_compose = yaml.safe_load(_docker_compose_file)
     if not docker_compose:
         raise Exception("Could not load docker-compose file.")
-    images = list(set([service['image'] for name, service in docker_compose["services"].items()]))
+    images = list(set([service["image"] for name, service in docker_compose["services"].items()]))
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(pull_and_rename_docker_image, image) for image in images]
         wait(futures, return_when=ALL_COMPLETED)

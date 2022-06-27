@@ -88,12 +88,7 @@ from eventkit_cloud.api.validators import (
     validate_search_bbox,
 )
 from eventkit_cloud.auth.views import requires_oauth_authentication
-from eventkit_cloud.core.helpers import (
-    NotificationLevel,
-    NotificationVerb,
-    get_query_cache_key,
-    sendnotification,
-)
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, get_query_cache_key, sendnotification
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
@@ -119,10 +114,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity,
     VisibilityState,
 )
-from eventkit_cloud.tasks.export_tasks import (
-    cancel_export_provider_task,
-    pick_up_run_task,
-)
+from eventkit_cloud.tasks.export_tasks import cancel_export_provider_task, pick_up_run_task
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,

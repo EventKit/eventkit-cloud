@@ -7,12 +7,7 @@ import uuid
 import requests_mock
 from django.test import TestCase
 
-from eventkit_cloud.utils.client import (
-    EventKitClient,
-    parse_byte_size,
-    parse_duration,
-    parse_size_unit,
-)
+from eventkit_cloud.utils.client import EventKitClient, parse_byte_size, parse_duration, parse_size_unit
 
 logger = logging.getLogger(__name__)
 

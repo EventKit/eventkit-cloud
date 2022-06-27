@@ -3,13 +3,7 @@ import logging
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    LineString,
-    Point,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, LineString, Point, Polygon
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 

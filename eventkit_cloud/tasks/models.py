@@ -13,11 +13,7 @@ from django.utils import timezone
 from notifications.models import Notification
 from storages.backends.s3boto3 import S3Boto3Storage
 
-from eventkit_cloud.core.helpers import (
-    NotificationLevel,
-    NotificationVerb,
-    sendnotification,
-)
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.core.models import (
     DownloadableMixin,
     LowerCaseCharField,
@@ -34,11 +30,7 @@ from eventkit_cloud.jobs.models import (
     MapImageSnapshot,
     RegionalPolicy,
 )
-from eventkit_cloud.tasks import (
-    DEFAULT_CACHE_EXPIRATION,
-    get_cache_value,
-    set_cache_value,
-)
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, get_cache_value, set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 
 logger = logging.getLogger(__name__)
@@ -258,10 +250,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         # since cloning and managing datapacks is mostly done at the run level.  If managing data fell to the data
         # provider or task level, then it doesn't make sense to have a
         # complicated helper function like this for each model.
-        from eventkit_cloud.tasks.helpers import (
-            download_run_directory,
-            make_file_downloadable,
-        )
+        from eventkit_cloud.tasks.helpers import download_run_directory, make_file_downloadable
 
         previous_run = self.parent_run
         download_run_directory(previous_run, self)

@@ -17,11 +17,7 @@ from notifications.models import Notification
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus, Job
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import list_to_dict
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-    ExportRun,
-    ExportTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.tasks.scheduled_tasks import (
     check_provider_availability_task,
     clean_up_queues_task,

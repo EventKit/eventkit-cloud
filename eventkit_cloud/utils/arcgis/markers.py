@@ -1,6 +1,5 @@
 from eventkit_cloud.utils.arcgis.types import cim_types, service_types
 
-
 sms_circle = {"curveRings": [[[1.2246467991473532e-16, 2], {"a": [[1.2246467991473532e-16, 2], [0, 0], 0, 1]}]]}
 sms_cross = {
     "rings": [

@@ -33,20 +33,10 @@ from gdal_utils import convert
 from yaml import CLoader
 
 from eventkit_cloud.celery import TaskPriority, app
-from eventkit_cloud.core.helpers import (
-    NotificationLevel,
-    NotificationVerb,
-    sendnotification,
-)
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import (
-    DataProvider,
-    ExportFormat,
-    MapImageSnapshot,
-    clean_config,
-    load_provider_config,
-)
+from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, clean_config, load_provider_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -90,10 +80,7 @@ from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, 
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
-from eventkit_cloud.utils.ogcapi_process import (
-    OgcApiProcess,
-    get_format_field_from_config,
-)
+from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.services.types import LayersDescription
@@ -2075,10 +2062,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
     """
     result = result or {}
     try:
-        from eventkit_cloud.utils.image_snapshot import (
-            fit_to_area,
-            get_wmts_snapshot_image,
-        )
+        from eventkit_cloud.utils.image_snapshot import fit_to_area, get_wmts_snapshot_image
 
         check_cached_task_failures(create_datapack_preview.name, task_uid)
 

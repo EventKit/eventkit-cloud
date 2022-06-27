@@ -161,10 +161,7 @@ class DataProviderForm(forms.ModelForm):
         service_type = self.cleaned_data.get("export_provider_type").type_name
 
         if service_type in ["wms", "wmts", "tms", "arcgis-raster"]:
-            from eventkit_cloud.utils.mapproxy import (
-                ConfigurationError,
-                MapproxyGeopackage,
-            )
+            from eventkit_cloud.utils.mapproxy import ConfigurationError, MapproxyGeopackage
 
             service = MapproxyGeopackage(
                 layer=self.cleaned_data.get("layer"),
@@ -179,9 +176,7 @@ class DataProviderForm(forms.ModelForm):
         elif service_type in ["osm", "osm-generic"]:
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
-            from eventkit_cloud.feature_selection.feature_selection import (
-                FeatureSelection,
-            )
+            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 
             feature_selection = FeatureSelection(clean_config_as_str(config))
             if feature_selection.errors:

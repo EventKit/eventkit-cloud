@@ -1,9 +1,6 @@
 import logging
 
-from eventkit_cloud.utils.services.errors import (
-    MissingLayerError,
-    UnsupportedFormatError,
-)
+from eventkit_cloud.utils.services.errors import MissingLayerError, UnsupportedFormatError
 from eventkit_cloud.utils.services.ows import OWS
 from eventkit_cloud.utils.services.types import LayersDescription
 

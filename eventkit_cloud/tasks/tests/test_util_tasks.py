@@ -3,26 +3,13 @@
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import (
-    GeometryCollection,
-    GEOSGeometry,
-    LineString,
-    Point,
-    Polygon,
-)
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, LineString, Point, Polygon
 from django.test import TestCase
 
 from eventkit_cloud.jobs.models import DataProvider, Job
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.util_tasks import (
-    kill_worker,
-    kill_workers,
-    rerun_data_provider_records,
-)
-from eventkit_cloud.utils.scaling.exceptions import (
-    MultipleTaskTerminationErrors,
-    TaskTerminationError,
-)
+from eventkit_cloud.tasks.util_tasks import kill_worker, kill_workers, rerun_data_provider_records
+from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
 
 
 class TestUtilTasks(TestCase):

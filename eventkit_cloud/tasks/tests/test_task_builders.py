@@ -8,22 +8,9 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db.utils import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import (
-    DataProvider,
-    DataProviderTask,
-    ExportFormat,
-    Job,
-    Region,
-)
-from eventkit_cloud.tasks.export_tasks import (
-    mapproxy_export_task,
-    osm_data_collection_task,
-    wcs_export_task,
-)
-from eventkit_cloud.tasks.task_builders import (
-    TaskChainBuilder,
-    create_export_task_record,
-)
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat, Job, Region
+from eventkit_cloud.tasks.export_tasks import mapproxy_export_task, osm_data_collection_task, wcs_export_task
+from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
 from eventkit_cloud.tasks.task_factory import create_run
 
 logger = logging.getLogger(__name__)

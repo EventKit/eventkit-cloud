@@ -9,14 +9,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import (
-    DataProvider,
-    DataProviderTask,
-    Job,
-    License,
-    Region,
-    UserLicense,
-)
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, Job, License, Region, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (
     TaskFactory,

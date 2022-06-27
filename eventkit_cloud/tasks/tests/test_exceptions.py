@@ -2,11 +2,7 @@ import logging
 
 from django.test import TestCase
 
-from eventkit_cloud.tasks.exceptions import (
-    CancelException,
-    DeleteException,
-    FailedException,
-)
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException, FailedException
 
 logger = logging.getLogger(__name__)
 
