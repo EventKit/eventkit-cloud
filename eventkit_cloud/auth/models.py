@@ -1,7 +1,7 @@
-from django.contrib.auth.models import User
 from django.conf import settings
-from django.db import models
+from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
+from django.db import models
 
 from eventkit_cloud.core.models import update_all_attribute_classes_with_user
 

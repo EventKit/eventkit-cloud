@@ -2,6 +2,7 @@ import socket
 import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
+from typing import List, cast
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -15,10 +16,12 @@ from rest_framework.response import Response
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 from eventkit_cloud.utils.scaling import get_scale_client
-from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors
+from eventkit_cloud.utils.scaling.exceptions import MultipleTaskTerminationErrors, TaskTerminationError
+from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
+from eventkit_cloud.utils.types.django_helpers import DjangoUserType
 
 User = get_user_model()
 
@@ -38,7 +41,7 @@ def shutdown_celery_workers(self):
     return {"action": "shutdown", "hostname": socket.gethostname()}
 
 
-def kill_workers(task_names=None, client=None, timeout=60):
+def kill_workers(task_names: list = None, client: ScaleClient = None, timeout: int = 60) -> None:
     if not task_names:
         return
 
@@ -53,14 +56,16 @@ def kill_workers(task_names=None, client=None, timeout=60):
         wait(futures)
 
         # Collect any errors that occurred and raise an appropriate exception
-        errors = [task.exception() for task in futures if task.exception() is not None]
+        errors = cast(
+            List[TaskTerminationError], [task.exception() for task in futures if task.exception() is not None]
+        )
         if len(errors) == 1:
             raise errors[0]
         elif len(errors) > 1:
             raise MultipleTaskTerminationErrors(errors)
 
 
-def kill_worker(task_name=None, client=None, timeout=60):
+def kill_worker(task_name: str = None, client: ScaleClient = None, timeout: int = 60) -> None:
     if not task_name:
         return
 
@@ -74,13 +79,12 @@ def kill_worker(task_name=None, client=None, timeout=60):
     # allow time for soft kill to try to work
     time.sleep(timeout)
 
-    # hard kill task if it hasn't already terminated
+    # hard kill task if it hasn't already terminated, this can cause your docker logs to stop
     client.terminate_task(str(task_name))
 
 
 @app.task(name="Get Estimates", default_retry_delay=60)
 def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):
-
     run = ExportRun.objects.get(uid=run_uid)
     provider_task = DataProviderTask.objects.get(uid=data_provider_task_uid)
 
@@ -94,19 +98,19 @@ def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_recor
 
 
 def rerun_data_provider_records(run_uid, user_id, data_provider_slugs):
-    from eventkit_cloud.tasks.task_factory import create_run, Error, Unauthorized, InvalidLicense
+    from eventkit_cloud.tasks.task_factory import Error, InvalidLicense, Unauthorized, create_run
 
     with transaction.atomic():
         old_run: ExportRun = ExportRun.objects.select_related("job__user", "parent_run__job__user").get(uid=run_uid)
 
-        user: User = User.objects.get(pk=user_id)
+        user: DjangoUserType = User.objects.get(pk=user_id)
 
         while old_run and old_run.is_cloning:
             # Find pending providers and add them to list
             for dptr in old_run.data_provider_task_records.all():
                 if dptr.status == TaskState.PENDING.value:
                     data_provider_slugs.append(dptr.provider.slug)
-            old_run: ExportRun = old_run.parent_run
+            old_run = old_run.parent_run
 
         # Remove any duplicates
         data_provider_slugs = list(set(data_provider_slugs))

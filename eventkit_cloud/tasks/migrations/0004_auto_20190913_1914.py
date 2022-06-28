@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0003_dataprovidertaskrecord_estimated_duration'),
+        ("tasks", "0003_dataprovidertaskrecord_estimated_duration"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dataprovidertaskrecord',
-            name='name',
+            model_name="dataprovidertaskrecord",
+            name="name",
             field=models.CharField(blank=True, max_length=100),
         ),
         migrations.AlterField(
-            model_name='exporttaskrecord',
-            name='name',
+            model_name="exporttaskrecord",
+            name="name",
             field=models.CharField(max_length=100),
         ),
     ]

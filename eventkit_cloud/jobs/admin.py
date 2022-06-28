@@ -3,30 +3,30 @@ import logging
 import os
 
 from django import forms
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
 from django.urls import re_path
 from django.utils.html import format_html
-from django_celery_beat.models import IntervalSchedule, CrontabSchedule
+from django_celery_beat.models import CrontabSchedule, IntervalSchedule
 
-from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
+from eventkit_cloud.jobs.forms import RegionalPolicyForm, RegionForm
 from eventkit_cloud.jobs.models import (
-    ExportFormat,
-    Projection,
-    Job,
-    Region,
-    RegionalPolicy,
-    RegionalJustification,
-    DataProvider,
-    DataProviderType,
     DatamodelPreset,
-    License,
+    DataProvider,
     DataProviderStatus,
     DataProviderTask,
+    DataProviderType,
+    ExportFormat,
+    Job,
     JobPermission,
+    License,
+    Projection,
+    Region,
+    RegionalJustification,
+    RegionalPolicy,
     clean_config,
+    clean_config_as_str,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class JobAdmin(OSMGeoAdmin):
         """
         Select exports to update.
         """
-        selected = ",".join(request.POST.getlist(admin.ACTION_CHECKBOX_NAME))
+        selected = ",".join(request.POST.getlist(admin.ACTION_CHECKBOX_NAME))  # type: ignore
         regions = Region.objects.all()
 
         # noinspection PyProtectedMember
@@ -75,7 +75,8 @@ class JobAdmin(OSMGeoAdmin):
             {"regions": regions, "selected": selected, "opts": self.model._meta},
         )
 
-    select_exports.short_description = "Assign a region to the selected exports"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    select_exports.short_description = "Assign a region to the selected exports"  # type: ignore
 
     def update_exports(self, request):
         """
@@ -156,10 +157,7 @@ class DataProviderForm(forms.ModelForm):
         service_type = self.cleaned_data.get("export_provider_type").type_name
 
         if service_type in ["wms", "wmts", "tms", "arcgis-raster"]:
-            from eventkit_cloud.utils.mapproxy import (
-                MapproxyGeopackage,
-                ConfigurationError,
-            )
+            from eventkit_cloud.utils.mapproxy import ConfigurationError, MapproxyGeopackage
 
             service = MapproxyGeopackage(
                 layer=self.cleaned_data.get("layer"),
@@ -176,15 +174,14 @@ class DataProviderForm(forms.ModelForm):
                 raise forms.ValidationError("Configuration is required for OSM data providers")
             from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 
-            cleaned_config = clean_config(config)
-            feature_selection = FeatureSelection(cleaned_config)
-            feature_selection.valid
+            feature_selection = FeatureSelection(clean_config_as_str(config))
             if feature_selection.errors:
                 raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
         elif service_type in ["ogcapi-process"]:
             if not config:
                 raise forms.ValidationError("Configuration is required for OGC API Process")
-            cleaned_config = clean_config(config, return_dict=True)
+            cleaned_config = clean_config(config)
+            assert isinstance(cleaned_config, dict)
             ogcapi_process = cleaned_config.get("ogcapi_process")
             if not ogcapi_process:
                 raise forms.ValidationError("OGC API Process requires an ogcapi_process key with valid configuration")
@@ -264,7 +261,8 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
             '<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status
         )
 
-    color_status.short_description = "status"
+    # TODO: https://github.com/typeddjango/django-stubs/issues/151
+    color_status.short_description = "status"  # type: ignore
 
     model = DataProviderStatus
     readonly_fields = (

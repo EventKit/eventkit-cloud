@@ -6,24 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_alter_grouppermission_id'),
+        ("core", "0006_alter_grouppermission_id"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='attributeclass',
+            name="attributeclass",
             unique_together=set(),
         ),
         migrations.AlterUniqueTogether(
-            name='grouppermission',
+            name="grouppermission",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='attributeclass',
-            constraint=models.UniqueConstraint(fields=('filter', 'exclude'), name='unique_filter_exclude'),
+            model_name="attributeclass",
+            constraint=models.UniqueConstraint(
+                fields=("filter", "exclude"), name="unique_filter_exclude"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='grouppermission',
-            constraint=models.UniqueConstraint(fields=('user', 'group', 'permission'), name='unique_user_permission_per_group'),
+            model_name="grouppermission",
+            constraint=models.UniqueConstraint(
+                fields=("user", "group", "permission"),
+                name="unique_user_permission_per_group",
+            ),
         ),
     ]

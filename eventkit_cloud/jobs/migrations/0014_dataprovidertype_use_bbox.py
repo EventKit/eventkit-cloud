@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0013_add_ogc_process_provider'),
+        ("jobs", "0013_add_ogc_process_provider"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataprovidertype',
-            name='use_bbox',
-            field=models.BooleanField(default=False, verbose_name='Use bounding box to calculate area'),
+            model_name="dataprovidertype",
+            name="use_bbox",
+            field=models.BooleanField(
+                default=False, verbose_name="Use bounding box to calculate area"
+            ),
         ),
     ]

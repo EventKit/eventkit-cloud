@@ -5,10 +5,11 @@ import os
 from datetime import datetime
 from string import Template
 
+import yaml
 from django.conf import settings
 from requests import exceptions
+
 from eventkit_cloud.core.helpers import get_or_update_session
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +66,10 @@ class Overpass(object):
         # extract all nodes / ways and relations within the bounding box
         # see: http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
         conf: dict = yaml.safe_load(self.config) or dict()
-        self.default_template = (
+        default_template_str = (
             "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
         )
-        self.default_template = Template(conf.get("overpass_query", self.default_template))
+        self.default_template = Template(conf.get("overpass_query", default_template_str))
 
         # dump out all osm data for the specified bounding box
         max_size = settings.OVERPASS_MAX_SIZE
@@ -97,8 +98,9 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
-        from eventkit_cloud.tasks.helpers import update_progress
         from audit_logging.file_logging import logging_open
+
+        from eventkit_cloud.tasks.helpers import update_progress
 
         # This is just to make it easier to trace when user_details haven't been sent
         if user_details is None:

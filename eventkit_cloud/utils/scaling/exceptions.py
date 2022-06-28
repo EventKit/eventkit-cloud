@@ -1,3 +1,6 @@
+from typing import List
+
+
 class ScaleLimitError(Exception):
     """Raise when the application couldn't scale for all needed jobs."""
 
@@ -24,7 +27,7 @@ class TaskTerminationError(Exception):
 class MultipleTaskTerminationErrors(TaskTerminationError):
     """Raise when multiple task termination errors occurred"""
 
-    def __init__(self, errors: list[TaskTerminationError]) -> None:
+    def __init__(self, errors: List[TaskTerminationError]) -> None:
         """
         :param errors: All of the task termination errors that occurred
         """

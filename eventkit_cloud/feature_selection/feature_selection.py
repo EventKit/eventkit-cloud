@@ -1,3 +1,4 @@
+import logging
 import re
 import unicodedata
 
@@ -7,9 +8,6 @@ from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from .sql import SQLValidator
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +145,7 @@ class FeatureSelection(object):
         if self._doc:
             return self._doc
         try:
-            loaded_doc = yaml.safe_load(self._raw_doc)
+            loaded_doc = yaml.safe_load(self._raw_doc) if isinstance(self._raw_doc, str) else self._raw_doc
             if validate_schema(loaded_doc):
                 self._doc = loaded_doc
                 return self._doc
@@ -189,10 +187,10 @@ class FeatureSelection(object):
         return " OR ".join(['"' + x + '" IS NOT NULL' for x in theme["select"]])
 
     def zip_readme(self, theme):
-        columns = []
+        columns_list = []
         for key in self.key_selections(theme):
-            columns.append("{0} http://wiki.openstreetmap.org/wiki/Key:{0}".format(key))
-        columns = "\n".join(columns)
+            columns_list.append("{0} http://wiki.openstreetmap.org/wiki/Key:{0}".format(key))
+        columns = "\n".join(columns_list)
         criteria = self.filter_clause(theme)
         return ZIP_README.format(columns=columns, criteria=criteria)
 

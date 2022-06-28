@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from unittest.mock import MagicMock, Mock, patch, ANY
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 from django.test import TestCase
 

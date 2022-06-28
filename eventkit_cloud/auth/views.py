@@ -4,25 +4,34 @@ import base64
 import json
 from functools import wraps
 from logging import getLogger
+from typing import Union
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import logout as auth_logout
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
 from eventkit_cloud.auth.auth import (
-    request_access_tokens,
-    fetch_user_from_token,
     OAuthError,
     Unauthorized,
+    fetch_user_from_token,
     refresh_access_tokens,
+    request_access_tokens,
 )
 from eventkit_cloud.core.helpers import get_id
 
 logger = getLogger(__name__)
+
+
+def validate_oath_vars():
+    oauth_vars = ["OAUTH_CLIENT_ID", "OAUTH_REDIRECT_URI", "OAUTH_RESPONSE_TYPE", "OAUTH_SCOPE"]
+    oauth_values = [getattr(settings, _oauth_var) for _oauth_var in oauth_vars]
+    if any([_value is None for _value in oauth_values]):
+        first_index_of_none = oauth_values.index(None)
+        raise Exception(f"OAuth enabled but var '{oauth_vars[first_index_of_none]}' is None.")
 
 
 def oauth(request, redirect_url=None):
@@ -30,18 +39,24 @@ def oauth(request, redirect_url=None):
     :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings
     """
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
+        oauth_name = getattr(settings, "OAUTH_NAME")
+        if oauth_name is None:
+            raise Exception("OAuth enabled but var 'OAUTH_NAME' is None.")
         if request.GET.get("query"):
             return HttpResponse(
-                json.dumps({"name": settings.OAUTH_NAME}),
+                json.dumps({"name": oauth_name}),
                 content_type="application/json",
                 status=200,
             )
         else:
+            validate_oath_vars()
+            # TODO: investigate why mypy refuses to recognize settings.OAUTH_CLIENT as an attribute
+            # this applies to all of the oauth vars
             params = [
-                ("client_id", settings.OAUTH_CLIENT_ID),
-                ("redirect_uri", settings.OAUTH_REDIRECT_URI),
-                ("response_type", settings.OAUTH_RESPONSE_TYPE),
-                ("scope", settings.OAUTH_SCOPE),
+                ("client_id", getattr(settings, "OAUTH_CLIENT_ID")),
+                ("redirect_uri", getattr(settings, "OAUTH_REDIRECT_URI")),
+                ("response_type", getattr(settings, "OAUTH_RESPONSE_TYPE")),
+                ("scope", getattr(settings, "OAUTH_SCOPE")),
             ]
             if redirect_url:
                 params += [
@@ -58,7 +73,7 @@ def oauth(request, redirect_url=None):
                     )
                 ]
             encoded_params = urlencode(params)
-            return redirect("{0}?{1}".format(settings.OAUTH_AUTHORIZATION_URL.rstrip("/"), encoded_params))
+            return redirect("{0}?{1}".format(getattr(settings, "OAUTH_AUTHORIZATION_URL").rstrip("/"), encoded_params))
     else:
         return redirect("/login/error")
 
@@ -99,10 +114,10 @@ def logout(request):
     is_oauth = hasattr(request.user, "oauth")
     if request.user.is_authenticated:
         auth_logout(request)
-    response = redirect("login")
+    response: Union[JsonResponse, HttpResponsePermanentRedirect] = redirect("login")
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
         if is_oauth:
-            response = JsonResponse({"OAUTH_LOGOUT_URL": settings.OAUTH_LOGOUT_URL})
+            response = JsonResponse({"OAUTH_LOGOUT_URL": getattr(settings, "OAUTH_LOGOUT_URL")})
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
     response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)

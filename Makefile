@@ -11,9 +11,18 @@ black-format:
 	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud
 
 flake8:
-	docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
+	docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/setup.cfg eventkit_cloud
 
-lint: black flake8
+mypy:
+	docker-compose run --rm eventkit mypy eventkit_cloud
+
+isort:
+	docker-compose run --rm eventkit isort --check eventkit_cloud
+
+isort-format:
+	docker-compose run --rm eventkit isort eventkit_cloud
+
+lint: black flake8 isort mypy
 
 test:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud

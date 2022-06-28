@@ -5,20 +5,30 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     def insert_supported_projections(apps, schema_editor):
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')
-        Projection = apps.get_model('jobs', 'Projection')
+        ExportFormat = apps.get_model("jobs", "ExportFormat")
+        Projection = apps.get_model("jobs", "Projection")
         projection_4326 = Projection.objects.get(srid=4326)
         projection_3857 = Projection.objects.get(srid=3857)
 
-        ExportFormat.objects.get(slug='hfa').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='nitf').supported_projections.add(projection_4326)
-        ExportFormat.objects.get(slug='gtiff').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='kml').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='shp').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='gpkg').supported_projections.add(projection_4326, projection_3857)
+        ExportFormat.objects.get(slug="hfa").supported_projections.add(
+            projection_4326, projection_3857
+        )
+        ExportFormat.objects.get(slug="nitf").supported_projections.add(projection_4326)
+        ExportFormat.objects.get(slug="gtiff").supported_projections.add(
+            projection_4326, projection_3857
+        )
+        ExportFormat.objects.get(slug="kml").supported_projections.add(
+            projection_4326, projection_3857
+        )
+        ExportFormat.objects.get(slug="shp").supported_projections.add(
+            projection_4326, projection_3857
+        )
+        ExportFormat.objects.get(slug="gpkg").supported_projections.add(
+            projection_4326, projection_3857
+        )
 
     dependencies = [
-        ('jobs', 'add_supported_projections'),
+        ("jobs", "add_supported_projections"),
     ]
 
     operations = [

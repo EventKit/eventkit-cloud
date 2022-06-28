@@ -1,41 +1,43 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import multiprocessing
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING
-from typing import Union, List
+from typing import TYPE_CHECKING, Dict, List, Type, Union, cast
 
 import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, MultiPolygon, Polygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
-from django.db.models import Q, QuerySet, Case, Value, When
+from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from yaml import CLoader, CDumper
+from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
+    AttributeClass,
     CachedModelMixin,
     DownloadableMixin,
-    TimeStampedModelMixin,
-    UIDMixin,
-    AttributeClass,
     GroupPermissionLevel,
     LowerCaseCharField,
+    TimeStampedModelMixin,
+    UIDMixin,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.services import get_client
-from eventkit_cloud.utils.services.check_result import get_status_result, CheckResult
+from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
+from eventkit_cloud.utils.services.types import LayersDescription
+from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 if TYPE_CHECKING:
     from eventkit_cloud.utils.services.base import GisClient
@@ -175,7 +177,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
 
     def get_supported_projection_list(self) -> List[int]:
         supported_projections = self.supported_projections.all().values_list("srid", flat=True)
-        return supported_projections
+        return list(supported_projections)
 
 
 class DataProviderType(TimeStampedModelMixin):
@@ -367,7 +369,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
             url = settings.OVERPASS_API_URL
         Client = get_client(self.export_provider_type.type_name)
-        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=load_provider_config(self.config))
+        config = None
+        if self.config:
+            config = load_provider_config(self.config)
+        return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=config)
 
     def check_status(self, aoi_geojson: dict = None):
         try:
@@ -449,29 +454,37 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return get_mapproxy_footprint_url(self.slug)
 
     @property
-    def layers(self) -> List[str]:
+    def layers(self) -> LayersDescription:
         """
         Used to populate the list of vector layers, typically for contextual or styling information.
         :return: A list of layer names.
         """
         if self.data_type != GeospatialDataType.VECTOR.value:
-            return []
-        if not self.config:
-            # Often layer names are configured using an index number but this number is not very
-            # useful when using the data so fall back to the slug which should be more meaningful.
-            if not self.layer:  # check for NoneType or empty string
-                return [self.slug]
-            try:
-                int(self.layer)
-                return [self.slug]  # self.layer is an integer, so use the slug for better context.
-            except ValueError:
-                return [self.layer]  # If we got here, layer is not None or an integer so use that.
-        config = clean_config(self.config, return_dict=True)
-        # As of EK 1.9.0 only vectors support multiple layers in a single provider
-        if self.export_provider_type.type_name in ["osm", "osm-generic"]:
-            return list(config.keys())
-        else:
-            return [layer.get("name") for layer in config.get("vector_layers", [])]
+            return {}
+        if self.config:
+            config = clean_config(str(self.config))
+            # As of EK 1.9.0 only vectors support multiple layers in a single provider
+            if self.export_provider_type.type_name in ["osm", "osm-generic"]:
+                return config
+            elif config.get("vector_layers"):
+                return {layer.get("name"): layer for layer in config.get("vector_layers", [])}
+        # Often layer names are configured using an index number but this number is not very
+        # useful when using the data so fall back to the slug which should be more meaningful.
+        if not self.layer:  # check for NoneType or empty string
+            # TODO: support other service types
+            if self.export_provider_type.type_name in ["arcgis-feature"]:
+                return self.get_service_client().get_layers()
+            else:
+                return {self.slug: {"url": self.url, "name": self.slug}}
+        try:
+            int(self.layer)  # noqa
+            return {
+                self.slug: {"url": self.url, "name": self.slug}
+            }  # self.layer is an integer, so use the slug for better context.
+        except ValueError:
+            return {
+                self.layer: {"url": self.url, "name": self.layer}
+            }  # If we got here, layer is not None or an integer so use that.
 
     def get_use_bbox(self):
         if self.export_provider_type is not None:
@@ -765,7 +778,7 @@ class RegionMask(models.Model):
     def __init__(self, *args, **kwargs):
         if not args:  # Fixture loading happens with args, so don't do this if that.
             kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        super(Region, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)
     the_geom = models.MultiPolygonField(verbose_name="Mask for export regions", srid=4326)
@@ -858,7 +871,10 @@ class JobPermission(TimeStampedModelMixin):
         ]
 
     @staticmethod
-    def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
+    def get_orderable_queryset_for_job(job: Job, model: Union[Type[User], Type[Group]]) -> QuerySet:
+        admin: ListOrQuerySet
+        shared: ListOrQuerySet
+        unshared: ListOrQuerySet
         admin = shared = unshared = []
         if job:
             job_permissions = job.permissions.prefetch_related("content_object").filter(
@@ -871,11 +887,13 @@ class JobPermission(TimeStampedModelMixin):
                     admin_ids += [job_permission.content_object.id]
                 else:
                     shared_ids += [job_permission.content_object.id]
-            admin = model.objects.filter(pk__in=admin_ids)
-            shared = model.objects.filter(pk__in=shared_ids)
+            admin_queryset = model.objects.filter(pk__in=admin_ids)
+            shared_queryset = model.objects.filter(pk__in=shared_ids)
             total = admin_ids + shared_ids
-            unshared = model.objects.exclude(pk__in=total)
-            queryset = admin | shared | unshared
+            unshared_queryset = model.objects.exclude(pk__in=total)
+            queryset = (
+                cast(QuerySet, admin_queryset) | cast(QuerySet, shared_queryset) | cast(QuerySet, unshared_queryset)
+            )
         else:
             queryset = model.objects.all()
         # https://docs.djangoproject.com/en/3.0/ref/models/conditional-expressions/#case
@@ -900,7 +918,7 @@ class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
     def jobpermissions(job: Job) -> dict:
-        permissions = {"groups": {}, "members": {}}
+        permissions: Dict[str, Dict] = {"groups": {}, "members": {}}
         for jp in job.permissions.prefetch_related("content_object"):
             if isinstance(jp.content_object, User):
                 permissions["members"][jp.content_object.username] = jp.permission
@@ -1039,30 +1057,30 @@ def delete(self, *args, **kwargs):
     super(Group, self).delete(*args, **kwargs)
 
 
-Group.delete = delete
+# https://github.com/python/mypy/issues/2427
+Group.delete = delete  # type: ignore
 
 
-def load_provider_config(config: str) -> dict:
+def load_provider_config(config: Union[str, dict]) -> dict:
     """
     Function deserializes a yaml object from a given string.
     """
 
     try:
         if isinstance(config, dict):
-            return config
-        configuration = yaml.safe_load(config) or dict()
+            return copy.deepcopy(config)
+        configuration = yaml.safe_load(config) if config else dict()
     except yaml.YAMLError as e:
         logger.error(f"Unable to load provider configuration: {e}")
         raise Exception(e)
     return configuration
 
 
-def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+def clean_config(config: Union[str, dict]) -> dict:
     """
     Used to remove adhoc service related values from the configuration.
     :param config: A yaml structured string.
-    :param return_dict: True if wishing to return config as dictionary.
-    :return: A yaml as a str.
+    :return: A yaml as a dict.
     """
     service_keys = [
         "cert_info",
@@ -1075,10 +1093,22 @@ def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
         "tile_size",
     ]
 
-    conf = yaml.safe_load(config) or dict()
+    if isinstance(config, str):
+        conf = yaml.safe_load(config)
+    else:
+        conf = copy.deepcopy(config)
 
     for service_key in service_keys:
         conf.pop(service_key, None)
-    if return_dict:
-        return conf
-    return yaml.dump(conf, Dumper=CDumper)
+
+    return conf
+
+
+def clean_config_as_str(config: str) -> str:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    return yaml.dump(clean_config(config), Dumper=CDumper)

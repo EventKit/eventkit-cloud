@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 import datetime
+import logging
+import os
 import unicodedata
 import uuid
-
-import os
+from enum import Enum
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet, Case, Value, When, Q, Count
+from django.db.models import Case, Count, Q, QuerySet, Value, When
 from django.utils import timezone
-from enum import Enum
-
 from django.utils.text import slugify
 from notifications.models import Notification
-import logging
-from typing import List, Callable, Tuple
-
-from typing import Union
 
 from eventkit_cloud.tasks.enumerations import Directory
 
@@ -76,6 +72,7 @@ class TimeTrackingModelMixin(models.Model):
     Mixin for timestamped models.
     """
 
+    status: Optional[Any]
     started_at = models.DateTimeField(null=True, editable=False)
     finished_at = models.DateTimeField(editable=False, null=True)
 
@@ -309,7 +306,7 @@ def get_operation(operation) -> Callable[[str, str], bool]:
     return operations[operation]
 
 
-def validate_object(filter: Union[List[any], bool], object_dict: dict) -> bool:
+def validate_object(filter: Union[List[Any], bool], object_dict: dict) -> bool:
     """This function takes a filter and a dict and validates it. The filter should be a three part List left part,
     operator (as a string), and right part which is the key for the desired value in object dict.  All values,
     are strings and the operator will be evaluated for safety.  While normally we can make
@@ -320,7 +317,7 @@ def validate_object(filter: Union[List[any], bool], object_dict: dict) -> bool:
     [["MyGroup", "in", "groups"], "or", ["student", "==", "employmentStatus"]]
     """
     if isinstance(filter, bool):
-        return bool
+        return filter
     else:
         try:
             left, operator, right = filter
@@ -349,14 +346,15 @@ def validate_object(filter: Union[List[any], bool], object_dict: dict) -> bool:
         # If a field isn't defined then we will end up trying something against None,
         # which probably isn't allowed. Consider it a "fail" and continue with evaluation.
         return False
+    return False
 
 
-def validate_filter(filter: Union[List[any], bool]) -> bool:
+def validate_filter(filter: Union[List[Any], bool]) -> bool:
     """This function takes a filter and ensures that it is a valid filter, in that each element is a nested thruple,
     where the center element is a valid operation.
     """
     if isinstance(filter, bool):
-        return bool
+        return filter
     else:
         try:
             left, operator, right = filter
@@ -392,9 +390,9 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
     """
     query_filter = getattr(attribute_class, "filter") or dict()
     query_exclude = getattr(attribute_class, "exclude") or dict()
-    complex_filter = getattr(attribute_class, "complex") or dict()
+    complex_filter: List[Any] = getattr(attribute_class, "complex") or []
     if query_filter or query_exclude:
-        user = User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id)
+        user = cast(User, User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id))
         if user:
             return True
     elif complex_filter:
@@ -405,13 +403,15 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
 
 
 def get_users_from_attribute_class(attribute_class: AttributeClass) -> List[User]:
+
     query_filter = getattr(attribute_class, "filter") or dict()
     query_exclude = getattr(attribute_class, "exclude") or dict()
-    complex_filter = getattr(attribute_class, "complex") or dict()
-    users = []
+    # TODO: verify this change is ok
+    complex_filter: List[Any] = getattr(attribute_class, "complex") or []
+    users: List[User] = []
 
     if query_filter or query_exclude:
-        users = User.objects.filter(**query_filter).exclude(**query_exclude)
+        users = cast(List, User.objects.filter(**query_filter).exclude(**query_exclude))
     elif complex_filter:
         for user in User.objects.all().select_related("oauth"):
             if hasattr(user, "oauth"):
@@ -483,7 +483,7 @@ def get_group_counts(groups_queryset, user):
 def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
 
     if not user:
-        return queryset, []
+        return queryset, queryset.as_manager().filter().none()
 
     # Get all of the classes that we aren't in.
     restricted_attribute_classes = AttributeClass.objects.exclude(users=user)

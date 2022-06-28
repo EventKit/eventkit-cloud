@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from eventkit_cloud.tasks import get_cache_value, get_cache_key, set_cache_value
+from eventkit_cloud.tasks import get_cache_key, get_cache_value, set_cache_value
 from eventkit_cloud.tasks.models import ExportTaskRecord
 
 

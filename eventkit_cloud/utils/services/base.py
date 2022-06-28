@@ -3,15 +3,15 @@ import base64
 import copy
 import json
 import logging
-from typing import Dict
-from typing import Optional
+from typing import Any, Dict, Optional, Union, cast
 
 import requests
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Polygon
 from django.core.cache import cache
 
 from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.utils.generic import cacheable
 from eventkit_cloud.utils.services import DEFAULT_CACHE_TIMEOUT
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.errors import ProviderCheckError
@@ -33,7 +33,7 @@ class GisClient(abc.ABC):
         """
 
         self.service_url = service_url
-        self.query = None
+        self.query: Optional[Dict[str, Any]] = None
         self.layer = layer
         self.slug = slug
         self.max_area = max_area
@@ -43,21 +43,20 @@ class GisClient(abc.ABC):
 
         self.set_aoi(aoi_geojson)
 
-    def set_aoi(self, aoi_geojson: dict):
+    def set_aoi(self, aoi_geojson: Optional[Union[str, dict, GeometryCollection]]):
         if aoi_geojson is not None and aoi_geojson != "":
             if isinstance(aoi_geojson, str):
-                aoi_geojson = json.loads(aoi_geojson)
+                aoi: dict = json.loads(aoi_geojson)
+            else:
+                aoi = copy.deepcopy(cast(Dict[Any, Any], aoi_geojson))
 
             geoms = tuple(
-                [
-                    GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326)
-                    for feature in aoi_geojson.get("features")
-                ]
+                [GEOSGeometry(json.dumps(feature.get("geometry")), srid=4326) for feature in aoi.get("features")]
             )
 
             geom_collection = GeometryCollection(geoms, srid=4326)
 
-            logger.debug("AOI: {}".format(json.dumps(aoi_geojson)))
+            logger.debug("AOI: %s", json.dumps(aoi))
 
             self.aoi = geom_collection
         else:
@@ -137,11 +136,11 @@ class GisClient(abc.ABC):
     def get_cache_key(self, aoi: GeometryCollection = None):
         cache_key = f"provider-status-{normalize_name(self.service_url)}"
         if aoi:
-            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"
+            cache_key = f"{cache_key}-{base64.b64encode(aoi.wkt.encode())}"  # type: ignore
         cache_key = cache_key[:200]
         return cache_key  # Some caches only support keys <250
 
-    def check(self, aoi_geojson: Optional[dict] = None) -> dict:
+    def check(self, aoi_geojson: Optional[Union[dict, GeometryCollection]] = None) -> dict:
         """
         Main call to check the status of the service. Returns JSON with a status string and more detailed message.
         :param aoi: A geojson as a dict representing an AOI to check within the service instance.
@@ -199,6 +198,13 @@ class GisClient(abc.ABC):
         query_params = copy.deepcopy(query) or self.query
         service_url = url.rstrip("/\\")
         return self.session.get(url=service_url, params=query_params, timeout=self.timeout)
+
+    @cacheable()
+    def get_capabilities(self):
+        return self.get_response(url=self.service_url, query=self.query)
+
+    def get_layers(self):
+        raise NotImplementedError("Method is specific to service type")
 
     def check_intersection(self, geometry: GEOSGeometry):
         """

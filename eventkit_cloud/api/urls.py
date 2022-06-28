@@ -19,17 +19,17 @@ from eventkit_cloud.api.views import (
     GroupViewSet,
     JobViewSet,
     LicenseViewSet,
+    MetricsView,
     NotificationViewSet,
     ProjectionViewSet,
-    RegionViewSet,
-    RegionalPolicyViewSet,
     RegionalJustificationViewSet,
+    RegionalPolicyViewSet,
+    RegionViewSet,
     RunZipFileViewSet,
     SizeIncreaseRequestViewSet,
     UserDataViewSet,
     UserJobActivityViewSet,
     api_docs_view,
-    MetricsView,
 )
 
 app_name = "api"

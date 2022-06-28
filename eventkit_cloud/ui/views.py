@@ -3,28 +3,30 @@
 import json
 from datetime import timedelta
 from logging import getLogger
+from typing import List
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
-from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.context_processors import csrf
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
 from eventkit_cloud.ui.helpers import (
     file_to_geojson,
-    set_session_user_last_active_at,
-    is_mgrs,
     is_lat_lon,
+    is_mgrs,
+    set_session_user_last_active_at,
     write_uploaded_file,
 )
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 from eventkit_cloud.utils.geocoding.geocode import Geocode
 from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode
+from eventkit_cloud.utils.types.features import Geojson
 
 logger = getLogger(__file__)
 
@@ -159,7 +161,7 @@ def search(request):
         if not mgrs_data or not mgrs_data.get("geometry"):
             return HttpResponse(status=204, content_type="application/json")
 
-        features = []
+        features_list: List[Geojson] = list()
         # save the mgrs feature to return later
         if not mgrs_data.get("properties"):
             mgrs_data["properties"] = {}
@@ -170,7 +172,7 @@ def search(request):
             mgrs_data.get("geometry").get("coordinates")[1] + degree_range,
         ]
         mgrs_data["source"] = "MGRS"
-        features.append(mgrs_data)
+        features_list.append(mgrs_data)
 
         # call reverse to get a list of results near the mgrs feature
         reverse = ReverseGeocode()
@@ -187,10 +189,12 @@ def search(request):
 
         if result.get("features"):
             # add the mgrs feature with the search results and return together
-            result["features"] = features + result["features"]
+            result["features"] = features_list + result["features"]
             return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if no results just return the MGRS feature in the response
-        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json")
+        return HttpResponse(
+            content=json.dumps({"features": features_list}), status=200, content_type="application/json"
+        )
 
     elif is_lat_lon(q):
         coords = is_lat_lon(q)
@@ -230,8 +234,8 @@ def search(request):
             result.get("features").insert(0, point_feature)
             return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if there are no results return only the point feature
-        features = {"features": [point_feature]}
-        return HttpResponse(content=json.dumps(features), status=200, content_type="application/json")
+        feature_collection = {"features": [point_feature]}
+        return HttpResponse(content=json.dumps(feature_collection), status=200, content_type="application/json")
     else:
         # make call to geocode with search
         geocode = Geocode()

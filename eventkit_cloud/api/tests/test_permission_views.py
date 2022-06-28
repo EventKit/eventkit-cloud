@@ -5,14 +5,14 @@ import json
 import os
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, LineString, Point, Polygon
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
-from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask, DatamodelPreset
+from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, DataProviderTask, ExportFormat, Job
 from eventkit_cloud.tasks.models import ExportRun
 
 

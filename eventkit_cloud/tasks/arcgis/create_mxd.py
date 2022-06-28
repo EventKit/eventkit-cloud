@@ -10,7 +10,7 @@ import shutil
 from multiprocessing import Pool
 
 try:
-    input = raw_input
+    input = raw_input  # type: ignore
 except NameError:
     pass
 

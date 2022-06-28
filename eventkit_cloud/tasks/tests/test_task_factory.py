@@ -2,19 +2,19 @@
 import logging
 import os
 import uuid
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, Job, License, Region, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (
     TaskFactory,
-    create_run,
     create_finalize_run_task_collection,
+    create_run,
     get_invalid_licenses,
 )
 
@@ -163,7 +163,7 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # which unmocked would be a task signature, should be passed to celery.chain
         expected_chain_inputs = (
             mock_zip_chain,
-            finalize_export_provider_task.s.return_value,
+            finalize_export_provider_task.s().set.return_value,
             finalize_run_task.si().set.return_value,
         )
         self.assertEqual(chain_inputs, expected_chain_inputs)

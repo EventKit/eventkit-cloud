@@ -1,8 +1,8 @@
-from typing import Optional, List
-
-from eventkit_cloud.utils.services.errors import UnsupportedFormatError, MissingLayerError, ServiceError
-from eventkit_cloud.utils.services.ows import OWS
 from logging import getLogger
+from typing import List, Optional
+
+from eventkit_cloud.utils.services.errors import MissingLayerError, ServiceError, UnsupportedFormatError
+from eventkit_cloud.utils.services.ows import OWS
 
 logger = getLogger("__name__")
 
@@ -44,7 +44,7 @@ class WMTS(OWS):
         bbox_element = element.find("wgs84boundingbox")
 
         if bbox_element is None:
-            return
+            return None
 
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]

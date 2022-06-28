@@ -6,19 +6,16 @@ from io import BytesIO
 from typing import Union
 from urllib.parse import urlparse
 
-from PIL import Image
 from django.conf import settings
 from mapproxy.grid import tile_grid
+from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
-from eventkit_cloud.jobs.helpers import (
-    get_provider_image_download_dir,
-    get_provider_image_download_path,
-)
+from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
 
 logger = logging.getLogger(__name__)
@@ -69,7 +66,7 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
         requests = mapproxy_app
     else:
         # Ensure proper requests is loaded
-        import requests
+        import requests  # type: ignore
     response = requests.get(base_url.format(x=0, y=0, z=0))
     tile = get_tile(response)
     size_x, size_y = tile.size  # These should be the same
@@ -137,7 +134,7 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
     filesize = os.stat(filepath).st_size
     thumbnail_snapshot = MapImageSnapshot.objects.create(download_url="", filename=filepath, size=filesize)
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(thumbnail_snapshot.uid, filepath, download_filename)
+        download_url = s3.upload_to_s3(str(thumbnail_snapshot.uid), filepath, download_filename)
         os.remove(filepath)
     else:
         download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)

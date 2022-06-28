@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0015_add_use_bbox_data_providers'),
+        ("jobs", "0015_add_use_bbox_data_providers"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='region',
-            name='properties',
+            model_name="region",
+            name="properties",
             field=models.JSONField(default=dict),
         ),
     ]

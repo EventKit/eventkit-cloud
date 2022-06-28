@@ -6,10 +6,10 @@ from django.contrib.sessions.models import Session
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import BadSignature
-from django.urls import reverse
 from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
+from django.urls import reverse
 from social import utils
 from social.exceptions import InvalidEmail
 from social.pipeline.partial import partial
@@ -69,7 +69,7 @@ def partial_pipeline_data(backend, user=None, *args, **kwargs):  # pragma: no co
             signed_details = signing.loads(data["signature"], key=settings.SECRET_KEY)
             session = Session.objects.get(pk=signed_details["session_key"])
         except BadSignature as xxx_todo_changeme:
-            Session.DoesNotExist = xxx_todo_changeme
+            Session.DoesNotExist = xxx_todo_changeme  # type: ignore
             raise InvalidEmail(backend)
 
         session_details = session.get_decoded()

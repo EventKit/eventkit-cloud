@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import yaml
 from django.conf import settings
@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
+from eventkit_cloud.jobs.models import DatamodelPreset, ExportFormat, Job
 from eventkit_cloud.utils.overpass import Overpass
 
 logger = logging.getLogger(__name__)

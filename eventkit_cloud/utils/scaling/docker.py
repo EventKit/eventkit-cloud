@@ -1,10 +1,10 @@
+import logging
+import os
 import shlex
 import uuid
+from typing import Any, Dict
 
 import requests
-import os
-import logging
-
 from docker.errors import APIError
 
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
@@ -83,7 +83,7 @@ class Docker(ScaleClient):
                 containers += self.client.containers.list(filters={"label": f"task_name={name}"})
         else:
             containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
-        result = {"resources": [], "pagination": {}}
+        result: Dict[str, Any] = {"resources": [], "pagination": {}}
         result["pagination"]["total_results"] = len(containers)
         for container in containers:
             stats = container.stats(stream=False)
@@ -110,7 +110,7 @@ class Docker(ScaleClient):
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
 
-    def terminate_task(self, task_name: str) -> dict:
+    def terminate_task(self, task_name: str):
         containers = self.client.containers.list(filters={"label": f"task_name={task_name}"})
         for container in containers:
             try:

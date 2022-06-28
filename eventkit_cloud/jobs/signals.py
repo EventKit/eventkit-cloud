@@ -18,13 +18,10 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.tasks.helpers import make_file_downloadable
+from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.image_snapshot import save_thumbnail
-from eventkit_cloud.utils.mapproxy import (
-    get_mapproxy_config_template,
-    clear_mapproxy_config_cache,
-)
+from eventkit_cloud.utils.mapproxy import clear_mapproxy_config_cache, get_mapproxy_config_template
 from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
@@ -112,7 +109,7 @@ def provider_pre_save(sender, instance, **kwargs):
                     instance.thumbnail = None
                     prev_thumb.delete()
                 instance.thumbnail = MapImageSnapshot.objects.create(
-                    filename=filename, size=size, download_url=download_url
+                    filename=str(filename), size=size, download_url=download_url
                 )
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if

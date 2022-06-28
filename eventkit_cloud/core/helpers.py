@@ -8,15 +8,14 @@ from enum import Enum
 from functools import wraps
 from typing import Type
 
-import requests_pkcs12
-from django.db import models
-
 import dj_database_url
 import requests
+import requests_pkcs12
 from django.conf import settings
-from django.core.cache import cache
-from notifications.signals import notify
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.db import models
+from notifications.signals import notify
 
 from eventkit_cloud.utils import auth_requests
 
@@ -30,11 +29,11 @@ def get_id(user: User):
         return user.username
 
 
-def get_model_by_params(model_class: models.Model, **kwargs):
+def get_model_by_params(model_class: Type[models.Model], **kwargs):
     return model_class.objects.get(**kwargs)
 
 
-def get_cached_model(model: Type[models.Model], prop: str, value: str) -> Type[models.Model]:
+def get_cached_model(model: Type[models.Model], prop: str, value: str) -> models.Model:
     return cache.get_or_set(f"{model.__name__}-{prop}-{value}", get_model_by_params(model, **{prop: value}), 360)
 
 

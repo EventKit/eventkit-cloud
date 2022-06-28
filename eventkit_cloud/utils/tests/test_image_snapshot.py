@@ -1,13 +1,13 @@
 import logging
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 
 from eventkit_cloud.utils.image_snapshot import (
     get_tile,
     get_wmts_snapshot_image,
-    save_thumbnail,
     make_thumbnail_downloadable,
+    save_thumbnail,
 )
 
 logger = logging.getLogger(__name__)

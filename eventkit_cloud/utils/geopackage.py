@@ -12,6 +12,7 @@ from osgeo import gdal, osr
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.tasks.task_process import TaskProcess
+
 from .artifact import Artifact
 
 logger = logging.getLogger(__name__)

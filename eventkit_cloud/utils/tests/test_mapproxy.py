@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import yaml as real_yaml
@@ -11,20 +11,20 @@ from mapproxy.config.config import load_default_config
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.mapproxy import (
-    MapproxyGeopackage,
-    get_conf_dict,
-    get_cache_template,
     CustomLogger,
+    MapproxyGeopackage,
     check_zoom_levels,
-    get_mapproxy_footprint_url,
-    get_footprint_layer_name,
-    get_mapproxy_metadata_url,
-    get_custom_exp_backoff,
     clear_mapproxy_config_cache,
-    mapproxy_config_keys_index,
+    get_cache_template,
+    get_conf_dict,
+    get_custom_exp_backoff,
+    get_footprint_layer_name,
+    get_height,
+    get_mapproxy_footprint_url,
+    get_mapproxy_metadata_url,
     get_resolution_for_extent,
     get_width,
-    get_height,
+    mapproxy_config_keys_index,
 )
 
 logger = logging.getLogger(__name__)

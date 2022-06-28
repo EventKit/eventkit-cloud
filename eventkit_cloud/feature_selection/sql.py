@@ -1,16 +1,18 @@
+from typing import List
+
 from pyparsing import (
-    Word,
-    delimitedList,
-    Group,
-    alphas,
-    nums,
-    alphanums,
-    ParseException,
     Forward,
+    Group,
+    Keyword,
+    ParseException,
+    Word,
+    ZeroOrMore,
+    alphanums,
+    alphas,
+    delimitedList,
+    nums,
     oneOf,
     quotedString,
-    ZeroOrMore,
-    Keyword,
 )
 
 
@@ -76,7 +78,7 @@ class SQLValidator(object):
     def column_names(self):
         # takes a dictionary, returns a list
         def column_names_in_dict(d):
-            result = []
+            result: List[str] = []
             for column_name, value in d.items():
                 if "columnName" == column_name:
                     result = result + [value]

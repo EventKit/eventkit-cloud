@@ -2,30 +2,30 @@
 import doctest
 import logging
 import os
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 from django.test import TransactionTestCase
 
 from eventkit_cloud.utils import geopackage
 from eventkit_cloud.utils.geopackage import (
+    add_file_metadata,
     add_geojson_to_geopackage,
+    check_content_exists,
+    check_zoom_levels,
+    create_extension_table,
+    create_metadata_tables,
+    create_table_from_existing,
     get_table_count,
-    get_table_names,
-    get_tile_table_names,
     get_table_gpkg_contents_information,
-    set_gpkg_contents_bounds,
+    get_table_info,
+    get_table_names,
+    get_tile_matrix_table_zoom_levels,
+    get_tile_table_names,
     get_zoom_levels_table,
     remove_empty_zoom_levels,
     remove_zoom_level,
-    get_tile_matrix_table_zoom_levels,
-    check_content_exists,
-    check_zoom_levels,
-    get_table_info,
-    create_table_from_existing,
-    create_metadata_tables,
-    create_extension_table,
-    add_file_metadata,
+    set_gpkg_contents_bounds,
 )
 
 logger = logging.getLogger(__name__)

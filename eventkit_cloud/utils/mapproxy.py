@@ -6,7 +6,7 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Tuple
+from typing import Any, Dict, Tuple, cast
 
 import mapproxy
 import yaml
@@ -16,7 +16,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
+from mapproxy.config.loader import ConfigurationError, ProxyConfiguration, validate_references
 from mapproxy.grid import tile_grid
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
@@ -28,22 +28,23 @@ from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import (
-    get_tile_table_names,
-    set_gpkg_contents_bounds,
     get_table_tile_matrix_information,
+    get_tile_table_names,
     get_zoom_levels_table,
     remove_empty_zoom_levels,
+    set_gpkg_contents_bounds,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
 # a dummy process which relies on threads.  This fixes a bunch of deadlock issues which happen when using billiard.
-multiprocessing.Process = DummyProcess
+# mypy does not generally handle patching well
+multiprocessing.Process = DummyProcess  # type: ignore
 from mapproxy.seed import seeder  # noqa: E402
 from mapproxy.seed.config import SeedingConfiguration  # noqa: E402
-from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore  # noqa: E402
+from mapproxy.seed.util import ProgressLog, ProgressStore, exp_backoff, timestamp  # noqa: E402
 
-multiprocessing.Process = Process
+multiprocessing.Process = Process  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,9 @@ def get_mapproxy_config_template(slug, user=None):
 
 
 class CustomLogger(ProgressLog):
+    # mypy cannot determine the base type, define it here
+    _laststep: float
+
     def __init__(self, task_uid=None, *args, **kwargs):
         self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
@@ -333,7 +337,7 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
     out_projection = 4326
     if projection:
         out_projection = projection
-    seed_template = {
+    seed_template: Dict[str, Any] = {
         "coverages": {"geom": {"srs": "EPSG:4326"}},
         "seeds": {
             "seed": {
@@ -407,7 +411,7 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
     if not mapproxy_config:
         # TODO: place this somewhere else consolidate settings.
-        base_config = {
+        base_config: Dict[str, Any] = {
             "services": {
                 "demo": None,
                 "tms": None,
@@ -484,7 +488,7 @@ def get_conf_dict(slug: str) -> dict:
     from eventkit_cloud.jobs.models import DataProvider  # Circular reference
 
     try:
-        provider = get_cached_model(model=DataProvider, prop="slug", value=slug)
+        provider = cast(DataProvider, get_cached_model(model=DataProvider, prop="slug", value=slug))
     except Exception:
         raise Exception(f"Unable to find provider for slug {slug}")
 

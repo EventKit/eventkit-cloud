@@ -2,6 +2,7 @@ import json
 import logging
 from abc import ABC
 from collections import defaultdict
+from typing import Any, Dict, Type
 
 from eventkit_cloud.utils.arcgis2geojson import convert as convert_arcgis_to_geojson
 
@@ -32,10 +33,10 @@ class OGCQuery(MapQuery):
     pass
 
 
-def get_map_query(type: str) -> MapQuery:
+def get_map_query(type: str) -> Type[MapQuery]:
 
     print(f"get_map_query: {type}")
-    query_map = defaultdict(lambda: MapQuery)
+    query_map: Dict[str, Any] = defaultdict(lambda: MapQuery)
     query_map["arcgis"] = ArcGISQuery
 
     return query_map[type]

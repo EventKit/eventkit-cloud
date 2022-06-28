@@ -5,7 +5,7 @@ from django.urls import re_path
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from eventkit_cloud.auth.views import oauth, callback, logout
+from eventkit_cloud.auth.views import callback, logout, oauth
 
 urlpatterns = [
     re_path(r"^oauth$", ensure_csrf_cookie(oauth), name="oauth"),

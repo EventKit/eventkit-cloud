@@ -6,7 +6,6 @@ import tempfile
 from string import Template
 
 import yaml
-
 from gdal_utils import get_dimensions, get_meta, merge_geotiffs
 
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -14,7 +13,6 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
-
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +219,8 @@ class WCSConverter(object):
                 logger.error(e)
                 raise Exception("There was an error writing the file to disk.")
         if len(geotiffs) > 1:
-            self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
+            task_process = TaskProcess(self.task_uid)
+            self.out = merge_geotiffs(geotiffs, self.out, executor=task_process.start_process)
         else:
             shutil.copy(geotiffs[0], self.out)
 

@@ -97,6 +97,12 @@ The built EventKit containers can be pushed to a platform like Kubernetes or som
 Additionally it can be deployed on [Pivotal Cloud Foundry](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).
 
 ## For Developers
+
+#### Debugging
+
+When debugging file conversion issues it can be helpful to use the environment settings `KEEP_STAGE=True`, 
+which will not delete the staged files after the run completes/fails.
+
 #### Using ESLint
 To use ESLint while working on the EventKit front-end, first make sure you have Node.js and NPM installed in your local dev environment.
 You can find the instructions for installing them here https://docs.npmjs.com/getting-started/installing-node

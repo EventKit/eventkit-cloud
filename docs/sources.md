@@ -224,13 +224,20 @@ In order to specify the desired layers, a YAML configuration must be supplied. T
 Additionally (currently for ArcgGIS FeatureServices) specify a "distinct_field" to ensure group features on that field.
 
 ##### Example ArcGIS Configuration
+
+Arcgis-feature service (FeatureService), or MapServices with feature layers will automatically configure. 
+If wanting to override the default configuration then you can pass in configuration like below.
+
 ```yaml
 vector_layers:
-  - name: 'WBDLine'
+  WBDLine:
+    name: 'WBDLine'
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/0'
-  - name: 'Basin'
+  Basin:
+    name: 'Basin'
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/3' 
-  - name: 'Subbasin'
+  SubBasin:
+    name: 'Subbasin'
     url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/4'
     distinct_field: 'OBJECTID'
 ```
@@ -239,10 +246,12 @@ For ArcGIS providers, the specific URL for each layer must be provided.
 ##### Example WFS Configuration
 ```yaml
 vector_layers:
-  - name: 'foo'
-    url: 'https://abc.gov/wfs/services/x'
-  - name: 'bar'
-    url: 'https://abc.gov/wfs/services/x' 
+  foo:
+    name: 'foo'
+    url: 'https://abc.test/wfs/services/x'
+  bar: 
+    name: 'bar'
+    url: 'https://abc.test/wfs/services/x' 
 ```
 
 #### File Data Providers

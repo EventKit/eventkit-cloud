@@ -3,38 +3,36 @@
 
 import itertools
 import logging
+from typing import Tuple
 
 from celery import chain
 from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.jobs.models import Job, JobPermission, JobPermissionLevel
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import (
-    finalize_export_provider_task,
     TaskPriority,
-    wait_for_providers_task,
-    create_zip_task,
-    finalize_run_task,
-    output_selection_geojson_task,
-    osm_data_collection_task,
-    wfs_export_task,
-    mapproxy_export_task,
-    wcs_export_task,
     arcgis_feature_service_export_task,
-    vector_file_export_task,
-    raster_file_export_task,
+    create_zip_task,
+    finalize_export_provider_task,
+    finalize_run_task,
+    mapproxy_export_task,
     ogcapi_process_export_task,
+    osm_data_collection_task,
+    output_selection_geojson_task,
+    raster_file_export_task,
+    vector_file_export_task,
+    wait_for_providers_task,
+    wcs_export_task,
+    wfs_export_task,
 )
-from eventkit_cloud.tasks.helpers import (
-    get_run_staging_dir,
-    get_provider_staging_dir,
-    get_celery_queue_group,
-)
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.helpers import get_celery_queue_group, get_provider_staging_dir, get_run_staging_dir
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
+from eventkit_cloud.utils.types.django_helpers import DjangoUserType
 
 User = get_user_model()
 
@@ -251,7 +249,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job: Job, user: User = None, clone: ExportRun = None, download_data=True):
+def create_run(job: Job, user: DjangoUserType = None, clone: ExportRun = None, download_data=True):
     """
     This will create a new Run based on the provided job.
     :param job: The Job model on which to create a new run.
@@ -296,7 +294,7 @@ def create_run(job: Job, user: User = None, clone: ExportRun = None, download_da
         raise e
 
 
-def check_job_permissions(job: Job, user: User = None) -> (Job, User):
+def check_job_permissions(job: Job, user: DjangoUserType = None) -> Tuple[Job, DjangoUserType]:
     # get the number of existing runs for this job
 
     if not job.data_provider_tasks.all():
@@ -455,7 +453,8 @@ def create_finalize_run_task_collection(
         data_provider_task_uid=run_provider_task_record_uid,
         status=TaskState.COMPLETED.value,
         locking_task_key=run_uid,
-    )
+    ).set(**apply_args)
+
     all_task_sigs_list.append(finalize_export_provider_signature)
     all_task_sigs_list.append(finalize_signature)
     all_task_sigs = itertools.chain(all_task_sigs_list)
