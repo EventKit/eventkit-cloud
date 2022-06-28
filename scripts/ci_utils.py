@@ -2,7 +2,8 @@ import json
 import logging
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
+
 import requests
 import yaml
 

@@ -5,7 +5,7 @@ else
 endif
 
 black:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check --diff eventkit_cloud
+	docker-compose run --rm eventkit black --config /var/lib/eventkit/pyproject.toml --check --diff eventkit_cloud
 
 black-format:
 	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud

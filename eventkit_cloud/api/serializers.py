@@ -943,7 +943,7 @@ def filtered_basic_data_provider_serializer(
 ):
 
     if not data_providers:
-        return [{}]
+        return []
 
     if not isinstance(data_providers, (list, QuerySet)):  # type: ignore
         data_providers = [data_providers]

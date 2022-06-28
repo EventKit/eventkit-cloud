@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import getpass
-import os
-import json
 import argparse
+import getpass
+import json
+import os
 import time
 
 from eventkit_cloud.utils.client import EventKitClient

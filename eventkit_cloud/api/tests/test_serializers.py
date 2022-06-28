@@ -37,7 +37,7 @@ class TestSerializers(TestCase):
         ]
         self.assertEqual(filtered_basic_data_provider_serializer(self.data_provider, many=True), expected_result)
         self.assertEqual(filtered_basic_data_provider_serializer(self.data_provider), expected_result[0])
-        self.assertEqual(filtered_basic_data_provider_serializer([]), [{}])
+        self.assertEqual(filtered_basic_data_provider_serializer([]), [])
         with self.assertRaises(Exception):
             filtered_basic_data_provider_serializer([Mock(), Mock()])
 

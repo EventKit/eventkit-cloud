@@ -1,5 +1,5 @@
-from os import path
 import re
+from os import path
 
 
 def convert_requirements_to_conda():

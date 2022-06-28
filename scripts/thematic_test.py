@@ -9,9 +9,8 @@
 import logging
 import os
 import shutil
-from string import Template
-
 import sqlite3
+from string import Template
 
 from eventkit_cloud.jobs.models import Job
 
