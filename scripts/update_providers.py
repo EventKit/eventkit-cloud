@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-import sys
+
 
 def update_providers(file_path, skip_missing=False):
     print(f"Loading provider file {file_path}")
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
     import django
     django.setup()
-    from eventkit_cloud.jobs.models import DataProvider, DataProviderType
     from eventkit_cloud.core.models import AttributeClass
+    from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 
     parser = argparse.ArgumentParser(description='Load Fixtures for Data Providers.')
 

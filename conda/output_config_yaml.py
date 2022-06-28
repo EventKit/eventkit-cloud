@@ -1,9 +1,9 @@
+import os
 import re
 import subprocess
 import sys
 
 import yaml
-import os
 
 
 def dump_conda_config_yaml(output_dir='.', requirements_file=None):
