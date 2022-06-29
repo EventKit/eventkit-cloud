@@ -22,3 +22,4 @@ class Dummy(ScaleClient):
 
     def terminate_task(self, task_name: str):
         logger.info("Dummy client called with terminate_task(%s)", task_name)
+        exit(0)

@@ -356,6 +356,8 @@ MAPPROXY_LOGS = {
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOGGING_SINGLE_LINE_OUTPUT = is_true(os.getenv("LOGGING_SINGLE_LINE_OUTPUT", False))
 
+GDAL_LOG_LEVEL = os.getenv("GDAL_LOG_LEVEL", "ERROR")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -370,6 +372,7 @@ LOGGING = {
     "root": {"handlers": ["console"], "propagate": True, "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
+        "gdal_utils": {"handlers": ["console"], "propagate": True, "level": GDAL_LOG_LEVEL},
     },
 }
 

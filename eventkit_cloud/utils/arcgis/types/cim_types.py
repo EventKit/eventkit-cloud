@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeAlias, TypedDict, Union
+from typing import Any, Literal, TypeAlias, TypedDict, Union, Sequence
 
 # https://github.com/Esri/cim-spec/blob/master/docs/v2/CIMEnumerations.md
 AltitudeMode = Literal["ClampToGround", "RelativeToGround", "Absolute"]
@@ -242,16 +242,18 @@ class _Geometry(TypedDict, total=False):
     hasZ: bool
 
 
-class _Point(TypedDict):
-    x: int
-    y: int
+class __Point(TypedDict):
+    x: Union[float, int]
+    y: Union[float, int]
 
 
-class Point(_Point, total=False):
+class _Point(__Point, total=False):
     spatialReference: SpatialReference
-    m: int
-    z: int
+    m: Union[float, int]
+    z: Union[float, int]
 
+
+Point: TypeAlias = Union[_Point, list[float], list[int], list[Union[float, int]]]
 
 CIMICCColorSpace = Any
 
@@ -395,12 +397,11 @@ class Envelope(TypedDict, total=False):
     zmax: int
     zmin: int
 
-
-Path = list[Point]
-CurvePath = list[Point]
-Ring = list[Point]
-CurveRing = list[Point]
-
+CurveGeometry = Union[Point, "Curve"]
+Path: TypeAlias = Union[Point, list[Point], list[list[Point]]]
+CurvePath: TypeAlias = Union[CurveGeometry, list[CurveGeometry], list[list[CurveGeometry]]]
+Ring: TypeAlias = list[Union[Point, list[Point]]]
+CurveRing: TypeAlias = Union[CurveGeometry, list[CurveGeometry], list[list[CurveGeometry]]]
 
 class Multipoint(_Geometry, total=False):
     points: list[Point]
@@ -432,7 +433,7 @@ class CircularArc(TypedDict):
 
 
 class EllipticArc(TypedDict):
-    a: list[Point]
+    a: list[Union[Point, int, float]]
 
 
 class BezierCurve(TypedDict):
@@ -443,26 +444,10 @@ Curve: TypeAlias = Union[CircularArc, EllipticArc, BezierCurve]
 
 
 class GeometryBag(_Geometry):
-    points: list[
-        Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope, Area, Path, CurvePath, Ring, CurveRing, Curve]
-    ]  # It's a geometry type.
+    points: list["Geometry"]  # type: ignore  # cyclic
 
 
-Geometry: TypeAlias = Union[
-    Point,
-    Multipoint,
-    Multipatch,
-    Polyline,
-    Polygon,
-    Envelope,
-    GeometryBag,
-    Area,
-    Path,
-    CurvePath,
-    Ring,
-    CurveRing,
-    Curve,
-]
+Geometry: TypeAlias = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope, GeometryBag, Area, Path, CurvePath, Ring, CurveRing, Curve]  # type: ignore  # cyclic
 
 
 CIMWaterFill = Any
@@ -541,7 +526,7 @@ CIMGeometricEffect = Union[
     CIMGeometricEffectWave,
 ]
 
-SymbolLayer: TypeAlias = Union[
+SymbolLayer: TypeAlias = Union[  # type: ignore  # cyclic
     "CIMBarChartMarker",
     "CIMCharacterMarker",
     "CIMGradientFill",
@@ -558,7 +543,7 @@ SymbolLayer: TypeAlias = Union[
     "CIMSolidMeshEdge",
     "CIMSolidStroke",
     "CIMStackedBarChartMarker",
-    "CIMVectorMarker",
+    "CIMVectorMarker",  # type: ignore  # cyclic
     "CIMWaterFill",
     "CIMglTFMarker3D",
 ]
@@ -697,7 +682,7 @@ class CIMScaleDependentSizeVariation(TypedDict):
     size: float
 
 
-Symbol = Union[CIMLineSymbol, CIMMeshSymbol, CIMPointSymbol, CIMPolygonSymbol, CIMTextSymbol]
+Symbol = Union[CIMLineSymbol, CIMMeshSymbol, CIMPointSymbol, CIMPolygonSymbol, CIMTextSymbol]  # type: ignore  # cyclic
 
 
 class CIMClippingPath(TypedDict, total=False):
@@ -712,7 +697,7 @@ class _CIMVectorMarker(CIMSymbolLayer):
 class CIMVectorMarker(_CIMVectorMarker, CIMMarker, total=False):
     depth3D: int
     frame: Envelope
-    markerGraphics: list["CIMMarkerGraphic"]
+    markerGraphics: list["CIMMarkerGraphic"]  # type: ignore  # cyclic
     verticalOrientation3D: bool
     scaleSymbolsProportionally: bool
     respectFrame: bool
@@ -886,7 +871,7 @@ class CIMMaplexExternalZonePriorities(TypedDict):
     centerLeft: int
 
 
-class CIMStandardLineLabelPriorities(TypedDict):
+class CIMStandardLineLabelPriorities(TypedDict, total=False):
     type: Literal["CIMStandardLineLabelPriorities"]
     aboveStart: int
     aboveAlong: int
@@ -922,7 +907,7 @@ class CIMMaplexStrategyPriorities(TypedDict):
     abbreviation: int
 
 
-class CIMMaplexLabelPlacementProperties(TypedDict):
+class CIMMaplexLabelPlacementProperties(TypedDict, total=False):
     type: Literal["CIMMaplexLabelPlacementProperties"]
     featureType: LabelFeatureType
     avoidPolygonHoles: bool
@@ -978,7 +963,7 @@ class CIMMaplexLabelPlacementProperties(TypedDict):
     polygonAnchorPointPerimeterInsetUnit: Literal["Point"]
 
 
-class CIMStandardPointPlacementPriorities(TypedDict):
+class CIMStandardPointPlacementPriorities(TypedDict, total=False):
     type: Literal["CIMStandardPointPlacementPriorities"]
     aboveLeft: int
     aboveCenter: int
@@ -990,14 +975,14 @@ class CIMStandardPointPlacementPriorities(TypedDict):
     belowRight: int
 
 
-class CIMStandardLineLabelPosition(TypedDict):
+class CIMStandardLineLabelPosition(TypedDict, total=False):
     type: Literal["CIMStandardLineLabelPosition"]
     above: bool
     inLine: bool
     parallel: bool
 
 
-class CIMStandardLabelPlacementProperties(TypedDict):
+class CIMStandardLabelPlacementProperties(TypedDict, total=False):
     type: Literal["CIMStandardLabelPlacementProperties"]
     featureType: LabelFeatureType
     featureWeight: StandardFeatureWeight
@@ -1005,18 +990,20 @@ class CIMStandardLabelPlacementProperties(TypedDict):
     numLabelsOption: Literal["OneLabelPerName"]
     lineLabelPosition: CIMStandardLineLabelPosition
     lineLabelPriorities: CIMStandardLineLabelPriorities
-    pointPlacementMethod: Literal["AroundPoint"]
+    pointPlacementMethod: StandardPointPlacementMethod
     pointPlacementPriorities: CIMStandardPointPlacementPriorities
     rotationType: Literal["Arithmetic"]
-    polygonPlacementMethod: Literal["AlwaysHorizontal"]
+    polygonPlacementMethod: StandardPolygonPlacementMethod
 
 
-class CIMLabelClass(TypedDict):
+class CIMLabelClass(TypedDict, total=False):
     type: Literal["CIMLabelClass"]
     expressionTitle: Literal["Custom"]
-    expression: Literal["$feature.name"]
-    expressionEngine: Literal["Arcade"]
+    expression: str
+    expressionEngine: Literal["Arcade", "Python"]
     featuresToLabel: Literal["AllVisibleFeatures"]
+    maximumScale: int
+    minimumScale: int
     maplexLabelPlacementProperties: CIMMaplexLabelPlacementProperties
     name: str
     priority: int
@@ -1156,7 +1143,7 @@ class CIMLayerAction(TypedDict, total=False):
 
 
 SymbolSubstitutionType = Literal["Color", "IndividualSubordinate", "IndividualDominant"]
-Renderer: TypeAlias = Union[CIMSimpleRenderer, CIMUniqueValueRenderer]
+Renderer: TypeAlias = Union[CIMSimpleRenderer, CIMUniqueValueRenderer]  # type: ignore  # cyclic
 
 
 class CIMSymbolLayerMasking(TypedDict, total=False):
@@ -1215,7 +1202,7 @@ class CIMGroupLayer(CIMDefinition, CIMLayerDefinition, CIMStandaloneTableContain
     symbolLayerDrawing: CIMSymbolLayerDrawing
 
 
-LayerDefinition = Union[
+LayerDefinition = Union[  # type: ignore  # cyclic
     CIMFeatureLayer, CIMGroupLayer
 ]  # There are many others currently only feature is supported in EK.
 

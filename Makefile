@@ -5,13 +5,13 @@ else
 endif
 
 black:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check --diff eventkit_cloud
+	docker-compose run --rm eventkit black --check --diff eventkit_cloud
 
 black-format:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud
+	docker-compose run --rm eventkit black eventkit_cloud
 
 flake8:
-	docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/setup.cfg eventkit_cloud
+	docker-compose run --rm eventkit flake8 eventkit_cloud
 
 mypy:
 	docker-compose run --rm eventkit mypy eventkit_cloud

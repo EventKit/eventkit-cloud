@@ -1,4 +1,7 @@
+import copy
 import logging
+import re
+import uuid
 from typing import Optional
 
 from django.conf import settings
@@ -188,9 +191,77 @@ class ArcGISLayer:
         return symbol
 
     def get_cim_text_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMTextSymbol:
-        if settings.DEBUG:
-            raise NotImplementedError()
-        return None
+        symbol: cim_types.CIMTextSymbol = {
+            "type": "CIMTextSymbol",
+            "blockProgression": "TTB",
+            "depth3D": 1,
+            "extrapolateBaselines": True,
+            "fontEffects": "Normal",
+            "fontEncoding": "Unicode",
+            "fontFamilyName": service_symbol.get("font", {}).get("family", "Tahoma"),
+            "fontStyleName": "Regular",
+            "fontType": "Unspecified",
+            "height": service_symbol.get("font", {}).get("size", 10),
+            "hinting": "Default",
+            "horizontalAlignment": "Left",
+            "kerning": service_symbol.get("kerning", True),
+            "letterWidth": 100,
+            "ligatures": True,
+            "lineGapType": "ExtraLeading",
+            "symbol": {
+                "type": "CIMPolygonSymbol",
+                "symbolLayers": [
+                    {
+                        "type": "CIMSolidStroke",
+                        "enable": True,
+                        "capStyle": "Round",
+                        "joinStyle": "Round",
+                        "lineStyle3D": "Strip",
+                        "miterLimit": 10,
+                        "width": service_symbol.get("borderLineSize") or 0,
+                        "color": self.get_cim_color(service_symbol.get("borderLineColor") or [0, 0, 0, 255]),
+                    },
+                    {
+                        "type": "CIMSolidFill",
+                        "enable": True,
+                        "color": self.get_cim_color(service_symbol.get("color") or [0, 0, 0, 255]),
+                    },
+                ],
+            },
+            "textCase": "Normal",
+            "textDirection": "LTR",
+            "verticalAlignment": "Bottom",
+            "verticalGlyphOrientation": "Right",
+            "wordSpacing": 100,
+            "billboardMode3D": "FaceNearPlane",
+        }
+        if service_symbol.get("haloColor"):
+            symbol.update(
+                {
+                    "haloSize": service_symbol.get("haloSize", 1),
+                    "haloSymbol": {
+                        "type": "CIMPolygonSymbol",
+                        "symbolLayers": [
+                            {
+                                "type": "CIMSolidStroke",
+                                "enable": True,
+                                "capStyle": "Round",
+                                "joinStyle": "Round",
+                                "lineStyle3D": "Strip",
+                                "miterLimit": 10,
+                                "width": 0,
+                                "color": self.get_cim_color(service_symbol["haloColor"]),
+                            },
+                            {
+                                "type": "CIMSolidFill",
+                                "enable": True,
+                                "color": self.get_cim_color(service_symbol["haloColor"]),
+                            },
+                        ],
+                    },
+                }
+            )
+        return symbol
 
     def get_cim_symbol_reference(
         self, service_symbol: Optional[service_types.Symbol]
@@ -276,7 +347,7 @@ class ArcGISLayer:
                 "maxAlpha": 100,
             },
             "defaultLabel": service_renderer.get("defaultLabel", "Other"),
-            "defaultSymbol": self.get_cim_symbol_reference(service_renderer["defaultSymbol"]),
+            "defaultSymbol": self.get_cim_symbol_reference(service_renderer.get("defaultSymbol")),
             "defaultSymbolPatch": "Default",
             "fields": fields,
             "groups": [self.get_cim_unique_value_group(service_renderer)],
@@ -338,17 +409,165 @@ class ArcGISLayer:
         }
         return cim_feature_table
 
+    @staticmethod
+    def get_cim_standard_label_placement_properties(
+        label_placement: service_types.LabelPlacement,
+    ) -> cim_types.CIMStandardLabelPlacementProperties:
+
+        placement_properties: cim_types.CIMStandardLabelPlacementProperties = {
+            "type": "CIMStandardLabelPlacementProperties",
+        }
+        match label_placement:
+            case "esriServerLinePlacementAboveAfter":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "aboveEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementAboveAlong":
+
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveAlong": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementAboveBefore":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementAboveEnd":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementAboveStart":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementBelowAfter":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementBelowAlong":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowAlong": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementBelowBefore":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementBelowEnd":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementBelowStart":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementCenterAfter":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementCenterAlong":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerAlong": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementCenterBefore":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementCenterEnd":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerEnd": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerLinePlacementCenterStart":
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerStart": 1}
+                placement_properties["featureType"] = "Line"
+            case "esriServerPointLabelPlacementAboveCenter":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "aboveCenter": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementAboveLeft":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "aboveLeft": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementAboveRight":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "aboveRight": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementBelowCenter":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "belowCenter": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementBelowLeft":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "belowLeft": 1,
+                }
+
+            case "esriServerPointLabelPlacementBelowRight":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "belowRight": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementCenterCenter":
+                # according to the link there is no center center?
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementCenterLeft":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "centerLeft": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPointLabelPlacementCenterRight":
+                placement_properties["pointPlacementPriorities"] = {
+                    "type": "CIMStandardPointPlacementPriorities",
+                    "centerRight": 1,
+                }
+                placement_properties["featureType"] = "Point"
+            case "esriServerPolygonPlacementAlwaysHorizontal":
+                placement_properties["polygonPlacementMethod"] = "AlwaysHorizontal"
+                placement_properties["featureType"] = "Polygon"
+        return placement_properties
+
+    def get_cim_label_classes(
+        self, name: str = None, label_infos: list[service_types.LabelingInfo] = None
+    ) -> list[cim_types.CIMLabelClass]:
+        label_classes = []
+        label_class_name = copy.deepcopy(name)
+        if not label_class_name:
+            label_class_name = str(uuid.uuid4())
+        if not label_infos:
+            return label_classes
+        for index, label_info in enumerate(label_infos):
+            text_symbol = self.get_cim_symbol_reference(label_info["symbol"])
+            if not text_symbol:
+                continue
+            # Doesn't account for "where" property
+            label: cim_types.CIMLabelClass = {
+                "type": "CIMLabelClass",
+                "priority": 1,
+                "expressionTitle": "Custom",
+                "expression": ArcGISLayer.parse_label_expression(label_info.get("labelExpression")),
+                "expressionEngine": "Python",
+                "featuresToLabel": "AllVisibleFeatures",
+                "textSymbol": text_symbol,
+                "useCodedValue": label_info.get("useCodedValues") or True,
+                "name": f"{label_class_name} {index}",
+                "visibility": True,
+                "minimumScale": label_info["minScale"],
+                "maximumScale": label_info["maxScale"],
+                "standardLabelPlacementProperties": ArcGISLayer.get_cim_standard_label_placement_properties(
+                    label_info.get("labelPlacement")
+                ),
+            }
+            label["maplexLabelPlacementProperties"] = {
+                "type": "CIMMaplexLabelPlacementProperties",
+                "featureType": label["standardLabelPlacementProperties"]["featureType"],
+            }
+            label_classes += [label]
+        return label_classes
+
     def get_cim_feature_layer(self, service_spec: service_types.MapServiceSpecification) -> cim_types.CIMFeatureLayer:
         cim_path = f"CIMPATH=internal_map/{service_spec['name']}.xml"
 
-        return {
+        feature_layer: cim_types.CIMFeatureLayer = {
             "type": "CIMFeatureLayer",
             "name": service_spec["name"],
             "uRI": cim_path,
             "sourceModifiedTime": {"type": "TimeInstant"},
             "minScale": service_spec.get("minScale", 750000),
             "maxScale": service_spec.get("maxScale", 0),
-            # "metadataURI": "CIMPATH=Metadata/17c09fe7552f53d41973af1ecb1d6b1f.xml",
             "useSourceMetadata": True,
             "description": service_spec.get("description"),
             "layerElevation": {
@@ -377,7 +596,12 @@ class ArcGISLayer:
             "renderer": self.get_cim_renderer(service_spec.get("drawingInfo")),
             "scaleSymbols": True,
             "snappable": True,
+            "labelClasses": self.get_cim_label_classes(
+                name=service_spec["name"], label_infos=service_spec.get("drawingInfo", {}).get("labelingInfo", [])
+            ),
+            "labelVisibility": True,
         }
+        return feature_layer
 
     def get_cim_group_layer(
         self, name: str = None, layer: service_types.MapServiceSpecification = None
@@ -428,6 +652,55 @@ class ArcGISLayer:
             "layers": layers,
             "layerDefinitions": sublayers,
         }
+
+    @staticmethod
+    def parse_label_expression(label_exp: str) -> str:
+        """
+         Parses a labelExpression from an arcgis service and converts it to a python formatted syntax string.
+         @param: A string with python syntax to format the string.
+        @return: if data is only alphanumeric or '_' chars.
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" CONCAT [field]')
+        '\"Title:\" + [field]'
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" NEWLINE [field]')
+        '\"Title:\" \\n [field]'
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" CONCAT NEWLINE [field]')
+        '\"Title:\" + \\n [field]'
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" CONCAT UCASE([field])')
+        '\"Title:\" + [field].upper()'
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" CONCAT LCASE([field])')
+        '\"Title:\" + [field].lower()'
+        >>> ArcGISLayer.parse_label_expression('\"Title:\" CONCAT ROUND([field], 3)')
+        '\"Title:\" + round([field], 3)'
+        >>> ArcGISLayer.parse_label_expression('\"Date:\" CONCAT FORMATDATETIME([field], \"YYYY\")')
+        '\"Date:\" + [field]'
+        """
+
+        def reg_replace(m):
+            return m.group(1)
+
+        def round_str(m):
+            number_field = m.group(1)
+            integer = int(m.group(2))
+            return f"round({number_field}, {integer})"
+
+        def datetime_str(m):
+            # needs to be improved to actually format date.
+            return m.group(1)
+
+        python_label: str = copy.copy(label_exp)
+        keywords = {
+            r"\sCONCAT\s": " + ",
+            r"\sNEWLINE\s": " \n ",
+            r"UCASE\((.*)\)": lambda x: f"{reg_replace(x)}.upper()",
+            r"LCASE\((.*)\)": lambda x: f"{reg_replace(x)}.lower()",
+            r"ROUND\((.*),(.*)\)": round_str,
+            r"FORMATDATETIME\((.*),(.*)\)": datetime_str,
+        }
+
+        for regex, replacement in keywords.items():
+            python_label = re.sub(regex, replacement, python_label)
+
+        return python_label
 
     def get_cim_layer(
         self, service_specification: service_types.MapServiceSpecification

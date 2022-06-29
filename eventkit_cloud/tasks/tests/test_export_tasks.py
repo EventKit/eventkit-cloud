@@ -377,6 +377,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_1,
                 "projection": projection,
+                "level": 15
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -386,6 +387,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_2,
                 "projection": projection,
+                "level": 15
             },
         }
 

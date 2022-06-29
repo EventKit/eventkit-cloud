@@ -433,11 +433,109 @@ class UniqueValueRenderer(TypedDict, total=False):
 
 Renderer = Union[ClassBreaksRenderer, DictionaryRenderer, DotDensityRenderer, SimpleRenderer, UniqueValueRenderer]
 
+DeconflictionStrategy = Literal["dynamic", "dynamicNeverRemove", "none", "static"]
+
+DateFormat = Literal[
+    "dayShortMonthYear",
+    "dayShortMonthYearLongTime",
+    "dayShortMonthYearLongTime24",
+    "dayShortMonthYearShortTime",
+    "dayShortMonthYearShortTime24",
+    "longDate",
+    "longDateLongTime",
+    "longDateLongTime24",
+    "longDateShortTime",
+    "longDateShortTime24",
+    "longMonthDayYear",
+    "longMonthDayYearLongTime",
+    "longMonthDayYearLongTime24",
+    "longMonthDayYearShortTime",
+    "longMonthDayYearShortTime24",
+    "longMonthYear",
+    "shortDate",
+    "shortDateLE",
+    "shortDateLELongTime",
+    "shortDateLELongTime24",
+    "shortDateLEShortTime",
+    "shortDateLEShortTime24",
+    "shortDateLongTime",
+    "shortDateLongTime24",
+    "shortDateShortTime",
+    "shortDateShortTime24",
+    "shortMonthYear",
+    "year",
+]
+
+
+class Format(TypedDict, total=False):
+    dateFormat: DateFormat
+    digitSeparator: bool
+    places: int
+
+
+class FieldInfo(TypedDict, total=False):
+    fieldName: str
+    format: Format
+
+
+LabelPlacement = Literal[
+    "esriServerLinePlacementAboveAfter",
+    "esriServerLinePlacementAboveAlong",
+    "esriServerLinePlacementAboveBefore",
+    "esriServerLinePlacementAboveEnd",
+    "esriServerLinePlacementAboveStart",
+    "esriServerLinePlacementBelowAfter",
+    "esriServerLinePlacementBelowAlong",
+    "esriServerLinePlacementBelowBefore",
+    "esriServerLinePlacementBelowEnd",
+    "esriServerLinePlacementBelowStart",
+    "esriServerLinePlacementCenterAfter",
+    "esriServerLinePlacementCenterAlong",
+    "esriServerLinePlacementCenterBefore",
+    "esriServerLinePlacementCenterEnd",
+    "esriServerLinePlacementCenterStart",
+    "esriServerPointLabelPlacementAboveCenter",
+    "esriServerPointLabelPlacementAboveLeft",
+    "esriServerPointLabelPlacementAboveRight",
+    "esriServerPointLabelPlacementBelowCenter",
+    "esriServerPointLabelPlacementBelowLeft",
+    "esriServerPointLabelPlacementBelowRight",
+    "esriServerPointLabelPlacementCenterCenter",
+    "esriServerPointLabelPlacementCenterLeft",
+    "esriServerPointLabelPlacementCenterRight",
+    "esriServerPolygonPlacementAlwaysHorizontal",
+]
+LineConnection = Literal["minimizeLabels", "none", "unambiguousLabels"]
+MultiPart = Literal["labelLargest", "labelPerFeature", "labelPerPart", "labelPerSegment"]
+
+
+class LabelingInfo(TypedDict, total=False):
+    allowOverrun: bool
+    deconflictionStrategy: DeconflictionStrategy
+    fieldInfos: list[FieldInfo]
+    labelExpression: str
+    labelPlacement: LabelPlacement
+    lineConnection: LineConnection
+    minScale: int
+    maxScale: int
+    multipart: MultiPart
+    name: str
+    priority: int
+    removeDuplicates: Literal["all", "featureType", "labelClass", "none"]
+    removeDuplicatesDistance: int
+    repeatLabel: bool
+    repeatLabelDistance: int
+    stackAlignment: Literal["dynamic", "textSymbol"]
+    stackLabel: bool
+    useCodedValues: bool
+    symbol: Symbol
+    where: str
+
 
 class DrawingInfo(TypedDict):
     renderer: Renderer
     transparency: int
-    labelingInfo: list[Any]
+    labelingInfo: LabelingInfo
 
 
 class LayerID(TypedDict):
@@ -497,7 +595,8 @@ class _MapServiceSpecification(TypedDict):
     type: LayerType
     geometryType: Optional[GeometryType]
     parentLayer: Optional[LayerID]
-    subLayers: list["MapServiceSpecification"]  # Not standard, but used to store entire service description.
+    # Not standard, but used to store entire service description.
+    subLayers: list["MapServiceSpecification"]  # type: ignore  # cyclic
 
 
 class MapServiceSpecification(_MapServiceSpecification, total=False):

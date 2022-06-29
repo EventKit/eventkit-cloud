@@ -59,9 +59,7 @@ class ArcGIS(GisClient):
             else:
                 service_capabilities["subLayers"] = list(layers.values())
             service_capabilities["url"] = url  # Not in spec but helpful for calling the layer for data.
-            service_capabilities["level"] = get_zoom_level_from_scale(
-                floor((service_capabilities["maxScale"] + service_capabilities["minScale"]) / 2)
-            )
+            service_capabilities["level"] = get_zoom_level_from_scale(service_capabilities.get("minScale"), limit=16)
             return service_capabilities
         except requests.exceptions.HTTPError:
             if url:

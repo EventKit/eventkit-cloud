@@ -117,7 +117,9 @@ def add_layers_to_group(
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
                 arcpy.AddMessage(e)
-            layer_file = layer_info.get("layer_file") or get_layer_file(datapack_path, layer_info["type"], version)
+            layer_file = os.path.abspath(os.path.join(datapack_path, layer_info.get("layer_file"))) or get_layer_file(
+                datapack_path, layer_info["type"], version
+            )
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 arcpy.AddWarning(
                     f"Skipping layer {vector_layer_name} because the file type is not supported for ArcPro {version}"
@@ -248,6 +250,13 @@ def create_vector_layers(
             os.unlink(layer_file_path)
 
 
+def update_labels(layer):
+    if layer.supports("SHOWLABELS"):
+        for lblClass in layer.listLabelClasses():
+            lblClass.visible = True
+    layer.save()
+
+
 def add_layer_to_map(
     layer_name: str, layer_path: str, mapx: arcpy._mp.Map, group_layer: arcpy.mp.LayerFile = None
 ) -> arcpy._mp.Layer:
@@ -267,6 +276,7 @@ def add_layer_to_map(
         mapx.addLayer(layer_file, "TOP")
         layer = mapx.listLayers()[0]
     layer.name = layer_name
+    update_labels(layer_file)
     return layer
 
 

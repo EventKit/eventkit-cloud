@@ -665,7 +665,8 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
 
     service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
     metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
-    arcgis_layer = ArcGISLayer(data_provider_task_record.provider.slug, service_capabilities, file_info["file_path"])
+    arcgis_layer = ArcGISLayer(data_provider_task_record.provider.slug, service_capabilities,
+                               os.path.basename(file_info["file_path"]))
     doc = arcgis_layer.get_cim_layer_document()
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
@@ -978,12 +979,16 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
     return layers
 
 
-def get_zoom_level_from_scale(scale: int) -> int:
+def get_zoom_level_from_scale(scale: Optional[int], limit: int = 20) -> int:
     zoom_level_scale = 559082264
     zoom_level = 0
+    if not scale:
+        return 10
     while zoom_level_scale > scale:
         zoom_level_scale = zoom_level_scale / 2
         zoom_level += 1
+        if zoom_level == limit:
+            break
     return zoom_level
 
 
@@ -1037,7 +1042,10 @@ def download_arcgis_feature_data(
             result_offset = 0
             result_record_count = max_record_count
             while True:
-                input_url = f"{input_url}?resultOffset={result_offset}&resultRecordCount={result_record_count}"
+                url_parts: dict = urllib.parse.urlparse(input_url)._asdict()
+                query = urllib.parse.parse_qs(url_parts["query"])
+                query.update({"resultOffset": result_offset, "resultRecordCount": result_record_count})
+                input_url = urllib.parse.ParseResult(**url_parts).geturl()
 
                 with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
                     download_data(
@@ -1068,7 +1076,7 @@ def download_arcgis_feature_data(
 
 def download_chunks(
     task_uid: str,
-    bbox: list,
+    bbox: list[float],
     stage_dir: str,
     base_url: str,
     task_points=100,
@@ -1096,6 +1104,7 @@ def download_chunks(
                 logger.error("Could not get service description for %s", service_url)
             else:
                 logger.error("There was an error parsing the url to get a description for %s", base_url)
+        logger.info("Making %s requests at level %s for service %s", len(tile_bboxes), level, service_url or base_url)
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
@@ -1130,6 +1139,7 @@ def get_file_name_from_response(response: Response) -> str:
     return filename
 
 
+@retry
 @handle_auth
 def download_data(task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, *args, **kwargs):
     """
@@ -1175,7 +1185,7 @@ def download_data(task_uid: str, input_url: str, out_file: str = None, session=N
     start_points = cache.get_or_set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
     start_percent = (start_points / task_points) * 100
 
-    logger.info(f"Saving data to: {out_file}")
+    logger.debug("Saving data to: %s", out_file)
     with logging_open(out_file, "wb") as file_:
         for chunk in response.iter_content(CHUNK):
             file_.write(chunk)

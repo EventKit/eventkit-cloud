@@ -1,9 +1,11 @@
 from eventkit_cloud.utils.arcgis.types import cim_types, service_types
 
-sms_circle = {"curveRings": [[[1.2246467991473532e-16, 2], {"a": [[1.2246467991473532e-16, 2], [0, 0], 0, 1]}]]}
-sms_cross = {
-    "rings": [
-        [
+circle_arc: cim_types.EllipticArc = {"a": [[1.2246467991473532e-16, 2], [0, 0], 0, 1]}
+point: cim_types.Point = [1.2246467991473532e-16, 2]
+curve_geometry: list[cim_types.CurveGeometry] = [point, circle_arc]
+sms_circle: cim_types.Polygon = {"curveRings": [curve_geometry]}
+
+ring: cim_types.Ring = [
             [16.9899999999999984, 11.32],
             [16.9899999999999984, 5.66000000000000014],
             [11.34, 5.66000000000000014],
@@ -18,9 +20,10 @@ sms_cross = {
             [11.34, 11.32],
             [16.9899999999999984, 11.32],
         ]
-    ]
-}
-sms_diamond = {
+
+sms_cross: cim_types.Polygon = {"rings": [ring]}
+
+sms_diamond: cim_types.Polygon = {
     "rings": [
         [
             [13.35, 8.48000000000000043],
@@ -31,8 +34,8 @@ sms_diamond = {
         ]
     ]
 }
-sms_square = {"rings": [[[0, 17], [17, 17], [17, 0], [0, 0], [0, 17]]]}
-sms_triangle = {"rings": [[[0, 0], [8.60999999999999943, 14.85], [17, 0], [0, 0]]]}
+sms_square: cim_types.Polygon = {"rings": [[[0, 17], [17, 17], [17, 0], [0, 0], [0, 17]]]}
+sms_triangle: cim_types.Polygon = {"rings": [[[0, 0], [8.60999999999999943, 14.85], [17, 0], [0, 0]]]}
 
 
 def get_marker_geometry(sms: service_types.SimpleMarkerSymbol) -> cim_types.Geometry:
@@ -48,4 +51,6 @@ def get_marker_geometry(sms: service_types.SimpleMarkerSymbol) -> cim_types.Geom
         case "esriSMSTriangle":
             return sms_triangle
         case "esriSMSX":
-            raise NotImplementedError
+            raise NotImplementedError()
+        case _:
+            raise NotImplementedError()
