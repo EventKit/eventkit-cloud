@@ -19,10 +19,22 @@ class TestArcGIS(TransactionTestCase):
         arcgis = ArcGIS(url, None)
         arcgis.session = MagicMock()
 
-        layer_1 = {"id": 1, "type": "Feature Layer", "description": "test", "subLayers": [], "minScale": 10000,
-                   "maxScale": 0}
-        layer_0 = {"id": 0, "type": "Group Layer", "description": "test", "subLayers": [{"id": 1}], "minScale": 20000,
-                   "maxScale": 5000}
+        layer_1 = {
+            "id": 1,
+            "type": "Feature Layer",
+            "description": "test",
+            "subLayers": [],
+            "minScale": 10000,
+            "maxScale": 0,
+        }
+        layer_0 = {
+            "id": 0,
+            "type": "Group Layer",
+            "description": "test",
+            "subLayers": [{"id": 1}],
+            "minScale": 20000,
+            "maxScale": 5000,
+        }
         root_doc = {"layers": [{"id": 0}, {"id": 1}]}
         arcgis.session.get().json.side_effect = [root_doc, layer_0, layer_1]
 
@@ -42,10 +54,22 @@ class TestArcGIS(TransactionTestCase):
         arcgis = ArcGIS(url, 0)
         arcgis.session = MagicMock()
 
-        layer_1 = {"id": 1, "type": "Feature Layer", "description": "test", "subLayers": [], "minScale": 10000,
-                   "maxScale": 0}
-        layer_0 = {"id": 0, "type": "Group Layer", "description": "test", "subLayers": [{"id": 1}], "minScale": 20000,
-                   "maxScale": 5000}
+        layer_1 = {
+            "id": 1,
+            "type": "Feature Layer",
+            "description": "test",
+            "subLayers": [],
+            "minScale": 10000,
+            "maxScale": 0,
+        }
+        layer_0 = {
+            "id": 0,
+            "type": "Group Layer",
+            "description": "test",
+            "subLayers": [{"id": 1}],
+            "minScale": 20000,
+            "maxScale": 5000,
+        }
         arcgis.session.get().json.side_effect = [layer_0, layer_1]
 
         expected_layer_1 = copy.deepcopy(layer_1)

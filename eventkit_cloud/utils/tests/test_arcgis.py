@@ -10,12 +10,9 @@ from eventkit_cloud.utils.arcgis import arcgis_layer
 logger = logging.getLogger(__name__)
 
 
-
-
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(arcgis_layer))
     return tests
-
 
 
 # Note: For these tests we import the functions in the tests,

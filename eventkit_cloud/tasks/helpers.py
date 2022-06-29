@@ -665,8 +665,9 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
 
     service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
     metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
-    arcgis_layer = ArcGISLayer(data_provider_task_record.provider.slug, service_capabilities,
-                               os.path.basename(file_info["file_path"]))
+    arcgis_layer = ArcGISLayer(
+        data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
+    )
     doc = arcgis_layer.get_cim_layer_document()
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))

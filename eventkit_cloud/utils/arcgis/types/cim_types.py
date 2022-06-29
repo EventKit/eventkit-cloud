@@ -397,11 +397,13 @@ class Envelope(TypedDict, total=False):
     zmax: int
     zmin: int
 
+
 CurveGeometry = Union[Point, "Curve"]
 Path: TypeAlias = Union[Point, list[Point], list[list[Point]]]
 CurvePath: TypeAlias = Union[CurveGeometry, list[CurveGeometry], list[list[CurveGeometry]]]
 Ring: TypeAlias = list[Union[Point, list[Point]]]
 CurveRing: TypeAlias = Union[CurveGeometry, list[CurveGeometry], list[list[CurveGeometry]]]
+
 
 class Multipoint(_Geometry, total=False):
     points: list[Point]
