@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-import sys
+
 
 
 def update_providers(file_path, skip_missing=False):

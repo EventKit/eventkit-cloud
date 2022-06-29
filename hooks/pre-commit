@@ -4,11 +4,8 @@ set -e
 
 echo "Running Linters..."
 docker-compose exec -T webpack npm run eslint
-<<<<<<< HEAD
-docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --check --config config/pyproject.toml eventkit_cloud'
-=======
+
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --check eventkit_cloud'
->>>>>>> master
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake8 eventkit_cloud'
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && isort --check eventkit_cloud'
 docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && mypy eventkit_cloud'
