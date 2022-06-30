@@ -264,8 +264,18 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         help_text="This determines the highest zoom level the tile export will seed to.",
     )
-    config = models.TextField(
-        default="",
+    # config = models.TextField(
+    #     default="",
+    #     null=True,
+    #     blank=True,
+    #     verbose_name="Configuration",
+    #     help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
+    #                           with a Sources key of imagery and a Service Layer name of imagery; the validator also
+    #                           requires a layers section, but this isn't used.
+    #                           OSM Services also require a YAML configuration.""",
+    # )
+    config = models.JSONField(
+        default=dict,
         null=True,
         blank=True,
         verbose_name="Configuration",
@@ -435,9 +445,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config, Loader=CLoader)
-        url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
-        type = config.get("sources", {}).get("info", {}).get("type")
+        url = self.config.get("sources", {}).get("info", {}).get("req", {}).get("url")
+        type = self.config.get("sources", {}).get("info", {}).get("type")
         if url:
             return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
 
