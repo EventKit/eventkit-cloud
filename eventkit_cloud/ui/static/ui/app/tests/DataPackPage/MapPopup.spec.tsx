@@ -20,7 +20,7 @@ describe('LoadButtons component', () => {
             expiration: '2017-03-10T15:52:27.500Z',
             user: 'test user',
         },
-        detailUrl: 'cloud.eventkit.test',
+        detailUrl: 'host.docker.internal',
         handleZoom: sinon.spy(),
         handlePopupClose: sinon.spy(),
         ...(global as any).eventkit_test_props,

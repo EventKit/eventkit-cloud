@@ -15,15 +15,15 @@ It's also required that you change some of the default Docker settings.  You'll 
 
 Prior to using the EventKit docker setup, two variables must be set in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
-Typically `SITE_NAME` is set to 'cloud.eventkit.test' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
+Typically `SITE_NAME` is set to 'host.docker.internal' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-This is usually done by using `export SITE_NAME=cloud.eventkit.test` on OSX/Linux or `setx SITE_NAME cloud.eventkit.test` on Windows.
+This is usually done by using `export SITE_NAME=host.docker.internal` on OSX/Linux or `setx SITE_NAME host.docker.internal` on Windows.
 
-You'll also need to open an elevated shell/command prompt add cloud.eventkit.test to the hosts file:
+You'll also need to open an elevated shell/command prompt add host.docker.internal to the hosts file:
 
-On Linux: <code>echo "127.0.0.1  cloud.eventkit.test" > /etc/hosts</code>
+On Linux: <code>echo "127.0.0.1  host.docker.internal" > /etc/hosts</code>
 
-On Windows: <code>echo "127.0.0.1  cloud.eventkit.test" > "C:\Windows\System32\drivers\etc\hosts"</code>
+On Windows: <code>echo "127.0.0.1  host.docker.internal" > "C:\Windows\System32\drivers\etc\hosts"</code>
 
 If you changed the `SITE_IP` to a local available IP address instead of `127.0.0.1`, you'll want to use that same IP in the hosts file.
 
@@ -33,7 +33,7 @@ After you have the above steps completed you can proceed on to either the Makefi
 
 A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
 
-After running `make fresh` you can hit the site directly at the URL you chose for the `SITE_NAME` which is generally `cloud.eventkit.test`.
+After running `make fresh` you can hit the site directly at the URL you chose for the `SITE_NAME` which is generally `host.docker.internal`.
 
 ## Manual Setup
 
@@ -61,7 +61,7 @@ _Note: if running the docker setup with an IP set other than 127.0.0.1, then the
 cd eventkit-cloud
 docker-compose run --rm eventkit python manage.py runinitial setup
 docker-compose up</pre>
-Then open a browser and navigate to http://cloud.eventkit.test
+Then open a browser and navigate to http://host.docker.internal
 
 Linux users have indicated issues with the docker setup.  That is because it mounts directories in the containers, and on linux the container user and host user permissions are mapped. To solve this problem run:
 <pre>groupadd -g 880 eventkit

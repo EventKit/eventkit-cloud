@@ -9,13 +9,13 @@ Note: Many settings merely look for the value to exist in the environment to mea
 
 ### Site
 The sitename and the hostname are added to allowed hosts.  This is used for security purposes.  The SITE_NAME should match what users are accessing the site on.
-<pre>HOSTNAME=cloud.eventkit.test</pre>
+<pre>HOSTNAME=host.docker.internal</pre>
 (default: the host machines hostname)
-<pre>SITE_NAME=cloud.eventkit.test</pre>
+<pre>SITE_NAME=host.docker.internal</pre>
 (default: HOSTNAME)
 
 The SITE_URL is used when providing links for users.  This should include the SITE_NAME but can provide additional context like https.
-<pre>SITE_URL=http://cloud.eventkit.test</pre>
+<pre>SITE_URL=http://host.docker.internal</pre>
 (default: http://<SITE_NAME>)
 
 The SECRET_KEY is a django setting used to encrypt certain items with in the application

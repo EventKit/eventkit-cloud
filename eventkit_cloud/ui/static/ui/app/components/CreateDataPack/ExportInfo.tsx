@@ -311,7 +311,7 @@ const dummyProvider = {
     level_to: 13,
     supported_formats: [{
         uid: 'fakeduid',
-        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        url: 'http://host.docker.internal/api/formats/gpkg',
         slug: 'gpkg',
         name: 'Geopackage',
         description: 'GeoPackage',

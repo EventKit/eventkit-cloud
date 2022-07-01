@@ -49,7 +49,7 @@ class TestStyles(TestCase):
             "name": "test",
             "project": "Test",
             "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
-            "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
+            "url": "http://host.docker.internal/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
         }
 
         returnvalue = generate_qgs_style(metadata)

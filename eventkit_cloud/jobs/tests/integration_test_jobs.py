@@ -41,7 +41,7 @@ class TestJob(TestCase):
             password = os.getenv("EVENTKIT_PASS", "@dm1n")
         verify = getattr(settings, "SSL_VERIFICATION", True)
         self.base_url = os.getenv(
-            "BASE_URL", "http://{0}".format(getattr(settings, "SITE_NAME", "cloud.eventkit.test"))
+            "BASE_URL", "http://{0}".format(getattr(settings, "SITE_NAME", "host.docker.internal"))
         )
         self.login_url = self.base_url + "/api/login/"
         self.create_export_url = self.base_url + "/status/create"

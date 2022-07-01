@@ -25,7 +25,7 @@ def string2bool(string_value):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('url', help='The EventKit instance base url (i.e. http://cloud.eventkit.test).')
+    parser.add_argument('url', help='The EventKit instance base url (i.e. http://host.docker.internal).')
     parser.add_argument('-s', '--sources', nargs='+', default='',
                         help='The slugs of sources to check, if not included all visible sources are checked.')
     parser.add_argument('--verify', default='',
