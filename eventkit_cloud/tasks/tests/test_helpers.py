@@ -349,7 +349,7 @@ class TestHelpers(TestCase):
 </MissionPackageManifest>"""
         example_metadata = {
             "name": example_name,
-            "url": "http://cloud.eventkit.test/status/b4e7e799-8eb6-4d52-98b4-3fcaed619cc9",
+            "url": "http://host.docker.internal/status/b4e7e799-8eb6-4d52-98b4-3fcaed619cc9",
             "description": "test",
             "project": "test",
             "projections": [4326],

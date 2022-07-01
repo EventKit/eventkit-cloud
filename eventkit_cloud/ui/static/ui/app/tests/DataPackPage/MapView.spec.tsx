@@ -45,7 +45,7 @@ const providers = [{
 function getRuns() {
     return [{
         uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://host.docker.internal/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
         started_at: '2017-03-10T15:52:35.637331Z',
         finished_at: '2017-03-10T15:52:39.837Z',
         user: 'admin',
@@ -56,7 +56,7 @@ function getRuns() {
             event: 'Test1 event',
             featured: false,
             description: 'Test1 description',
-            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            url: 'http://host.docker.internal/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -88,7 +88,7 @@ function getRuns() {
     },
     {
         uid: 'c7466114-8c0c-4160-8383-351414b11e37',
-        url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+        url: 'http://host.docker.internal/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
         started_at: '2017-03-10T15:52:29.311523Z',
         finished_at: '2017-03-10T15:52:33.612Z',
         user: 'notAdmin',
@@ -99,7 +99,7 @@ function getRuns() {
             event: 'Test2 event',
             featured: true,
             description: 'Test2 description',
-            url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+            url: 'http://host.docker.internal/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -131,7 +131,7 @@ function getRuns() {
     },
     {
         uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
-        url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+        url: 'http://host.docker.internal/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
         started_at: '2017-03-10T15:52:18.796929Z',
         finished_at: '2017-03-10T15:52:27.500Z',
         user: 'admin',
@@ -142,7 +142,7 @@ function getRuns() {
             event: 'Test3 event',
             featured: false,
             description: 'Test3 description',
-            url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+            url: 'http://host.docker.internal/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -207,7 +207,7 @@ describe('MapView component', () => {
         clearAoiInfo: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
-    
+
     let props;
     let wrapper;
     let instance;
