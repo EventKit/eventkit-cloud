@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeAlias, TypedDict, Union, Sequence
+from typing import Any, Literal, TypeAlias, TypedDict, Union
 
 # https://github.com/Esri/cim-spec/blob/master/docs/v2/CIMEnumerations.md
 AltitudeMode = Literal["ClampToGround", "RelativeToGround", "Absolute"]
@@ -387,15 +387,15 @@ CIMStackedBarChartMarker = Any
 
 
 class Envelope(TypedDict, total=False):
-    mmax: int
-    mmin: int
+    mmax: float
+    mmin: float
     spatialReference: SpatialReference
-    xmax: int
-    xmin: int
-    ymax: int
-    ymin: int
-    zmax: int
-    zmin: int
+    xmax: float
+    xmin: float
+    ymax: float
+    ymin: float
+    zmax: float
+    zmin: float
 
 
 CurveGeometry = Union[Point, "Curve"]
@@ -449,7 +449,8 @@ class GeometryBag(_Geometry):
     points: list["Geometry"]  # type: ignore  # cyclic
 
 
-Geometry: TypeAlias = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope, GeometryBag, Area, Path, CurvePath, Ring, CurveRing, Curve]  # type: ignore  # cyclic
+Geometry: TypeAlias = Union[Point, Multipoint, Multipatch, Polyline, Polygon, Envelope, GeometryBag, Area, Path,
+                            CurvePath, Ring, CurveRing, Curve]  # type: ignore  # cyclic
 
 
 CIMWaterFill = Any
@@ -1024,10 +1025,13 @@ class CIMNumericFormat(TypedDict):
     roundingValue: int
 
 
-class CIMFieldDescription(TypedDict):
+class _CIMFieldDescription(TypedDict, total=False):
     type: Literal["CIMFieldDescription"]
-    alias: str
     fieldName: str
+
+
+class CIMFieldDescription(_CIMFieldDescription, total=False):
+    alias: str
     numberFormat: CIMNumericFormat
     visible: bool
     searchMode: Literal["Exact"]
@@ -1159,13 +1163,17 @@ CIMClusteringFeatureReduction = Any
 FeatureReduction = Union[CIMBinningFeatureReduction, CIMClusteringFeatureReduction]
 
 
+class _LayerDefinitions(TypedDict, total=False):
+    layerDefinitions: list["LayerDefinition"]  # type: ignore  # cyclic
+
+
 class CIMGeoFeatureLayerDefinition(TypedDict, total=False):
     actions: list[CIMLayerAction]
     exclusionSet: int
-    featureMasks: CIMDataConnection
-    labelClasses: CIMLabelClass
+    featureMasks: list[CIMDataConnection]
+    labelClasses: list[CIMLabelClass]
     labelVisibility: bool
-    maskedSymbolLayers: CIMSymbolLayerMasking
+    maskedSymbolLayers: list[CIMSymbolLayerMasking]
     mostCurrentRenderer: Renderer
     renderer: Renderer
     scaleSymbols: bool
@@ -1180,7 +1188,7 @@ class CIMGeoFeatureLayerDefinition(TypedDict, total=False):
     showTracks: bool
 
 
-class CIMFeatureLayer(CIMDefinition, CIMLayerDefinition, total=False):
+class CIMFeatureLayer(CIMDefinition, CIMGeoFeatureLayerDefinition, CIMLayerDefinition, _LayerDefinitions, total=False):
     type: Literal["CIMFeatureLayer"]
     autoGenerateFeatureTemplates: bool
     featureElevationExpression: str
@@ -1190,18 +1198,21 @@ class CIMFeatureLayer(CIMDefinition, CIMLayerDefinition, total=False):
     featureCacheType: Literal["Session"]
     displayFiltersType: Literal["ByScale"]
     featureBlendingMode: BlendingMode
-    labelClasses: list[CIMLabelClass]
-    renderer: CIMSimpleRenderer
-    scaleSymbols: bool
-    snappable: bool
 
 
-class CIMStandaloneTableContainer(TypedDict):
+class CIMStandaloneTableContainer(TypedDict, total=False):
     standaloneTables: list[str]
 
 
-class CIMGroupLayer(CIMDefinition, CIMLayerDefinition, CIMStandaloneTableContainer):
+class CIMGroupLayerDefinition(TypedDict, total=False):
+    layers: list[str]
     symbolLayerDrawing: CIMSymbolLayerDrawing
+
+
+class CIMGroupLayer(
+    CIMDefinition, CIMLayerDefinition, CIMGroupLayerDefinition, CIMStandaloneTableContainer, _LayerDefinitions
+):
+    type: Literal["CIMGroupLayer"]
 
 
 LayerDefinition = Union[  # type: ignore  # cyclic
@@ -1217,7 +1228,7 @@ class CIMVersion(TypedDict):
 class CIMLayerDocument(CIMVersion):
     type: Literal["CIMLayerDocument"]
     layers: list[str]
-    layerDefinitions: list[CIMDefinition]
+    layerDefinitions: list[LayerDefinition]
     binaryReferences: list[CIMBinaryReference]
     elevationSurfaces: list[CIMMapElevationSurface]
     rGBColorProfile: Literal["sRGB IEC61966-2-1 noBPC"]

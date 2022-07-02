@@ -2,7 +2,7 @@ import copy
 import logging
 import re
 import uuid
-from typing import Optional
+from typing import Optional, cast, Union
 
 from django.conf import settings
 
@@ -22,19 +22,18 @@ class ArcGISLayer:
         self._service_specification = service_specification
         self._file_path = file_path or ".\\*.gpkg"
 
-    def get_geometry(self, service_symbol: service_types.Symbol) -> cim_types.Geometry:
-        return get_marker_geometry(service_symbol)
-
-    def get_cim_color(self, service_color: service_types.Color) -> cim_types.CIMRGBColor:
+    @staticmethod
+    def get_cim_color(service_color: service_types.Color) -> cim_types.CIMRGBColor:
         color: cim_types.CIMRGBColor = {
             "type": "CIMRGBColor",
             "values": [service_color[0], service_color[1], service_color[2], int((service_color[3] / 255) * 100)],
         }
         return color
 
-    def get_dash_template(self, service_symbol: service_types.Symbol) -> Optional[list[int]]:
+    @staticmethod
+    def get_dash_template(service_symbol: service_types.SimpleLineSymbol) -> Optional[list[int]]:
         # The dashTemplate controls the line/spaceing (i.e. [line, space, line, space, line, space])
-        match service_symbol["style"]:
+        match service_symbol.get("style"):
             case "esriSLSDash":
                 return [6, 6]
             case "esriSLSDashDot":
@@ -59,109 +58,137 @@ class ArcGISLayer:
                 return [1, 2]
             case "esriSLSSolid":
                 return None
+            case _:
+                return None
 
-    def get_cim_solid_stroke(self, service_symbol: service_types.Symbol) -> cim_types.CIMSolidStroke:
+    def get_cim_solid_stroke(
+        self,
+        service_symbol: Union[
+            service_types.SimpleLineSymbol, service_types.SimpleMarkerSymbol, service_types.TextSymbol
+        ],
+    ) -> cim_types.CIMSolidStroke:
+        dash_template = []
+        width = 1
+        color: cim_types.CIMRGBColor = self.get_cim_color((0, 0, 0, 255))
+        match service_symbol:
+            case {"type": "esriSLS"}:
+                sls: service_types.SimpleLineSymbol = cast(service_types.SimpleLineSymbol, service_symbol)
+                width = sls["width"] or width
+                color = self.get_cim_color(sls["color"])
+                dash_template = self.get_dash_template(sls)
+            case {"type": "esriTS"}:
+                ts: service_types.TextSymbol = cast(service_types.TextSymbol, service_symbol)
+                width = ts["borderLineSize"] or 0
+                color = self.get_cim_color(ts["borderLineColor"]) if ts["borderLineColor"] else color
+            case {"type": "esriSMS"}:
+                sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
+                width = sms.get("outline", {}).get("width") or 0
+                service_color: service_types.Color = sms.get("outline", {}).get("color")
+                color = self.get_cim_color(service_color) if service_color else color
+            case _:
+                if settings.DEBUG:
+                    logger.error("Could not get_cim_solid_stroke for the service symbol: %s", service_symbol)
+                    raise NotImplementedError("This layer has unsupported line types.")
+
         line: cim_types.CIMSolidStroke = {
             "type": "CIMSolidStroke",
             "enable": True,
-            "capStyle": "Round",
-            "joinStyle": "Round",
-            "width": service_symbol.get("width", 1),
-            "color": self.get_cim_color(service_symbol.get("color", [0, 0, 0, 255])),
+            "width": width,
+            "color": color,
         }
-        dash_template = self.get_dash_template(service_symbol)
+
         if dash_template:
             effect = {
                 "type": "CIMGeometricEffectDashes",
                 "dashTemplate": dash_template,
-                "lineDashEnding": "NoConstraint",
-                "controlPointEnding": "NoConstraint",
             }
             line["effects"] = [effect]
         return line
 
-    def get_cim_solid_fill(self, service_symbol: service_types.Symbol) -> cim_types.CIMSolidFill:
+    def get_cim_solid_fill(
+        self,
+        service_symbol: Union[
+            service_types.TextSymbol, service_types.SimpleFillSymbol, service_types.SimpleMarkerSymbol
+        ],
+    ) -> cim_types.CIMSolidFill:
         return {
             "type": "CIMSolidFill",
             "enable": True,
-            "color": self.get_cim_color(service_symbol.get("color", [0, 0, 0, 255])),
+            "color": self.get_cim_color(service_symbol.get("color") or [0, 0, 0, 255]),
         }
 
     def get_symbol_layers(self, service_symbol: service_types.Symbol) -> list[cim_types.SymbolLayer]:
-        match service_symbol["type"]:
-            case "esriSLS":
-                return [self.get_cim_solid_stroke(service_symbol)]
-            case "esriSFS":
-                layers = []
-                if service_symbol.get("outline"):
-                    layers += [self.get_cim_solid_stroke(service_symbol.get("outline"))]
-                layers += [self.get_cim_solid_fill(service_symbol)]
-                return layers
+        match service_symbol:
+            case {"type": "esriSLS"}:
+                sls: service_types.SimpleLineSymbol = cast(service_types.SimpleLineSymbol, service_symbol)
+                return [self.get_cim_solid_stroke(sls)]
+            case {"type": "esriSFS"}:
+                sfs: service_types.SimpleFillSymbol = cast(service_types.SimpleFillSymbol, service_symbol)
+                return [self.get_cim_solid_stroke(sfs["outline"]), self.get_cim_solid_fill(sfs)]
+            case {"type": "esriTS"}:
+                ts: service_types.TextSymbol = cast(service_types.TextSymbol, service_symbol)
+                return [self.get_cim_solid_fill(ts)]
+            case {"type": "esriSMS"}:
+                sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
+                return [self.get_cim_solid_stroke(sms), self.get_cim_solid_fill(sms)]
             case _:
                 if settings.DEBUG:
-                    raise NotImplementedError()
+                    logger.error("Got an unsupported service symbol type %s", service_symbol)
+                    raise NotImplementedError("This layer uses an unsupported symbol type: %s", service_symbol)
                 return []
 
-    def get_cim_marker_graphic(self, service_symbol: service_types.Symbol) -> cim_types.CIMMarkerGraphic:
+    def get_cim_marker_graphic(self, service_symbol: service_types.SimpleMarkerSymbol) -> cim_types.CIMMarkerGraphic:
+        poly_symbol: cim_types.CIMPolygonSymbol = {
+            "type": "CIMPolygonSymbol",
+            "symbolLayers": self.get_symbol_layers(service_symbol),
+        }
         graphic: cim_types.CIMMarkerGraphic = {
             "type": "CIMMarkerGraphic",
-            "geometry": self.get_geometry(service_symbol),
-            "symbol": {"type": "CIMPolygonSymbol", "symbolLayers": self.get_symbol_layers(service_symbol)},
+            "geometry": get_marker_geometry(service_symbol),
+            "symbol": poly_symbol,
         }
         return graphic
 
-    def get_cim_vector_marker(self, service_symbol: service_types.Symbol) -> cim_types.CIMVectorMarker:
+    def get_envelope(self, size: int, xoffset: int, yoffset: int) -> cim_types.Envelope:
+        offset: float = size / 2
+        return {"xmin": xoffset - offset, "ymin": yoffset - offset, "xmax": xoffset + offset, "ymax": yoffset + offset}
+
+    def get_cim_vector_marker(self, service_symbol: service_types.SimpleMarkerSymbol) -> cim_types.CIMVectorMarker:
+        size: int = service_symbol["size"]
+        xoffset: int = int(service_symbol.get("xoffset") or 0)
+        yoffset: int = int(service_symbol.get("yoffset") or 0)
         marker: cim_types.CIMVectorMarker = {
             "type": "CIMVectorMarker",
             "enable": True,
-            "anchorPointUnits": "Relative",
-            "dominantSizeAxis3D": "Z",
-            "size": 4,
-            "billboardMode3D": "FaceNearPlane",
-            "frame": {"xmin": -2, "ymin": -2, "xmax": 2, "ymax": 2},
+            "size": service_symbol["size"],
+            "frame": self.get_envelope(size, xoffset, yoffset),
             "markerGraphics": [self.get_cim_marker_graphic(service_symbol)],
-            "respectFrame": True,
         }
         return marker
 
-    def get_cim_picture_marker(self, service_symbol: service_types.Symbol) -> cim_types.CIMPictureMarker:
+    @staticmethod
+    def get_cim_picture_marker(service_symbol: service_types.PictureMarkerSymbol) -> cim_types.CIMPictureMarker:
+        color: cim_types.CIMRGBColor = {"type": "CIMRGBColor", "values": [255, 255, 255, 100]}
         marker: cim_types.CIMPictureMarker = {
             "type": "CIMPictureMarker",
             "enable": True,
             "anchorPoint": {"x": 0, "y": 0, "z": 0},
             "anchorPointUnits": "Relative",
             "dominantSizeAxis3D": "Y",
-            "size": 12,
+            "size": service_symbol["height"],
+            "rotation": service_symbol["angle"],
+            "offsetX": service_symbol["xoffset"],
+            "offsetY": service_symbol["yoffset"],
             "billboardMode3D": "FaceNearPlane",
             "invertBackfaceTexture": True,
             "scaleX": 1,
             "textureFilter": "Draft",
-            "tintColor": {"type": "CIMRGBColor", "values": [255, 255, 255, 100]},
+            "tintColor": color,
             "url": f"data:{service_symbol['contentType']};base64,{service_symbol['imageData']}",
         }
         return marker
 
-    def get_symbol_layer(self, service_symbol: service_types.Symbol) -> cim_types.SymbolLayer:
-        match service_symbol.get("type"):
-            case "CIMSymbolReference":
-                return self.get_symbol(service_symbol)
-            case "esriSLS":
-                return self.get_cim_line_symbol(service_symbol)
-            case "esriSFS":
-                return self.get_cim_polygon_symbol(service_symbol)
-            case "esriSMS":
-                return self.get_cim_vector_marker(service_symbol)
-            case "esriPFS":
-                return self.get_cim_polygon_symbol(service_symbol)
-            case "esriPMS":
-                return self.get_cim_picture_marker(service_symbol)
-            case "esriTS":
-                return self.get_cim_text_symbol(service_symbol)
-            case _:
-                logger.error("Unsupported Symbol %s was used")
-                return None
-
-    def get_cim_line_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMLineSymbol:
+    def get_cim_line_symbol(self, service_symbol: service_types.SimpleLineSymbol) -> cim_types.CIMLineSymbol:
         symbol: cim_types.CIMLineSymbol = {
             "type": "CIMLineSymbol",
             "symbolLayers": self.get_symbol_layers(service_symbol),
@@ -170,27 +197,56 @@ class ArcGISLayer:
 
     def get_cim_mesh_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMMeshSymbol:
         if settings.DEBUG:
-            raise NotImplementedError()
-        return None
+            logger.error("This layer tried to create unsupported mesh_symbol %s", service_symbol)
+            raise NotImplementedError("Mesh symbols aren't supported.")
+        return {"type": "CIMMeshSymbol", "symbolLayers": self.get_symbol_layers(service_symbol)}
 
-    def get_cim_point_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMPointSymbol:
+    def get_cim_point_symbol(
+        self, service_symbol: Union[service_types.SimpleMarkerSymbol, service_types.PictureMarkerSymbol]
+    ) -> cim_types.CIMPointSymbol:
         symbol: cim_types.CIMPointSymbol = {
             "type": "CIMPointSymbol",
-            "symbolLayers": [self.get_symbol_layer(service_symbol)],
+            "symbolLayers": self.get_symbol_layers(service_symbol),
             "haloSize": 1,
             "scaleX": 1,
             "angleAlignment": "Display",
         }
         return symbol
 
-    def get_cim_polygon_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMPolygonSymbol:
+    def get_cim_polygon_symbol(
+        self, service_symbol: Union[service_types.SimpleFillSymbol, service_types.PictureFillSymbol]
+    ) -> cim_types.CIMPolygonSymbol:
         symbol: cim_types.CIMPolygonSymbol = {
             "type": "CIMPolygonSymbol",
             "symbolLayers": self.get_symbol_layers(service_symbol),
         }
         return symbol
 
-    def get_cim_text_symbol(self, service_symbol: service_types.Symbol) -> cim_types.CIMTextSymbol:
+    @staticmethod
+    def get_font_properties(service_font: service_types.Font) -> cim_types.CIMTextSymbol:
+        text_symbol: cim_types.CIMTextSymbol = {
+            "type": "CIMTextSymbol",
+            "fontFamilyName": service_font["family"],
+            "height": service_font["size"],
+        }
+        match service_font["decoration"]:
+            case "line-through":
+                text_symbol.update({"strikethrough": True})
+            case "underline":
+                text_symbol.update({"underline": True})
+        match service_font["style"]:
+            case "italic":
+                text_symbol.update({"fontStyleName": "Italic"})
+            case "oblique":
+                text_symbol.update({"fontStyleName": "Oblique"})
+        if service_font["weight"] in ("bold", "bolder"):
+            text_symbol.update({"fontStyleName": "Bold"})
+        return text_symbol
+
+    def get_cim_text_symbol(self, service_symbol: service_types.TextSymbol) -> cim_types.CIMTextSymbol:
+        horizontal_alignment: cim_types.HorizontalAlignment = cast(
+            cim_types.HorizontalAlignment, (service_symbol.get("horizontalAlignment") or "Left").capitalize()
+        )
         symbol: cim_types.CIMTextSymbol = {
             "type": "CIMTextSymbol",
             "blockProgression": "TTB",
@@ -198,35 +254,16 @@ class ArcGISLayer:
             "extrapolateBaselines": True,
             "fontEffects": "Normal",
             "fontEncoding": "Unicode",
-            "fontFamilyName": service_symbol.get("font", {}).get("family", "Tahoma"),
-            "fontStyleName": "Regular",
             "fontType": "Unspecified",
-            "height": service_symbol.get("font", {}).get("size", 10),
             "hinting": "Default",
-            "horizontalAlignment": "Left",
-            "kerning": service_symbol.get("kerning", True),
+            "horizontalAlignment": horizontal_alignment,
+            "kerning": service_symbol.get("kerning") or True,
             "letterWidth": 100,
             "ligatures": True,
             "lineGapType": "ExtraLeading",
             "symbol": {
                 "type": "CIMPolygonSymbol",
-                "symbolLayers": [
-                    {
-                        "type": "CIMSolidStroke",
-                        "enable": True,
-                        "capStyle": "Round",
-                        "joinStyle": "Round",
-                        "lineStyle3D": "Strip",
-                        "miterLimit": 10,
-                        "width": service_symbol.get("borderLineSize") or 0,
-                        "color": self.get_cim_color(service_symbol.get("borderLineColor") or [0, 0, 0, 255]),
-                    },
-                    {
-                        "type": "CIMSolidFill",
-                        "enable": True,
-                        "color": self.get_cim_color(service_symbol.get("color") or [0, 0, 0, 255]),
-                    },
-                ],
+                "symbolLayers": [self.get_cim_solid_stroke(service_symbol), self.get_cim_solid_fill(service_symbol)],
             },
             "textCase": "Normal",
             "textDirection": "LTR",
@@ -235,10 +272,16 @@ class ArcGISLayer:
             "wordSpacing": 100,
             "billboardMode3D": "FaceNearPlane",
         }
+        symbol.update(self.get_font_properties(service_symbol["font"]))
         if service_symbol.get("haloColor"):
+            fill_symbol: cim_types.CIMSolidFill = {
+                "type": "CIMSolidFill",
+                "enable": True,
+                "color": self.get_cim_color(service_symbol["haloColor"]),
+            }
             symbol.update(
                 {
-                    "haloSize": service_symbol.get("haloSize", 1),
+                    "haloSize": service_symbol.get("haloSize") or 1,
                     "haloSymbol": {
                         "type": "CIMPolygonSymbol",
                         "symbolLayers": [
@@ -252,46 +295,49 @@ class ArcGISLayer:
                                 "width": 0,
                                 "color": self.get_cim_color(service_symbol["haloColor"]),
                             },
-                            {
-                                "type": "CIMSolidFill",
-                                "enable": True,
-                                "color": self.get_cim_color(service_symbol["haloColor"]),
-                            },
+                            fill_symbol,
                         ],
                     },
                 }
             )
         return symbol
 
-    def get_cim_symbol_reference(
-        self, service_symbol: Optional[service_types.Symbol]
-    ) -> Optional[cim_types.CIMSymbolReference]:
-        if not service_symbol:
-            return None
-        symbol: cim_types.CIMSymbolReference = {"type": "CIMSymbolReference", "symbol": self.get_symbol(service_symbol)}
-        return symbol
+    def get_cim_symbol_reference(self, service_symbol: service_types.Symbol) -> cim_types.CIMSymbolReference:
+        symbol: Union[cim_types.Symbol, cim_types.CIMSymbolReference] = self.get_symbol(service_symbol)
+        if symbol and symbol["type"] == "CIMSymbolReference":
+            return symbol
+        cim_symbol: cim_types.Symbol = cast(cim_types.Symbol, self.get_symbol(service_symbol))
+        symbol_ref: service_types.CIMSymbolReference = {"type": "CIMSymbolReference", "symbol": cim_symbol}
+        return symbol_ref
 
-    def get_symbol(self, service_symbol: Optional[service_types.Symbol]) -> Optional[cim_types.Symbol]:
-        if not service_symbol:
-            return None
+    def get_symbol(
+        self, service_symbol: Optional[service_types.Symbol]
+    ) -> Union[cim_types.Symbol, cim_types.CIMSymbolReference]:
         match service_symbol.get("type"):
             case "CIMSymbolReference":
-                return self.get_symbol(service_symbol.get("symbol"))
+                sym_ref: service_types.CIMSymbolReference = cast(service_types.CIMSymbolReference, service_symbol)
+                return sym_ref
             case "esriSLS":
-                return self.get_cim_line_symbol(service_symbol)
+                sls: service_types.SimpleLineSymbol = cast(service_types.SimpleLineSymbol, service_symbol)
+                return self.get_cim_line_symbol(sls)
             case "esriSFS":
-                return self.get_cim_polygon_symbol(service_symbol)
+                sfs: service_types.SimpleFillSymbol = cast(service_types.SimpleFillSymbol, service_symbol)
+                return self.get_cim_polygon_symbol(sfs)
             case "esriSMS":
-                return self.get_cim_point_symbol(service_symbol)
+                sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
+                return self.get_cim_point_symbol(sms)
             case "esriPFS":
-                return self.get_cim_polygon_symbol(service_symbol)
+                pfs: service_types.PictureFillSymbol = cast(service_types.PictureFillSymbol, service_symbol)
+                return self.get_cim_polygon_symbol(pfs)
             case "esriPMS":
-                return self.get_cim_point_symbol(service_symbol)
+                pms: service_types.PictureMarkerSymbol = cast(service_types.PictureMarkerSymbol, service_symbol)
+                return self.get_cim_point_symbol(pms)
             case "esriTS":
-                return self.get_cim_text_symbol(service_symbol)
+                ts: service_types.TextSymbol = cast(service_types.TextSymbol, service_symbol)
+                return self.get_cim_text_symbol(ts)
             case _:
                 logger.error("Unsupported Symbol %s was used")
-                return None
+                return {}
 
     def get_cim_unique_value_class(self, value_info: service_types.UniqueValueInfo) -> cim_types.CIMUniqueValueClass:
         value_class: cim_types.CIMUniqueValueClass = {
@@ -304,10 +350,13 @@ class ArcGISLayer:
         }
         return value_class
 
-    def get_cim_unique_value_group(self, service_renderer: service_types.Renderer) -> cim_types.CIMUniqueValueGroup:
+    def get_cim_unique_value_group(
+        self, service_renderer: service_types.UniqueValueRenderer
+    ) -> cim_types.CIMUniqueValueGroup:
+        unique_value_infos: list[service_types.UniqueValueInfo] = service_renderer["uniqueValueInfos"]
         group: cim_types.CIMUniqueValueGroup = {
             "type": "CIMUniqueValueGroup",
-            "classes": [self.get_cim_unique_value_class(info) for info in service_renderer.get("uniqueValueInfos", [])],
+            "classes": [self.get_cim_unique_value_class(info) for info in unique_value_infos],
         }
         return group
 
@@ -324,13 +373,14 @@ class ArcGISLayer:
     def get_unique_value_renderer(
         self, service_renderer: service_types.UniqueValueRenderer
     ) -> cim_types.CIMUniqueValueRenderer:
+        default_symbol: Optional[service_types.Symbol] = service_renderer.get("defaultSymbol")
         fields = [
             field
-            for field in [
+            for field in (
                 service_renderer.get("field1"),
                 service_renderer.get("field2"),
                 service_renderer.get("field3"),
-            ]
+            )
             if field
         ]
         renderer: cim_types.CIMUniqueValueRenderer = {
@@ -346,27 +396,30 @@ class ArcGISLayer:
                 "minAlpha": 100,
                 "maxAlpha": 100,
             },
-            "defaultLabel": service_renderer.get("defaultLabel", "Other"),
-            "defaultSymbol": self.get_cim_symbol_reference(service_renderer.get("defaultSymbol")),
+            "defaultLabel": service_renderer.get("defaultLabel") or "Other",
+            "defaultSymbol": self.get_cim_symbol_reference(default_symbol) if default_symbol else None,
             "defaultSymbolPatch": "Default",
             "fields": fields,
             "groups": [self.get_cim_unique_value_group(service_renderer)],
-            "useDefaultSymbol": True,
+            "useDefaultSymbol": bool(default_symbol),
             "polygonSymbolColorTarget": "Fill",
         }
         return renderer
 
-    def get_cim_renderer(self, drawingInfo: service_types.DrawingInfo) -> Optional[cim_types.Renderer]:
+    def get_cim_renderer(self, drawingInfo: service_types.DrawingInfo) -> cim_types.Renderer:
         renderer = drawingInfo.get("renderer")
         match renderer:
             case {"type": "simple"}:
-                return self.get_simple_renderer(renderer)
+                sr: service_types.SimpleRenderer = cast(service_types.SimpleRenderer, renderer)
+                return self.get_simple_renderer(sr)
             case {"type": "uniqueValue"}:
-                return self.get_unique_value_renderer(renderer)
+                uv: service_types.UniqueValueRenderer = cast(service_types.UniqueValueRenderer, renderer)
+                return self.get_unique_value_renderer(uv)
             case _:
                 if settings.DEBUG:
-                    raise NotImplementedError("The renderer type: %s is not supported", renderer.get("type"))
-                return None
+                    type = renderer.get("type") if renderer else "NO RENDERER"
+                    raise NotImplementedError("The renderer: %s is not supported", type)
+                return {}
 
     def get_cim_field_descriptions(
         self, service_spec: service_types.MapServiceSpecification
@@ -423,46 +476,73 @@ class ArcGISLayer:
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementAboveAlong":
 
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveAlong": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "aboveAlong": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementAboveBefore":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "aboveStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementAboveEnd":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveEnd": 1}
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "aboveEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementAboveStart":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "aboveStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "aboveStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementBelowAfter":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowEnd": 1}
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "belowEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementBelowAlong":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowAlong": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "belowAlong": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementBelowBefore":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "belowStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementBelowEnd":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowEnd": 1}
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "belowEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementBelowStart":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "belowStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "belowStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementCenterAfter":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerEnd": 1}
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "centerEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementCenterAlong":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerAlong": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "centerAlong": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementCenterBefore":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "centerStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementCenterEnd":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerEnd": 1}
+                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "centerEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementCenterStart":
-                placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPosition", "centerStart": 1}
+                placement_properties["lineLabelPriorities"] = {
+                    "type": "CIMStandardLineLabelPriorities",
+                    "centerStart": 1,
+                }
                 placement_properties["featureType"] = "Line"
             case "esriServerPointLabelPlacementAboveCenter":
                 placement_properties["pointPlacementPriorities"] = {
@@ -521,9 +601,9 @@ class ArcGISLayer:
         return placement_properties
 
     def get_cim_label_classes(
-        self, name: str = None, label_infos: list[service_types.LabelingInfo] = None
+        self, name: str = None, label_infos: Optional[list[service_types.LabelingInfo]] = None
     ) -> list[cim_types.CIMLabelClass]:
-        label_classes = []
+        label_classes: list[cim_types.CIMLabelClass] = []
         label_class_name = copy.deepcopy(name)
         if not label_class_name:
             label_class_name = str(uuid.uuid4())
@@ -538,7 +618,7 @@ class ArcGISLayer:
                 "type": "CIMLabelClass",
                 "priority": 1,
                 "expressionTitle": "Custom",
-                "expression": ArcGISLayer.parse_label_expression(label_info.get("labelExpression")),
+                "expression": self.parse_label_expression(label_info.get("labelExpression")),
                 "expressionEngine": "Python",
                 "featuresToLabel": "AllVisibleFeatures",
                 "textSymbol": text_symbol,
@@ -547,7 +627,7 @@ class ArcGISLayer:
                 "visibility": True,
                 "minimumScale": label_info["minScale"],
                 "maximumScale": label_info["maxScale"],
-                "standardLabelPlacementProperties": ArcGISLayer.get_cim_standard_label_placement_properties(
+                "standardLabelPlacementProperties": self.get_cim_standard_label_placement_properties(
                     label_info.get("labelPlacement")
                 ),
             }
@@ -597,7 +677,7 @@ class ArcGISLayer:
             "scaleSymbols": True,
             "snappable": True,
             "labelClasses": self.get_cim_label_classes(
-                name=service_spec["name"], label_infos=service_spec.get("drawingInfo", {}).get("labelingInfo", [])
+                name=service_spec["name"], label_infos=service_spec.get("drawingInfo", {}).get("labelingInfo")
             ),
             "labelVisibility": True,
         }
@@ -698,7 +778,7 @@ class ArcGISLayer:
         }
 
         for regex, replacement in keywords.items():
-            python_label = re.sub(regex, replacement, python_label)
+            python_label = re.sub(regex, replacement, python_label)  # type: ignore
 
         return python_label
 
@@ -715,19 +795,19 @@ class ArcGISLayer:
 
     def flatten_layers(self, layer_group: cim_types.LayerDefinition) -> list[cim_types.LayerDefinition]:
         layers = []
-        layerDefinitions = layer_group.pop("layerDefinitions", [])
-        for layer in layerDefinitions:
+        for layer in layer_group.pop("layerDefinitions", []):
             layers += self.flatten_layers(layer)
         layers += [layer_group]
         return layers
 
     def get_cim_layer_document(self) -> cim_types.CIMLayerDocument:
         layer_group = self.get_cim_group_layer(self._layer_name, self._service_specification)
-        layer_definitions = self.flatten_layers(layer_group)
         # Deduplicate the layers.
-        layer_definitions = list({layer["uRI"]: layer for layer in layer_definitions}.values())
+        layer_definitions: list[cim_types.LayerDefinition] = list(
+            {layer["uRI"]: layer for layer in self.flatten_layers(layer_group)}.values()
+        )
 
-        cim_document = {
+        cim_document: cim_types.CIMLayerDocument = {
             "type": "CIMLayerDocument",
             "version": "2.7.0",
             "build": 26828,

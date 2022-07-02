@@ -117,9 +117,10 @@ def add_layers_to_group(
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
                 arcpy.AddMessage(e)
-            layer_file = os.path.abspath(os.path.join(datapack_path, layer_info.get("layer_file"))) or get_layer_file(
-                datapack_path, layer_info["type"], version
-            )
+            if layer_info.get("layer_file"):
+                layer_file = os.path.abspath(os.path.join(datapack_path, layer_info.get("layer_file")))
+            else:
+                layer_file = get_layer_file(datapack_path, layer_info["type"], version)
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 arcpy.AddWarning(
                     f"Skipping layer {vector_layer_name} because the file type is not supported for ArcPro {version}"

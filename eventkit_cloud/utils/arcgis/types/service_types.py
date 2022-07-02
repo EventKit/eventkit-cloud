@@ -1,4 +1,5 @@
-from typing import Any, Literal, Optional, TypedDict, Union
+from typing import Any, Literal, Optional, TypedDict, Union, TypeAlias
+from eventkit_cloud.utils.arcgis.types.cim_types import CIMSymbolReference
 
 
 class SpatialReference(TypedDict):
@@ -6,7 +7,7 @@ class SpatialReference(TypedDict):
     latestWkid: int
 
 
-Color = tuple[int, int, int, int]
+Color: TypeAlias = tuple[int, int, int, int]
 
 
 class Outline(TypedDict):
@@ -46,9 +47,9 @@ class InheritedDomain(TypedDict):
     type: Literal["inherited"]
 
 
-Domain = Union[CodedValueDomain, InheritedDomain, RangeDomain]
+Domain: TypeAlias = Union[CodedValueDomain, InheritedDomain, RangeDomain]
 
-DrawingTool = Literal[
+DrawingTool: TypeAlias = Literal[
     "esriFeatureEditToolAutoCompletePolygon",
     "esriFeatureEditToolCircle",
     "esriFeatureEditToolDownArrow",
@@ -66,9 +67,9 @@ DrawingTool = Literal[
     "esriFeatureEditToolUpArrow",
 ]
 
-Point = tuple[float, float]
-Ring = list[Point]
-Polyline = list[Point]
+Point: TypeAlias = tuple[float, float]
+Ring: TypeAlias = list[Point]
+Polyline: TypeAlias = list[Point]
 
 
 class MultiPointGeometry(TypedDict):
@@ -100,7 +101,7 @@ class PolylineGeometry(TypedDict):
     spatialReference: SpatialReference
 
 
-Geometry = Union[MultiPointGeometry, PointGeometry, PolygonGeometry, PolylineGeometry]
+Geometry: TypeAlias = Union[MultiPointGeometry, PointGeometry, PolygonGeometry, PolylineGeometry]
 
 LineStyle = Literal[
     "esriSLSDash",
@@ -128,10 +129,6 @@ FillStyle = Literal[
 ]
 
 
-class CIMSymbolReference(TypedDict):
-    type: Literal["CIMSymbolReference"]
-
-
 class SimpleLineSymbol(TypedDict):
     type: Literal["esriSLS"]
     style: LineStyle
@@ -143,10 +140,12 @@ class SimpleFillSymbol(TypedDict):
     type: Literal["esriSFS"]
     style: FillStyle
     color: Color
-    outline: SimpleLineSymbol
+    outline: Optional[SimpleLineSymbol]
 
 
-MarkerStyle = Literal["esriSMSCircle", "esriSMSCross", "esriSMSDiamond", "esriSMSSquare", "esriSMSTriangle", "esriSMSX"]
+MarkerStyle: TypeAlias = Literal[
+    "esriSMSCircle", "esriSMSCross", "esriSMSDiamond", "esriSMSSquare", "esriSMSTriangle", "esriSMSX"
+]
 
 
 class SimpleMarkerSymbol(TypedDict):
@@ -180,8 +179,8 @@ class PictureMarkerSymbol(TypedDict):
     url: str
     imageData: str
     contentType: str
-    width: float
-    height: float
+    width: int
+    height: int
     angle: int
     xoffset: int
     yoffset: int
@@ -198,9 +197,9 @@ class Font(TypedDict):
 class TextSymbol(TypedDict):
     type: Literal["esriTS"]
     color: Color
-    backgroundColor: Color
-    borderLineSize: int
-    borderLineColor: Color
+    backgroundColor: Optional[Color]
+    borderLineSize: Optional[int]
+    borderLineColor: Optional[Color]
     haloSize: int
     haloColor: Color
     verticalAlignment: Literal["baseline", "bottom", "middle", "top"]
@@ -213,8 +212,14 @@ class TextSymbol(TypedDict):
     font: Font
 
 
-Symbol = Union[
-    CIMSymbolReference, PictureFillSymbol, PictureMarkerSymbol, SimpleFillSymbol, SimpleMarkerSymbol, TextSymbol
+Symbol: TypeAlias = Union[
+    CIMSymbolReference,
+    SimpleLineSymbol,
+    PictureFillSymbol,
+    PictureMarkerSymbol,
+    SimpleFillSymbol,
+    SimpleMarkerSymbol,
+    TextSymbol,
 ]
 
 
@@ -360,7 +365,7 @@ class ClassBreaksRenderer(TypedDict, total=False):
     field: str
     minValue: int
     classBreakInfos: list[ClassBreakInfo]
-    defaultSymbol: Symbol
+    defaultSymbol: Optional[Symbol]
     legendOptions: LegendOptions
     normalizationField: str
     normalizationTotal: str
@@ -412,8 +417,12 @@ class SimpleRenderer(TypedDict, total=False):
     visualVariables: list[VisualVariable]
 
 
-class UniqueValueRenderer(TypedDict, total=False):
+class _UniqueValueRenderer(TypedDict):
     type: Literal["uniqueValue"]
+    uniqueValueInfos: list[UniqueValueInfo]
+
+
+class UniqueValueRenderer(TypedDict, total=False):
     authoringInfo: dict
     backgroundFillSymbol: Union[SimpleFillSymbol, PictureFillSymbol]
     defaultSymbol: Optional[Symbol]
@@ -533,9 +542,11 @@ class LabelingInfo(TypedDict, total=False):
 
 
 class DrawingInfo(TypedDict):
+    scaleSymbols: bool
     renderer: Renderer
     transparency: int
-    labelingInfo: LabelingInfo
+    labelingInfo: list[LabelingInfo]
+    showLabels: bool
 
 
 class LayerID(TypedDict):
@@ -595,6 +606,7 @@ class _MapServiceSpecification(TypedDict):
     type: LayerType
     geometryType: Optional[GeometryType]
     parentLayer: Optional[LayerID]
+    layers: list["MapServiceSpecification"]  # type: ignore  # cyclic
     # Not standard, but used to store entire service description.
     subLayers: list["MapServiceSpecification"]  # type: ignore  # cyclic
 

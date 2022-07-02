@@ -39,7 +39,6 @@ from requests import Response, Session
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS, Directory
 from eventkit_cloud.tasks.exceptions import FailedException
@@ -669,6 +668,7 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
         data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
     )
     doc = arcgis_layer.get_cim_layer_document()
+
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
     return {layer_filepath_stage: layer_filepath_archive}
@@ -981,8 +981,8 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
 
 
 def get_zoom_level_from_scale(scale: Optional[int], limit: int = 20) -> int:
-    zoom_level_scale = 559082264
-    zoom_level = 0
+    zoom_level_scale: float = 559082264
+    zoom_level: int = 0
     if not scale:
         return 10
     while zoom_level_scale > scale:
@@ -1045,7 +1045,7 @@ def download_arcgis_feature_data(
             while True:
                 url_parts: dict = urllib.parse.urlparse(input_url)._asdict()
                 query = urllib.parse.parse_qs(url_parts["query"])
-                query.update({"resultOffset": result_offset, "resultRecordCount": result_record_count})
+                query.update({"resultOffset": [result_offset], "resultRecordCount": [result_record_count]})
                 input_url = urllib.parse.ParseResult(**url_parts).geturl()
 
                 with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:

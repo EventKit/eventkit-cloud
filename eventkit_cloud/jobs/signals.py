@@ -96,10 +96,7 @@ def provider_pre_save(sender, instance, **kwargs):
                 # Return a file system path to the image.
                 filepath = save_thumbnail(
                     instance.preview_url,
-                    os.path.join(
-                        provider_image_dir,
-                        f"{get_provider_thumbnail_name(instance.slug)}.jpg",
-                    ),
+                    os.path.join(provider_image_dir, f"{get_provider_thumbnail_name(instance.slug)}.jpg"),
                 )
 
                 # TODO: This is redundant to code in export_tasks.py after __call__

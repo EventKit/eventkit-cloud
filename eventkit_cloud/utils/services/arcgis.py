@@ -1,6 +1,4 @@
-import copy
 from logging import getLogger
-from math import floor
 from typing import Optional, TypedDict, Union
 
 import requests

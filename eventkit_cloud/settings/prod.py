@@ -344,7 +344,7 @@ AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
 
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_DEFAULT_ACL = None
+AWS_DEFAULT_ACL: str = None
 
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)

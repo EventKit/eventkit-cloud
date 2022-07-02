@@ -1984,13 +1984,12 @@ class TestDataProviderRequestViewSet(APITestCase):
         }
 
         url = reverse("api:provider_requests-list")
-        response = self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
-        response = response.json()
+        self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
 
         provider_request = DataProviderRequest.objects.last()
         self.assertEqual(provider_request.name, request_data["name"])
         self.assertEqual(provider_request.url, request_data["url"])
-        self.assertEqual(provider_request.service_capabilities, request_data["service_description"])
+        self.assertEqual(provider_request.service_description, request_data["service_description"])
         self.assertEqual(provider_request.layer_names, request_data["layer_names"])
         self.assertEqual(provider_request.status, "pending")
         self.assertEqual(provider_request.user, self.user)

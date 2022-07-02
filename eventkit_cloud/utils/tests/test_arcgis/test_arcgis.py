@@ -30,14 +30,14 @@ class TestCreateMXD(TestCase):
         self.patcher.stop()
 
     def test_create_mxd(self):
-        from eventkit_cloud.utils.arcgis.templates import create_mxd
+        from eventkit_cloud.utils.arcgis.templates.create_mxd import create_mxd
 
         with patch("builtins.open") as mock_open, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.shutil"
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.shutil"
         ) as mock_shutil, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.get_mxd_template"
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.get_mxd_template"
         ) as mock_get_mxd_template, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.update_mxd_from_metadata"
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.update_mxd_from_metadata"
         ) as mock_update_from_metadata:
             test_mxd = "test.mxd"
             mxd_contents = "Test data."
@@ -72,8 +72,8 @@ class TestCreateMXD(TestCase):
     def test_create_mxd_process(self):
         from eventkit_cloud.utils.arcgis.templates.create_mxd import create_mxd_process
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.create_mxd"), patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.Pool"
+        with patch("eventkit_cloud.utils.arcgis.templates.create_mxd.create_mxd"), patch(
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.Pool"
         ) as mock_pool:
             example_mxd = "value"
             example_metadata = {"some": "data"}
@@ -89,7 +89,7 @@ class TestCreateMXD(TestCase):
     def test_get_mxd_template(self):
         from eventkit_cloud.utils.arcgis.templates.create_mxd import get_mxd_template
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_mxd.os") as mock_os:
 
             mock_os.path.isfile.return_value = True
             version = "10.5.1"
@@ -125,13 +125,13 @@ class TestCreateMXD(TestCase):
         layer_type = "raster"
         arc_version = "10.5"
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_mxd.os") as mock_os:
             mock_os.path.isfile.return_value = True
             mock_os.path.abspath.return_value = example_layer
             returned_layer = get_layer_file(layer_type, arc_version)
             self.assertEqual(example_layer, returned_layer)
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_mxd.os") as mock_os:
             mock_os.path.isfile.return_value = False
             mock_os.path.abspath.return_value = example_layer
             self.assertIsNone(get_layer_file(layer_type, arc_version))
@@ -177,12 +177,12 @@ class TestCreateMXD(TestCase):
         example_version = "10.8"
         example_arc_layer = Mock()
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.get_layer_file") as mock_get_layer_file, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.add_layer_to_mxd"
+        with patch("eventkit_cloud.utils.arcgis.templates.create_mxd.get_layer_file") as mock_get_layer_file, patch(
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.add_layer_to_mxd"
         ) as mock_add_layer_to_mxd, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.update_layer"
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.update_layer"
         ) as mock_update_layer, patch(
-            "eventkit_cloud.tasks.arcgis.create_mxd.os"
+            "eventkit_cloud.utils.arcgis.templates.create_mxd.os"
         ) as mock_os:
             mock_add_layer_to_mxd.return_value = example_arc_layer
 
@@ -284,11 +284,11 @@ class TestCreateAPRX(TestCase):
         from eventkit_cloud.utils.arcgis.templates.create_aprx import create_aprx
 
         with patch("builtins.open") as mock_open, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.shutil"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.shutil"
         ) as mock_shutil, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.get_aprx_template"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.get_aprx_template"
         ) as mock_get_aprx_template, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.update_aprx_from_metadata"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.update_aprx_from_metadata"
         ) as mock_update_from_metadata:
             test_aprx = "test.aprx"
             datapack_path = "/example/datapack"
@@ -307,7 +307,7 @@ class TestCreateAPRX(TestCase):
 
         expected_file = "/arcgis/templates/template-2-7.aprx"
         example_datapack_path = "/test/datapack"
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.os") as mock_os:
 
             mock_os.path.isfile.return_value = True
             mock_os.path.abspath.return_value = expected_file
@@ -320,8 +320,8 @@ class TestCreateAPRX(TestCase):
     def test_create_aprx_process(self):
         from eventkit_cloud.utils.arcgis.templates.create_aprx import create_aprx_process
 
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.create_aprx"), patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.Pool"
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.create_aprx"), patch(
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.Pool"
         ) as mock_pool:
             example_aprx = "value"
             example_metadata = {"some": "data"}
@@ -372,14 +372,14 @@ class TestCreateAPRX(TestCase):
         }
         verify = True
 
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.add_layer_to_map"
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.os") as mock_os, patch(
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.add_layer_to_map"
         ) as mock_add_layer_to_map, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.get_data_source_by_type"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.get_data_source_by_type"
         ) as mock_get_data_source_by_type, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.get_layer_file"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.get_layer_file"
         ) as mock_get_layer_file, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.add_layers_to_group"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.add_layers_to_group"
         ) as mock_add_layers_to_group:
             expected_full_path = f"/test/{example_file_name}"
             mock_layer_file = Mock()
@@ -433,13 +433,13 @@ class TestCreateAPRX(TestCase):
         layer_type = "raster"
         arc_version = "2.6"
 
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.os") as mock_os:
             mock_os.path.isfile.return_value = True
             mock_os.path.abspath.return_value = example_layer
             returned_layer = get_layer_file(layer_type, arc_version)
             self.assertEqual(example_layer, returned_layer)
 
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.os") as mock_os:
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.os") as mock_os:
             mock_os.path.isfile.return_value = False
             mock_os.path.abspath.return_value = example_layer
             self.assertIsNone(get_layer_file(layer_type, arc_version))
@@ -516,14 +516,14 @@ class TestCreateAPRX(TestCase):
         example_version = "2.7"
         example_arc_layer = Mock()
 
-        with patch("eventkit_cloud.tasks.arcgis.create_aprx.get_layer_file") as mock_get_layer_file, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.add_layer_to_map"
+        with patch("eventkit_cloud.utils.arcgis.templates.create_aprx.get_layer_file") as mock_get_layer_file, patch(
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.add_layer_to_map"
         ) as mock_add_layer_to_map, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.update_layer"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.update_layer"
         ) as mock_update_layer, patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.create_vector_layers"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.create_vector_layers"
         ), patch(
-            "eventkit_cloud.tasks.arcgis.create_aprx.os"
+            "eventkit_cloud.utils.arcgis.templates.create_aprx.os"
         ) as mock_os:
             mock_add_layer_to_map.return_value = example_arc_layer
 
@@ -548,9 +548,12 @@ class TestCreateAPRX(TestCase):
             file_type = example_source["osm"]["type"]
             file_path = example_source["osm"]["files"][0]["file_path"]
             file_projection = example_source["osm"]["files"][0]["projection"]
+            layer_file = "/path/to/layerfile.lyrx"
             mock_os.path.abspath.side_effect = [
                 example_source["osm"]["files"][0]["file_path"],
+                layer_file,
                 example_source["osm"]["files"][1]["file_path"],
+                layer_file,
             ]
 
             example_layer_file = "vector"

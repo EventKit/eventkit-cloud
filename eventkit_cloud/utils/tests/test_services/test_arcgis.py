@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from django.core.cache import cache
 from django.test import TransactionTestCase
 
 from eventkit_cloud.utils.services.arcgis import ArcGIS

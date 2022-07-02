@@ -392,33 +392,18 @@ class TestDataProvider(TestCase):
     def setUp(self):
         self.data_provider = DataProvider.objects.get(slug="osm-generic")
 
-    @patch("eventkit_cloud.jobs.signals.make_dirs")
+    @patch("os.makedirs")
     @patch("eventkit_cloud.jobs.signals.make_file_downloadable")
     @patch("eventkit_cloud.jobs.signals.save_thumbnail")
-    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_file_downloadable, makedirs):
+    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_file_downloadable, mock_makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = "/var/lib/downloads/images/test_thumb.jpg"
         # An instance of MapImageSnapshot
         mock_make_file_downloadable.return_value = 1
-        stat = os.stat
-
-        # We don't want to interfere with any other os.stat functions
-        # This is a simple way of doing that without setting up a property mock.
-        class StatMock:
-            def __init__(self):
-                self.st_size = 64
-
-            def __getattr__(self, item):
-                if item.lower() != "st_size":
-                    return getattr(stat, item)
-                return self.st_size
-
-        with patch("os.stat") as mock_stat:
-            mock_stat.return_value = StatMock()
-            self.data_provider.preview_url = "http://url.com"
-            self.data_provider.save()
-            makedirs.assert_called()
-            mock_make_file_downloadable.assert_called()
+        self.data_provider.preview_url = "http://url.com"
+        self.data_provider.save()
+        mock_makedirs.assert_called()
+        mock_make_file_downloadable.assert_called()
 
     @patch("eventkit_cloud.core.models.cache")
     def test_cached_model_on_save(self, mocked_cache):

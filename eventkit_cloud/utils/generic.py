@@ -1,6 +1,4 @@
 import copy
-import hashlib
-import inspect
 import itertools
 import logging
 import time
@@ -9,8 +7,6 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.core.cache import cache
-
-from eventkit_cloud.feature_selection.feature_selection import slugify
 
 logger = logging.getLogger()
 
