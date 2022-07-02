@@ -25,19 +25,15 @@ def string2bool(string_value):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("url", help="The EventKit instance base url (i.e. http://cloud.eventkit.test).")
-    parser.add_argument(
-        "-s",
-        "--sources",
-        nargs="+",
-        default="",
-        help="The slugs of sources to check, if not included all visible sources are checked.",
-    )
-    parser.add_argument(
-        "--verify", default="", help="True to enable ssl verification, false to disable ssl verification"
-    )
-    parser.add_argument("--certificate", default="", help="The path to a certificate to use for authentication")
-    parser.add_argument("--full", default="", help="")
+    parser.add_argument('url', help='The EventKit instance base url (i.e. http://host.docker.internal).')
+    parser.add_argument('-s', '--sources', nargs='+', default='',
+                        help='The slugs of sources to check, if not included all visible sources are checked.')
+    parser.add_argument('--verify', default='',
+                        help='True to enable ssl verification, false to disable ssl verification')
+    parser.add_argument('--certificate', default='',
+                        help='The path to a certificate to use for authentication')
+    parser.add_argument('--full', default='',
+                        help='')
 
     args = parser.parse_args()
     user = password = None

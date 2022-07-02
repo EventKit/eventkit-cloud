@@ -17,42 +17,26 @@ logging.basicConfig(format="%(levelname)s:%(message)s", level=os.getenv("LOG_LEV
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("url", help="The EventKit instance base url (i.e. http://cloud.eventkit.test).")
-    parser.add_argument("file", help="A geojson file to be used for location data.")
-    parser.add_argument(
-        "--name",
-        default="name",
-        help="The field to be used for the name of the location which will be the datapack name.",
-    )
-    parser.add_argument(
-        "--description",
-        default="description",
-        help="The field to be used for the description of the location which will be the datapack description.",
-    )
-    parser.add_argument(
-        "--project", default="project", help="The project name, will be the same for all datapacks (not based on file)."
-    )
-    parser.add_argument(
-        "-s",
-        "--sources",
-        nargs="+",
-        default="",
-        help="The slugs of sources to check, if not included all visible sources are checked.",
-    )
-    parser.add_argument(
-        "--levels", nargs="+", default="1 10", help="The levels to see (i.e. 1 10) would seed from levels 1-10."
-    )
-    parser.add_argument("--limit", type=int, default=0, help="The max number of jobs to create.")
-    parser.add_argument(
-        "--start",
-        type=int,
-        default=0,
-        help="The index (0-based) of the first geojson feature to use to create a datapack",
-    )
-    parser.add_argument(
-        "--verify", default="true", help="True to enable ssl verification, false to disable ssl verification"
-    )
-    parser.add_argument("--certificate", default="", help="The path to a certificate to use for authentication")
+    parser.add_argument('url', help='The EventKit instance base url (i.e. http://host.docker.internal).')
+    parser.add_argument('file', help='A geojson file to be used for location data.')
+    parser.add_argument('--name', default='name',
+                        help='The field to be used for the name of the location which will be the datapack name.')
+    parser.add_argument('--description', default='description',
+                        help='The field to be used for the description of the location which will be the datapack description.')
+    parser.add_argument('--project', default='project',
+                        help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('-s', '--sources', nargs='+', default='',
+                        help='The slugs of sources to check, if not included all visible sources are checked.')
+    parser.add_argument('--levels', nargs='+', default='1 10',
+                        help='The levels to see (i.e. 1 10) would seed from levels 1-10.')
+    parser.add_argument('--limit', type=int, default=0,
+                        help='The max number of jobs to create.')
+    parser.add_argument('--start', type=int, default=0,
+                        help='The index (0-based) of the first geojson feature to use to create a datapack')
+    parser.add_argument('--verify', default='true',
+                        help='True to enable ssl verification, false to disable ssl verification')
+    parser.add_argument('--certificate', default='',
+                        help='The path to a certificate to use for authentication')
 
     args = parser.parse_args()
     user = password = None

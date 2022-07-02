@@ -16,7 +16,7 @@ describe('DataPackTableItem component', () => {
     const providers = [
         {
             id: 2,
-            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            model_url: 'http://host.docker.internal/api/providers/osm',
             type: 'osm',
             license: null,
             created_at: '2017-08-15T19:25:10.844911Z',
@@ -49,7 +49,7 @@ describe('DataPackTableItem component', () => {
             uid: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34',
             result: {
                 size: '1.234 MB',
-                url: 'http://cloud.eventkit.test/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
+                url: 'http://host.docker.internal/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
             },
             display: true,
         },
@@ -62,11 +62,11 @@ describe('DataPackTableItem component', () => {
         slug: 'osm',
         tasks,
         uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
-        url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
+        url: 'http://host.docker.internal/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
     }];
     const run = {
         uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://host.docker.internal/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
         started_at: '2017-03-10T15:52:35.637331Z',
         finished_at: '2017-03-10T15:52:39.837Z',
         duration: '0:00:04.199825',
@@ -77,7 +77,7 @@ describe('DataPackTableItem component', () => {
             name: 'Test1',
             event: 'Test1 event',
             description: 'Test1 description',
-            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            url: 'http://host.docker.internal/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             extent: {},
             permissions: {
                 value: 'PRIVATE',
@@ -86,7 +86,7 @@ describe('DataPackTableItem component', () => {
             },
         },
         provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://host.docker.internal/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     }
 

@@ -9,8 +9,8 @@ variables:
   BRANCH: "master"
   NEXUS_BASE_URL: $NEXUS_BASE_URL
   NEXUS_REPO: "EventKit_eventkit"
-  BASE_URL: "http://cloud.eventkit.test:6080"
-  SITE_NAME: "cloud.eventkit.test"
+  BASE_URL: "http://host.docker.internal:6080"
+  SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
   SECRET_KEY: "TESTING"
   VERSION: "1.13.0"
@@ -96,7 +96,7 @@ migrations:
 .test:
   stage: test
   extends: .default
-  
+
 unit-back:
   extends:
     - .test

@@ -7,7 +7,7 @@ describe('ProvidersFilter component', () => {
     const providers = [
         {
             id: 2,
-            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            model_url: 'http://host.docker.internal/api/providers/osm',
             type: 'osm',
             license: null,
             created_at: '2017-08-15T19:25:10.844911Z',

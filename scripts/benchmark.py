@@ -113,31 +113,18 @@ class BenchmarkEventkit(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("url", help="The EventKit instance base url (i.e. http://cloud.eventkit.test).")
-    parser.add_argument("file", help="A geojson file to be used for location data.")
-    parser.add_argument(
-        "--name",
-        default="name",
-        help="The field to be used for the name of the location which will be the datapack name.",
-    )
-    parser.add_argument(
-        "--description",
-        default="description",
-        help="The field to be used for the description of the location which will be the datapack description.",
-    )
-    parser.add_argument(
-        "--project", default="project", help="The project name, will be the same for all datapacks (not based on file)."
-    )
-    parser.add_argument(
-        "--sources",
-        nargs="*",
-        default="",
-        help="The project name, will be the same for all datapacks (not based on file).",
-    )
-    parser.add_argument(
-        "--batches", default=0, help="The project name, will be the same for all datapacks (not based on file)."
-    )
-
+    parser.add_argument('url', help='The EventKit instance base url (i.e. http://host.docker.internal).')
+    parser.add_argument('file', help='A geojson file to be used for location data.')
+    parser.add_argument('--name', default='name',
+                        help='The field to be used for the name of the location which will be the datapack name.')
+    parser.add_argument('--description', default='description',
+                        help='The field to be used for the description of the location which will be the datapack description.')
+    parser.add_argument('--project', default='project',
+                        help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('--sources', nargs='*', default='',
+                        help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('--batches', default=0,
+                        help='The project name, will be the same for all datapacks (not based on file).')
     args = parser.parse_args()
     user = os.getenv("EVENTKIT_USER")
     if not user:

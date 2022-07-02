@@ -195,7 +195,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_kml_export_task(
-            self, mock_request, mock_convert, mock_qgis_convert, mock_generate_qgs_style, mock_get_export_filepath
+        self, mock_request, mock_convert, mock_qgis_convert, mock_generate_qgs_style, mock_get_export_filepath
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -285,14 +285,14 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(
-            self,
-            mock_request,
-            mock_gpkg,
-            mock_convert,
-            mock_download_concurrently,
-            mock_get_export_filepath,
-            mock_exists,
-            mock_layers,
+        self,
+        mock_request,
+        mock_gpkg,
+        mock_convert,
+        mock_download_concurrently,
+        mock_get_export_filepath,
+        mock_exists,
+        mock_layers,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -547,18 +547,18 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.pbf")
     @patch("eventkit_cloud.tasks.export_tasks.overpass")
     def test_osm_data_collection_pipeline(
-            self,
-            mock_overpass,
-            mock_pbf,
-            mock_feature_selection,
-            mock_geopackage,
-            mock_update_progress,
-            mock_os,
-            mock_get_export_task_record,
-            mock_get_export_filepath,
-            mock_cancel_provider_task,
-            mock_connect,
-            mock_convert,
+        self,
+        mock_overpass,
+        mock_pbf,
+        mock_feature_selection,
+        mock_geopackage,
+        mock_update_progress,
+        mock_os,
+        mock_get_export_task_record,
+        mock_get_export_filepath,
+        mock_cancel_provider_task,
+        mock_connect,
+        mock_convert,
     ):
         example_export_task_record_uid = "1234"
         example_bbox = [-1, -1, 1, 1]
@@ -614,7 +614,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     def test_geotiff_export_task(
-            self, mock_convert, mock_get_export_task_record, mock_get_creation_options, mock_get_export_filepath
+        self, mock_convert, mock_get_export_task_record, mock_get_creation_options, mock_get_export_filepath
     ):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
@@ -700,7 +700,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_sqlite_export_task(
-            self, mock_request, mock_convert, mock_get_export_task_record, mock_get_export_filepath
+        self, mock_request, mock_convert, mock_get_export_task_record, mock_get_export_filepath
     ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         expected_provider_slug = "osm-generic"
@@ -801,15 +801,15 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(
-            self,
-            mock_request,
-            mock_convert,
-            mock_download_concurrently,
-            mock_geopackage,
-            mock_get_export_filepath,
-            mock_makedirs,
-            mock_exists,
-            mock_layers,
+        self,
+        mock_request,
+        mock_convert,
+        mock_download_concurrently,
+        mock_geopackage,
+        mock_get_export_filepath,
+        mock_makedirs,
+        mock_exists,
+        mock_layers,
     ):
         selection = "selection.geojson"
         celery_uid = str(uuid.uuid4())
@@ -1038,7 +1038,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("os.walk")
     @patch("os.path.getsize")
     def test_zipfile_task(
-            self, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry, mock_get_data_package_manifest
+        self, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry, mock_get_data_package_manifest
     ):
         os_path_getsize.return_value = 20
 
@@ -1209,12 +1209,12 @@ class TestExportTasks(ExportTaskBase):
             {"auth_token": "auth_token", "user_id": "user_id", "channels": ["channel"], "url": "http://api.example.dev"}
         )
         with self.settings(
-                ROCKETCHAT_NOTIFICATIONS={
-                    "auth_token": "auth_token",
-                    "user_id": "user_id",
-                    "channels": ["channel"],
-                    "url": "http://api.example.dev",
-                }
+            ROCKETCHAT_NOTIFICATIONS={
+                "auth_token": "auth_token",
+                "user_id": "user_id",
+                "channels": ["channel"],
+                "url": "http://api.example.dev",
+            }
         ):
             rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
             channel = rocketchat_notifications["channels"][0]
@@ -1384,18 +1384,18 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.DataProviderTaskRecord")
     def test_create_zip_task(
-            self,
-            mock_DataProviderTaskRecord,
-            mock_get_export_task_record,
-            join,
-            mock_generate_qgs_style,
-            mock_json,
-            mock_get_style_files,
-            mock_get_human_readable_metadata_document,
-            mock_zip_files,
-            mock_get_metadata,
-            mock_get_arcgis_templates,
-            mock_get_export_filepath,
+        self,
+        mock_DataProviderTaskRecord,
+        mock_get_export_task_record,
+        join,
+        mock_generate_qgs_style,
+        mock_json,
+        mock_get_style_files,
+        mock_get_human_readable_metadata_document,
+        mock_zip_files,
+        mock_get_metadata,
+        mock_get_arcgis_templates,
+        mock_get_export_filepath,
     ):
         meta_files = {}
         mock_get_style_files.return_value = style_files = {"/styles.png": "icons/styles.png"}
@@ -1421,11 +1421,11 @@ class TestExportTasks(ExportTaskBase):
                 "osm": {
                     "copyright": None,
                     "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\t"
-                                   "Data is grouped into separate tables (e.g. water, roads...).",
+                    "Data is grouped into separate tables (e.g. water, roads...).",
                     "file_path": "data/osm/test-osm-20181101.gpkg",
                     "file_type": ".gpkg",
                     "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/"
-                                      "test.gpkg",
+                    "test.gpkg",
                     "last_update": "2018-10-29T04:35:02Z\n",
                     "metadata": "https://overpass-server.com/overpass/interpreter",
                     "name": "OpenStreetMap Data (Themes)",
@@ -1442,7 +1442,7 @@ class TestExportTasks(ExportTaskBase):
             "name": "test",
             "project": "Test",
             "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
-            "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
+            "url": "http://host.docker.internal/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb",
         }
         data_provider_task_record_uids = ["0d08ddf6-35c1-464f-b271-75f6911c3f78"]
         mock_get_metadata.return_value = metadata
@@ -1608,8 +1608,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.mapproxy.MapproxyGeopackage")
     def test_reprojection_task(
-            self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os,
-            mock_parse_result
+        self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os, mock_parse_result
     ):
         job_name = self.job.name.lower()
         in_projection = "4326"
@@ -1724,14 +1723,14 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("celery.app.task.Task.request")
     def test_ogcapi_process_export_task(
-            self,
-            mock_request,
-            mock_convert,
-            mock_get_ogcapi_data,
-            mock_getenv,
-            mock_get_geometry,
-            mock_find_in_zip,
-            mock_get_export_filepath,
+        self,
+        mock_request,
+        mock_convert,
+        mock_get_ogcapi_data,
+        mock_getenv,
+        mock_get_geometry,
+        mock_find_in_zip,
+        mock_get_export_filepath,
     ):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -1869,12 +1868,12 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.OgcApiProcess")
     @patch("eventkit_cloud.tasks.export_tasks.get_geometry")
     def test_get_ogcapi_data(
-            self,
-            mock_get_geometry,
-            mock_ogc_api_process,
-            mock_download_data,
-            mock_update_progress,
-            mock_extract_metadata_files,
+        self,
+        mock_get_geometry,
+        mock_ogc_api_process,
+        mock_download_data,
+        mock_update_progress,
+        mock_extract_metadata_files,
     ):
         bbox = [1, 2, 3, 4]
         example_geojson = "/path/to/geo.json"

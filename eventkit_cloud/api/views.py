@@ -299,7 +299,7 @@ class JobViewSet(EventkitViewSet):
                     }
                   ],
                   "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
-                  "url": "http://cloud.eventkit.test/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://host.docker.internal/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
                   "name": "test",
                   "description": "test",
                   "event": "test",
@@ -310,7 +310,7 @@ class JobViewSet(EventkitViewSet):
                       "formats": [
                         {
                           "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
-                          "url": "http://cloud.eventkit.test/api/formats/gpkg",
+                          "url": "http://host.docker.internal/api/formats/gpkg",
                           "slug": "gpkg",
                           "name": "Geopackage",
                           "description": "GeoPackage"

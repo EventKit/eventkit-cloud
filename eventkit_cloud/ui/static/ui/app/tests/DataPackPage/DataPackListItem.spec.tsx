@@ -7,7 +7,7 @@ import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackSh
 describe('DataPackListItem component', () => {
     const run = {
         uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://host.docker.internal/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
         started_at: '2017-03-10T15:52:35.637331Z',
         finished_at: '2017-03-10T15:52:39.837Z',
         duration: '0:00:04.199825',
@@ -18,7 +18,7 @@ describe('DataPackListItem component', () => {
             name: 'Test1',
             event: 'Test1 event',
             description: 'Test1 description',
-            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            url: 'http://host.docker.internal/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             extent: {},
             permissions: {
                 value: 'PRIVATE',
@@ -27,7 +27,7 @@ describe('DataPackListItem component', () => {
             },
         },
         provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://host.docker.internal/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 

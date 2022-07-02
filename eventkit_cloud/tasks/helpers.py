@@ -492,7 +492,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
     "project": "Test",
     "projections": [4326, 3857]
     "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
-    "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"
+    "url": "http://host.docker.internal/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"
     }
     """
 
