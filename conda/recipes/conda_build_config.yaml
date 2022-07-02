@@ -65,7 +65,7 @@ dj_database_url:
 django:
 - 4.0.4
 django_audit_logging:
-- 0.3.0
+- 0.3.1
 django_auth_ldap:
 - 4.0.0
 django_celery_beat:
@@ -111,7 +111,7 @@ freexl:
 gdal:
 - 3.4.2
 gdalutils:
-- 1.0.0
+- 1.0.1
 gdbm:
 - '1.18'
 geos:
@@ -141,11 +141,11 @@ idna:
 importlib_metadata:
 - 4.11.4
 importlib_resources:
-- 5.7.1
+- 5.8.0
 jbig:
 - '2.1'
 jmespath:
-- 1.0.0
+- 1.0.1
 jpeg:
 - 9e
 json_c:
@@ -155,7 +155,7 @@ jsonfield:
 jsonschema:
 - 4.4.0
 kealib:
-- 1.4.14
+- 1.4.15
 kernel_headers_linux_64:
 - 3.10.0
 keyutils:
@@ -301,7 +301,7 @@ postgresql:
 proj:
 - 9.0.0
 prompt_toolkit:
-- 3.0.29
+- 3.0.30
 psycopg2:
 - 2.9.3
 pthread_stubs:
@@ -345,7 +345,7 @@ pytz:
 pyyaml:
 - '6.0'
 readline:
-- '8.1'
+- 8.1.2
 requests:
 - 2.27.1
 requests_pkcs12:
@@ -377,7 +377,7 @@ tiledb:
 tk:
 - 8.6.12
 typing_extensions:
-- 4.2.0
+- 4.3.0
 tzcode:
 - 2022a
 tzdata:

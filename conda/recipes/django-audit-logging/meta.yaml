@@ -1,8 +1,8 @@
 {% set name = "django-audit-logging" %}
-{% set version = "0.3.0" %}
+{% set version = "0.3.1" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "02f8fdd926bba3c6cb3c830658adcc6ffeca5a51987831593836c722660818a2" %}
+{% set hash_value = "7c19a59e406955413a88462e1ac924a62bc252f3ff138edcd37ef942a38d863f" %}
 
 package:
   name: '{{ name|lower }}'
@@ -12,7 +12,6 @@ source:
   fn: '{{ name }}-{{ version }}.{{ file_ext }}'
   url: https://github.com/eventkit/{{ name }}/archive/v{{ version }}.tar.gz
   '{{ hash_type }}': '{{ hash_value|lower }}'
-  patches: version.patch
 
 build:
   script: {{ PYTHON }} -m pip install . -vv
