@@ -2282,6 +2282,7 @@ def get_ogcapi_data(
             cred_var=configuration.get("cred_var"),
             cert_info=configuration.get("cert_info"),
             cred_token=configuration.get("cred_token"),
+            login_url=configuration.get("login_url"),
         )
         ogc_process.create_job(geom, file_format=export_format_slug)
         download_url = ogc_process.get_job_results()
