@@ -1,4 +1,5 @@
-from typing import Any, Literal, Optional, TypedDict, Union, TypeAlias
+from typing import Any, Literal, Optional, TypeAlias, TypedDict, Union
+
 from eventkit_cloud.utils.arcgis.types.cim_types import CIMSymbolReference
 
 

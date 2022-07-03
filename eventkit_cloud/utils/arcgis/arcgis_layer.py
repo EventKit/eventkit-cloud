@@ -2,7 +2,7 @@ import copy
 import logging
 import re
 import uuid
-from typing import Optional, cast, Union
+from typing import Optional, Union, cast
 
 from django.conf import settings
 
@@ -306,7 +306,6 @@ class ArcGISLayer:
         symbol: Union[cim_types.Symbol, cim_types.CIMSymbolReference] = self.get_symbol(service_symbol)
         if symbol and symbol["type"] == "CIMSymbolReference":
             return symbol
-        cim_symbol: cim_types.Symbol = cast(cim_types.Symbol, self.get_symbol(service_symbol))
         symbol_ref: service_types.CIMSymbolReference = {"type": "CIMSymbolReference", "symbol": cim_symbol}
         return symbol_ref
 

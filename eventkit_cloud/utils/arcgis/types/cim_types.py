@@ -449,7 +449,7 @@ class GeometryBag(_Geometry):
     points: list["Geometry"]  # type: ignore  # cyclic
 
 
-Geometry: TypeAlias = Union[
+Geometry: TypeAlias = Union[  # type: ignore  # cyclic
     Point,
     Multipoint,
     Multipatch,
@@ -463,7 +463,7 @@ Geometry: TypeAlias = Union[
     Ring,
     CurveRing,
     Curve,
-]  # type: ignore  # cyclic
+]
 
 
 CIMWaterFill = Any

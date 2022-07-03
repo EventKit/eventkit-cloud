@@ -253,3 +253,141 @@ class TestCreateArcgisLayer(TestCase):
         self.assertTrue(self.arcgis_layer.get_font_properties(font)["fontStyleName"] == "Oblique")
         font["weight"] = "bold"
         self.assertTrue(self.arcgis_layer.get_font_properties(font)["fontStyleName"] == "Bold")
+
+    def test_get_cim_text_symbol(self):
+        halo_color = Mock()
+        self.arcgis_layer.get_cim_color = Mock(return_value=halo_color)
+        horizontal_alignment = "left"
+        service_symbol = {"horizontalAlignment": horizontal_alignment, "haloColor": "color", "font": "<font>"}
+        mock_stroke = Mock()
+        self.arcgis_layer.get_cim_solid_stroke = Mock(return_value=mock_stroke)
+        mock_fill = Mock()
+        self.arcgis_layer.get_cim_solid_fill = Mock(return_value=mock_fill)
+        expected_font = {"font": "font"}
+        self.arcgis_layer.get_font_properties = Mock(return_value=expected_font)
+        expected_symbol = {
+            "type": "CIMTextSymbol",
+            "blockProgression": "TTB",
+            "depth3D": 1,
+            "extrapolateBaselines": True,
+            "fontEffects": "Normal",
+            "fontEncoding": "Unicode",
+            "fontType": "Unspecified",
+            "hinting": "Default",
+            "horizontalAlignment": horizontal_alignment.capitalize(),
+            "kerning": service_symbol.get("kerning") or True,
+            "letterWidth": 100,
+            "ligatures": True,
+            "lineGapType": "ExtraLeading",
+            "symbol": {
+                "type": "CIMPolygonSymbol",
+                "symbolLayers": [mock_stroke, mock_fill],
+            },
+            "textCase": "Normal",
+            "textDirection": "LTR",
+            "verticalAlignment": "Bottom",
+            "verticalGlyphOrientation": "Right",
+            "wordSpacing": 100,
+            "billboardMode3D": "FaceNearPlane",
+            "haloSize": 1,
+            "haloSymbol": {
+                "type": "CIMPolygonSymbol",
+                "symbolLayers": [
+                    {
+                        "type": "CIMSolidStroke",
+                        "enable": True,
+                        "capStyle": "Round",
+                        "joinStyle": "Round",
+                        "lineStyle3D": "Strip",
+                        "miterLimit": 10,
+                        "width": 0,
+                        "color": halo_color,
+                    },
+                    {
+                        "type": "CIMSolidFill",
+                        "enable": True,
+                        "color": halo_color,
+                    },
+                ],
+            },
+            **expected_font,
+        }
+        self.assertEqual(expected_symbol, self.arcgis_layer.get_cim_text_symbol(service_symbol))
+
+    def test_get_cim_symbol_reference(self):
+        sym_ref = {"type": "CIMSymbolReference"}
+        self.assertEqual(sym_ref, self.arcgis_layer.get_cim_symbol_reference(sym_ref))
+        symbol = {"type": "CIMLineSymbol"}
+        self.arcgis_layer.get_symbol = Mock(return_value=symbol)
+        self.assertEqual(
+            {"type": "CIMSymbolReference", "symbol": symbol}, self.arcgis_layer.get_cim_symbol_reference(symbol)
+        )
+
+    def test_get_cim_unique_value_class(self):
+        symbol = Mock()
+        self.arcgis_layer.get_cim_symbol_reference = Mock(return_value=symbol)
+        value_info = {"value": "<value>", "label": "LABEL", "symbol": "<symbol>"}
+        expected_return_value = {
+            "type": "CIMUniqueValueClass",
+            "label": value_info["label"],
+            "patch": "Default",
+            "symbol": symbol,
+            "values": [{"type": "CIMUniqueValue", "fieldValues": [str(value_info["value"])]}],
+            "visible": True,
+        }
+        self.assertEqual(expected_return_value, self.arcgis_layer.get_cim_unique_value_class(value_info))
+
+    def test_get_cim_unique_value_group(self):
+        value_info = Mock()
+        self.arcgis_layer.get_cim_unique_value_class = Mock(return_value=value_info)
+        unique_value_infos = [{"value": "<value>"}]
+        renderer = {"uniqueValueInfos": unique_value_infos}
+        expected_return_value = {
+            "type": "CIMUniqueValueGroup",
+            "classes": [self.arcgis_layer.get_cim_unique_value_class(info) for info in unique_value_infos],
+        }
+        self.assertEqual(expected_return_value, self.arcgis_layer.get_cim_unique_value_group(renderer))
+
+    def test_get_simple_renderer(self):
+        service_renderer = {"label": "LABEL", "description": "DESCRIPTION", "symbol": "<symbol>"}
+        symbol = Mock()
+        self.arcgis_layer.get_cim_symbol_reference = Mock(return_value=symbol)
+        expected_return_value = {
+            "type": "CIMSimpleRenderer",
+            "patch": "Default",
+            "symbol": symbol,
+            "label": service_renderer["label"],
+            "description": service_renderer["description"],
+        }
+        self.assertEqual(expected_return_value, self.arcgis_layer.get_simple_renderer(service_renderer))
+
+    def test_get_unique_value_renderer(self):
+        fields = {"field1": "field1", "field2": "field2", "field3": "field3"}
+        service_renderer = {"defaultSymbol": "<symbol>", **fields}
+        default_symbol = Mock()
+        self.arcgis_layer.get_cim_symbol_reference = Mock(return_value=default_symbol)
+        group = Mock()
+        self.arcgis_layer.get_cim_unique_value_group = Mock(return_value=group)
+        expected_renderer = {
+            "type": "CIMUniqueValueRenderer",
+            "colorRamp": {
+                "type": "CIMRandomHSVColorRamp",
+                "colorSpace": {"type": "CIMICCColorSpace", "url": "Default RGB"},
+                "maxH": 360,
+                "minS": 15,
+                "maxS": 30,
+                "minV": 99,
+                "maxV": 100,
+                "minAlpha": 100,
+                "maxAlpha": 100,
+            },
+            "defaultLabel": "Other",
+            "defaultSymbol": default_symbol,
+            "defaultSymbolPatch": "Default",
+            "fields": list(fields.values()),
+            "groups": [group],
+            "useDefaultSymbol": bool(default_symbol),
+            "polygonSymbolColorTarget": "Fill",
+        }
+        self.maxDiff = None
+        self.assertEqual(expected_renderer, self.arcgis_layer.get_unique_value_renderer(service_renderer))
