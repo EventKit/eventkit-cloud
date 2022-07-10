@@ -1,0 +1,23 @@
+version: '3'
+services:
+  eventkit:
+    expose: []
+    ports:
+      - "6080:6080"
+  memcached:
+    expose: []
+    ports:
+      - "11211:11211"
+  celery:
+    depends_on: []
+    command: "exit 0"
+    links:
+      - postgis
+      - rabbitmq
+  postgis:
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"

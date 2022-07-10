@@ -44,7 +44,8 @@ class EventKitBaseTask(Task):
                 print(f"RUNNING TASKS BY QUEUE: {running_tasks_by_queue}")
                 running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
                 export_tasks = ExportTaskRecord.objects.filter(
-                    worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
+                    worker=hostname,
+                    status__in=[task_state.value for task_state in TaskState.get_not_finished_states()],
                 )
 
                 if not export_tasks:
@@ -101,13 +102,14 @@ class LockingTask(Task):
         """
         retry = False
         logger.debug("enter __call__ for {0}".format(self.request.id))
-        lock_key = kwargs.get("locking_task_key")
+        lock_key = kwargs.pop("locking_task_key", None)
         if lock_key:
+            self.lock_key = lock_key
             retry = True
         else:
-            lock_key = self.get_lock_key()
+            self.lock_key = self.get_lock_key()
 
-        if self.acquire_lock(lock_key=lock_key, value=self.request.id):
+        if self.acquire_lock(lock_key=self.lock_key, value=self.request.id) or getattr(settings, "DEBUG_CELERY", False):
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
             result = super(LockingTask, self).__call__(*args, **kwargs)
@@ -115,10 +117,11 @@ class LockingTask(Task):
             return result
         else:
             if retry:
-                logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
+                logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, self.lock_key))
+                kwargs["locking_task_key"] = self.lock_key
                 self.apply_async(args=args, kwargs=kwargs)
             else:
-                logger.info("Task {0} skipped due to lock".format(self.request.id))
+                logger.info("Task {0} skipped due to lock".format(self.lock_key))
 
     def release_lock(self):
         """
