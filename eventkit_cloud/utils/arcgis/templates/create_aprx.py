@@ -117,7 +117,10 @@ def add_layers_to_group(
                 arcpy.management.CalculateStatistics(file_path)
             except Exception as e:
                 arcpy.AddMessage(e)
-            layer_file = get_layer_file(datapack_path, layer_info["type"], version)
+            if layer_info.get("layer_file"):
+                layer_file = os.path.abspath(os.path.join(datapack_path, layer_info.get("layer_file")))
+            else:
+                layer_file = get_layer_file(datapack_path, layer_info["type"], version)
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 arcpy.AddWarning(
                     f"Skipping layer {vector_layer_name} because the file type is not supported for ArcPro {version}"
@@ -248,12 +251,19 @@ def create_vector_layers(
             os.unlink(layer_file_path)
 
 
+def update_labels(layer):
+    if layer.supports("SHOWLABELS"):
+        for lblClass in layer.listLabelClasses():
+            lblClass.visible = True
+    layer.save()
+
+
 def add_layer_to_map(
     layer_name: str, layer_path: str, mapx: arcpy._mp.Map, group_layer: arcpy.mp.LayerFile = None
 ) -> arcpy._mp.Layer:
     """
     :param layer_name: The name of the layer as it will appear in ArcPro.
-    :param layer_file: The .lyr which will be used for the layer template.
+    :param layer_path: The .lyr which will be used for the layer template.
     :param data_frame:  The dataframe from the map document where the layer should be loaded.
     :return: Layer, raises exception.
     """
@@ -267,6 +277,7 @@ def add_layer_to_map(
         mapx.addLayer(layer_file, "TOP")
         layer = mapx.listLayers()[0]
     layer.name = layer_name
+    update_labels(layer_file)
     return layer
 
 
@@ -356,11 +367,11 @@ def update_layer(layer: arcpy._mp.Layer, file_path: str, type: str, projection: 
             del lyr
 
 
-def create_aprx(datapack_path: str, aprx=None, metadata=None, verify=True):
+def create_aprx(datapack_path: str, aprx=None, metadata: dict = None, verify=True):
     """
     Updates the template aprx with a new gpkg datasource. If an aprx is provided the result is written to that file.
     :param aprx: An aprx to write the result to (optional).
-    :param metadata: The metadata file to use for updating the aprx.
+    :param metadata: The metadata dict to use for updating the aprx.
     :param verify: Raise an exception if there is an error in the aprx after adding the new gpkg.
     :return: The contents (binary) of the aprx file.
     """
@@ -415,12 +426,12 @@ def find_file(name, path):
     arcpy.AddError(f"Could not find file {name} in {path}")
 
 
-def create_aprx_process(datapack_path, aprx=None, metadata=None, verify=False):
+def create_aprx_process(datapack_path, aprx=None, metadata: dict = None, verify=False):
     """
     This wraps create_aprx to overcome issues with licensing by running in a unique process.
     Updates the template aprx with a new gpkg datasource. If an aprx is provided the result is written to that file.
     :param aprx: An aprx to write the result to (optional).
-    :param metadata: The metadata file to use for updating the aprx.
+    :param metadata: The metadata dict for updating the aprx.
     :param verify: Raise an exception if there is an error in the aprx after adding the new gpkg.
     :return: The contents (binary) of the aprx file.
     """
@@ -517,3 +528,13 @@ class CreateAPRX(object):
         except Exception as e:
             arcpy.AddError(e)
             raise e
+
+
+if __name__ == "__main__" and os.getenv("DEBUG"):
+    import sys
+
+    print(f"Running create aprx with {sys.argv[1:]}", flush=True)
+    _, datapack_path = sys.argv
+    metadata = load_metadata(datapack_path)
+
+    create_aprx_process(datapack_path, metadata=metadata)
