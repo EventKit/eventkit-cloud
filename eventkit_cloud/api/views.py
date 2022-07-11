@@ -299,7 +299,7 @@ class JobViewSet(EventkitViewSet):
                     }
                   ],
                   "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
-                  "url": "http://cloud.eventkit.test/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://host.docker.internal/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
                   "name": "test",
                   "description": "test",
                   "event": "test",
@@ -310,7 +310,7 @@ class JobViewSet(EventkitViewSet):
                       "formats": [
                         {
                           "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
-                          "url": "http://cloud.eventkit.test/api/formats/gpkg",
+                          "url": "http://host.docker.internal/api/formats/gpkg",
                           "slug": "gpkg",
                           "name": "Geopackage",
                           "description": "GeoPackage"
@@ -969,11 +969,7 @@ class DataProviderViewSet(EventkitViewSet):
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
             data = serializer(providers, many=True, context={"request": request})
             filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
-            if isinstance(data, list):
-                data += filtered_data
-            else:
-                filtered_data.update(data)
-                data = filtered_data
+            data = data + filtered_data
 
             if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 DataProvider.update_cache_key_list(cache_key)

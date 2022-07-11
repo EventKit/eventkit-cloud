@@ -31,7 +31,7 @@ const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
 const formats = [
     {
         uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
-        url: 'http://cloud.eventkit.test/api/formats/shp',
+        url: 'http://host.docker.internal/api/formats/shp',
         slug: 'shp',
         name: 'ESRI Shapefile Format',
         description: 'Esri Shapefile (OSM Schema)',
@@ -52,7 +52,7 @@ const formats = [
     },
     {
         uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
-        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        url: 'http://host.docker.internal/api/formats/gpkg',
         slug: 'gpkg',
         name: 'Geopackage',
         description: 'GeoPackage',
@@ -88,7 +88,7 @@ const providers = {
         {
             display: true,
             id: 1,
-            model_url: 'http://cloud.eventkit.test/api/providers/1',
+            model_url: 'http://host.docker.internal/api/providers/1',
             type: 'osm-generic',
             created_at: '2017-03-24T17:44:22.940611Z',
             updated_at: '2017-03-24T17:44:22.940629Z',
@@ -106,7 +106,7 @@ const providers = {
         {
             display: true,
             id: 2,
-            model_url: 'http://cloud.eventkit.test/api/providers/2',
+            model_url: 'http://host.docker.internal/api/providers/2',
             type: 'usgs',
             created_at: '2021-03-24T17:44:22.940611Z',
             updated_at: '2021-03-24T17:44:22.940629Z',

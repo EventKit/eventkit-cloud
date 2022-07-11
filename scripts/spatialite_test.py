@@ -8,9 +8,8 @@
 """
 
 import os
-from string import Template
-
 import sqlite3
+from string import Template
 
 
 def run(*script_args):

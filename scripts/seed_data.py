@@ -17,7 +17,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=os.getenv("LOG_LEV
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('url', help='The EventKit instance base url (i.e. http://cloud.eventkit.test).')
+    parser.add_argument('url', help='The EventKit instance base url (i.e. http://host.docker.internal).')
     parser.add_argument('file', help='A geojson file to be used for location data.')
     parser.add_argument('--name', default='name',
                         help='The field to be used for the name of the location which will be the datapack name.')

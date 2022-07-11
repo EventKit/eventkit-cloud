@@ -61,7 +61,7 @@ describe('DataPackOptions component', () => {
             name: 'test',
             event: 'test',
             description: 'test',
-            url: 'http://cloud.eventkit.test/api/jobs/67890',
+            url: 'http://host.docker.internal/api/jobs/67890',
             formats: [
                 'gpkg',
             ],
