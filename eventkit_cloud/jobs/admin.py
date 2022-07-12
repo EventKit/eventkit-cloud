@@ -1,9 +1,9 @@
 import json
 import logging
 import os
-import yaml
-from typing import Optional, Any
+from typing import Any, Optional
 
+import yaml
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.gis.admin import OSMGeoAdmin
