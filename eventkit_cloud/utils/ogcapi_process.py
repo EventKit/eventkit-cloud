@@ -13,7 +13,7 @@ from django.core.cache import cache
 
 from eventkit_cloud.auth.views import has_valid_access_token
 from eventkit_cloud.core.helpers import get_or_update_session
-from eventkit_cloud.jobs.models import clean_config, load_provider_config
+from eventkit_cloud.jobs.models import clean_config
 from eventkit_cloud.tasks.enumerations import OGC_Status
 from eventkit_cloud.tasks.helpers import update_progress
 from eventkit_cloud.utils.generic import retry
@@ -196,7 +196,7 @@ def get_process(provider, session):
 def get_process_formats_from_json(process_json: dict, provider_config: dict):
     """Extract format information from a valid JSON object representing an OGC Process."""
     # TODO: Make more flexible to allow other keys
-    ogcapi_process_config = load_provider_config(provider_config).get("ogcapi_process")
+    ogcapi_process_config = provider_config.get("ogcapi_process")
     product_slug = ogcapi_process_config.get("inputs", {}).get("product").get("id")
     if not product_slug:
         raise Exception("A product name needs to be configured {'inputs':{'product':{'id': <product_name>'}}}")
@@ -225,12 +225,12 @@ def get_process_formats(provider: DataProvider):
         client = provider.get_service_client()
         process_json = get_process(provider, client.session)
         if process_json:
-            process_formats = get_process_formats_from_json(process_json, load_provider_config(provider.config))
+            process_formats = get_process_formats_from_json(process_json, provider.config)
     return process_formats
 
 
 def get_session(request, provider):
-    config = load_provider_config(provider.config)
+    config = provider.config
 
     session = get_or_update_session(**config)
 

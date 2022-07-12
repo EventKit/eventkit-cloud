@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import yaml
+from typing import Optional, Any
 
 from django import forms
 from django.contrib import admin, messages
@@ -26,7 +28,6 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     clean_config,
-    clean_config_as_str,
 )
 
 logger = logging.getLogger(__name__)
@@ -121,10 +122,28 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ["uid", "name", "user", "config_type", "published", "created_at"]
 
 
+class YAMLWidget(forms.widgets.Textarea):
+    def format_value(self, value):
+        try:
+            value = yaml.dump(json.loads(value))
+            return value
+        except Exception as e:
+            logger.warning("Error while formatting JSON: %s", e)
+            return super(YAMLWidget, self).format_value(value)
+
+
+class ConfigField(forms.JSONField):
+    def to_python(self, value: Optional[Any]) -> Optional[Any]:
+        value = yaml.safe_load(value)
+        return super().to_python(value)
+
+
 class DataProviderForm(forms.ModelForm):
     """
     Admin form for editing export providers in the admin interface.
     """
+
+    config = ConfigField(widget=YAMLWidget)
 
     class Meta:
         model = DataProvider
@@ -152,6 +171,7 @@ class DataProviderForm(forms.ModelForm):
         ]
 
     def clean_config(self):
+        print(self.cleaned_data)
         config = self.cleaned_data.get("config")
 
         service_type = self.cleaned_data.get("export_provider_type").type_name
@@ -174,7 +194,7 @@ class DataProviderForm(forms.ModelForm):
                 raise forms.ValidationError("Configuration is required for OSM data providers")
             from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 
-            feature_selection = FeatureSelection(clean_config_as_str(config))
+            feature_selection = FeatureSelection(clean_config(config))
             if feature_selection.errors:
                 raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
         elif service_type in ["ogcapi-process"]:

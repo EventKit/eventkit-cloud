@@ -2,6 +2,7 @@
 
 
 import unittest
+import yaml
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 
@@ -36,7 +37,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Theme name reserved: points")
         y = """
@@ -44,7 +45,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Theme name reserved: rtree_something")
         y = """
@@ -52,14 +53,14 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Theme name reserved: gpkg_something")
 
     def test_empty_feature_selection(self):
         y = """
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
 
     def test_theme_names(self):
@@ -68,7 +69,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertTrue(f.valid)
         self.assertEqual(f.themes, ["A Theme Name"])
         self.assertEqual(f.slug_themes, ["a_theme_name"])
@@ -92,7 +93,7 @@ class TestFeatureSelection(unittest.TestCase):
                 - building
             where: building IS NOT NULL
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertCountEqual(f.themes, ["buildings", "waterways"])
         self.assertCountEqual(f.geom_types("waterways"), ["lines", "polygons"])
         self.assertCountEqual(f.key_selections("waterways"), ["name", "waterway"])
@@ -112,7 +113,7 @@ class TestFeatureSelection(unittest.TestCase):
                 - name IS NOT NULL
                 - name = 'some building'
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertEqual(f.filter_clause("waterways"), "name IS NOT NULL OR name = 'some building'")
 
     def test_sqls(self):
@@ -125,7 +126,7 @@ class TestFeatureSelection(unittest.TestCase):
                 - name
                 - addr:housenumber
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         create_sqls, index_sqls = f.sqls
         self.assertEqual(
             create_sqls[0],
@@ -153,7 +154,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - highway
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         create_sqls, index_sqls = f.sqls
         self.assertEqual(
             create_sqls[0],
@@ -164,26 +165,6 @@ class TestFeatureSelection(unittest.TestCase):
             'WHERE ("highway" IS NOT NULL);\n',
         )
 
-    def test_unsafe_yaml(self):
-        y = """
-        !!python/object:feature_selection.feature_selection.FeatureSelection
-        a: 0
-        """
-        f = FeatureSelection(y)
-        self.assertFalse(f.valid)
-        self.assertEqual(1, len(f.errors))
-
-    def test_malformed_yaml(self):
-        # if it's not a valid YAML document
-        # TODO: errors for if yaml indentation is incorrect
-        y = """
-        all
-            select:
-                - name
-        """
-        f = FeatureSelection(y)
-        self.assertFalse(f.valid)
-
     def test_minimal_yaml(self):
         # the shortest valid feature selection
         y = """
@@ -191,7 +172,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertTrue(f.valid)
         self.assertEqual(f.geom_types("all"), ["points", "lines", "polygons"])
 
@@ -202,7 +183,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "YAML must be dict, not list")
 
@@ -213,7 +194,7 @@ class TestFeatureSelection(unittest.TestCase):
           select:
             -name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
 
     def test_no_select_yaml(self):
@@ -223,7 +204,7 @@ class TestFeatureSelection(unittest.TestCase):
           -select:
             - name
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Each theme must have a 'select' key")
 
@@ -237,14 +218,14 @@ class TestFeatureSelection(unittest.TestCase):
             - has:colon
             - UPPERCASE
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertTrue(f.valid)
         y = """
         all:
           select:
             - na?me
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Invalid OSM key: na?me")
         y = """
@@ -252,7 +233,7 @@ class TestFeatureSelection(unittest.TestCase):
           select:
             -
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "Missing OSM key")
 
@@ -264,7 +245,7 @@ class TestFeatureSelection(unittest.TestCase):
                 - addr:housenumber
             where: addr:housenumber IS NOT NULL
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0], "SQL WHERE Invalid: identifier with colon : must be in double quotes.")
 
@@ -282,7 +263,7 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - column3
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertTrue(f.valid)
         self.assertEqual(f.key_union(), ["column1", "column2", "column3"])
         self.assertEqual(f.key_union("points"), ["column3"])
@@ -297,5 +278,5 @@ class TestFeatureSelection(unittest.TestCase):
             select:
                 - column3
         """
-        f = FeatureSelection(y)
+        f = FeatureSelection(yaml.safe_load(y))
         self.assertMultiLineEqual(f.zip_readme("buildings"), ZIP_README)

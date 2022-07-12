@@ -17,7 +17,7 @@ from django.db.models.query import QuerySet
 from mapproxy import grid as mapproxy_grid
 from mapproxy import srs as mapproxy_srs
 
-from eventkit_cloud.jobs.models import DataProvider, load_provider_config
+from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
 from eventkit_cloud.utils.client import parse_duration
@@ -486,7 +486,7 @@ def get_provider_grid(provider, min_zoom=None, max_zoom=None):
     min_zoom = int(min_zoom) if min_zoom else provider.level_from
     max_zoom = int(max_zoom) if max_zoom else provider.level_to
 
-    config = load_provider_config(provider.config)
+    config = provider.config
     try:
         res = config.get("grids", {}).get("default", {}).get("res", [])[min_zoom:max_zoom]
         if not res:

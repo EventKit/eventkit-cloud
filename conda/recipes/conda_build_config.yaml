@@ -33,13 +33,13 @@ bzip2:
 c_ares:
 - 1.18.1
 ca_certificates:
-- 2022.5.18.1
+- 2022.6.15
 cairo:
 - 1.16.0
 celery:
 - 5.2.6
 certifi:
-- 2022.5.18.1
+- 2022.6.15
 cffi:
 - 1.15.0
 cfitsio:
@@ -141,11 +141,11 @@ idna:
 importlib_metadata:
 - 4.11.4
 importlib_resources:
-- 5.7.1
+- 5.8.0
 jbig:
 - '2.1'
 jmespath:
-- 1.0.0
+- 1.0.1
 jpeg:
 - 9e
 json_c:
@@ -155,7 +155,7 @@ jsonfield:
 jsonschema:
 - 4.4.0
 kealib:
-- 1.4.14
+- 1.4.15
 kernel_headers_linux_64:
 - 3.10.0
 keyutils:
@@ -345,7 +345,7 @@ pytz:
 pyyaml:
 - '6.0'
 readline:
-- '8.1'
+- 8.1.2
 requests:
 - 2.27.1
 requests_pkcs12:
@@ -355,7 +355,7 @@ ruby:
 s3transfer:
 - 0.5.2
 setuptools:
-- 62.3.2
+- 62.6.0
 shapely:
 - 1.8.0
 six:

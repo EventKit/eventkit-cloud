@@ -14,7 +14,6 @@ from typing import List, Type, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
-import yaml
 from billiard.einfo import ExceptionInfo
 from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
@@ -30,13 +29,12 @@ from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
 from gdal_utils import convert
-from yaml import CLoader
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, clean_config, load_provider_config
+from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, clean_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -369,7 +367,7 @@ def osm_data_collection_pipeline(
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
-    pbf_file = yaml.load(config, Loader=CLoader).get("pbf_file")
+    pbf_file = config.get("pbf_file")
 
     if pbf_file:
         logger.info(f"Using PBF file: {pbf_file} instead of overpass.")
@@ -796,7 +794,7 @@ def ogc_result_task(
     export_task_record = get_export_task_record(task_uid)
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
-    ogcapi_config = load_provider_config(data_provider.config).get("ogcapi_process")
+    ogcapi_config = data_provider.config.get("ogcapi_process")
     # check to see if file format that we're processing is the same one as the
     # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
@@ -1192,7 +1190,7 @@ def wfs_export_task(
     self,
     result=None,
     layer=None,
-    config=str(),
+    config=dict(),
     task_uid=None,
     stage_dir=None,
     bbox=None,
@@ -1209,7 +1207,7 @@ def wfs_export_task(
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
-    configuration = load_provider_config(config)
+    configuration = config
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data: LayersDescription = export_task_record.export_provider_task.provider.layers
@@ -1368,7 +1366,7 @@ def arcgis_feature_service_export_task(
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
-    configuration = load_provider_config(export_task_record.export_provider_task.provider.config)
+    configuration = export_task_record.export_provider_task.provider.config
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
 
@@ -2238,7 +2236,7 @@ def get_function(function):
     return function_object
 
 
-def get_creation_options(config: str, driver: str):
+def get_creation_options(config: dict, driver: str):
     """
     Gets a list of options for a specific format or returns None.
     :param config: The configuration for a datasource.
@@ -2246,7 +2244,7 @@ def get_creation_options(config: str, driver: str):
     :return: A tuple of None or the first value is list of warp creation options, and
      the second value is a list of translate create options."""
     if config:
-        conf = yaml.safe_load(config) or dict()
+        conf = config or dict()
         params = conf.get("formats", {}).get(driver, {})
         return params.get("warp_params"), params.get("translate_params")
     return None, None
@@ -2266,7 +2264,7 @@ def get_ogcapi_data(
     if download_path is None:
         raise Exception("A download path is required to download ogcapi data.")
 
-    configuration = load_provider_config(config)
+    configuration = config
 
     geom: GEOSGeometry = get_geometry(bbox, selection)
 

@@ -9,7 +9,6 @@ import uuid
 from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch
 
 import celery
-import yaml
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -17,7 +16,6 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
-from yaml import CDumper, CLoader
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, DataProviderType, Job
@@ -570,7 +568,7 @@ class TestExportTasks(ExportTaskBase):
             example_export_task_record_uid,
             self.stage_dir,
             bbox=example_bbox,
-            config=yaml.dump(example_config, Dumper=CDumper),
+            config=example_config,
         )
         mock_connect.assert_called_once()
         mock_overpass.Overpass.assert_called_once()
@@ -584,7 +582,7 @@ class TestExportTasks(ExportTaskBase):
             example_export_task_record_uid,
             self.stage_dir,
             bbox=example_bbox,
-            config=yaml.dump(example_config, Dumper=CDumper),
+            config=example_config,
         )
         mock_cancel_provider_task.assert_called_once()
 
@@ -600,7 +598,7 @@ class TestExportTasks(ExportTaskBase):
             example_export_task_record_uid,
             self.stage_dir,
             bbox=example_bbox,
-            config=yaml.dump(example_config, Dumper=CDumper),
+            config=example_config,
         )
 
         mock_overpass.Overpass.assert_not_called()
@@ -815,7 +813,7 @@ class TestExportTasks(ExportTaskBase):
         expected_provider_slug = "arcgis-feature-service"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="arcgis-feature")
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = {}
         self.provider.save()
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
@@ -1624,12 +1622,7 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         task_uid = str(saved_export_task.uid)
-        config = """
-        cert_info:
-            cert_path: '/path/to/cert'
-            cert_pass_var: 'fake_pass'
-
-        """
+        config = {"cert_info": {"cert_path": "/path/to/cert", "cert_pass_var": "fake_pass"}}
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata
@@ -1737,7 +1730,8 @@ class TestExportTasks(ExportTaskBase):
         example_format_slug = "fmt"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
         self.provider.slug = expected_provider_slug
-        self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}}, Dumper=CDumper)
+        # self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}}, Dumper=CDumper)
+        self.provider.config = {"ogcapi_process": {"id": "test"}}
         self.provider.save()
 
         expected_outfile = "/path/to/file.ext"
@@ -1762,22 +1756,16 @@ class TestExportTasks(ExportTaskBase):
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
         cred_var = "USER_PASS_ENV_VAR"
-        config = f"""
-                ogcapi_process:
-                  id: 'eventkit'
-                  inputs:
-                    input:
-                      value: 'random'
-                    format:
-                      value: 'gpkg'
-                  outputs:
-                      format:
-                        mediaType: 'application/zip'
-                  output_file_ext: '.gpkg'
-                  download_credentials:
-                      cred_var: '{cred_var}'
-                cred_var: '{cred_var}'
-                """
+        config = {
+            "ogcapi_process": {
+                "id": "eventkit",
+                "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
+                "outputs": {"format": {"mediaType": "application/zip"}},
+                "output_file_ext": ".gpkg",
+                "download_credentials": {"cred_var": cred_var},
+            },
+            "cred_var": cred_var,
+        }
 
         service_url = "http://example.test/v1/"
         session_token = "_some_token_"
@@ -1877,28 +1865,19 @@ class TestExportTasks(ExportTaskBase):
         task_uid = "1234"
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
-        config = """
-                        ogcapi_process:
-                          id: 'eventkit'
-                          inputs:
-                            input:
-                              value: 'random'
-                            format:
-                              value: 'gpkg'
-                          outputs:
-                            format:
-                              mediaType: 'application/zip'
-                          output_file_ext: '.gpkg'
-                          download_credentials:
-                            cert_info:
-                              cert_path: "something"
-                              cert_pass: "something"
-                        cert_info:
-                          cert_path: "something"
-                          cert_pass: "something"
-                        """
 
-        configuration = yaml.load(config, Loader=CLoader)["ogcapi_process"]
+        config = {
+            "ogcapi_process": {
+                "id": "eventkit",
+                "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
+                "outputs": {"format": {"mediaType": "application/zip"}},
+                "output_file_ext": ".gpkg",
+                "download_credentials": {"cert_info": {"cert_path": "something", "cert_pass": "something"}},
+            },
+            "cert_info": {"cert_path": "something", "cert_pass": "something"},
+        }
+
+        configuration = config["ogcapi_process"]
         service_url = "http://example.test/v1/"
         session_token = "_some_token_"
         example_download_url = "https://example.test/path.zip"
