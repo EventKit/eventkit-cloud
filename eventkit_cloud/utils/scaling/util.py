@@ -10,14 +10,14 @@ from eventkit_cloud.utils.scaling import Docker, Dummy, Pcf
 def get_scale_client():
 
     client: Union[Pcf, Docker]
-    if settings.DEBUG_CELERY:
+    if settings.DEBUG_CELERY:  # type: ignore  # issue with django-stubs
         return Dummy(), "Dummy"
-    elif settings.PCF_SCALING:
+    elif settings.PCF_SCALING:  # type: ignore  # issue with django-stubs
         client = Pcf()
         client.login()
 
-        if settings.CELERY_TASK_APP:
-            app_name = settings.CELERY_TASK_APP
+        if settings.CELERY_TASK_APP:  # type: ignore  # issue with django-stubs
+            app_name = settings.CELERY_TASK_APP  # type: ignore  # issue with django-stubs
         else:
             app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
     else:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 from celery.schedules import crontab
 
@@ -66,7 +66,7 @@ beat_schedule = {
         "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
     },
 }
-CELERY_TASK_APP = os.getenv("CELERY_TASK_APP")
+CELERY_TASK_APP: Optional[str] = os.getenv("CELERY_TASK_APP")
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
 celery_default_task_settings: Dict[str, int] = {
@@ -122,6 +122,6 @@ MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 # Default to 8 hours
 TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
 app.conf.task_soft_time_limit = TASK_TIMEOUT
-DEBUG_CELERY = is_true(os.getenv("DEBUG_CELERY", False))
+DEBUG_CELERY: bool = is_true(os.getenv("DEBUG_CELERY", False))
 app.conf.task_always_eager = DEBUG_CELERY
-PCF_SCALING = is_true(os.getenv("PCF_SCALING", False))
+PCF_SCALING: bool = is_true(os.getenv("PCF_SCALING", False))
