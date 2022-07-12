@@ -157,7 +157,7 @@ class SimpleMarkerSymbol(TypedDict):
     angle: int
     xoffset: int
     yoffset: int
-    outline: Outline
+    outline: Optional[SimpleLineSymbol]
 
 
 class PictureFillSymbol(TypedDict):
@@ -166,7 +166,7 @@ class PictureFillSymbol(TypedDict):
     contentType: str
     height: float
     imageData: str
-    outline: SimpleLineSymbol
+    outline: Optional[SimpleLineSymbol]
     url: str
     width: int
     xoffset: int

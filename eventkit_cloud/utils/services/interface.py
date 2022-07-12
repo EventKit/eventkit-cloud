@@ -8,7 +8,7 @@ from eventkit_cloud.utils.services.types import LayersDescription
 
 
 class IGisClient(abc.ABC):
-    aoi = None
+    aoi: dict = None
 
     @abc.abstractmethod
     def find_layers(self, root):

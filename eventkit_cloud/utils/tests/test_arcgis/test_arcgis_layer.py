@@ -1,3 +1,4 @@
+import copy
 import doctest
 import logging
 from unittest.mock import Mock, patch
@@ -53,14 +54,14 @@ class TestCreateArcgisLayer(TestCase):
             }
             self.assertEqual(result, self.arcgis_layer.get_dash_template(sls))
 
-    def test_cim_solid_stroke(self):
+    def test_get_cim_solid_stroke(self):
         sls: service_types.SimpleLineSymbol = {
             "type": "esriSLS",
             "style": "esriSLSDash",
             "width": 3,
             "color": (1, 2, 3, 255),
         }
-        expected_result = {
+        expected_sls_result = {
             "type": "CIMSolidStroke",
             "enable": True,
             "width": 3,
@@ -72,7 +73,34 @@ class TestCreateArcgisLayer(TestCase):
                 }
             ],
         }
-        self.assertEqual(expected_result, self.arcgis_layer.get_cim_solid_stroke(sls))
+        self.assertEqual(expected_sls_result, self.arcgis_layer.get_cim_solid_stroke(sls))
+        ts: service_types.TextSymbol = {"type": "esriTS", "borderLineSize": 5, "borderLineColor": (2, 3, 4, 255)}
+        expected_ts_result = {
+            "type": "CIMSolidStroke",
+            "enable": True,
+            "width": 5,
+            "color": {"type": "CIMRGBColor", "values": [2, 3, 4, 100]},
+        }
+        self.assertEqual(expected_ts_result, self.arcgis_layer.get_cim_solid_stroke(ts))
+
+        sms: service_types.SimpleMarkerSymbol = {"type": "esriSMS", "outline": sls}
+
+        expected_sms_result = copy.deepcopy(expected_sls_result)
+        self.assertEqual(expected_sms_result, self.arcgis_layer.get_cim_solid_stroke(sms))
+
+        pfs: service_types.PictureFillSymbol = {"type": "esriPFS", "outline": sls}
+
+        expected_pfs_result = copy.deepcopy(expected_sls_result)
+        self.assertEqual(expected_pfs_result, self.arcgis_layer.get_cim_solid_stroke(pfs))
+
+        not_supported = {"type": "notSupported"}
+        expected_not_supported_result = {
+            "type": "CIMSolidStroke",
+            "enable": True,
+            "width": 1,
+            "color": {"type": "CIMRGBColor", "values": [0, 0, 0, 100]},
+        }
+        self.assertEqual(expected_not_supported_result, self.arcgis_layer.get_cim_solid_stroke(not_supported))
 
     def get_cim_solid_fill(self):
         sfs: service_types.SimpleFillSymbol = {
@@ -88,6 +116,17 @@ class TestCreateArcgisLayer(TestCase):
         }
         self.assertEqual(expected_result, self.arcgis_layer.get_cim_solid_fill(sfs))
 
+    def test_get_cim_solid_fill(self):
+        expected_solid_fill = {
+            "type": "CIMSolidFill",
+            "enable": True,
+            "color": {
+                "type": "CIMRGBColor",
+                "values": [0, 0, 0, 100],
+            },
+        }
+        self.assertEqual(expected_solid_fill, self.arcgis_layer.get_cim_solid_fill({}))
+
     def test_get_symbol_layers(self):
         stroke = {"type": "CIMSolidStroke"}
         fill = {"type": "CIMSolidFill"}
@@ -97,6 +136,9 @@ class TestCreateArcgisLayer(TestCase):
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSFS", "outline": "<SLS>"}), [stroke, fill])
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriTS"}), [fill])
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSMS"}), [stroke, fill])
+        self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "bad"}), [])
+        with self.settings(DEBUG=True), self.assertRaises(NotImplementedError):
+            self.arcgis_layer.get_symbol_layers({"type": "bad"})
 
     def test_get_cim_marker_graphic(self):
         symbol = Mock()
@@ -209,6 +251,8 @@ class TestCreateArcgisLayer(TestCase):
             "symbolLayers": symbol_layers,
         }
         self.assertEqual(expected_return_value, self.arcgis_layer.get_cim_mesh_symbol(symbol))
+        with self.settings(DEBUG=True), self.assertRaises(NotImplementedError):
+            self.arcgis_layer.get_cim_mesh_symbol({"type": "bad"})
 
     def test_get_cim_point_symbol(self):
         symbol = Mock()
@@ -391,3 +435,412 @@ class TestCreateArcgisLayer(TestCase):
         }
         self.maxDiff = None
         self.assertEqual(expected_renderer, self.arcgis_layer.get_unique_value_renderer(service_renderer))
+
+    def test_get_cim_renderer(self):
+        simple_renderer = Mock()
+        self.arcgis_layer.get_simple_renderer = Mock(return_value=simple_renderer)
+        self.assertEqual(simple_renderer, self.arcgis_layer.get_cim_renderer({"type": "simple"}))
+
+        unique_value_renderer = Mock()
+        self.arcgis_layer.get_unique_value_renderer = Mock(return_value=unique_value_renderer)
+        self.assertEqual(unique_value_renderer, self.arcgis_layer.get_cim_renderer({"type": "uniqueValue"}))
+
+        self.assertIsNone(self.arcgis_layer.get_cim_renderer({"type": "notSupported"}))
+        with self.settings(DEBUG=True), self.assertRaises(NotImplementedError):
+            self.arcgis_layer.get_cim_renderer({"type": "notSupported"})
+
+    def test_get_cim_field_descriptions(self):
+        alias = "test_alias"
+        name = "test_name"
+        spec = {"fields": [{"alias": alias, "name": name}]}
+        expected_field_descriptions = [
+            {
+                "type": "CIMFieldDescription",
+                "alias": alias,
+                "fieldName": name,
+                "numberFormat": {
+                    "type": "CIMNumericFormat",
+                    "alignmentOption": "esriAlignRight",
+                    "alignmentWidth": 0,
+                    "roundingOption": "esriRoundNumberOfDecimals",
+                    "roundingValue": 6,
+                },
+                "visible": True,
+                "searchMode": "Exact",
+            }
+        ]
+        self.assertEqual(expected_field_descriptions, self.arcgis_layer.get_cim_field_descriptions(spec))
+
+    def test_get_cim_feature_table(self):
+        self.maxDiff = None
+        field_descriptions = Mock()
+        self.arcgis_layer.get_cim_field_descriptions = Mock(return_value=field_descriptions)
+        name = "test_name"
+        spec = {"name": name}
+        expected_return_value = {
+            "type": "CIMFeatureTable",
+            "displayField": "name",
+            "editable": True,
+            "fieldDescriptions": field_descriptions,
+            "dataConnection": {
+                "type": "CIMStandardDataConnection",
+                "workspaceConnectionString": f"AUTHENTICATION_MODE=OSA;DATABASE={self.file_path}",
+                "workspaceFactory": "Sql",
+                "dataset": f'main."{name}"',
+                "datasetType": "esriDTFeatureClass",
+            },
+            "studyAreaSpatialRel": "esriSpatialRelUndefined",
+            "searchOrder": "esriSearchOrderSpatial",
+        }
+        self.assertEqual(expected_return_value, self.arcgis_layer.get_cim_feature_table(spec))
+
+    def test_get_cim_standard_label_placement_properties(self):
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "aboveEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementAboveAfter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "aboveAlong": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementAboveAlong"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "aboveStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementAboveBefore"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "aboveEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementAboveEnd"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "aboveStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementAboveStart"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "belowEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementBelowAfter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "belowAlong": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementBelowAlong"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "belowStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementBelowBefore"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "belowEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementBelowEnd"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "belowStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementBelowStart"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "centerEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementCenterAfter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "centerAlong": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementCenterAlong"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "centerStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementCenterBefore"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "centerEnd": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementCenterEnd"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "lineLabelPriorities": {"type": "CIMStandardLineLabelPriorities", "centerStart": 1},
+                "featureType": "Line",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerLinePlacementCenterStart"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "aboveCenter": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementAboveCenter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "aboveLeft": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementAboveLeft"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "aboveRight": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementAboveRight"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "belowCenter": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementBelowCenter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "belowLeft": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementBelowLeft"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "belowRight": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementBelowRight"),
+        )
+        self.assertEqual(
+            {"type": "CIMStandardLabelPlacementProperties", "featureType": "Point"},
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementCenterCenter"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "centerLeft": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementCenterLeft"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "pointPlacementPriorities": {"type": "CIMStandardPointPlacementPriorities", "centerRight": 1},
+                "featureType": "Point",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPointLabelPlacementCenterRight"),
+        )
+        self.assertEqual(
+            {
+                "type": "CIMStandardLabelPlacementProperties",
+                "polygonPlacementMethod": "AlwaysHorizontal",
+                "featureType": "Polygon",
+            },
+            self.arcgis_layer.get_cim_standard_label_placement_properties("esriServerPolygonPlacementAlwaysHorizontal"),
+        )
+
+    def test_get_cim_label_classes(self):
+        self.maxDiff = None
+        self.assertEqual([], self.arcgis_layer.get_cim_label_classes())
+        with patch("eventkit_cloud.utils.arcgis.arcgis_layer.uuid.uuid4") as mock_uuid4:
+            expression = Mock()
+            self.arcgis_layer.parse_label_expression = Mock(return_value=expression)
+            min_scale = Mock()
+            max_scale = Mock()
+            text_symbol = Mock()
+            self.arcgis_layer.get_cim_symbol_reference = Mock(return_value=text_symbol)
+            feature_type = "polygon"
+            label_placement = {"featureType": feature_type}
+            self.arcgis_layer.get_cim_standard_label_placement_properties = Mock(return_value=label_placement)
+            test_uuid = Mock()
+            mock_uuid4.return_value = test_uuid
+            label_infos = [
+                {
+                    "labelExpression": Mock(),
+                    "symbol": Mock(),
+                    "minScale": min_scale,
+                    "maxScale": max_scale,
+                    "labelPlacement": Mock(),
+                }
+            ]
+
+            expected_label_class = {
+                "type": "CIMLabelClass",
+                "priority": 1,
+                "expressionTitle": "Custom",
+                "expression": expression,
+                "expressionEngine": "Python",
+                "featuresToLabel": "AllVisibleFeatures",
+                "textSymbol": text_symbol,
+                "useCodedValue": True,
+                "name": f"{test_uuid} 0",
+                "visibility": True,
+                "minimumScale": min_scale,
+                "maximumScale": max_scale,
+                "standardLabelPlacementProperties": label_placement,
+                "maplexLabelPlacementProperties": {
+                    "type": "CIMMaplexLabelPlacementProperties",
+                    "featureType": feature_type,
+                },
+            }
+            self.assertEqual([expected_label_class], self.arcgis_layer.get_cim_label_classes(label_infos=label_infos))
+
+    def test_get_cim_feature_layer(self):
+        self.maxDiff = None
+        name = "test_name"
+        description = "test_description"
+        service_spec = {"name": name, "description": description, "drawingInfo": {"renderer": "Renderer"}}
+        cim_path = f"CIMPATH=internal_map/{name}.xml"
+        feature_table = Mock()
+        self.arcgis_layer.get_cim_feature_table = Mock(return_value=feature_table)
+        renderer = Mock()
+        self.arcgis_layer.get_cim_renderer = Mock(return_value=renderer)
+        label_classes = Mock()
+        self.arcgis_layer.get_cim_label_classes = Mock(return_value=label_classes)
+        expected_feature_layer = {
+            "type": "CIMFeatureLayer",
+            "name": name,
+            "uRI": cim_path,
+            "sourceModifiedTime": {"type": "TimeInstant"},
+            "minScale": 750000,
+            "maxScale": 0,
+            "useSourceMetadata": True,
+            "description": description,
+            "layerElevation": {
+                "type": "CIMLayerElevationSurface",
+                "mapElevationID": "{752ADD4F-A4BC-44F1-8B73-D03138DD2020}",
+            },
+            "expanded": True,
+            "layerType": "Operational",
+            "showLegends": True,
+            "visibility": True,
+            "displayCacheType": "Permanent",
+            "maxDisplayCacheAge": 5,
+            "showPopups": True,
+            "serviceLayerID": -1,
+            "refreshRate": -1,
+            "refreshRateUnit": "esriTimeUnitsSeconds",
+            "blendingMode": "Alpha",
+            "autoGenerateFeatureTemplates": True,
+            "featureElevationExpression": "0",
+            "featureTable": feature_table,
+            "htmlPopupEnabled": True,
+            "selectable": True,
+            "featureCacheType": "Session",
+            "displayFiltersType": "ByScale",
+            "featureBlendingMode": "Alpha",
+            "renderer": renderer,
+            "scaleSymbols": True,
+            "snappable": True,
+            "labelClasses": label_classes,
+            "labelVisibility": True,
+        }
+        self.assertEqual(expected_feature_layer, self.arcgis_layer.get_cim_feature_layer(service_spec))
+
+    def test_get_cim_group_layer(self):
+        self.maxDiff = None
+        layer_uri = Mock()
+        mock_layer = {"uRI": layer_uri}
+        self.arcgis_layer.get_cim_layer = Mock(return_value=mock_layer)
+
+        layer_name = "test_name"
+        layer = {"name": layer_name}
+        cim_path = f"CIMPATH=internal_map/{layer_name}.xml"
+        uris = [layer_uri]
+        expected_layer = {
+            "type": "CIMGroupLayer",
+            "name": layer_name,
+            "uRI": cim_path,
+            "sourceModifiedTime": {"type": "TimeInstant"},
+            "useSourceMetadata": True,
+            "layerElevation": {
+                "type": "CIMLayerElevationSurface",
+                "mapElevationID": "{752ADD4F-A4BC-44F1-8B73-D03138DD2020}",
+            },
+            "expanded": True,
+            "layerType": "Operational",
+            "showLegends": True,
+            "visibility": True,
+            "displayCacheType": "Permanent",
+            "maxDisplayCacheAge": 5,
+            "showPopups": True,
+            "serviceLayerID": -1,
+            "refreshRate": -1,
+            "refreshRateUnit": "esriTimeUnitsSeconds",
+            "blendingMode": "Alpha",
+            "layers": uris,
+            "layerDefinitions": [mock_layer],
+        }
+        self.assertEqual(expected_layer, self.arcgis_layer.get_cim_group_layer(layer=layer))
+
+    def test_get_cim_layer(self):
+        mock_group_layer = Mock()
+        self.arcgis_layer.get_cim_group_layer = Mock(return_value=mock_group_layer)
+        self.assertEqual(mock_group_layer, self.arcgis_layer.get_cim_layer({"name": "test", "type": "Group Layer"}))
+        mock_feature_layer = Mock()
+        self.arcgis_layer.get_cim_feature_layer = Mock(return_value=mock_feature_layer)
+        self.assertEqual(mock_feature_layer, self.arcgis_layer.get_cim_layer({"type": "Feature Layer"}))
+        self.assertIsNone(self.arcgis_layer.get_cim_layer({}))
+
+    def test_flatten_layers(self):
+        group = {
+            "name": "test1",
+            "layerDefinitions": [
+                {"name": "test2", "layerDefinitions": [{"name": "test3", "layerDefinitions": []}, {"name": "test4"}]}
+            ],
+        }
+        expected_group = [{"name": "test1"}, {"name": "test2"}, {"name": "test3"}, {"name": "test4"}]
+        self.assertCountEqual(expected_group, self.arcgis_layer.flatten_layers(group))

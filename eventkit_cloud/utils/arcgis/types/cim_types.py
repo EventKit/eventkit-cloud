@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeAlias, TypedDict, Union
+from typing import Any, Literal, Optional, TypeAlias, TypedDict, Union
 
 # https://github.com/Esri/cim-spec/blob/master/docs/v2/CIMEnumerations.md
 AltitudeMode = Literal["ClampToGround", "RelativeToGround", "Absolute"]
@@ -332,6 +332,12 @@ class CIMStroke(TypedDict, total=False):
 class CIMSolidStroke(CIMSymbolLayer, CIMStroke):
     type: Literal["CIMSolidStroke"]
     color: CIMRGBColor
+
+
+class LineProps(TypedDict, total=False):
+    color: CIMRGBColor
+    width: float
+    dash_template: Optional[list[int]]
 
 
 class CIMSolidFill(TypedDict):

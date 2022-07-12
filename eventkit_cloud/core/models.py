@@ -228,9 +228,9 @@ class GroupPermission(TimeStampedModelMixin):
 
 class AttributeClass(UIDMixin, TimeStampedModelMixin):
 
-    __original_filter = None
-    __original_exclude = None
-    __original_complex = None
+    __original_filter: dict = None
+    __original_exclude: dict = None
+    __original_complex: dict = None
 
     name = models.CharField(max_length=100, blank=False, unique=True)
     slug = LowerCaseCharField(max_length=40, blank=False, unique=True, db_index=True)

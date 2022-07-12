@@ -61,30 +61,43 @@ class ArcGISLayer:
             case _:
                 return None
 
+    def get_line_props(self, symbol: Optional[service_types.SimpleLineSymbol]) -> cim_types.LineProps:
+        line_props: cim_types.LineProps = {}
+        if not symbol:
+            return line_props
+        if symbol.get("width"):
+            line_props["width"] = symbol["width"]
+        if symbol.get("color"):
+            line_props["color"] = self.get_cim_color(symbol["color"])
+        line_props["dash_template"] = self.get_dash_template(symbol)
+        return line_props
+
     def get_cim_solid_stroke(
         self,
         service_symbol: Union[
             service_types.SimpleLineSymbol, service_types.SimpleMarkerSymbol, service_types.TextSymbol
         ],
     ) -> cim_types.CIMSolidStroke:
-        dash_template = []
-        width = 1
-        color: cim_types.CIMRGBColor = self.get_cim_color((0, 0, 0, 255))
+        line_props: cim_types.LineProps = {
+            "width": 1,
+            "color": self.get_cim_color((0, 0, 0, 255)),
+            "dash_template": None,
+        }
         match service_symbol:
             case {"type": "esriSLS"}:
                 sls: service_types.SimpleLineSymbol = cast(service_types.SimpleLineSymbol, service_symbol)
-                width = sls["width"] or width
-                color = self.get_cim_color(sls["color"])
-                dash_template = self.get_dash_template(sls)
+                line_props.update(self.get_line_props(sls))
             case {"type": "esriTS"}:
                 ts: service_types.TextSymbol = cast(service_types.TextSymbol, service_symbol)
-                width = ts["borderLineSize"] or 0
-                color = self.get_cim_color(ts["borderLineColor"]) if ts["borderLineColor"] else color
+                line_props["width"] = ts.get("borderLineSize") or 0
+                if ts.get("borderLineColor"):
+                    line_props["color"] = self.get_cim_color(ts["borderLineColor"])
             case {"type": "esriSMS"}:
                 sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
-                width = sms.get("outline", {}).get("width") or 0
-                service_color: service_types.Color = sms.get("outline", {}).get("color")
-                color = self.get_cim_color(service_color) if service_color else color
+                line_props.update(self.get_line_props(sms.get("outline")))
+            case {"type": "esriPFS"}:
+                pfs: service_types.PictureFillSymbol = cast(service_types.PictureFillSymbol, service_symbol)
+                line_props.update(self.get_line_props(pfs.get("outline")))
             case _:
                 if settings.DEBUG:
                     logger.error("Could not get_cim_solid_stroke for the service symbol: %s", service_symbol)
@@ -93,10 +106,10 @@ class ArcGISLayer:
         line: cim_types.CIMSolidStroke = {
             "type": "CIMSolidStroke",
             "enable": True,
-            "width": width,
-            "color": color,
+            "width": line_props["width"],
+            "color": line_props["color"],
         }
-
+        dash_template = line_props.pop("dash_template", None)
         if dash_template:
             effect = {
                 "type": "CIMGeometricEffectDashes",
@@ -406,8 +419,7 @@ class ArcGISLayer:
         }
         return renderer
 
-    def get_cim_renderer(self, drawingInfo: service_types.DrawingInfo) -> cim_types.Renderer:
-        renderer = drawingInfo.get("renderer")
+    def get_cim_renderer(self, renderer: service_types.Renderer) -> Optional[cim_types.Renderer]:
         match renderer:
             case {"type": "simple"}:
                 sr: service_types.SimpleRenderer = cast(service_types.SimpleRenderer, renderer)
@@ -419,7 +431,7 @@ class ArcGISLayer:
                 if settings.DEBUG:
                     type = renderer.get("type") if renderer else "NO RENDERER"
                     raise NotImplementedError("The renderer: %s is not supported", type)
-                return {}
+                return None
 
     def get_cim_field_descriptions(
         self, service_spec: service_types.MapServiceSpecification
@@ -475,7 +487,6 @@ class ArcGISLayer:
                 placement_properties["lineLabelPriorities"] = {"type": "CIMStandardLineLabelPriorities", "aboveEnd": 1}
                 placement_properties["featureType"] = "Line"
             case "esriServerLinePlacementAboveAlong":
-
                 placement_properties["lineLabelPriorities"] = {
                     "type": "CIMStandardLineLabelPriorities",
                     "aboveAlong": 1,
@@ -573,7 +584,7 @@ class ArcGISLayer:
                     "type": "CIMStandardPointPlacementPriorities",
                     "belowLeft": 1,
                 }
-
+                placement_properties["featureType"] = "Point"
             case "esriServerPointLabelPlacementBelowRight":
                 placement_properties["pointPlacementPriorities"] = {
                     "type": "CIMStandardPointPlacementPriorities",
@@ -604,11 +615,11 @@ class ArcGISLayer:
         self, name: str = None, label_infos: Optional[list[service_types.LabelingInfo]] = None
     ) -> list[cim_types.CIMLabelClass]:
         label_classes: list[cim_types.CIMLabelClass] = []
+        if not label_infos:
+            return label_classes
         label_class_name = copy.deepcopy(name)
         if not label_class_name:
             label_class_name = str(uuid.uuid4())
-        if not label_infos:
-            return label_classes
         for index, label_info in enumerate(label_infos):
             text_symbol = self.get_cim_symbol_reference(label_info["symbol"])
             if not text_symbol:
@@ -673,7 +684,6 @@ class ArcGISLayer:
             "featureCacheType": "Session",
             "displayFiltersType": "ByScale",
             "featureBlendingMode": "Alpha",
-            "renderer": self.get_cim_renderer(service_spec.get("drawingInfo")),
             "scaleSymbols": True,
             "snappable": True,
             "labelClasses": self.get_cim_label_classes(
@@ -681,6 +691,10 @@ class ArcGISLayer:
             ),
             "labelVisibility": True,
         }
+        if service_spec.get("drawingInfo", {}).get("renderer"):
+            renderer: Optional[cim_types.Renderer] = self.get_cim_renderer(service_spec["drawingInfo"]["renderer"])
+            if renderer:
+                feature_layer["renderer"] = renderer
         return feature_layer
 
     def get_cim_group_layer(
@@ -703,10 +717,7 @@ class ArcGISLayer:
 
         layers = []
         for sublayer in sublayers:
-            if layer.get("layers", {}) and not sublayer.get("parentLayer"):
-                layers.append(sublayer["uRI"])
-            else:
-                layers.append(sublayer["uRI"])
+            layers.append(sublayer["uRI"])
 
         return {
             "type": "CIMGroupLayer",
