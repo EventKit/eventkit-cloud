@@ -62,6 +62,25 @@ class TestDocker(TestCase):
                 },
             )
 
+    def test_get_running_tasks(self):
+        app_name = "test_name"
+        mock_stats = {"memory_stats": {}}
+        mock_container = Mock(labels={"task_name": app_name}, stats=Mock(return_value=mock_stats))
+        expected_result = {
+            "resources": [
+                {
+                    "name": app_name,
+                    "memory_in_mb": 0.0,
+                    "disk_in_mb": 0,  # Docker doesn't provider disk stats.
+                }
+            ],
+            "pagination": {"total_results": 1},
+        }
+        self.docker.client.containers.list.return_value = [mock_container]
+        self.assertEqual(expected_result, self.docker.get_running_tasks(app_name))
+        names = [app_name]
+        self.assertEqual(expected_result, self.docker.get_running_tasks(app_name, names=names))
+
     def test_get_running_tasks_memory(self):
         expected_memory = 5
         self.docker.get_running_tasks = Mock(return_value={"resources": [{"memory_in_mb": expected_memory}]})

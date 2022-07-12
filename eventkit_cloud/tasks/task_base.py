@@ -1,5 +1,3 @@
-import os
-
 from celery import Task
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -20,7 +18,7 @@ class EventKitBaseTask(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         # This will only run in the PCF environment to shut down unused workers.
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-        pcf_scaling = os.getenv("PCF_SCALING", False)
+        pcf_scaling = settings.PCF_SCALING
         if pcf_scaling:
             from eventkit_cloud.tasks.scheduled_tasks import kill_worker  # type: ignore
 
@@ -44,8 +42,7 @@ class EventKitBaseTask(Task):
                 print(f"RUNNING TASKS BY QUEUE: {running_tasks_by_queue}")
                 running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
                 export_tasks = ExportTaskRecord.objects.filter(
-                    worker=hostname,
-                    status__in=[task_state.value for task_state in TaskState.get_not_finished_states()],
+                    worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
                 )
 
                 if not export_tasks:

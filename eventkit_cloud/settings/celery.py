@@ -66,7 +66,7 @@ beat_schedule = {
         "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
     },
 }
-
+CELERY_TASK_APP = os.getenv("CELERY_TASK_APP")
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
 celery_default_task_settings: Dict[str, int] = {
@@ -124,3 +124,4 @@ TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
 app.conf.task_soft_time_limit = TASK_TIMEOUT
 DEBUG_CELERY = is_true(os.getenv("DEBUG_CELERY", False))
 app.conf.task_always_eager = DEBUG_CELERY
+PCF_SCALING = is_true(os.getenv("PCF_SCALING", False))
