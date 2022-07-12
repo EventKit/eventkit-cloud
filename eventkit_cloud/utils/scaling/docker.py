@@ -48,7 +48,7 @@ class Docker(ScaleClient):
 
         # Don't pass in the HOSTNAME of the main celery node.
         environment = dict(os.environ)
-        environment.pop("HOSTNAME")
+        environment.pop("HOSTNAME", None)
         container_number = str(uuid.uuid4().int)[:8]
         logger.info(f"Scaling up using docker image {app_name}")
         self.client.containers.run(
@@ -108,7 +108,6 @@ class Docker(ScaleClient):
 
         running_tasks = self.get_running_tasks(app_name)
         running_tasks_memory = 0
-        print(running_tasks)
         for task in running_tasks["resources"]:
             running_tasks_memory += task["memory_in_mb"]
         return running_tasks_memory
