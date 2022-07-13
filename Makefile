@@ -5,13 +5,13 @@ else
 endif
 
 black:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/pyproject.toml --check --diff eventkit_cloud
+	docker-compose run --rm eventkit black --check --diff eventkit_cloud
 
 black-format:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud
+	docker-compose run --rm eventkit black eventkit_cloud
 
 flake8:
-	docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/setup.cfg eventkit_cloud
+	docker-compose run --rm eventkit flake8 eventkit_cloud
 
 mypy:
 	docker-compose run --rm eventkit mypy eventkit_cloud
@@ -24,15 +24,13 @@ isort-format:
 
 lint: black flake8 isort mypy
 
-test:
-	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
-	docker-compose run --rm webpack npm test
-
 test-back:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
 
 test-front:
 	docker-compose run --rm webpack npm test
+
+test: test-back test-front
 
 install-hooks:
 ifeq ($(detected_OS),Windows)

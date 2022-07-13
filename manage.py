@@ -1,6 +1,14 @@
 #!/usr/bin/env python
-import logging
 import os
+
+if os.getenv("COVERAGE"):
+    import coverage
+
+    cov = coverage.coverage(config_file=".coveragerc", source=["eventkit_cloud"])
+    cov.erase()
+    cov.start()
+
+import logging
 import subprocess
 import sys
 
@@ -23,20 +31,7 @@ if __name__ == "__main__":
 
         logging.disable(logging.CRITICAL)
 
-        if os.getenv("COVERAGE"):
-            import coverage
-
-            cov = coverage.coverage(config_file=".coveragerc", source=["eventkit_cloud"])
-            cov.erase()
-            cov.start()
-
         execute_from_command_line(sys.argv)
-
-        if os.getenv("COVERAGE"):
-            cov.stop()
-            cov.save()
-            coverage = cov.report()
-            assert coverage >= float(os.getenv("COVERAGE_THRESHOLD", 0))
 
         if os.getenv("TRAVIS"):
             coveralls = os.path.join(
@@ -59,3 +54,10 @@ if __name__ == "__main__":
     else:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
         execute_from_command_line(sys.argv)
+
+
+if os.getenv("COVERAGE"):
+    cov.stop()
+    cov.save()
+    coverage = cov.report()
+    assert coverage >= float(os.getenv("COVERAGE_THRESHOLD", 0))
