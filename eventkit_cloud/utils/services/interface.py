@@ -2,13 +2,13 @@ import abc
 from typing import Optional
 
 import requests
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import GeometryCollection, Polygon
 
 from eventkit_cloud.utils.services.types import LayersDescription
 
 
 class IGisClient(abc.ABC):
-    aoi = None
+    aoi: Optional[GeometryCollection] = None
 
     @abc.abstractmethod
     def find_layers(self, root):

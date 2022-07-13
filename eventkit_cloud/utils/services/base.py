@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class GisClient(abc.ABC):
-    aoi = None
+    aoi: Optional[GeometryCollection] = None
 
     def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None):
         """

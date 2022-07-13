@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 from celery.schedules import crontab
 
@@ -32,15 +32,24 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
-BEAT_SCHEDULE = {
+beat_schedule = {
     "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0")},
     "provider-statuses": {
         "task": "Check Provider Availability",
         "schedule": crontab(minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
     },
-    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0")},
-    "clear-tile-cache": {"task": "Clear Tile Cache", "schedule": crontab(minute="0", day_of_month="*/14")},
-    "clear-user-sessions": {"task": "Clear User Sessions", "schedule": crontab(minute="0", day_of_month="*/2")},
+    "clean-up-queues": {
+        "task": "Clean Up Queues",
+        "schedule": crontab(minute="0", hour="0"),
+    },
+    "clear-tile-cache": {
+        "task": "Clear Tile Cache",
+        "schedule": crontab(minute="0", day_of_month="*/14"),
+    },
+    "clear-user-sessions": {
+        "task": "Clear User Sessions",
+        "schedule": crontab(minute="0", day_of_month="*/2"),
+    },
     "update-statistics-cache": {
         "task": "Update Statistics Caches",
         "schedule": crontab(minute="0", day_of_month="*/4"),
@@ -57,7 +66,7 @@ BEAT_SCHEDULE = {
         "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
     },
 }
-
+CELERY_TASK_APP: Optional[str] = os.getenv("CELERY_TASK_APP")
 CELERY_SCALE_BY_RUN = is_true(os.getenv("CELERY_SCALE_BY_RUN", False))
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", None)
 celery_default_task_settings: Dict[str, int] = {
@@ -70,7 +79,7 @@ CELERY_DEFAULT_TASK_SETTINGS = (
 )
 CELERY_MAX_DEFAULT_TASKS = int(os.getenv("CELERY_MAX_DEFAULT_TASKS", 3))
 
-app.conf.beat_schedule = BEAT_SCHEDULE
+app.conf.beat_schedule = beat_schedule
 
 CELERYD_USER = CELERYD_GROUP = "eventkit"
 if os.getenv("VCAP_SERVICES"):
@@ -113,3 +122,6 @@ MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 # Default to 8 hours
 TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
 app.conf.task_soft_time_limit = TASK_TIMEOUT
+DEBUG_CELERY: bool = is_true(os.getenv("DEBUG_CELERY", False))
+app.conf.task_always_eager = DEBUG_CELERY
+PCF_SCALING: bool = is_true(os.getenv("PCF_SCALING", False))
