@@ -15,6 +15,7 @@ from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import yaml
+from audit_logging.file_logging import logging_open
 from billiard.einfo import ExceptionInfo
 from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
@@ -890,8 +891,6 @@ def output_selection_geojson_task(
     if selection:
         # Test if json.
         json.loads(selection)
-
-        from audit_logging.file_logging import logging_open
 
         user_details = kwargs.get("user_details")
         with logging_open(geojson_file, "w", user_details=user_details) as open_file:
