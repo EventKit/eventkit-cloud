@@ -14,6 +14,7 @@ from typing import List, Type, Union
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from audit_logging.file_logging import logging_open
 from billiard.einfo import ExceptionInfo
 from billiard.exceptions import SoftTimeLimitExceeded
 from celery import signature
@@ -1366,15 +1367,12 @@ def arcgis_feature_service_export_task(
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
-    configuration = export_task_record.export_provider_task.provider.config
+    data_provider = export_task_record.export_provider_task.provider
+    configuration = data_provider.config
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
 
-    data_provider = export_task_record.export_provider_task.provider
-
     out = None
-
-    configuration = load_provider_config(data_provider.config)
 
     layers: LayersDescription = {}
     vector_layer_data = data_provider.layers
