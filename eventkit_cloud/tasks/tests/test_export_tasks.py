@@ -380,6 +380,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_1,
                 "projection": projection,
+                "level": 15,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -389,6 +390,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_2,
                 "projection": projection,
+                "level": 15,
             },
         }
 
@@ -812,6 +814,7 @@ class TestExportTasks(ExportTaskBase):
         mock_exists,
         mock_layers,
     ):
+        selection = "selection.geojson"
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         projection = 4326
@@ -832,7 +835,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.return_value = expected_output_path
         mock_exists.return_value = True
 
-        previous_task_result = {"source": expected_input_url}
+        previous_task_result = {"source": expected_input_url, "selection": selection}
 
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, status=TaskState.PENDING.value, provider=self.provider
@@ -904,6 +907,7 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
+                "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_1,
                 "distinct_field": "OBJECTID",
@@ -914,6 +918,7 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
+                "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_2,
                 "distinct_field": expected_field,
@@ -948,7 +953,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_1,
             output_file=expected_output_path,
             projection=4326,
-            boundary=bbox,
+            boundary=selection,
             access_mode="append",
             layer_name=layer_name_1,
             executor=self.task_process().start_process,
@@ -959,7 +964,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_2,
             output_file=expected_output_path,
             projection=4326,
-            boundary=bbox,
+            boundary=selection,
             access_mode="append",
             layer_name=layer_name_2,
             executor=self.task_process().start_process,

@@ -241,7 +241,7 @@ def get_mxd_template(version=CURRENT_VERSION):
         template_file_name = "template-10-4.mxd"
     else:
         template_file_name = "template-10-6.mxd"
-    template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", template_file_name))
+    template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "", template_file_name))
     if not os.path.isfile(template_file):
         logger.warning("This script requires an mxd template file which was not found.")
         raise Exception("File Not Found: {0}".format(template_file))
@@ -259,7 +259,7 @@ def get_layer_file(type, version=CURRENT_VERSION):
     if int(version.split(".")[1]) >= 6:
         version = "10.6"
     layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
-    layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
+    layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "", layer_basename))
     if os.path.isfile(layer_file):
         logger.warning(("Fetching layer template: {0}".format(layer_file)))
         return layer_file

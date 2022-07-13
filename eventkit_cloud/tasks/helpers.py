@@ -3,6 +3,7 @@ import glob
 import json
 import logging
 import os
+import pathlib
 import pickle
 import re
 import shutil
@@ -44,6 +45,7 @@ from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import s3
+from eventkit_cloud.utils.arcgis.arcgis_layer import ArcGISLayer
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import get_chunked_bbox
@@ -51,7 +53,6 @@ from eventkit_cloud.utils.s3 import download_folder_from_s3
 from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 CHUNK = 1024 * 1024 * 2  # 2MB chunks
-
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ def get_download_path(folder_name):
     """
     The download dir is where all files are stored after they are processed.
     It is a unique space to ensure that files aren't being improperly modified.
-    :param file_path: The unique value to store the directory for the data.
+    :param folder_name: The unique value to store the directory for the data.
     :return: The path to the directory.
     """
     return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(folder_name))
@@ -79,7 +80,7 @@ def get_download_path(folder_name):
 def get_download_url(file_name):
     """
     A URL path to the run data
-    :param run_uid: The unique identifier for the run data.
+    :param file_name: The unique identifier for the data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
     return f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(file_name)}"
@@ -171,10 +172,9 @@ def get_export_filepath(
     """
     Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
-    :param job_name: The name of the job being processed.
+    :param export_task_record: The name of the job being processed.
     :param descriptor: A projection (or other description) as an int or string referencing an EPSG code
     (e.g. 4326 = EPSG:4326)
-    :param export_task: The provider slug (e.g. osm) for the filename.
     :param extension: The file extension for the filename.
     """
     provider = export_task_record.export_provider_task.provider if export_task_record else None
@@ -272,7 +272,7 @@ def get_arcgis_templates(metadata: dict) -> dict:
     if not os.path.dirname(stage_dir):
         os.makedirs(stage_dir)
 
-    with cd(os.path.join(os.path.dirname(__file__), "arcgis")):
+    with cd(os.path.join(os.path.dirname(__file__), "../utils/arcgis/templates")):
         for dirpath, _, arcgis_template_files in os.walk("./"):
             if not os.path.isdir(stage_dir):
                 os.mkdir(stage_dir)
@@ -303,9 +303,11 @@ def get_arcgis_templates(metadata: dict) -> dict:
                         files[os.path.abspath(os.path.join(dirpath, arcgis_template_file))] = os.path.join(
                             Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename)
                         )
-
     arcgis_metadata_file = os.path.join(stage_dir, "metadata.json")
     arcgis_metadata = get_arcgis_metadata(metadata)
+
+    # Add layer files
+    logger.error("Searching for layer_path")
 
     with open(arcgis_metadata_file, "w") as open_md_file:
         json.dump(arcgis_metadata, open_md_file)
@@ -640,12 +642,36 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
         if include_files:
             try:
                 include_files.update(create_license_file(data_provider_task_record))
+                # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
+                if provider_type == "arcgis-feature":
+                    include_files.update(create_arcgis_layer_file(data_provider_task_record, metadata))
             except FileNotFoundError:
                 # This fails if run at beginning of run.
                 pass
 
         metadata["include_files"] = include_files
     return metadata
+
+
+def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, metadata: dict) -> dict[str, str]:
+    file_info = metadata["data_sources"][data_provider_task_record.provider.slug]["files"][0]
+    layer_filepath_stage = str(
+        pathlib.Path(file_info["full_file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
+    )
+    layer_filepath_archive = str(
+        pathlib.Path(file_info["file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
+    )
+
+    service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
+    metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
+    arcgis_layer = ArcGISLayer(
+        data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
+    )
+    doc = arcgis_layer.get_cim_layer_document()
+
+    with open(layer_filepath_stage, "w") as layer_file:
+        layer_file.write(json.dumps(doc))
+    return {layer_filepath_stage: layer_filepath_archive}
 
 
 def get_arcgis_metadata(metadata):
@@ -864,6 +890,7 @@ def merge_chunks(
     base_url: str,
     task_points=100,
     feature_data=False,
+    level=15,
     distinct_field=None,
     session=None,
     *args,
@@ -873,7 +900,7 @@ def merge_chunks(
     # mypy complains when keyword arguments are passed alongside a **kwargs
     # it believes that session could be getting passed in twice (it could, but shouldn't)
     chunks = download_chunks(
-        task_uid, bbox, stage_dir, base_url, task_points, feature_data, session=session, *args, **kwargs
+        task_uid, bbox, stage_dir, base_url, task_points, feature_data, level=level, session=session, *args, **kwargs
     )  # type: ignore
     task_process = TaskProcess(task_uid=task_uid)
     try:
@@ -912,6 +939,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
         cert_info=layer.get("cert_info"),
         task_points=task_points,
         feature_data=feature_data,
+        level=layer.get("level"),
         distinct_field=layer.get("distinct_field"),
         session=session,
     )
@@ -950,6 +978,19 @@ def download_concurrently(layers: list, concurrency=None, feature_data=False, *a
         raise e
 
     return layers
+
+
+def get_zoom_level_from_scale(scale: Optional[int], limit: int = 20) -> int:
+    zoom_level_scale: float = 559082264
+    zoom_level: int = 0
+    if not scale:
+        return 10
+    while zoom_level_scale > scale:
+        zoom_level_scale = zoom_level_scale / 2
+        zoom_level += 1
+        if zoom_level == limit:
+            break
+    return zoom_level
 
 
 def parse_arcgis_feature_response(file_path: str) -> dict:
@@ -1002,7 +1043,10 @@ def download_arcgis_feature_data(
             result_offset = 0
             result_record_count = max_record_count
             while True:
-                input_url = f"{input_url}?resultOffset={result_offset}&resultRecordCount={result_record_count}"
+                url_parts: dict = urllib.parse.urlparse(input_url)._asdict()
+                query = urllib.parse.parse_qs(url_parts["query"])
+                query.update({"resultOffset": [result_offset], "resultRecordCount": [result_record_count]})
+                input_url = urllib.parse.ParseResult(**url_parts).geturl()
 
                 with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
                     download_data(
@@ -1033,7 +1077,7 @@ def download_arcgis_feature_data(
 
 def download_chunks(
     task_uid: str,
-    bbox: list,
+    bbox: list[float],
     stage_dir: str,
     base_url: str,
     task_points=100,
@@ -1061,6 +1105,7 @@ def download_chunks(
                 logger.error("Could not get service description for %s", service_url)
             else:
                 logger.error("There was an error parsing the url to get a description for %s", base_url)
+        logger.info("Making %s requests at level %s for service %s", len(tile_bboxes), level, service_url or base_url)
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
@@ -1095,6 +1140,7 @@ def get_file_name_from_response(response: Response) -> str:
     return filename
 
 
+@retry
 @handle_auth
 def download_data(task_uid: str, input_url: str, out_file: str = None, session=None, task_points=100, *args, **kwargs):
     """
@@ -1140,7 +1186,7 @@ def download_data(task_uid: str, input_url: str, out_file: str = None, session=N
     start_points = cache.get_or_set(get_task_progress_cache_key(task_uid), 0, timeout=DEFAULT_CACHE_EXPIRATION)
     start_percent = (start_points / task_points) * 100
 
-    logger.info(f"Saving data to: {out_file}")
+    logger.debug("Saving data to: %s", out_file)
     with logging_open(out_file, "wb") as file_:
         for chunk in response.iter_content(CHUNK):
             file_.write(chunk)
