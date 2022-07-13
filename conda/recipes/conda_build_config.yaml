@@ -33,13 +33,13 @@ bzip2:
 c_ares:
 - 1.18.1
 ca_certificates:
-- 2022.6.15
+- 2022.5.18.1
 cairo:
 - 1.16.0
 celery:
 - 5.2.6
 certifi:
-- 2022.6.15
+- 2022.5.18.1
 cffi:
 - 1.15.0
 cfitsio:
@@ -65,7 +65,7 @@ dj_database_url:
 django:
 - 4.0.4
 django_audit_logging:
-- 0.3.0
+- 0.3.1
 django_auth_ldap:
 - 4.0.0
 django_celery_beat:
@@ -111,7 +111,7 @@ freexl:
 gdal:
 - 3.4.2
 gdalutils:
-- 1.0.0
+- 1.0.1
 gdbm:
 - '1.18'
 geos:
@@ -301,7 +301,7 @@ postgresql:
 proj:
 - 9.0.0
 prompt_toolkit:
-- 3.0.29
+- 3.0.30
 psycopg2:
 - 2.9.3
 pthread_stubs:
@@ -355,7 +355,7 @@ ruby:
 s3transfer:
 - 0.5.2
 setuptools:
-- 62.6.0
+- 62.3.2
 shapely:
 - 1.8.0
 six:
@@ -377,7 +377,7 @@ tiledb:
 tk:
 - 8.6.12
 typing_extensions:
-- 4.2.0
+- 4.3.0
 tzcode:
 - 2022a
 tzdata:

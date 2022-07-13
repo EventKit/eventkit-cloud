@@ -2,8 +2,5 @@
   "info": {
     "subdir": "noarch"
   },
-  "packages": {},
-  "packages.conda": {},
-  "removed": [],
-  "repodata_version": 1
+  "packages": {}
 }
