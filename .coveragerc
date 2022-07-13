@@ -1,5 +1,5 @@
 [run]
-omit = *tests*, eventkit_cloud/settings/*, eventkit_cloud/fixtures/*, */migrations/*, eventkit_cloud/api/renderers.py, */__init__.py, */admin.py, */scripts/*, */management/commands/*, */integration_test_jobs.py
+omit = *tests*, eventkit_cloud/settings/*, eventkit_cloud/fixtures/*, */migrations/*, eventkit_cloud/api/renderers.py, */__init__.py, */admin.py, */scripts/*, */management/commands/*, */integration_test_jobs.py, **/types/*, **/types.py
 source = eventkit_cloud
 
 [report]

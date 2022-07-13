@@ -103,6 +103,28 @@ Additionally it can be deployed on [Pivotal Cloud Foundry](https://github.com/Ev
 When debugging file conversion issues it can be helpful to use the environment settings `KEEP_STAGE=True`, 
 which will not delete the staged files after the run completes/fails.
 
+Additionally there is some configuration to run all services except for celery by running:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+```
+Then in your IDE you can configure your debugger to run celery in DEBUG mode with the following environment variables:
+```
+BROKER_API_URL=http://guest:guest@localhost:15672/api/
+BROKER_URL=amqp://guest:guest@localhost:5672/
+CELERY_SCALE_BY_RUN=True
+DEBUG_CELERY=True
+EXPORT_DOWNLOAD_ROOT=<path to downloads>
+EXPORT_STAGING_ROOT=<path to stage>
+GDAL_DATA=<path to virtual env>/share/gdal
+KEEP_STAGE=True
+MEMCACHED=localhost:11211
+PROJ_LIB=<path to virtual env>/share/proj
+PYTHONUNBUFFERED=1
+SECRET_KEY=<same secret as your dev env>
+SITE_IP=127.0.0.1
+SITE_NAME=host.docker.internal
+SSL_VERIFICATION=/home/user/eventkit-cloud/conda/cacert.pem
+```
 #### Using ESLint
 To use ESLint while working on the EventKit front-end, first make sure you have Node.js and NPM installed in your local dev environment.
 You can find the instructions for installing them here https://docs.npmjs.com/getting-started/installing-node

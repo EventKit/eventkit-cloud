@@ -889,8 +889,6 @@ def output_selection_geojson_task(
         # Test if json.
         json.loads(selection)
 
-        from audit_logging.file_logging import logging_open
-
         user_details = kwargs.get("user_details")
         with logging_open(geojson_file, "w", user_details=user_details) as open_file:
             open_file.write(selection)
@@ -1223,6 +1221,7 @@ def wfs_export_task(
             "bbox": bbox,
             "layer_name": layer_name,
             "projection": projection,
+            "level": layer.get("level", 15),
         }
 
     download_concurrently(list(layers.values()), **configuration)
@@ -1363,6 +1362,7 @@ def arcgis_feature_service_export_task(
     """
     result = result or {}
     export_task_record = get_export_task_record(task_uid)
+    selection = parse_result(result, "selection")
 
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
@@ -1370,10 +1370,14 @@ def arcgis_feature_service_export_task(
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
 
+    data_provider = export_task_record.export_provider_task.provider
+
     out = None
+
+    configuration = load_provider_config(data_provider.config)
+
     layers: LayersDescription = {}
-    vector_layer_data = export_task_record.export_provider_task.provider.layers
-    logger.info("Getting arcgis data using vector_layer_data %s", vector_layer_data)
+    vector_layer_data = data_provider.layers
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
         path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
@@ -1385,6 +1389,7 @@ def arcgis_feature_service_export_task(
             "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
             "bbox": bbox,
             "layer_name": layer_name,
+            "level": layer.get("level", 15),
             "projection": projection,
             "distinct_field": layer.get("distinct_field", "OBJECTID"),
         }
@@ -1402,7 +1407,7 @@ def arcgis_feature_service_export_task(
             driver="gpkg",
             input_files=layer.get("path"),
             output_file=gpkg,
-            boundary=bbox,
+            boundary=selection,
             projection=projection,
             layer_name=layer_name,
             access_mode="append",

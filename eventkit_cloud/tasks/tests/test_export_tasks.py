@@ -34,6 +34,7 @@ from eventkit_cloud.tasks.export_tasks import (
     geotiff_export_task,
     get_ogcapi_data,
     gpx_export_task,
+    hfa_export_task,
     kill_task,
     kml_export_task,
     mapproxy_export_task,
@@ -41,6 +42,7 @@ from eventkit_cloud.tasks.export_tasks import (
     nitf_export_task,
     ogcapi_process_export_task,
     osm_data_collection_pipeline,
+    output_selection_geojson_task,
     parse_result,
     pbf_export_task,
     pick_up_run_task,
@@ -50,6 +52,7 @@ from eventkit_cloud.tasks.export_tasks import (
     sqlite_export_task,
     vector_file_export_task,
     wait_for_providers_task,
+    wcs_export_task,
     wfs_export_task,
     zip_files,
 )
@@ -375,6 +378,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_1,
                 "projection": projection,
+                "level": 15,
             },
             layer_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -384,6 +388,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_2,
                 "projection": projection,
+                "level": 15,
             },
         }
 
@@ -807,6 +812,7 @@ class TestExportTasks(ExportTaskBase):
         mock_exists,
         mock_layers,
     ):
+        selection = "selection.geojson"
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         projection = 4326
@@ -827,7 +833,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.return_value = expected_output_path
         mock_exists.return_value = True
 
-        previous_task_result = {"source": expected_input_url}
+        previous_task_result = {"source": expected_input_url, "selection": selection}
 
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, status=TaskState.PENDING.value, provider=self.provider
@@ -899,6 +905,7 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_1,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_1}-{projection}",
                 "bbox": [1, 2, 3, 4],
+                "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_1,
                 "distinct_field": "OBJECTID",
@@ -909,6 +916,7 @@ class TestExportTasks(ExportTaskBase):
                 "path": expected_path_2,
                 "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_2}-{projection}",
                 "bbox": [1, 2, 3, 4],
+                "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_2,
                 "distinct_field": expected_field,
@@ -943,7 +951,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_1,
             output_file=expected_output_path,
             projection=4326,
-            boundary=bbox,
+            boundary=selection,
             access_mode="append",
             layer_name=layer_name_1,
             executor=self.task_process().start_process,
@@ -954,7 +962,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_2,
             output_file=expected_output_path,
             projection=4326,
-            boundary=bbox,
+            boundary=selection,
             access_mode="append",
             layer_name=layer_name_2,
             executor=self.task_process().start_process,
@@ -962,6 +970,112 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_c["result"])
         self.assertEqual(expected_output_path, result_c["source"])
+
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    @patch("eventkit_cloud.tasks.export_tasks.logging_open")
+    @patch("celery.app.task.Task.request")
+    def test_output_selection_geojson_task(
+        self, mock_request, mock_open, mock_get_export_task_record, mock_get_export_filepath
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        file_path = "/path/file.geojson"
+        mock_get_export_filepath.return_value = file_path
+        expected_result = {"result": file_path, "selection": file_path}
+        self.assertEqual(expected_result, output_selection_geojson_task.run(selection='{"geojson": "here"}'))
+
+    @patch("eventkit_cloud.tasks.export_tasks.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    @patch("eventkit_cloud.tasks.export_tasks.parse_result")
+    @patch("celery.app.task.Task.request")
+    def test_hfa_export_task(
+        self,
+        mock_request,
+        mock_parse_result,
+        mock_get_export_task_record,
+        mock_get_export_filepath,
+        mock_task_process,
+        mock_convert,
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        file_path = "/path/file.img"
+        mock_parse_result.return_value = file_path
+        mock_convert.return_value = file_path
+        expected_result = {"file_extension": "img", "result": file_path, "driver": "hfa", "hfa": file_path}
+        self.assertEqual(expected_result, hfa_export_task.run())
+
+    @patch("eventkit_cloud.tasks.export_tasks.wcs")
+    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    @patch("eventkit_cloud.tasks.export_tasks.parse_result")
+    @patch("celery.app.task.Task.request")
+    def test_wcs_export_task(
+        self,
+        mock_request,
+        mock_parse_result,
+        mock_get_export_task_record,
+        mock_get_export_filepath,
+        mock_export_task_record,
+        mock_wcs,
+    ):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        file_path = "/path/file.tif"
+        mock_parse_result.return_value = file_path
+        mock_wcs.WCSConverter().convert.return_value = file_path
+        expected_result = {"source": file_path, "result": file_path}
+        self.assertEqual(expected_result, wcs_export_task.run())
+
+    # @patch("eventkit_cloud.tasks.export_tasks.convert")
+    # @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
+    # @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    # @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    # @patch("eventkit_cloud.tasks.export_tasks.parse_result")
+    # @patch("celery.app.task.Task.request")
+    # def test_mbtiles_export_task(
+    #         self,
+    #         mock_request,
+    #         mock_parse_result,
+    #         mock_get_export_task_record,
+    #         mock_get_export_filepath,
+    #         mock_task_process,
+    #         mock_convert
+    # ):
+    #     celery_uid = str(uuid.uuid4())
+    #     type(mock_request).id = PropertyMock(return_value=celery_uid)
+    #     file_path = "/path/file.mbtiles"
+    #     mock_convert.return_value = file_path
+    #     expected_result = {"driver": "MBTiles", "result": file_path}
+    #     self.assertEqual(expected_result, mbtiles_export_task.run())
+    #
+    # @patch("eventkit_cloud.tasks.export_tasks.convert")
+    # @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
+    # @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    # @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
+    # @patch("eventkit_cloud.tasks.export_tasks.parse_result")
+    # @patch("celery.app.task.Task.request")
+    # def test_geopackage_export_task(
+    #         self,
+    #         mock_request,
+    #         mock_parse_result,
+    #         mock_get_export_task_record,
+    #         mock_get_export_filepath,
+    #         mock_task_process,
+    #         mock_convert
+    # ):
+    #     celery_uid = str(uuid.uuid4())
+    #     type(mock_request).id = PropertyMock(return_value=celery_uid)
+    #     file_path = "/path/file.gpkg"
+    #     mock_parse_result.return_value = file_path
+    #     mock_convert.return_value = file_path
+    #     expected_result = {"driver": "gpkg", "result": file_path, "gpkg": file_path}
+    #     self.assertEqual(expected_result, geopackage_export_task.run())
+    #
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("celery.app.task.Task.request")

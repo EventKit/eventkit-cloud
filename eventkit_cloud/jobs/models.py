@@ -322,9 +322,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     # Check if config changed to updated geometry
-    __config = None
-    __url = None
-    __layer = None
+    __config: str = None
+    __url: str = None
+    __layer: str = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -462,7 +462,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
             elif config.get("vector_layers"):
-                return {layer.get("name"): layer for layer in config.get("vector_layers", [])}
+                return {layer.get("name"): layer for layer in config.get("vector_layers", {})}
         # Often layer names are configured using an index number but this number is not very
         # useful when using the data so fall back to the slug which should be more meaningful.
         if not self.layer:  # check for NoneType or empty string

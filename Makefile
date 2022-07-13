@@ -24,15 +24,13 @@ isort-format:
 
 lint: black flake8 isort mypy
 
-test:
-	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
-	docker-compose run --rm webpack npm test
-
 test-back:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
 
 test-front:
 	docker-compose run --rm webpack npm test
+
+test: test-back test-front
 
 install-hooks:
 ifeq ($(detected_OS),Windows)
