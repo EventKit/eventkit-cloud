@@ -15,8 +15,9 @@ class Migration(migrations.Migration):
     def convert_to_yaml(apps, schema_editor):
         DataProvider = apps.get_model('jobs', 'DataProvider')
         for data_provider in DataProvider.objects.all():
-            data_provider.config = yaml.dump(data_provider.config_json, Loader=yaml.CDumper)
-            data_provider.save()
+            if data_provider.config_json:
+                data_provider.config = yaml.dump(data_provider.config_json, Dumper=yaml.CDumper)
+                data_provider.save()
             
     dependencies = [
         ('jobs', '0025_dataprovider_config_json'),
