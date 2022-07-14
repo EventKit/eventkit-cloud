@@ -322,7 +322,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     # Check if config changed to updated geometry
-    __config: str = None
+    __config: dict = None
     __url: str = None
     __layer: str = None
 
