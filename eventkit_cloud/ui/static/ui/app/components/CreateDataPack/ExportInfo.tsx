@@ -1163,6 +1163,7 @@ export function ExportInfo(props: Props) {
                                                     </div>
 
                                                     <Collapsible trigger={collapseTriggerContent(filterType.name)}
+                                                                 contentHiddenWhenClosed={true}
                                                                  open={showTypeFilter}
                                                                  className={classes.collapsible}
                                                                  openedClassName={classes.collapsible}
