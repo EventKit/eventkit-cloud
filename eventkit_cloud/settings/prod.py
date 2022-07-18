@@ -406,3 +406,7 @@ OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.13.0")
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 2621440))
+
+ENABLE_ADMIN_LOGIN: bool = is_true(os.getenv("ENABLE_ADMIN_LOGIN", False))
+ENABLE_ADMIN: bool = is_true(os.getenv("ENABLE_ADMIN", False))
+ADMIN_ROOT: str = os.getenv("ADMIN_ROOT", "admin")
