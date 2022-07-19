@@ -25,12 +25,6 @@ This should random, kept secret, and shared between any webserver portions of th
 Set CONTENT_SECURITY_POLICY for the browser to allow external resources. 
 <pre>CONTENT_SECURITY_POLICY="default-src 'none'; style-src cdn.example.com;"</pre>
 
-Change the default configuration for the admin page.
-<pre>ENABLE_ADMIN_LOGIN=False</pre>
-<pre>ENABLE_ADMIN=False</pre>
-<pre>ADMIN_ROOT=admin</pre>
-
-
 ### Storage
 
 #### S3 Storage
