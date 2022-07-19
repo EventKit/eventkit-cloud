@@ -35,6 +35,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalJustification,
     RegionalPolicy,
+    Topic,
     UserJobActivity,
     VisibilityState,
     bbox_to_geojson,
@@ -1541,6 +1542,79 @@ class TestLicenseViewSet(APITestCase):
         self.assertEqual("Not Found", bad_response.data["errors"][0]["title"])
 
 
+class TestTopicViewSet(APITestCase):
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
+        self.topics = [
+            Topic.objects.create(slug="topicslug0", name="topicname0", topic_description="topicdesc0"),
+            Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
+        ]
+        self.data_providers = [
+            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
+            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
+            DataProvider.objects.create(name="providername2", slug="providerslugtest2"),
+        ]
+        for topic in self.topics:
+            topic.providers.add(self.data_providers[-1])
+        self.attribute_class = AttributeClass.objects.create(
+            name="test", slug="test", exclude={"username__in": self.user.username}
+        )
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + token.key,
+            HTTP_ACCEPT="application/json, text/plain; version=1.0",
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
+        )
+
+    def test_get_topics_list(self):
+        expected_url = "/api/topics"
+        expected_data = [
+            {
+                "slug": "topicslug0",
+                "name": "topicname0",
+                "uid": str(self.topics[0].uid),
+                "providers": [self.data_providers[0].pk, self.data_providers[2].pk],
+                "topic_description": "topicdesc0",
+            },
+            {
+                "slug": "topicslug1",
+                "name": "topicname1",
+                "uid": str(self.topics[1].uid),
+                "providers": [self.data_providers[1].pk, self.data_providers[2].pk],
+                "topic_description": "topicdesc1",
+            },
+        ]
+        url = reverse("api:topics-list")
+        self.assertEqual(expected_url, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(expected_data, response.json())
+        # Don't show licenses not being used.
+        # self.data_providers[0].topics = None
+        # self.data_providers[0].save()
+        # self.assertEqual([{"slug": "test1", "name": "name1", "text": "text1"}], self.client.get(url).json())
+
+    def test_get_topics_detail(self):
+        expected_url = "/api/topics/topicslug1"
+        expected_data = {
+            "slug": "topicslug1",
+            "name": "topicname1",
+            "uid": str(self.topics[1].uid),
+            "providers": [self.data_providers[1].pk, self.data_providers[2].pk],
+            "topic_description": "topicdesc1",
+        }
+        url = reverse("api:topics-detail", args=["topicslug1"])
+        self.assertEqual(expected_url, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        data = response.json()
+        self.assertEqual(expected_data, data)
+
+
 class TestUserDataViewSet(APITestCase):
     fixtures = ("osm_provider.json",)
 
@@ -1946,6 +2020,50 @@ class TestUserJobActivityViewSet(APITestCase):
         job.last_export_run = run
         job.save()
         return job
+
+
+class TestDataProviderViewSet(APITestCase):
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
+        self.topics = [
+            Topic.objects.create(slug="topicslug0", name="topicname0", topic_description="topicdesc0"),
+            Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
+        ]
+        self.data_providers = [
+            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
+            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
+            DataProvider.objects.create(name="providername2", slug="providerslugtest2"),
+        ]
+        for topic in self.topics:
+            topic.providers.add(self.data_providers[-1])
+        self.attribute_class = AttributeClass.objects.create(
+            name="test", slug="test", exclude={"username__in": self.user.username}
+        )
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + token.key,
+            HTTP_ACCEPT="application/json; version=1.0",
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
+        )
+
+    def test_filter(self):
+        expected_url = "/api/providers/filter"
+        url = reverse("api:providers-filter")
+
+        response = self.client.post(
+            url,
+            data=json.dumps({"topics": [topic.slug for topic in self.topics]}),
+            content_type="application/json; version=1.0",
+        )
+
+        self.assertEqual(expected_url, url)
+        print(response)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        filtered_providers = response.json()
+        self.assertEqual(filtered_providers, self.data_providers)
 
 
 class TestDataProviderRequestViewSet(APITestCase):

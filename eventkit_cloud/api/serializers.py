@@ -47,6 +47,7 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     RegionMask,
+    Topic,
     UserJobActivity,
     UserLicense,
 )
@@ -375,6 +376,14 @@ class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
         fields = ("slug", "name", "text")
+
+
+class TopicSerializer(serializers.ModelSerializer):
+    """Serialize Topics."""
+
+    class Meta:
+        model = Topic
+        fields = ("slug", "name", "uid", "providers", "topic_description")
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
