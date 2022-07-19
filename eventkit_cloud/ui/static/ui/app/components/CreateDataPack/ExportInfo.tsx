@@ -257,7 +257,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         marginTop: '0px',
     },
     collapsible: {
-        backgroundColor: '#add8e6',
+        backgroundColor: theme.eventkit.colors.primary_background,
         marginBottom: 10,
     },
     collapseOuterContent: {
@@ -271,11 +271,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         fontWeight: 400,
         textDecoration: 'none',
         padding: 5,
-        color: 'black',
+        color: theme.eventkit.colors.black,
     },
     collapseIcon: {
         float: "right",
-        color: "black",
+        color: theme.eventkit.colors.black,
     }
 });
 
