@@ -49,7 +49,8 @@ class Pcf(ScaleClient):
         self.space_guid, self.space_name = self.get_space_guid(space_name=self.space_name)
 
     def get_links(self):
-        return self.session.get(self.api_url, headers={"Accept": "application/json"}).json()
+        response = self.session.get(self.api_url, headers={"Accept": "application/json"}).json()
+        return response["links"]
 
     def get_token(self):
         authorization_url = self.links.get("login", {}).get("href")
