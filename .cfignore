@@ -6,3 +6,4 @@ cache_data
 node_modules
 vendor
 tile_cache
+./*.json

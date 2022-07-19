@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from enum import Enum
+from typing import Optional
 
 import requests
 
@@ -22,18 +23,19 @@ class PcfTaskStates(Enum):
 
 class Pcf(ScaleClient):
     def __init__(self, api_url=None, org_name=None, space_name=None):
-        self.api_url = os.getenv("PCF_API_URL", api_url)
+        self.api_url: Optional[str] = os.getenv("PCF_API_URL", api_url)
         if not self.api_url:
             raise Exception("No api_url or PCF_API_URL provided.")
+        self.api_url: str = self.api_url.rstrip('/')
         self.session = requests.Session()
-        self.info = None
-        self.token = None
-        self.org_name = org_name or os.getenv("PCF_ORG")
-        self.space_name = space_name or os.getenv("PCF_SPACE")
-        self.user = os.getenv("PCF_USER")
-        self.passwd = os.getenv("PCF_PASS")
-        self.org_guid = None
-        self.space_guid = None
+        self.links: dict[str, pcf_types.Link] = dict()
+        self.token: Optional[str] = None
+        self.org_name: Optional[str] = org_name or os.getenv("PCF_ORG")
+        self.space_name: Optional[str] = space_name or os.getenv("PCF_SPACE")
+        self.user: Optional[str] = os.getenv("PCF_USER")
+        self.passwd: Optional[str] = os.getenv("PCF_PASS")
+        self.org_guid: Optional[str] = None
+        self.space_guid: Optional[str] = None
         self.login()
 
     def login(self, org_name=None, space_name=None):
@@ -41,23 +43,22 @@ class Pcf(ScaleClient):
         space_name = space_name or self.space_name
         if not org_name and space_name:
             raise Exception("Both an org and space are required to login.")
-        self.info = self.get_info()
+        self.links = self.get_links()
         self.token = self.get_token()
         self.org_guid, self.org_name = self.get_org_guid(org_name=self.org_name)
         self.space_guid, self.space_name = self.get_space_guid(space_name=self.space_name)
 
-    def get_info(self) -> dict:
-        return self.session.get(
-            "{0}/v3/info".format(self.api_url.rstrip("/")), headers={"Accept": "application/json"}
-        ).json()
+    def get_links(self):
+        return self.session.get(self.api_url, headers={"Accept": "application/json"}).json()
 
-    def get_token(self) -> str:
-        login_url = "{0}/login".format(self.info.get("authorization_endpoint").rstrip("/"))
-        logger.debug(login_url)
+    def get_token(self):
+        authorization_url = self.links.get("login", {}).get("href")
+        logger.debug(authorization_url)
+        if not authorization_url:
+            raise Exception("The api %s did not have a valid link for 'login'", self.api_url)
+        login_url = f"{authorization_url}/login"
         response = self.session.get(login_url)
         logger.debug(response.headers)
-        user = self.user
-
         payload = {
             "grant_type": "password",
             "username": self.user,
@@ -65,10 +66,10 @@ class Pcf(ScaleClient):
             "scope": "",
             "response_type": "token",
         }
-        url = "{0}/oauth/token".format(self.info.get("authorization_endpoint").rstrip("/"))
-        logger.debug(url)
+        token_url = f"{authorization_url}/oauth/token"
+        logger.debug(token_url)
         response = self.session.post(
-            url,
+            token_url,
             data=payload,
             headers={
                 "Authorization": "Basic Y2Y6",
@@ -77,7 +78,7 @@ class Pcf(ScaleClient):
             },
         )
         if response.status_code in ["401", "403"]:
-            raise Exception("The user {0} and password provided were invalid.".format(user))
+            raise Exception("The user %s and password provided were invalid.", self.user)
         token = response.json().get("access_token")
         if not token:
             raise Exception("Successfully logged into PCF but a token was not provided.")
@@ -88,14 +89,13 @@ class Pcf(ScaleClient):
             url,
             data=data,
             headers={
-                "Authorization": "bearer {0}".format(self.token),
+                "Authorization": f"bearer {self.token}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             },
         )
         response.raise_for_status()
         entity_response: pcf_types.ListResponse = response.json()
-
         resources = entity_response.get("resources")
         for resource in resources:
             if resource["name"].lower() == name.lower():
@@ -104,17 +104,17 @@ class Pcf(ScaleClient):
 
     def get_org_guid(self, org_name) -> tuple[str, str]:
         data = {"order-by": "name"}
-        url = f"{self.api_url.rstrip('/')}/v3/organizations"
+        url = f"{self.api_url}/v3/organizations"
         return self.get_entity_guid(org_name, url, data)
 
     def get_space_guid(self, space_name) -> tuple[str, str]:
         data = {"order-by": "name", "organization_guids": [self.org_guid]}
-        url = f"{self.api_url.rstrip('/')}/v3/spaces"
+        url = f"{self.api_url}/v3/spaces"
         return self.get_entity_guid(space_name, url, data)
 
     def get_app_guid(self, app_name) -> tuple[str, str]:
         data = {"names": [app_name], "organization_guids": [self.org_guid], "space_guids": [self.space_guid]}
-        url = f"{self.api_url.rstrip('/')}/v3/apps"
+        url = f"{self.api_url}/v3/apps"
         return self.get_entity_guid(app_name, url, data)
 
     def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None) -> scale_types.TaskResource:
@@ -125,7 +125,7 @@ class Pcf(ScaleClient):
             raise Exception("An application name was not provided to run_task.")
         app_guid = self.get_app_guid(app_name)
         if not app_guid:
-            raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
+            raise Exception("An application guid could not be recovered for app %s.", app_name)
         if not disk_in_mb:
             disk_in_mb = os.getenv("CELERY_TASK_DISK", "2048")
         if not memory_in_mb:
@@ -136,7 +136,7 @@ class Pcf(ScaleClient):
             "disk_in_mb": disk_in_mb,
             "memory_in_mb": memory_in_mb,
         }
-        url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), app_guid)
+        url = f"{self.api_url}/v3/apps/{app_guid}/tasks"
         return self.session.post(
             url,
             json=payload,
@@ -169,7 +169,7 @@ class Pcf(ScaleClient):
             payload = {
                 "states": PcfTaskStates.RUNNING.value,
             }
-        url = f"{self.api_url.rstrip('/')}/v3/apps/{app_guid}/tasks"
+        url = f"{self.api_url}/v3/apps/{app_guid}/tasks"
         response = self.session.get(
             url,
             params=payload,
@@ -207,7 +207,7 @@ class Pcf(ScaleClient):
             if task_guid:
                 logger.info(f"found task {task_guid} calling cancel")
 
-                url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
+                url = f"{self.api_url}/v3/tasks/{task_guid}/actions/cancel"
                 result = self.session.post(
                     url,
                     headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},

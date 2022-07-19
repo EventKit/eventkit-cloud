@@ -1,4 +1,6 @@
 name: eventkit-cloud
+channels:
+  - https://svc-EventKit:%2F5%403N%2F%2B%2B948I8q7h%409Cmf2SDv%2Fn%2F5%40%3AR@repos.dso.xc.nga.mil/repository/EventKit_eventkit
 dependencies:
   - eventkit-cloud=1.13.0
   - memcached=1.6.9
