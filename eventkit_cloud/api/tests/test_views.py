@@ -1551,9 +1551,9 @@ class TestTopicViewSet(APITestCase):
             Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
         ]
         self.data_providers = [
-            self.topics[0].providers.create(name="providername0", slug="providerslug0", export_format_type=1),
-            self.topics[1].providers.create(name="providername1", slug="providerslug1", export_format_type=1),
-            DataProvider.objects.create(name="providername2", slug="providerslugtest2", export_format_type=1),
+            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
+            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
+            DataProvider.objects.create(name="providername2", slug="providerslug2"),
         ]
         for topic in self.topics:
             topic.providers.add(self.data_providers[-1])
@@ -1592,10 +1592,6 @@ class TestTopicViewSet(APITestCase):
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
         self.assertEqual(expected_data, response.json())
-        # Don't show licenses not being used.
-        # self.data_providers[0].topics = None
-        # self.data_providers[0].save()
-        # self.assertEqual([{"slug": "test1", "name": "name1", "text": "text1"}], self.client.get(url).json())
 
     def test_get_topics_detail(self):
         expected_url = "/api/topics/topicslug1"
@@ -2070,7 +2066,8 @@ class TestDataProviderViewSet(APITestCase):
 
         # Third data provider isn't related to either topic
         filtered_providers_uid = [filtered_provider["uid"] for filtered_provider in response.json()]
-        expected_uids = [str(provider.uid) for provider in self.data_providers[0, 1, 3]]
+        expected_uids = [str(provider.uid) for provider in self.data_providers]
+        expected_uids.pop(2)
         self.assertEqual(filtered_providers_uid, expected_uids)
 
 
