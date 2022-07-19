@@ -34,6 +34,8 @@ class Pcf(ScaleClient):
         self.space_name: Optional[str] = space_name or os.getenv("PCF_SPACE")
         self.user: Optional[str] = os.getenv("PCF_USER")
         self.passwd: Optional[str] = os.getenv("PCF_PASS")
+        if not (self.user and self.passwd):
+            raise Exception("Both a username and password are required to use PCF client.")
         self.org_guid: Optional[str] = None
         self.space_guid: Optional[str] = None
         self.login()
@@ -88,13 +90,14 @@ class Pcf(ScaleClient):
     def get_entity_guid(self, name: str, url: str, data: dict) -> tuple[str, str]:
         response = self.session.get(
             url,
-            data=data,
+            json=data,
             headers={
                 "Authorization": f"bearer {self.token}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             },
         )
+        print(response.content)
         response.raise_for_status()
         entity_response: pcf_types.ListResponse = response.json()
         resources = entity_response.get("resources")
@@ -104,12 +107,12 @@ class Pcf(ScaleClient):
         raise Exception("Error the entity %s does not exist.", name)
 
     def get_org_guid(self, org_name) -> tuple[str, str]:
-        data = {"order-by": "name"}
+        data = {"order_by": "name"}
         url = f"{self.api_url}/v3/organizations"
         return self.get_entity_guid(org_name, url, data)
 
     def get_space_guid(self, space_name) -> tuple[str, str]:
-        data = {"order-by": "name", "organization_guids": [self.org_guid]}
+        data = {"order_by": "name", "organization_guids": [self.org_guid]}
         url = f"{self.api_url}/v3/spaces"
         return self.get_entity_guid(space_name, url, data)
 
@@ -160,7 +163,7 @@ class Pcf(ScaleClient):
         )
         if not app_name:
             raise Exception("An application name was not provided to get_running_tasks.")
-        app_guid = self.get_app_guid(app_name)
+        app_guid, _ = self.get_app_guid(app_name)
         if names:
             payload = {
                 "names": names,
