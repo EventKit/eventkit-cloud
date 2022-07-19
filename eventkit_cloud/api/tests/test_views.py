@@ -1551,9 +1551,9 @@ class TestTopicViewSet(APITestCase):
             Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
         ]
         self.data_providers = [
-            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
-            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
-            DataProvider.objects.create(name="providername2", slug="providerslugtest2"),
+            self.topics[0].providers.create(name="providername0", slug="providerslug0", export_format_type=1),
+            self.topics[1].providers.create(name="providername1", slug="providerslug1", export_format_type=1),
+            DataProvider.objects.create(name="providername2", slug="providerslugtest2", export_format_type=1),
         ]
         for topic in self.topics:
             topic.providers.add(self.data_providers[-1])
@@ -2030,10 +2030,16 @@ class TestDataProviderViewSet(APITestCase):
             Topic.objects.create(slug="topicslug0", name="topicname0", topic_description="topicdesc0"),
             Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
         ]
+        provider_type = DataProviderType.objects.first()
         self.data_providers = [
-            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
-            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
-            DataProvider.objects.create(name="providername2", slug="providerslugtest2"),
+            self.topics[0].providers.create(
+                name="providername0", slug="providerslug0", export_provider_type=provider_type
+            ),
+            self.topics[1].providers.create(
+                name="providername1", slug="providerslug1", export_provider_type=provider_type
+            ),
+            DataProvider.objects.create(name="providername2", slug="providerslug2", export_provider_type=provider_type),
+            DataProvider.objects.create(name="providername3", slug="providerslug3", export_provider_type=provider_type),
         ]
         for topic in self.topics:
             topic.providers.add(self.data_providers[-1])
@@ -2049,6 +2055,7 @@ class TestDataProviderViewSet(APITestCase):
         )
 
     def test_filter(self):
+        self.maxDiff = None
         expected_url = "/api/providers/filter"
         url = reverse("api:providers-filter")
 
@@ -2057,13 +2064,14 @@ class TestDataProviderViewSet(APITestCase):
             data=json.dumps({"topics": [topic.slug for topic in self.topics]}),
             content_type="application/json; version=1.0",
         )
-
         self.assertEqual(expected_url, url)
-        print(response)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        filtered_providers = response.json()
-        self.assertEqual(filtered_providers, self.data_providers)
+
+        # Third data provider isn't related to either topic
+        filtered_providers_uid = [filtered_provider["uid"] for filtered_provider in response.json()]
+        expected_uids = [str(provider.uid) for provider in self.data_providers[0, 1, 3]]
+        self.assertEqual(filtered_providers_uid, expected_uids)
 
 
 class TestDataProviderRequestViewSet(APITestCase):

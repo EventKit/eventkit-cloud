@@ -545,7 +545,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return str(self.data_type)
 
 
-class Topic(TimeStampedModelMixin, UIDMixin): # type: ignore
+class Topic(UIDMixin, TimeStampedModelMixin):  # type: ignore
     """
     Model for a Topic
     """
@@ -560,6 +560,9 @@ class Topic(TimeStampedModelMixin, UIDMixin): # type: ignore
         blank=True,
         help_text="This information is used to provide information about the Topic.",
     )
+
+    class Meta:
+        verbose_name_plural = "Topics"
 
     def __str__(self):
         return "{0}".format(self.name)
