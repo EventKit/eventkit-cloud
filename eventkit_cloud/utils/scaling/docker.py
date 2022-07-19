@@ -5,6 +5,7 @@ import uuid
 from typing import Any, Dict
 
 import requests
+from docker.errors import APIError
 
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
 
@@ -116,5 +117,5 @@ class Docker(ScaleClient):
         for container in containers:
             try:
                 container.stop()
-            except docker.errors.APIError as api_err:
+            except APIError as api_err:
                 raise TaskTerminationError(f"Failed to stop docker container for task: {task_name}") from api_err
