@@ -12,11 +12,7 @@ class TestCoreUrls(TestCase):
         with self.settings(**settings):
             url_modules = []
             for name, module in sys.modules.items():
-                if (
-                    "url" in name.lower()
-                    or "django.test.client" in name.lower()
-                    or "django.core.servers" in name.lower()
-                ):
+                if "urls" in name.lower():
                     url_modules += [module]
             for module in url_modules:
                 reload(module)

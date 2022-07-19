@@ -4,6 +4,7 @@
 import json
 import os
 import socket
+from typing import Union
 
 import dj_database_url
 
@@ -376,6 +377,7 @@ LOGGING = {
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
 ssl_verification_settings = os.getenv("SSL_VERIFICATION", "true")
+SSL_VERIFICATION: Union[str, bool]
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
     os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
