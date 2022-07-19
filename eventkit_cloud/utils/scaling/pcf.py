@@ -5,8 +5,10 @@ from enum import Enum
 
 import requests
 
+from eventkit_cloud.utils.scaling import types as scale_types
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
+from eventkit_cloud.utils.scaling.types import pcf as pcf_types
 
 logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.DEBUG)
@@ -26,10 +28,13 @@ class Pcf(ScaleClient):
         self.session = requests.Session()
         self.info = None
         self.token = None
-        self.org_name = org_name
-        self.space_name = space_name
+        self.org_name = org_name or os.getenv("PCF_ORG")
+        self.space_name = space_name or os.getenv("PCF_SPACE")
+        self.user = os.getenv("PCF_USER")
+        self.passwd = os.getenv("PCF_PASS")
         self.org_guid = None
         self.space_guid = None
+        self.login()
 
     def login(self, org_name=None, space_name=None):
         org_name = org_name or self.org_name
@@ -38,25 +43,25 @@ class Pcf(ScaleClient):
             raise Exception("Both an org and space are required to login.")
         self.info = self.get_info()
         self.token = self.get_token()
-        self.org_guid, self.org_name = self.get_org_guid(org_name=os.getenv("PCF_ORG", self.org_name))
-        self.space_guid, self.space_name = self.get_space_guid(space_name=os.getenv("PCF_SPACE", self.space_name))
+        self.org_guid, self.org_name = self.get_org_guid(org_name=self.org_name)
+        self.space_guid, self.space_name = self.get_space_guid(space_name=self.space_name)
 
-    def get_info(self):
+    def get_info(self) -> dict:
         return self.session.get(
-            "{0}/v2/info".format(self.api_url.rstrip("/")), headers={"Accept": "application/json"}
+            "{0}/v3/info".format(self.api_url.rstrip("/")), headers={"Accept": "application/json"}
         ).json()
 
-    def get_token(self):
+    def get_token(self) -> str:
         login_url = "{0}/login".format(self.info.get("authorization_endpoint").rstrip("/"))
         logger.debug(login_url)
         response = self.session.get(login_url)
         logger.debug(response.headers)
-        user = os.getenv("PCF_USER")
+        user = self.user
 
         payload = {
             "grant_type": "password",
-            "username": user,
-            "password": os.getenv("PCF_PASS"),
+            "username": self.user,
+            "password": self.passwd,
             "scope": "",
             "response_type": "token",
         }
@@ -78,82 +83,41 @@ class Pcf(ScaleClient):
             raise Exception("Successfully logged into PCF but a token was not provided.")
         return token
 
-    def get_org_guid(self, org_name):
-        payload = {"order-by": "name"}
-        url = "{0}/v2/organizations".format(self.api_url.rstrip("/"))
+    def get_entity_guid(self, name: str, url: str, data: dict) -> tuple[str, str]:
         response = self.session.get(
             url,
-            data=payload,
+            data=data,
             headers={
                 "Authorization": "bearer {0}".format(self.token),
                 "Content-Type": "application/json",
                 "Accept": "application/json",
             },
         )
-        organization_info = response.json()
-        org_index = next(
-            (
-                index
-                for (index, d) in enumerate(organization_info.get("resources"))
-                if d["entity"].get("name", "").lower() == org_name.lower()
-            ),
-            None,
-        )
-        if org_index is None:
-            raise Exception("Error the org {0} does not exist.".format(org_name))
-        return organization_info["resources"][org_index]["metadata"]["guid"], org_name
+        response.raise_for_status()
+        entity_response: pcf_types.ListResponse = response.json()
 
-    def get_space_guid(self, space_name):
-        payload = {"order-by": "name", "inline-relations-depth": 1}
-        url = "{0}/v2/organizations/{1}/spaces".format(self.api_url.rstrip("/"), self.org_guid)
-        response = self.session.get(
-            url,
-            data=payload,
-            headers={
-                "Authorization": "bearer {0}".format(self.token),
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
-        space_info = response.json()
-        space_index = next(
-            (
-                index
-                for (index, d) in enumerate(space_info.get("resources"))
-                if d["entity"].get("name", "").lower() == space_name.lower()
-            ),
-            None,
-        )
-        if space_index is None:
-            raise Exception("Error the space {0} does not exist in {1}.".format(space_name, self.org_name))
-        return space_info["resources"][space_index]["metadata"]["guid"], space_name
+        resources = entity_response.get("resources")
+        for resource in resources:
+            if resource["name"].lower() == name.lower():
+                return resource["guid"], name
+        raise Exception("Error the entity %s does not exist.", name)
 
-    def get_app_guid(self, app_name):
-        payload = {"q": "name:{0}".format(app_name), "inline-relations-depth": 1}
-        url = "{0}/v2/spaces/{1}/apps".format(self.api_url.rstrip("/"), self.space_guid)
-        response = self.session.get(
-            url,
-            data=payload,
-            headers={
-                "Authorization": "bearer {0}".format(self.token),
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
-        app_info = response.json()
-        app_index = next(
-            (
-                index
-                for (index, d) in enumerate(app_info.get("resources"))
-                if d["entity"].get("name", "").lower() == app_name.lower()
-            ),
-            None,
-        )
-        if app_index is None:
-            raise Exception("Error the app {0} does not exist in {1}.".format(app_name, self.space_name))
-        return app_info["resources"][app_index]["metadata"]["guid"]
+    def get_org_guid(self, org_name) -> tuple[str, str]:
+        data = {"order-by": "name"}
+        url = f"{self.api_url.rstrip('/')}/v3/organizations"
+        return self.get_entity_guid(org_name, url, data)
 
-    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
+    def get_space_guid(self, space_name) -> tuple[str, str]:
+        data = {"order-by": "name", "organization_guids": [self.org_guid]}
+        url = f"{self.api_url.rstrip('/')}/v3/spaces"
+        return self.get_entity_guid(space_name, url, data)
+
+    def get_app_guid(self, app_name) -> tuple[str, str]:
+        data = {"names": [app_name], "organization_guids": [self.org_guid], "space_guids": [self.space_guid]}
+        url = f"{self.api_url.rstrip('/')}/v3/apps"
+        return self.get_entity_guid(app_name, url, data)
+
+    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None) -> scale_types.TaskResource:
         app_name = (
             os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")) or app_name
         )
@@ -183,7 +147,7 @@ class Pcf(ScaleClient):
             },
         ).json()
 
-    def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> scale_types.ListTaskResponse:
         """
         Get running pcf tasks.
         :param app_name: The name of the PCF app.
@@ -196,8 +160,6 @@ class Pcf(ScaleClient):
         if not app_name:
             raise Exception("An application name was not provided to get_running_tasks.")
         app_guid = self.get_app_guid(app_name)
-        if not app_guid:
-            raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
         if names:
             payload = {
                 "names": names,
@@ -207,12 +169,15 @@ class Pcf(ScaleClient):
             payload = {
                 "states": PcfTaskStates.RUNNING.value,
             }
-        url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), app_guid)
-        return self.session.get(
+        url = f"{self.api_url.rstrip('/')}/v3/apps/{app_guid}/tasks"
+        response = self.session.get(
             url,
             params=payload,
-            headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
-        ).json()
+            headers={"Authorization": f"bearer {self.token}", "Accept": "application/json"},
+        )
+        response.raise_for_status()
+        task: pcf_types.ListTaskResponse = response.json()
+        return task
 
     def get_running_tasks_memory(self, app_name: str) -> int:
         """
@@ -236,19 +201,21 @@ class Pcf(ScaleClient):
 
         running_tasks = self.get_running_tasks(names=task_name)
         logger.info(f"Attempting to terminate PCF task with {task_name}")
-        task_guid = running_tasks.get("resources", [{}])[0].get("guid")
-        if task_guid:
-            logger.info(f"found task {task_guid} calling cancel")
+        resources: list[pcf_types.TaskResource] = running_tasks.get("resources")
+        for resource in resources:
+            task_guid = resource.get("guid")
+            if task_guid:
+                logger.info(f"found task {task_guid} calling cancel")
 
-            url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
-            result = self.session.post(
-                url,
-                headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
-            )
-            if result.status_code != 200:
-                raise TaskTerminationError(
-                    f"Failed to terminate PCF task with guid: {task_guid} for task named: {task_name}"
+                url = f"{self.api_url.rstrip('/')}/v3/tasks/{task_guid}/actions/cancel"
+                result = self.session.post(
+                    url,
+                    headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
                 )
+                if result.status_code != 200:
+                    raise TaskTerminationError(
+                        f"Failed to terminate PCF task with guid: {task_guid} for task named: {task_name}"
+                    )
         else:
             logger.warning(f"Terminate task was called with task_name: {task_name} but no running tasks were returned.")
             logger.warning(f"Running tasks: {running_tasks}")

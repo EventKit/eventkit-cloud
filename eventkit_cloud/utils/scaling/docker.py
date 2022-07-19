@@ -2,11 +2,10 @@ import logging
 import os
 import shlex
 import uuid
-from typing import Any, Dict
 
 import requests
-from docker.errors import APIError
 
+from eventkit_cloud.utils.scaling import types as scale_types
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
 
 try:
@@ -75,7 +74,7 @@ class Docker(ScaleClient):
             },
         )
 
-    def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> scale_types.ListTaskResponse:
         """
         Get running celery tasks, mimic the return values of the PCF client.
         :return: A list of the running task names.
@@ -86,8 +85,7 @@ class Docker(ScaleClient):
                 containers += self.client.containers.list(filters={"label": f"task_name={name}"})
         else:
             containers = self.client.containers.list(filters={"label": "task_type=celery_task"})
-        result: Dict[str, Any] = {"resources": [], "pagination": {}}
-        result["pagination"]["total_results"] = len(containers)
+        result: scale_types.ListTaskResponse = {"resources": [], "pagination": {"total_results": len(containers)}}
         for container in containers:
             stats = container.stats(stream=False)
             result["resources"].append(
@@ -95,6 +93,7 @@ class Docker(ScaleClient):
                     "name": container.labels.get("task_name"),
                     "memory_in_mb": stats["memory_stats"].get("limit", 0) / 1000000,
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
+                    "state": "RUNNING",
                 }
             )
         return result
@@ -117,5 +116,5 @@ class Docker(ScaleClient):
         for container in containers:
             try:
                 container.stop()
-            except APIError as api_err:
+            except docker.errors.APIError as api_err:
                 raise TaskTerminationError(f"Failed to stop docker container for task: {task_name}") from api_err

@@ -14,7 +14,6 @@ def get_scale_client():
         return Dummy(), "Dummy"
     elif settings.PCF_SCALING:  # type: ignore  # issue with django-stubs
         client = Pcf()
-        client.login()
 
         if settings.CELERY_TASK_APP:  # type: ignore  # issue with django-stubs
             app_name = settings.CELERY_TASK_APP  # type: ignore  # issue with django-stubs
