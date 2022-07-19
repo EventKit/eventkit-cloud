@@ -127,7 +127,7 @@ class Pcf(ScaleClient):
         )
         if not app_name:
             raise Exception("An application name was not provided to run_task.")
-        app_guid = self.get_app_guid(app_name)
+        app_guid, _ = self.get_app_guid(app_name)
         if not app_guid:
             raise Exception("An application guid could not be recovered for app %s.", app_name)
         if not disk_in_mb:
