@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 
 import requests
 
@@ -26,7 +26,7 @@ class Pcf(ScaleClient):
         self.api_url: Optional[str] = api_url or os.getenv("PCF_API_URL")
         if not self.api_url:
             raise Exception("No api_url or PCF_API_URL provided.")
-        self.api_url: str = self.api_url.rstrip("/")
+        self.api_url = cast(str, self.api_url.rstrip("/"))
         self.session = requests.Session()
         self.links: dict[str, pcf_types.Link] = dict()
         self.token: Optional[str] = None
@@ -55,7 +55,7 @@ class Pcf(ScaleClient):
         return response["links"]
 
     def get_token(self):
-        authorization_url = self.links.get("login", {}).get("href")
+        authorization_url: str = self.links.get("login", {"href": None}).get("href")
         logger.debug(authorization_url)
         if not authorization_url:
             raise Exception("The api %s did not have a valid link for 'login'", self.api_url)
