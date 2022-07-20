@@ -170,7 +170,6 @@ class ExportTask(EventKitBaseTask):
                 """
             # If a task is skipped it will be successfully completed but it won't have a return value.
             # Something needs to be populated to notify the user and to skip the following steps.
-            # Something needs to be populated to notify the user and to skip the following steps.
             if not (retval and retval.get("result")):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
 
