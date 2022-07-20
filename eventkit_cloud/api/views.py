@@ -954,8 +954,9 @@ class DataProviderViewSet(EventkitViewSet):
             downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef("pk")
         )
         download_subquery = (
-            UserDownload.objects.filter(exptask_q | (slug_q & dptask_q))
+            UserDownload.objects.filter(downloaded_at__gte=date.today() - timedelta(days=90))
             .order_by()
+            .filter(exptask_q | (slug_q & dptask_q))
             .values("uid")
             .annotate(count=Func("uid", function="COUNT"))
             .values("count")
