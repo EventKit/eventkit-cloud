@@ -1066,6 +1066,8 @@ def basic_data_provider_serializer(
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
     if hasattr(data_provider, "count"):
         serialized_data_provider["download_count"] = getattr(data_provider, "count")
+    if hasattr(data_provider, "latest_download"):
+        serialized_data_provider["latest_download"] = getattr(data_provider, "latest_download")
     return serialized_data_provider
 
 

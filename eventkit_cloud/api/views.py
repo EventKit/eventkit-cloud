@@ -948,6 +948,7 @@ class DataProviderViewSet(EventkitViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
+        # Download Count Subquery
         exptask_q = Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
         slug_q = Q(downloadable__export_task__export_provider_task__slug="run")
         dptask_q = Q(
@@ -961,11 +962,17 @@ class DataProviderViewSet(EventkitViewSet):
             .annotate(count=Func("uid", function="COUNT"))
             .values("count")
         )
+        # Latest Download Subquery
+        latest_subquery = (
+            UserDownload.objects.filter(exptask_q | (slug_q & dptask_q))
+            .order_by("-downloaded_at")
+            .values("downloaded_at")[:1]
+        )
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(count=Subquery(download_subquery))
+            .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .order_by(*self.ordering)
         )
 
