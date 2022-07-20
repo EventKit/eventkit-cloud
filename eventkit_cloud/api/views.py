@@ -896,10 +896,6 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         return super(TopicViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
-class BasicFilteredDataProviderSerializer:
-    pass
-
-
 class DataProviderViewSet(EventkitViewSet):
     """
     Endpoint exposing the supported data providers.
