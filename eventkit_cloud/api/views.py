@@ -16,7 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Func, OuterRef, Q, QuerySet, Subquery
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -896,10 +896,6 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         return super(TopicViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
-class BasicFilteredDataProviderSerializer:
-    pass
-
-
 class DataProviderViewSet(EventkitViewSet):
     """
     Endpoint exposing the supported data providers.
@@ -951,10 +947,18 @@ class DataProviderViewSet(EventkitViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
+        job_subquery = (
+            Job.objects.filter(data_provider_tasks__provider=OuterRef("pk"))
+            .order_by()
+            .values("uid")
+            .annotate(count=Func("uid", function="COUNT"))
+            .values("count")
+        )
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
+            .annotate(count=Subquery(job_subquery))
             .order_by(*self.ordering)
         )
 
