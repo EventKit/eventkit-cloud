@@ -383,7 +383,7 @@ class TopicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Topic
-        fields = ("slug", "name", "uid", "providers", "topic_description")
+        fields = ("slug", "name", "uid", "topic_description")
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
