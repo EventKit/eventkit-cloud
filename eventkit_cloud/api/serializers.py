@@ -1065,7 +1065,7 @@ def basic_data_provider_serializer(
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
     if hasattr(data_provider, "count"):
-        serialized_data_provider["job_count"] = getattr(data_provider, "count")
+        serialized_data_provider["download_count"] = getattr(data_provider, "count")
     return serialized_data_provider
 
 

@@ -122,6 +122,7 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
     RunZipFile,
+    UserDownload,
     prefetch_export_runs,
 )
 from eventkit_cloud.tasks.task_factory import (
@@ -947,8 +948,13 @@ class DataProviderViewSet(EventkitViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        job_subquery = (
-            Job.objects.filter(data_provider_tasks__provider=OuterRef("pk"))
+        exptask_q = Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
+        slug_q = Q(downloadable__export_task__export_provider_task__slug="run")
+        dptask_q = Q(
+            downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef("pk")
+        )
+        download_subquery = (
+            UserDownload.objects.filter(exptask_q | (slug_q & dptask_q))
             .order_by()
             .values("uid")
             .annotate(count=Func("uid", function="COUNT"))
@@ -958,7 +964,7 @@ class DataProviderViewSet(EventkitViewSet):
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(count=Subquery(job_subquery))
+            .annotate(count=Subquery(download_subquery))
             .order_by(*self.ordering)
         )
 
