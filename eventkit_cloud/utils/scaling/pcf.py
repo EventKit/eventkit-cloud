@@ -23,10 +23,10 @@ class PcfTaskStates(Enum):
 
 class Pcf(ScaleClient):
     def __init__(self, api_url=None, org_name=None, space_name=None):
-        self.api_url: Optional[str] = os.getenv("PCF_API_URL", api_url)
+        self.api_url: Optional[str] = api_url or os.getenv("PCF_API_URL")
         if not self.api_url:
             raise Exception("No api_url or PCF_API_URL provided.")
-        self.api_url: str = self.api_url.rstrip('/')
+        self.api_url: str = self.api_url.rstrip("/")
         self.session = requests.Session()
         self.links: dict[str, pcf_types.Link] = dict()
         self.token: Optional[str] = None
@@ -35,7 +35,7 @@ class Pcf(ScaleClient):
         self.user: Optional[str] = os.getenv("PCF_USER")
         self.passwd: Optional[str] = os.getenv("PCF_PASS")
         if not (self.user and self.passwd):
-            raise Exception("Both a username and password are required to use PCF client.")
+            raise Exception("Both PCF_USER and PCF_PASS are required to use PCF client.")
         self.org_guid: Optional[str] = None
         self.space_guid: Optional[str] = None
         self.login()
@@ -97,7 +97,6 @@ class Pcf(ScaleClient):
                 "Accept": "application/json",
             },
         )
-        print(response.content)
         response.raise_for_status()
         entity_response: pcf_types.ListResponse = response.json()
         resources = entity_response.get("resources")
@@ -130,10 +129,8 @@ class Pcf(ScaleClient):
         app_guid, _ = self.get_app_guid(app_name)
         if not app_guid:
             raise Exception("An application guid could not be recovered for app %s.", app_name)
-        if not disk_in_mb:
-            disk_in_mb = os.getenv("CELERY_TASK_DISK", "2048")
-        if not memory_in_mb:
-            memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2048")
+        disk_in_mb = disk_in_mb or os.getenv("CELERY_TASK_DISK", "2048")
+        memory_in_mb = memory_in_mb or os.getenv("CELERY_TASK_MEMORY", "2048")
         payload = {
             "name": name,
             "command": command,
@@ -164,15 +161,12 @@ class Pcf(ScaleClient):
         if not app_name:
             raise Exception("An application name was not provided to get_running_tasks.")
         app_guid, _ = self.get_app_guid(app_name)
+
+        payload = {
+            "states": PcfTaskStates.RUNNING.value,
+        }
         if names:
-            payload = {
-                "names": names,
-                "states": PcfTaskStates.RUNNING.value,
-            }
-        else:
-            payload = {
-                "states": PcfTaskStates.RUNNING.value,
-            }
+            payload["names"] = names
         url = f"{self.api_url}/v3/apps/{app_guid}/tasks"
         response = self.session.get(
             url,
