@@ -1,6 +1,6 @@
 import {createStore} from 'redux'
 import {Provider} from 'react-redux'
-import {fireEvent, render} from "@testing-library/react";
+import {fireEvent, render, waitFor} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
@@ -292,6 +292,24 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Clear All')).toBeInTheDocument();
         expect(component.queryByText('Apply')).toBeInTheDocument();
         expect(component.queryByText('Cancel')).toBeInTheDocument();
+    });
+
+    it('should show and hide type filter content when clicked', async () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const typeFilterComponent = component.getByText('Type(s)');
+        expect(typeFilterComponent).toBeInTheDocument();
+
+        fireEvent.click(typeFilterComponent);
+        expect(component.getByText('Vector')).toBeVisible();
+
+        fireEvent.click(typeFilterComponent);
+        await waitFor(() => {
+            expect(component.queryByText('Vector')).not.toBeVisible()
+        })
+
     });
 
     it('should have a list of projections', () => {
