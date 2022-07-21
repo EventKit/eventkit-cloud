@@ -16,7 +16,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Func, OuterRef, Q, QuerySet, Subquery
+from django.db.models import F, Func, OuterRef, Q, QuerySet, Subquery, Window
+from django.db.models.functions import DenseRank
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -973,6 +974,7 @@ class DataProviderViewSet(EventkitViewSet):
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
             .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
+            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
             .order_by(*self.ordering)
         )
 
