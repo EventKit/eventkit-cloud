@@ -5,7 +5,7 @@ import itertools
 import json
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
@@ -68,6 +68,7 @@ from eventkit_cloud.api.serializers import (
     RegionSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
+    TopicSerializer,
     UserDataSerializer,
     UserJobActivitySerializer,
     basic_data_provider_list_serializer,
@@ -111,6 +112,7 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     RegionMask,
+    Topic,
     UserJobActivity,
     VisibilityState,
 )
@@ -868,8 +870,30 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
-class BasicFilteredDataProviderSerializer:
-    pass
+class TopicViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint to get detailed information about the topics.
+    """
+
+    serializer_class = TopicSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Topic.objects.all()
+    lookup_field = "slug"
+    ordering = ["name"]
+
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of topic
+        * return: A list of topic objects
+        """
+        return super(TopicViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of topic
+        * return: A single topic object matching the provided slug value.
+        """
+        return super(TopicViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class DataProviderViewSet(EventkitViewSet):
@@ -1014,18 +1038,21 @@ class DataProviderViewSet(EventkitViewSet):
             except ValidationError as e:
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
-            serializer, filtered_serializer = self.get_readonly_serializer_classes()
-            providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
-            data = serializer(providers, many=True, context={"request": request})
-            filtered_data = filtered_serializer(filtered_providers, many=True)
-            if isinstance(data, list):
-                data += filtered_data
-            else:
-                filtered_data.update(data)
-                data = filtered_data
 
-            return Response(data)
-        return Response(queryset)
+        search_topics: Optional[List[Topic]] = self.request.data.get("topics") or []
+        if search_topics:
+            queryset = queryset.filter(topics__slug__in=search_topics).distinct()
+
+        serializer, filtered_serializer = self.get_readonly_serializer_classes()
+        providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+        data = serializer(providers, many=True, context={"request": request})
+        filtered_data = filtered_serializer(filtered_providers, many=True)
+        if isinstance(data, list):
+            data += filtered_data
+        else:
+            filtered_data.update(data)
+            data = filtered_data
+        return Response(data)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
