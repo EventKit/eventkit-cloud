@@ -975,6 +975,9 @@ class DataProviderViewSet(EventkitViewSet):
             .filter(Q(user=self.request.user) | Q(user=None))
             .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
+            .annotate(
+                download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
+            )
             .order_by(*self.ordering)
         )
 
