@@ -967,7 +967,7 @@ class DataProviderViewSet(EventkitViewSet):
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
             .annotate(count=Subquery(download_subquery))
-            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F('count').desc(nulls_last=True)))
+            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
             .order_by(*self.ordering)
         )
 
