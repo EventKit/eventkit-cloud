@@ -4,6 +4,7 @@
 import json
 import os
 import socket
+from typing import Union
 
 import dj_database_url
 
@@ -376,6 +377,7 @@ LOGGING = {
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
 ssl_verification_settings = os.getenv("SSL_VERIFICATION", "true")
+SSL_VERIFICATION: Union[str, bool]
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
     os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
@@ -406,3 +408,7 @@ OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.13.0")
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 2621440))
+
+ENABLE_ADMIN_LOGIN: bool = is_true(os.getenv("ENABLE_ADMIN_LOGIN", False))
+ENABLE_ADMIN: bool = is_true(os.getenv("ENABLE_ADMIN", False))
+ADMIN_ROOT: str = os.getenv("ADMIN_ROOT", "admin")
