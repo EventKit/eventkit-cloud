@@ -6,7 +6,6 @@ import '@testing-library/jest-dom/extend-expect'
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
 import rootReducer from "../../reducers/rootReducer";
-import {queryAllByTestId} from "@testing-library/dom/types/queries";
 
 jest.doMock("../../components/common/CustomTableRow", () => {
     return (props) => (<div className="row">{props.children}</div>);
@@ -90,7 +89,7 @@ const providerList = [
         display: true,
         id: 1,
         model_url: 'http://host.docker.internal/api/providers/1',
-        type: 'osm-generic',
+        data_type: 'osm-generic',
         created_at: '2017-03-24T17:44:22.940611Z',
         updated_at: '2017-03-24T17:44:22.940629Z',
         uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
@@ -111,7 +110,7 @@ const providerList = [
         display: true,
         id: 2,
         model_url: 'http://host.docker.internal/api/providers/2',
-        type: 'raster',
+        data_type: 'raster',
         created_at: '2021-03-24T17:44:22.940611Z',
         updated_at: '2021-03-24T17:44:22.940629Z',
         uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
@@ -132,7 +131,7 @@ const providerList = [
         display: true,
         id: 3,
         model_url: 'http://host.docker.internal/api/providers/3',
-        type: 'vector',
+        data_type: 'vector',
         created_at: '2021-03-24T17:44:22.940611Z',
         updated_at: '2021-03-24T17:44:22.940629Z',
         uid: 'ce401b02-63d3-4080-943a-0093c1b5a915',
