@@ -1064,6 +1064,8 @@ def basic_data_provider_serializer(
     }
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
+    if hasattr(data_provider, "download_count_rank"):
+        serialized_data_provider["download_count_rank"] = getattr(data_provider, "download_count_rank")
     return serialized_data_provider
 
 
