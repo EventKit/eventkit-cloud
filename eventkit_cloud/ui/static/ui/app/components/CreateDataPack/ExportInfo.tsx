@@ -1031,16 +1031,8 @@ export function ExportInfo(props: Props) {
     }
 
     const updateProviders = () => {
-        let geo = null;
-        let filterTopics = null;
-        if (isFilteringByProviderGeometry) {
-            geo = geojson;
-        }
-
-        if (selectedTopics.length > 0) {
-            filterTopics = selectedTopics;
-        }
-
+        const geo = isFilteringByProviderGeometry ? geojson : null;
+        const filterTopics = selectedTopics.length > 0 ? selectedTopics : null;
         dispatch(getProviders(geo, filterTopics));
     }
 
