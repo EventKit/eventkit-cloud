@@ -34,6 +34,7 @@ import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
 import {StoreHelpers} from "react-joyride";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {getTopics} from "../../actions/topicActions";
 
 interface Props {
     runIds: string[];
@@ -52,6 +53,7 @@ interface Props {
     getProviders: () => void;
     getFormats: () => void;
     getProjections: () => void;
+    getTopics: () => void;
     runDeletion: {
         deleted: boolean;
         deleting: boolean;
@@ -67,6 +69,7 @@ interface Props {
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
     projections: Eventkit.Projection[];
+    topics: Eventkit.Topic[];
     updateDataCartPermissions: () => void;
     updatePermissions: {
         updating: boolean;
@@ -186,6 +189,7 @@ export class DataPackPage extends Component<Props, State> {
         this.props.getProviders();
         this.props.getFormats();
         this.props.getProjections();
+        this.props.getTopics();
 
         this.makeRunRequest();
         // make sure no geojson upload is in the state
@@ -804,6 +808,9 @@ function mapDispatchToProps(dispatch) {
         },
         getProjections: () => {
             dispatch(getProjections());
+        },
+        getTopics: () => {
+            dispatch(getTopics())
         },
         processGeoJSONFile: (file: File) => {
             dispatch(processGeoJSONFile(file));
