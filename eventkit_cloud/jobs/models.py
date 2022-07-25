@@ -545,7 +545,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return str(self.data_type)
 
 
-class Topic(UIDMixin, TimeStampedModelMixin):  # type: ignore
+class Topic(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Topic
     """

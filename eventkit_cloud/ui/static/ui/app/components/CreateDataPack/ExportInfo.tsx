@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Collapsible from 'react-collapsible';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {useDispatch, useSelector} from 'react-redux';
@@ -253,6 +254,27 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         borderRadius: '4px',
         borderTopLeftRadius: '0',
         marginTop: '0px',
+    },
+    collapsible: {
+        backgroundColor: theme.eventkit.colors.primary_background,
+        marginBottom: 10,
+    },
+    collapseOuterContent: {
+        transition: 'height 200ms linear 0s'
+    },
+    collapseInnerContent: {
+        backgroundColor: theme.eventkit.colors.secondary,
+    },
+    collapsibleTriggerTitle: {
+        display: 'block',
+        fontWeight: 400,
+        textDecoration: 'none',
+        padding: 5,
+        color: theme.eventkit.colors.black,
+    },
+    collapseIcon: {
+        float: "right",
+        color: theme.eventkit.colors.black,
     }
 });
 
@@ -330,6 +352,7 @@ export function ExportInfo(props: Props) {
     const [providerSearch, setProviderSearch] = useState("");
     const [isFilteringByProviderGeometry, setIsFilteringByProviderGeometry] = useState(true);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
+    const [showTypeFilter, setShowTypeFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
     const [refreshPopover, setRefreshPopover] = useState(null);
@@ -414,7 +437,7 @@ export function ExportInfo(props: Props) {
 
     const [filterOptions, setFilterOptions] = useState([
         {
-            name: "Type",
+            name: "Type(s)",
             filterType: "type",
             options: [
                 {
@@ -528,6 +551,30 @@ export function ExportInfo(props: Props) {
                         color="primary"
                     />
                 ), !showProviderFilter)}
+            </span>
+        );
+    }
+
+    const collapseTriggerContent = (title: string) => {
+        return (
+            <span className={classes.collapsibleTriggerTitle}>
+                {title}
+            <span style={{margin: 'auto'}}>
+                {renderIf(() => (
+                    <ExpandLess
+                        id="ExpandButton"
+                        className={classes.collapseIcon}
+                        color="primary"
+                    />
+                ), !!showTypeFilter)}
+                {renderIf(() => (
+                    <ExpandMore
+                        id="ExpandButton"
+                        className={classes.collapseIcon}
+                        color="primary"
+                    />
+                ), !showTypeFilter)}
+            </span>
             </span>
         );
     }
@@ -815,11 +862,11 @@ export function ExportInfo(props: Props) {
     };
 
     const sortMostDownloaded = (currentProviders) => {
-        return currentProviders.sort((a, b) => a.download_count - b.download_count);
+        return currentProviders.sort((a, b) => a.download_count_rank - b.download_count_rank);
     };
 
     const sortMostRecent = (currentProviders) => {
-        return currentProviders.sort((a, b) => a.latest_download - b.latest_download);
+        return currentProviders.sort((a, b) => a.download_date_rank - b.download_date_rank);
     };
 
     const getCurrentProviders = () => {
@@ -1137,11 +1184,18 @@ export function ExportInfo(props: Props) {
                                                             }}
                                                         />
                                                     </div>
-                                                    <FormLabel component="legend"
-                                                               style={{
-                                                                   fontSize: "16px",
-                                                                   fontWeight: 'bold'
-                                                               }}>{filterType.name}</FormLabel>
+
+                                                    <Collapsible trigger={collapseTriggerContent(filterType.name)}
+                                                                 contentHiddenWhenClosed={true}
+                                                                 open={showTypeFilter}
+                                                                 className={classes.collapsible}
+                                                                 openedClassName={classes.collapsible}
+                                                                 contentOuterClassName={classes.collapseOuterContent}
+                                                                 contentInnerClassName={classes.collapseInnerContent}
+                                                                 onTriggerOpening={() => setShowTypeFilter(!showTypeFilter)}
+                                                                 onTriggerClosing={() => setShowTypeFilter(!showTypeFilter)}
+
+                                                    >
                                                     {filterType.options.map((filter) =>
                                                         <div>
                                                             <FormControlLabel
@@ -1159,6 +1213,7 @@ export function ExportInfo(props: Props) {
                                                             />
                                                         </div>
                                                     )}
+                                                    </Collapsible>
                                                     <FormLabel component="legend"
                                                                style={{
                                                                    fontSize: "16px",

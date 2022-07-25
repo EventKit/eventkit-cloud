@@ -1575,14 +1575,12 @@ class TestTopicViewSet(APITestCase):
                 "slug": "topicslug0",
                 "name": "topicname0",
                 "uid": str(self.topics[0].uid),
-                "providers": [self.data_providers[0].pk, self.data_providers[2].pk],
                 "topic_description": "topicdesc0",
             },
             {
                 "slug": "topicslug1",
                 "name": "topicname1",
                 "uid": str(self.topics[1].uid),
-                "providers": [self.data_providers[1].pk, self.data_providers[2].pk],
                 "topic_description": "topicdesc1",
             },
         ]
@@ -1599,7 +1597,6 @@ class TestTopicViewSet(APITestCase):
             "slug": "topicslug1",
             "name": "topicname1",
             "uid": str(self.topics[1].uid),
-            "providers": [self.data_providers[1].pk, self.data_providers[2].pk],
             "topic_description": "topicdesc1",
         }
         url = reverse("api:topics-detail", args=["topicslug1"])
