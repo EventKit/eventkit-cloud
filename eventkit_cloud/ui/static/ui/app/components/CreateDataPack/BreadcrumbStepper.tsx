@@ -30,6 +30,7 @@ import EstimateLabel from "./EstimateLabel";
 import {CreatePagePermissionsBanner} from "./CreatePagePermissionsBanner";
 import {MatomoClickTracker} from "../MatomoHandler";
 import Visibility = Eventkit.Permissions.Visibility;
+import {getTopics} from "../../actions/topicActions";
 
 export interface JobData {
     name: string;
@@ -81,6 +82,8 @@ export interface Props {
     sizeEstimate: number;
     timeEstimate: number;
     isCollectingEstimates: boolean;
+    getTopics: () => void;
+    topics: Eventkit.Topic[];
 }
 
 
@@ -147,6 +150,7 @@ export class BreadcrumbStepper extends Component<Props, State> {
         }
         this.props.getProjections();
         this.props.getFormats();
+        this.props.getTopics();
         // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
@@ -603,6 +607,9 @@ function mapDispatchToProps(dispatch) {
         },
         getProjections: () => (
             dispatch(getProjections())
+        ),
+        getTopics: () => (
+            dispatch(getTopics())
         ),
         setNextDisabled: () => {
             dispatch(stepperNextDisabled());

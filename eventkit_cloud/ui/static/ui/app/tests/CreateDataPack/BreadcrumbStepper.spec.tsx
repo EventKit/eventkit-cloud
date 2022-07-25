@@ -131,6 +131,7 @@ describe('BreadcrumbStepper component', () => {
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
         getProjections: sinon.spy(),
+        getTopics: sinon.spy(),
         getEstimate: sinon.spy(),
         checkEstimate: sinon.spy(),
         checkProvider: sinon.spy(),

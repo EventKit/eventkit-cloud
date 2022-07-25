@@ -39,6 +39,7 @@ describe('DataPackPage component', () => {
         getFormats: sinon.spy(),
         getProviders: sinon.spy(),
         getProjections: sinon.spy(),
+        getTopics: sinon.spy(),
         runDeletion: {
             deleting: false,
             deleted: false,

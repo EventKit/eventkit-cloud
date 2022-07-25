@@ -27,6 +27,7 @@ import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
 import { getProjectionsReducer } from './projectionReducer';
 import history from '../utils/history';
+import { getTopicsReducer } from './topicsReducer';
 
 const reducer = combineReducers({
     // short hand property names
@@ -54,6 +55,7 @@ const reducer = combineReducers({
     exports: runsReducer,
     providerTasks: providerTasksReducer,
     projections: getProjectionsReducer,
+    topics: getTopicsReducer,
 });
 
 const rootReducer = (rootState, action) => {

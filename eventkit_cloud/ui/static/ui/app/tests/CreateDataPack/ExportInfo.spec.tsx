@@ -8,6 +8,7 @@ import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
 import rootReducer from "../../reducers/rootReducer";
 
+
 jest.doMock("../../components/common/CustomTableRow", () => {
     return (props) => (<div className="row">{props.children}</div>);
 });
@@ -27,6 +28,10 @@ jest.doMock("../../components/CreateDataPack/DataProvider", () => {
 jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
+
+jest.doMock('../../actions/providerActions.js', () => ({
+    getProviders: jest.fn().mockReturnValue({ type: 'getProviders' })
+}));
 
 const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
 
@@ -214,6 +219,7 @@ describe('ExportInfo component', () => {
             ...(global as any).eventkit_test_props,
             classes: {},
             theme: theme,
+            topics: [],
         }
     );
 
@@ -245,12 +251,13 @@ describe('ExportInfo component', () => {
             providers,
             projections,
             formats,
+            topics: [],
         }
     );
 
     const renderWithRedux = (
         component,
-        {initialState, store = createStore(rootReducer, initialState)}: any = {}
+        {initialState, store = createStore(rootReducer,initialState)}: any = {}
     ) => {
         return {
             ...render(<Provider store={store}>{component}</Provider>),
@@ -468,4 +475,3 @@ describe('ExportInfo component', () => {
         expect(providers.length).toBe(3);
     });
 });
-
