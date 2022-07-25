@@ -27,7 +27,6 @@ export const initialState = {
         exportOptions: {},
         projections: [],
         visibility: 'PRIVATE',
-        topics: [],
     },
     updatePermission: {
         updating: null,
@@ -98,7 +97,6 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 exportOptions: {},
                 projections: [],
                 visibility: 'PRIVATE',
-                topics: [],
             };
         default:
             return state;

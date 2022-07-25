@@ -359,6 +359,7 @@ export function ExportInfo(props: Props) {
     const [showTopicFilter, setShowTopicFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
+    const [selectedTopics, setSelectedTopicsList] = useState([]);
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -438,6 +439,10 @@ export function ExportInfo(props: Props) {
             setIsRunning(true);
         }
     }, [props.walkthroughClicked]);
+
+    useEffect( () => {
+        updateProviders();
+    }, [selectedTopics, isFilteringByProviderGeometry])
 
     const [filterOptions, setFilterOptions] = useState([
         {
@@ -693,26 +698,24 @@ export function ExportInfo(props: Props) {
     };
 
     const onSelectTopic = (event) => {
-        const selectedTopics = [...exportInfo.topics] || [];
+        const newSelectedTopics = [...selectedTopics] || [];
         let index;
         // check if the check box is checked or unchecked
-        // `target` is the checkbox, and the `name` field is set to the topic name
+        // `target` is the checkbox, and the `name` field is set to the topic slug
         const selectedTopic = event.target.name;
         if (event.target.checked) {
-            if (selectedTopics.indexOf(selectedTopic) < 0) {
-                selectedTopics.push(selectedTopic);
+            if (newSelectedTopics.indexOf(selectedTopic) < 0) {
+                newSelectedTopics.push(selectedTopic);
             }
         } else {
             // or remove the value from the unchecked checkbox from the array
-            index = selectedTopics.indexOf(selectedTopic);
+            index = newSelectedTopics.indexOf(selectedTopic);
             if (index >= 0) {
-                selectedTopics.splice(index, 1);
+                newSelectedTopics.splice(index, 1);
             }
         }
-        // update the state with the new array of options
-        updateExportInfoCallback({
-            topics: selectedTopics,
-        });
+
+        setSelectedTopicsList(newSelectedTopics);
     }
 
     const onSelectProjection = (event) => {
@@ -845,8 +848,6 @@ export function ExportInfo(props: Props) {
             });
             currentProviders = filteredProviders;
         }
-
-        //TODO: Add logic to filter providers by topic here.
 
         return currentProviders;
     };
@@ -1012,6 +1013,8 @@ export function ExportInfo(props: Props) {
         setProviderFilterList([]);
         setProviderSortOption("");
         setProviderSearch("");
+        setSelectedTopicsList([]);
+        setIsFilteringByProviderGeometry(true);
         clearFilterOptions();
         clearSortOptions();
     };
@@ -1025,11 +1028,20 @@ export function ExportInfo(props: Props) {
         // Have to use a local variable because the state is not updated quickly enough.
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
-        if (newIsFilteringByProviderGeometry) {
-            dispatch(getProviders(geojson));
-        } else {
-            dispatch(getProviders(null));
+    }
+
+    const updateProviders = () => {
+        let geo = null;
+        let filterTopics = null;
+        if (isFilteringByProviderGeometry) {
+            geo = geojson;
         }
+
+        if (selectedTopics.length > 0) {
+            filterTopics = selectedTopics;
+        }
+
+        dispatch(getProviders(geo, filterTopics));
     }
 
     return (
@@ -1240,8 +1252,8 @@ export function ExportInfo(props: Props) {
                                                                         root: classes.checkbox,
                                                                         checked: classes.checked
                                                                     }}
-                                                                    name={`${topic.name}`}
-                                                                    checked={exportInfo.topics.indexOf(topic.name) != -1}
+                                                                    name={`${topic.slug}`}
+                                                                    checked={selectedTopics.indexOf(topic.slug) != -1}
                                                                     onChange={onSelectTopic}
                                                                 />}
                                                                 label={<Typography

@@ -85,7 +85,6 @@ describe('exportInfo reducer', () => {
             exportOptions: {},
             projections: [],
             visibility: 'PRIVATE',
-            topics: [],
         });
     });
 
@@ -141,7 +140,6 @@ describe('exportInfo reducer', () => {
             projectName: '',
             providers: [],
             projections: [],
-            topics: [],
             areaStr: '',
             formats: ['gpkg'],
             providerInfo: {},

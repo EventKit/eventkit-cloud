@@ -1,10 +1,12 @@
-import {createStore} from 'redux'
-import {Provider} from 'react-redux'
+import {createStore} from "redux";
+import {Provider} from "react-redux";
 import {fireEvent, render, waitFor} from "@testing-library/react";
+
 import '@testing-library/jest-dom/extend-expect'
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
 import rootReducer from "../../reducers/rootReducer";
+
 
 jest.doMock("../../components/common/CustomTableRow", () => {
     return (props) => (<div className="row">{props.children}</div>);
@@ -25,6 +27,10 @@ jest.doMock("../../components/CreateDataPack/DataProvider", () => {
 jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
+
+jest.doMock('../../actions/providerActions.js', () => ({
+    getProviders: jest.fn().mockReturnValue({ type: 'getProviders' })
+}));
 
 const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
 
@@ -83,47 +89,77 @@ const projections = [
         description: null,
     }
 ];
+const providerList = [
+    {
+        display: true,
+        id: 1,
+        model_url: 'http://host.docker.internal/api/providers/1',
+        data_type: 'osm-generic',
+        created_at: '2017-03-24T17:44:22.940611Z',
+        updated_at: '2017-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'OpenStreetMap Data (Generic)',
+        slug: 'osm-generic',
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        hidden: false,
+        latest_download: 2,
+        download_count: 2,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    },
+    {
+        display: true,
+        id: 2,
+        model_url: 'http://host.docker.internal/api/providers/2',
+        data_type: 'raster',
+        created_at: '2021-03-24T17:44:22.940611Z',
+        updated_at: '2021-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'USGS',
+        slug: 'usgs',
+        latest_download: 3,
+        download_count: 3,
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        hidden: false,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    },
+    {
+        display: true,
+        id: 3,
+        model_url: 'http://host.docker.internal/api/providers/3',
+        data_type: 'vector',
+        created_at: '2021-03-24T17:44:22.940611Z',
+        updated_at: '2021-03-24T17:44:22.940629Z',
+        uid: 'ce401b02-63d3-4080-943a-0093c1b5a915',
+        name: 'Ports',
+        slug: 'ports',
+        latest_download: 1,
+        download_count: 1,
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        hidden: false,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    }
+]
+
 const providers = {
-    objects: [
-        {
-            display: true,
-            id: 1,
-            model_url: 'http://host.docker.internal/api/providers/1',
-            type: 'osm-generic',
-            created_at: '2017-03-24T17:44:22.940611Z',
-            updated_at: '2017-03-24T17:44:22.940629Z',
-            uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-            name: 'OpenStreetMap Data (Generic)',
-            slug: 'osm-generic',
-            preview_url: '',
-            service_copyright: '',
-            service_description: '',
-            layer: null,
-            level_from: 0,
-            level_to: 10,
-            export_provider_type: 1,
-        },
-        {
-            display: true,
-            id: 2,
-            model_url: 'http://host.docker.internal/api/providers/2',
-            type: 'usgs',
-            created_at: '2021-03-24T17:44:22.940611Z',
-            updated_at: '2021-03-24T17:44:22.940629Z',
-            uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-            name: 'USGS',
-            slug: 'usgs',
-            preview_url: '',
-            service_copyright: '',
-            service_description: '',
-            layer: null,
-            level_from: 0,
-            level_to: 10,
-            export_provider_type: 1,
-        }
-    ],
+    objects: providerList,
     fetching: false,
 };
+
 
 describe('ExportInfo component', () => {
     const getProps = () => (
@@ -150,7 +186,7 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                providers: [{slug: 'osm'}],
+                providers: [],
                 providerInfo: {
                     'osm': {
                         availability: {
@@ -181,6 +217,7 @@ describe('ExportInfo component', () => {
             ...(global as any).eventkit_test_props,
             classes: {},
             theme: theme,
+            topics: [],
         }
     );
 
@@ -193,7 +230,7 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                providers: [{slug: 'osm'}],
+                providers: [],
                 providerInfo: {
                     'osm': {
                         availability: {
@@ -212,12 +249,13 @@ describe('ExportInfo component', () => {
             providers,
             projections,
             formats,
+            topics: [],
         }
     );
 
     const renderWithRedux = (
         component,
-        {initialState, store = createStore(rootReducer, initialState)}: any = {}
+        {initialState, store = createStore(rootReducer,initialState)}: any = {}
     ) => {
         return {
             ...render(<Provider store={store}>{component}</Provider>),
@@ -254,7 +292,6 @@ describe('ExportInfo component', () => {
 
     it('should have a list of providers sorted A-Z by default', () => {
         const component = renderComponent();
-
         const providers = component.getAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
@@ -338,7 +375,7 @@ describe('ExportInfo component', () => {
         const textField = component.getByTestId('filter-text-field') as HTMLInputElement;
         fireEvent.change(textField, {target: {value: 'Open'}})
         const providers = component.getAllByTestId('DataProvider');
-        expect(providers).toHaveLength(2);
+        expect(providers).toHaveLength(1);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
@@ -385,25 +422,28 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Filter By')).toBeNull();
     });
 
-    it('should close the filter section and clear filters when you click cancel', () => {
+    it('should close the filter section and clear filters when you click cancel', async () => {
         const component = renderComponent();
+
+        let providers = component.queryAllByTestId('DataProvider');
+        expect(providers.length).toBe(3);
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
         expect(component.queryByText('Filter By')).toBeInTheDocument();
 
-        const rasterFilter = component.getByText('Raster');
-        fireEvent.click(rasterFilter);
-        let providers = component.getAllByTestId('DataProvider');
+        const checkBox = component.getByLabelText('Raster');
+        fireEvent.click(checkBox);
+        expect(checkBox).toBeChecked();
+
+        providers = component.queryAllByTestId('DataProvider');
         expect(providers.length).toBe(1);
 
-        const applyFilterButton = component.queryByText('Cancel');
-        fireEvent.click(applyFilterButton);
+        const cancelFilterButton = component.queryByText('Cancel');
+        fireEvent.click(cancelFilterButton);
 
         expect(component.queryByText('Filter By')).toBeNull();
         providers = component.getAllByTestId('DataProvider');
         expect(providers.length).toBe(3);
     });
-
 });
-
