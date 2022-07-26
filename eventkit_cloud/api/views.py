@@ -955,7 +955,7 @@ class DataProviderViewSet(EventkitViewSet):
         dptask_q = Q(
             downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef("pk")
         )
-        window = settings.DATA_PROVIDER_WINDOW  # type: ignore  # issue with django-stubs
+        window = settings.DATA_PROVIDER_WINDOW
         download_subquery = (
             UserDownload.objects.filter(downloaded_at__gte=date.today() - timedelta(days=window))
             .order_by()

@@ -143,7 +143,7 @@ services:
     expose:
       - "11211"
     entrypoint: >
-      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 25m"
+      /bin/bash -c "source activate conda_env && memcached -m 2048 -I 25m"
   celery:
     image: eventkit/eventkit-base:1.13.0
     volumes:
