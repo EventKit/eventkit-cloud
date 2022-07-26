@@ -11,7 +11,6 @@ import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import NavigationRefresh from '@material-ui/icons/Refresh';
-
 import {getSqKmString} from '../../utils/generic';
 import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
@@ -493,6 +492,16 @@ export function ExportInfo(props: Props) {
             name: "Alphabetical Z-A",
             slug: "alphabetical-z-a",
             isChecked: false
+        },
+        {
+            name: "Most Downloaded",
+            slug: "most-downloaded",
+            isChecked: false
+        },
+        {
+            name: "Recently Downloaded",
+            slug: "most-recent",
+            isChecked: false
         }
     ]);
 
@@ -840,9 +849,9 @@ export function ExportInfo(props: Props) {
         let filteredProviders = [];
         if (providerFilterList.length > 0) {
             providerFilterList.forEach(filter => {
-                if (filter.filterType == "type") {
+                if (filter.filterType === "type") {
                     filteredProviders = filteredProviders.concat(currentProviders.filter(provider => {
-                        return provider.data_type == filter.slug
+                        return provider.data_type === filter.slug
                     }));
                 }
             });
@@ -861,6 +870,12 @@ export function ExportInfo(props: Props) {
             case "alphabetical-z-a":
                 sortedProviders = sortProvidersZtoA(currentProviders);
                 break;
+            case "most-downloaded":
+                sortedProviders = sortMostDownloaded(currentProviders);
+                break;
+            case "most-recent":
+                sortedProviders = sortMostRecent(currentProviders);
+                break;
             default:
                 sortedProviders = sortProvidersAtoZ(currentProviders);
                 break;
@@ -874,6 +889,14 @@ export function ExportInfo(props: Props) {
 
     const sortProvidersZtoA = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
+    };
+
+    const sortMostDownloaded = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.download_count_rank - b.download_count_rank);
+    };
+
+    const sortMostRecent = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.download_date_rank - b.download_date_rank);
     };
 
     const getCurrentProviders = () => {
