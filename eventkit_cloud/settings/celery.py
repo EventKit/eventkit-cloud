@@ -5,7 +5,6 @@ from typing import Dict, Optional
 
 from celery.schedules import crontab
 
-from eventkit_cloud.celery import app
 from eventkit_cloud.settings.base import is_true
 from eventkit_cloud.settings.contrib import *  # NOQA
 
@@ -32,7 +31,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
-beat_schedule = {
+CELERY_BEAT_SCHEDULE = {
     "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0")},
     "provider-statuses": {
         "task": "Check Provider Availability",
@@ -79,7 +78,6 @@ CELERY_DEFAULT_TASK_SETTINGS = (
 )
 CELERY_MAX_DEFAULT_TASKS = int(os.getenv("CELERY_MAX_DEFAULT_TASKS", 3))
 
-app.conf.beat_schedule = beat_schedule
 
 CELERYD_USER = CELERYD_GROUP = "eventkit"
 if os.getenv("VCAP_SERVICES"):
@@ -120,8 +118,6 @@ if not BROKER_API_URL:
 MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 
 # Default to 8 hours
-TASK_TIMEOUT = int(os.getenv("TASK_TIMEOUT", 0)) or None
-app.conf.task_soft_time_limit = TASK_TIMEOUT
-DEBUG_CELERY: bool = is_true(os.getenv("DEBUG_CELERY", False))
-app.conf.task_always_eager = DEBUG_CELERY
 PCF_SCALING: bool = is_true(os.getenv("PCF_SCALING", False))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("TASK_TIMEOUT", 0)) or None
+CELERY_TASK_ALWAYS_EAGER = is_true(os.getenv("DEBUG_CELERY", False))
