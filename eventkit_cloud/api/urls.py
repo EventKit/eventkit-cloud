@@ -27,6 +27,7 @@ from eventkit_cloud.api.views import (
     RegionViewSet,
     RunZipFileViewSet,
     SizeIncreaseRequestViewSet,
+    TopicViewSet,
     UserDataViewSet,
     UserJobActivityViewSet,
     api_docs_view,
@@ -54,6 +55,7 @@ router.register(r"groups", GroupViewSet, basename="groups")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 router.register(r"projections", ProjectionViewSet, basename="projections")
 router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
+router.register(r"topics", TopicViewSet, basename="topics")
 
 urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),

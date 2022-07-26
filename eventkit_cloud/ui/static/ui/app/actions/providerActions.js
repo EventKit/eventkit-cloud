@@ -10,8 +10,12 @@ export const types = {
     GETTING_PROVIDER_TASK_ERROR: 'GETTING_PROVIDER_TASK_ERROR',
 };
 
-export function getProviders(selectedArea) {
-    if (selectedArea) {
+export function getProviders(selectedArea, selectedTopics) {
+    if (selectedArea || selectedTopics) {
+        const params = {
+            ...(selectedArea && { geojson: selectedArea }),
+            ...(selectedTopics && { topics: selectedTopics }),
+        };
         return {
             types: [
                 types.GETTING_PROVIDERS,
@@ -20,7 +24,7 @@ export function getProviders(selectedArea) {
             ],
             url: '/api/providers/filter',
             method: 'POST',
-            data: { geojson: selectedArea },
+            data: params,
             onSuccess: (response) => ({ providers: response.data }),
         };
     }

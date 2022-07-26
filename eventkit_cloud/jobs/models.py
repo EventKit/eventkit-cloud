@@ -545,6 +545,29 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return str(self.data_type)
 
 
+class Topic(UIDMixin, TimeStampedModelMixin):
+    """
+    Model for a Topic
+    """
+
+    name = models.CharField(verbose_name="Topic Name", unique=True, max_length=100)
+    slug = LowerCaseCharField(max_length=40, unique=True, default="")
+    providers = models.ManyToManyField(DataProvider, related_name="topics")
+    topic_description = models.TextField(
+        verbose_name="Description",
+        null=True,
+        default="",
+        blank=True,
+        help_text="This information is used to provide information about the Topic.",
+    )
+
+    class Meta:
+        verbose_name_plural = "Topics"
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     """
     Model that remembers the last recorded status of a data provider.

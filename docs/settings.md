@@ -337,6 +337,11 @@ Estimates are provided for time to finish, data size, as well as in progress est
 This is enabled by default, but if adding new services or deploying eventkit for the first time, these values may not
 be very accurate.  To disable these estimates:
 <pre>SERVE_ESTIMATES='false'</pre>
+#### Data Provider Ranking
+Products in the UI can be sorted by most downloaded.  The `DATA_PROVIDER_WINDOW` changes the
+the window for counting the number of products to be included. A longer window is better for sparse usage, 
+and a shorter window will provide more relevant results during higher usage. 
+<pre>DATA_PROVIDER_WINDOW='90'</pre>
 
 #### Matomo
 | Variable Name | Description |

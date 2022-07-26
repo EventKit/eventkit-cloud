@@ -28,12 +28,9 @@ urlpatterns += [
     re_path(r"^api/", include("rest_framework.urls", namespace="rest_framework")),
 ]
 
-# Type ignores because django-stub doesn't seem to pick up these types.
 if not settings.ENABLE_ADMIN_LOGIN:
     # This redirects to the standard eventkit login method instead of the admin page.
-    urlpatterns += [
-        re_path(rf"^{settings.ADMIN_ROOT}/login$", RedirectView.as_view(url="/login", permanent=False))
-    ]
+    urlpatterns += [re_path(rf"^{settings.ADMIN_ROOT}/login$", RedirectView.as_view(url="/login", permanent=False))]
 if settings.ENABLE_ADMIN:
     admin.autodiscover()
     urlpatterns += [re_path(rf"^{settings.ADMIN_ROOT}/", admin.site.urls)]
