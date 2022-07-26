@@ -1,5 +1,6 @@
-import {createStore} from "redux";
-import {Provider} from "react-redux";
+import {createStore} from 'redux'
+import {Provider} from 'react-redux'
+
 import {fireEvent, render, waitFor} from "@testing-library/react";
 
 import '@testing-library/jest-dom/extend-expect'
@@ -105,8 +106,8 @@ const providerList = [
         service_description: '',
         layer: null,
         hidden: false,
-        latest_download: 2,
-        download_count: 2,
+        download_date_rank: 2,
+        download_count_rank: 2,
         level_from: 0,
         level_to: 10,
         export_provider_type: 1,
@@ -121,8 +122,8 @@ const providerList = [
         uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
         name: 'USGS',
         slug: 'usgs',
-        latest_download: 3,
-        download_count: 3,
+        download_date_rank: 3,
+        download_count_rank: 3,
         preview_url: '',
         service_copyright: '',
         service_description: '',
@@ -142,8 +143,8 @@ const providerList = [
         uid: 'ce401b02-63d3-4080-943a-0093c1b5a915',
         name: 'Ports',
         slug: 'ports',
-        latest_download: 1,
-        download_count: 1,
+        download_date_rank: 1,
+        download_count_rank: 1,
         preview_url: '',
         service_copyright: '',
         service_description: '',
@@ -162,6 +163,7 @@ const providers = {
 
 
 describe('ExportInfo component', () => {
+
     const getProps = () => (
         {
             geojson: {
@@ -308,6 +310,8 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Sort By')).toBeNull();
         expect(component.queryByText('Alphabetical A-Z')).toBeNull();
         expect(component.queryByText('Alphabetical Z-A')).toBeNull();
+        expect(component.queryByText('Most Downloaded')).toBeNull();
+        expect(component.queryByText('Recently Downloaded')).toBeNull();
         expect(component.queryByText('Clear All')).toBeNull();
         expect(component.queryByText('Apply')).toBeNull();
         expect(component.queryByText('Cancel')).toBeNull();
@@ -326,6 +330,8 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Sort By')).toBeInTheDocument();
         expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
         expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
+        expect(component.getByText('Most Downloaded')).toBeInTheDocument();
+        expect(component.getByText('Recently Downloaded')).toBeInTheDocument();
         expect(component.queryByText('Clear All')).toBeInTheDocument();
         expect(component.queryByText('Apply')).toBeInTheDocument();
         expect(component.queryByText('Cancel')).toBeInTheDocument();
@@ -365,6 +371,28 @@ describe('ExportInfo component', () => {
         fireEvent.click(radioButton);
         const providers = component.getAllByTestId('DataProvider');
         expect(providers[0]).toHaveTextContent('USGS');
+    });
+
+    it('should have a list of providers sorted most downloaded', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const radioButton = component.getByTestId('most-downloaded');
+        fireEvent.click(radioButton);
+        const providers = component.getAllByTestId('DataProvider');
+        expect(providers[0]).toHaveTextContent('Ports');
+    });
+
+    it('should have a list of providers sorted recently downloaded', () => {
+        const component = renderComponent();
+
+        const sortFilter = component.getByText('Sort / Filter');
+        fireEvent.click(sortFilter);
+        const radioButton = component.getByTestId('most-recent');
+        fireEvent.click(radioButton);
+        const providers = component.getAllByTestId('DataProvider');
+        expect(providers[0]).toHaveTextContent('Ports');
     });
 
     it('should show only the providers that match the name filter', () => {
