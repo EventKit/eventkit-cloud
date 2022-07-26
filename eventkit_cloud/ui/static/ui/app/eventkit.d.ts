@@ -238,6 +238,14 @@ declare namespace Eventkit {
         description: string;
     }
 
+    interface Topic {
+        slug: string;
+        name: string;
+        uid: string;
+        providers: string[];
+        topic_description: string;
+    }
+
     interface JustificationOption {
         id: string;
         name: string;
@@ -498,6 +506,7 @@ declare namespace Eventkit {
             projections: number[];  // Expecting projection srid
             visibility: Visibility;
             isProviderLoading: boolean;
+            topics: string[]; //Names of selected topics to filter providers by
         }
 
         interface AoiInfo {

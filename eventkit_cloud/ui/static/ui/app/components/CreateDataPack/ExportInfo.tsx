@@ -11,7 +11,6 @@ import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import NavigationRefresh from '@material-ui/icons/Refresh';
-
 import {getSqKmString} from '../../utils/generic';
 import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
@@ -307,6 +306,7 @@ export interface State {
     steps: Step[];
     isRunning: boolean;
     providers: Eventkit.Provider[];
+    topics: Eventkit.Topic[];
     fetchingProviders: boolean;
     displayDummy: boolean;
     refreshPopover: null | HTMLElement;
@@ -347,6 +347,7 @@ export function ExportInfo(props: Props) {
     const providers: Eventkit.Provider[] = useSelector((store: any) => store.providers.objects);
     const fetchingProviders: boolean = useSelector((store: any) => store.providers.fetching);
     const projections: Eventkit.Projection[] = useSelector((store: any) => [...store.projections]);
+    const topics: Eventkit.Topic[] = useSelector((store: any) => [...store.topics]);
     const formats: Eventkit.Format[] = useSelector((store: any) => [...store.formats]);
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
@@ -354,8 +355,10 @@ export function ExportInfo(props: Props) {
     const [isFilteringByProviderGeometry, setIsFilteringByProviderGeometry] = useState(true);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [showTypeFilter, setShowTypeFilter] = useState(false);
+    const [showTopicFilter, setShowTopicFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
     const [providerSortOption, setProviderSortOption] = useState("");
+    const [selectedTopics, setSelectedTopicsList] = useState([]);
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
     const [displaySrid, setDisplaySrid] = useState(null);
@@ -436,6 +439,10 @@ export function ExportInfo(props: Props) {
         }
     }, [props.walkthroughClicked]);
 
+    useEffect( () => {
+        updateProviders();
+    }, [selectedTopics, isFilteringByProviderGeometry])
+
     const [filterOptions, setFilterOptions] = useState([
         {
             name: "Type(s)",
@@ -484,6 +491,16 @@ export function ExportInfo(props: Props) {
         {
             name: "Alphabetical Z-A",
             slug: "alphabetical-z-a",
+            isChecked: false
+        },
+        {
+            name: "Most Downloaded",
+            slug: "most-downloaded",
+            isChecked: false
+        },
+        {
+            name: "Recently Downloaded",
+            slug: "most-recent",
             isChecked: false
         }
     ]);
@@ -546,7 +563,7 @@ export function ExportInfo(props: Props) {
         );
     }
 
-    const collapseTriggerContent = (title: string) => {
+    const collapseTriggerContent = (title: string, showCondition: boolean) => {
         return (
             <span className={classes.collapsibleTriggerTitle}>
                 {title}
@@ -557,14 +574,14 @@ export function ExportInfo(props: Props) {
                         className={classes.collapseIcon}
                         color="primary"
                     />
-                ), !!showTypeFilter)}
+                ), !!showCondition)}
                 {renderIf(() => (
                     <ExpandMore
                         id="ExpandButton"
                         className={classes.collapseIcon}
                         color="primary"
                     />
-                ), !showTypeFilter)}
+                ), !showCondition)}
             </span>
             </span>
         );
@@ -689,6 +706,27 @@ export function ExportInfo(props: Props) {
         });
     };
 
+    const onSelectTopic = (event) => {
+        const newSelectedTopics = [...selectedTopics] || [];
+        let index;
+        // check if the check box is checked or unchecked
+        // `target` is the checkbox, and the `name` field is set to the topic slug
+        const selectedTopic = event.target.name;
+        if (event.target.checked) {
+            if (newSelectedTopics.indexOf(selectedTopic) < 0) {
+                newSelectedTopics.push(selectedTopic);
+            }
+        } else {
+            // or remove the value from the unchecked checkbox from the array
+            index = newSelectedTopics.indexOf(selectedTopic);
+            if (index >= 0) {
+                newSelectedTopics.splice(index, 1);
+            }
+        }
+
+        setSelectedTopicsList(newSelectedTopics);
+    }
+
     const onSelectProjection = (event) => {
         // Selecting projections for the DataPack, here srid is spatial reference ID
         const selectedSrids = [...exportInfo.projections] || [];
@@ -699,7 +737,7 @@ export function ExportInfo(props: Props) {
         const selectedSrid = Number(event.target.name);
         if (event.target.checked) {
             // add the format to the array
-            if (selectedSrids.indexOf(selectedSrid) <= 0) {
+            if (selectedSrids.indexOf(selectedSrid) < 0) {
                 selectedSrids.push(selectedSrid);
             }
         } else {
@@ -811,14 +849,15 @@ export function ExportInfo(props: Props) {
         let filteredProviders = [];
         if (providerFilterList.length > 0) {
             providerFilterList.forEach(filter => {
-                if (filter.filterType == "type") {
+                if (filter.filterType === "type") {
                     filteredProviders = filteredProviders.concat(currentProviders.filter(provider => {
-                        return provider.data_type == filter.slug
+                        return provider.data_type === filter.slug
                     }));
                 }
             });
             currentProviders = filteredProviders;
         }
+
         return currentProviders;
     };
 
@@ -830,6 +869,12 @@ export function ExportInfo(props: Props) {
                 break;
             case "alphabetical-z-a":
                 sortedProviders = sortProvidersZtoA(currentProviders);
+                break;
+            case "most-downloaded":
+                sortedProviders = sortMostDownloaded(currentProviders);
+                break;
+            case "most-recent":
+                sortedProviders = sortMostRecent(currentProviders);
                 break;
             default:
                 sortedProviders = sortProvidersAtoZ(currentProviders);
@@ -844,6 +889,14 @@ export function ExportInfo(props: Props) {
 
     const sortProvidersZtoA = (currentProviders) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
+    };
+
+    const sortMostDownloaded = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.download_count_rank - b.download_count_rank);
+    };
+
+    const sortMostRecent = (currentProviders) => {
+        return currentProviders.sort((a, b) => a.download_date_rank - b.download_date_rank);
     };
 
     const getCurrentProviders = () => {
@@ -983,6 +1036,8 @@ export function ExportInfo(props: Props) {
         setProviderFilterList([]);
         setProviderSortOption("");
         setProviderSearch("");
+        setSelectedTopicsList([]);
+        setIsFilteringByProviderGeometry(true);
         clearFilterOptions();
         clearSortOptions();
     };
@@ -996,11 +1051,12 @@ export function ExportInfo(props: Props) {
         // Have to use a local variable because the state is not updated quickly enough.
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
-        if (newIsFilteringByProviderGeometry) {
-            dispatch(getProviders(geojson));
-        } else {
-            dispatch(getProviders(null));
-        }
+    }
+
+    const updateProviders = () => {
+        const geo = isFilteringByProviderGeometry ? geojson : null;
+        const filterTopics = selectedTopics.length > 0 ? selectedTopics : null;
+        dispatch(getProviders(geo, filterTopics));
     }
 
     return (
@@ -1162,7 +1218,7 @@ export function ExportInfo(props: Props) {
                                                         />
                                                     </div>
 
-                                                    <Collapsible trigger={collapseTriggerContent(filterType.name)}
+                                                    <Collapsible trigger={collapseTriggerContent(filterType.name, showTypeFilter)}
                                                                  contentHiddenWhenClosed={true}
                                                                  open={showTypeFilter}
                                                                  className={classes.collapsible}
@@ -1187,6 +1243,36 @@ export function ExportInfo(props: Props) {
                                                                 />}
                                                                 label={<Typography
                                                                     className={classes.checkboxLabel}>{filter.name}</Typography>}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    </Collapsible>
+                                                    <Collapsible trigger={collapseTriggerContent("Topic(s)", showTopicFilter)}
+                                                                 contentHiddenWhenClosed={true}
+                                                                 open={showTopicFilter}
+                                                                 className={classes.collapsible}
+                                                                 openedClassName={classes.collapsible}
+                                                                 contentOuterClassName={classes.collapseOuterContent}
+                                                                 contentInnerClassName={classes.collapseInnerContent}
+                                                                 onTriggerOpening={() => setShowTopicFilter(!showTopicFilter)}
+                                                                 onTriggerClosing={() => setShowTopicFilter(!showTopicFilter)}
+
+                                                    >
+                                                    {topics.map((topic) =>
+                                                        <div>
+                                                            <FormControlLabel
+                                                                control={<Checkbox
+                                                                    className="qa-ExportInfo-CheckBox-filter"
+                                                                    classes={{
+                                                                        root: classes.checkbox,
+                                                                        checked: classes.checked
+                                                                    }}
+                                                                    name={`${topic.slug}`}
+                                                                    checked={selectedTopics.indexOf(topic.slug) != -1}
+                                                                    onChange={onSelectTopic}
+                                                                />}
+                                                                label={<Typography
+                                                                    className={classes.checkboxLabel}>{topic.name}</Typography>}
                                                             />
                                                         </div>
                                                     )}

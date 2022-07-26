@@ -949,25 +949,36 @@ class DataProviderViewSet(EventkitViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
+        # Download Count Subquery
         exptask_q = Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
         slug_q = Q(downloadable__export_task__export_provider_task__slug="run")
         dptask_q = Q(
             downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef("pk")
         )
+        window = settings.DATA_PROVIDER_WINDOW
         download_subquery = (
-            UserDownload.objects.filter(downloaded_at__gte=date.today() - timedelta(days=90))
+            UserDownload.objects.filter(downloaded_at__gte=date.today() - timedelta(days=window))
             .order_by()
             .filter(exptask_q | (slug_q & dptask_q))
             .values("uid")
             .annotate(count=Func("uid", function="COUNT"))
             .values("count")
         )
+        # Latest Download Subquery
+        latest_subquery = (
+            UserDownload.objects.filter(exptask_q | (slug_q & dptask_q))
+            .order_by("-downloaded_at")
+            .values("downloaded_at")[:1]
+        )
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(count=Subquery(download_subquery))
+            .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
+            .annotate(
+                download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
+            )
             .order_by(*self.ordering)
         )
 
