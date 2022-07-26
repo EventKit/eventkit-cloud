@@ -1032,20 +1032,23 @@ def download_arcgis_feature_data(
     # or redirect to a parent URL if a resource is not found.
 
     logger.debug("Downloading feature data for %s", task_uid)
-    if session:
-        logger.debug("session %s", session.adapters)
+    if not session:
+        session = get_or_update_session(session, *args, **kwargs)
     service_description = service_description or dict()
     pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
-    max_record_count = service_description.get("maxRecordCount", 1000)
+    result_record_count = service_description.get("maxRecordCount", 1000)
+    json_response = None
     try:
-        json_response = None
+        total_expected_features = session.get(f"{input_url}&returnCountOnly=true").json()["count"]
+        logger.info("Downloading %s features", total_expected_features)
         if pagination:
             result_offset = 0
-            result_record_count = max_record_count
-            while True:
+            exceeded_transfer_limit: bool = True
+            while exceeded_transfer_limit:
                 url_parts: dict = urllib.parse.urlparse(input_url)._asdict()
                 query = urllib.parse.parse_qs(url_parts["query"])
                 query.update({"resultOffset": [result_offset], "resultRecordCount": [result_record_count]})
+                url_parts["query"] = urllib.parse.urlencode(query, doseq=True)
                 input_url = urllib.parse.ParseResult(**url_parts).geturl()
 
                 with tempfile.NamedTemporaryFile(mode="w+b") as arcgis_response_file:
@@ -1054,13 +1057,11 @@ def download_arcgis_feature_data(
                     )
                     feature_response = parse_arcgis_feature_response(arcgis_response_file.name)
                     if not json_response:
-                        json_response = feature_response
+                        json_response = copy.deepcopy(feature_response)
 
-                json_response["features"].extend(feature_response["features"])
-                result_offset = result_offset + result_record_count
-                if not feature_response.get("exceededTransferLimit"):
-                    break
-
+                    json_response["features"].extend(feature_response["features"])
+                    result_offset = result_offset + result_record_count
+                    exceeded_transfer_limit = bool(feature_response.get("exceededTransferLimit"))
         else:
             out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
             json_response = parse_arcgis_feature_response(out_file)
