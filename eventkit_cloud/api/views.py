@@ -5,7 +5,7 @@ import itertools
 import json
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from audit_logging.models import AuditEvent
 from dateutil import parser
@@ -16,7 +16,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import F, Func, OuterRef, Q, QuerySet, Subquery, Window
+from django.db.models.functions import DenseRank
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -68,6 +69,7 @@ from eventkit_cloud.api.serializers import (
     RegionSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
+    TopicSerializer,
     UserDataSerializer,
     UserJobActivitySerializer,
     basic_data_provider_list_serializer,
@@ -111,6 +113,7 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     RegionMask,
+    Topic,
     UserJobActivity,
     VisibilityState,
 )
@@ -120,6 +123,7 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
     RunZipFile,
+    UserDownload,
     prefetch_export_runs,
 )
 from eventkit_cloud.tasks.task_factory import (
@@ -868,8 +872,30 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
-class BasicFilteredDataProviderSerializer:
-    pass
+class TopicViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint to get detailed information about the topics.
+    """
+
+    serializer_class = TopicSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Topic.objects.all()
+    lookup_field = "slug"
+    ordering = ["name"]
+
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of topic
+        * return: A list of topic objects
+        """
+        return super(TopicViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of topic
+        * return: A single topic object matching the provided slug value.
+        """
+        return super(TopicViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class DataProviderViewSet(EventkitViewSet):
@@ -923,10 +949,36 @@ class DataProviderViewSet(EventkitViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
+        # Download Count Subquery
+        exptask_q = Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
+        slug_q = Q(downloadable__export_task__export_provider_task__slug="run")
+        dptask_q = Q(
+            downloadable__export_task__export_provider_task__run__job__data_provider_tasks__provider=OuterRef("pk")
+        )
+        window = settings.DATA_PROVIDER_WINDOW
+        download_subquery = (
+            UserDownload.objects.filter(downloaded_at__gte=date.today() - timedelta(days=window))
+            .order_by()
+            .filter(exptask_q | (slug_q & dptask_q))
+            .values("uid")
+            .annotate(count=Func("uid", function="COUNT"))
+            .values("count")
+        )
+        # Latest Download Subquery
+        latest_subquery = (
+            UserDownload.objects.filter(exptask_q | (slug_q & dptask_q))
+            .order_by("-downloaded_at")
+            .values("downloaded_at")[:1]
+        )
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             .filter(Q(user=self.request.user) | Q(user=None))
+            .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
+            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
+            .annotate(
+                download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
+            )
             .order_by(*self.ordering)
         )
 
@@ -1014,18 +1066,21 @@ class DataProviderViewSet(EventkitViewSet):
             except ValidationError as e:
                 logger.debug(e.detail)
                 raise ValidationError(code="validation_error", detail=e.detail)
-            serializer, filtered_serializer = self.get_readonly_serializer_classes()
-            providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
-            data = serializer(providers, many=True, context={"request": request})
-            filtered_data = filtered_serializer(filtered_providers, many=True)
-            if isinstance(data, list):
-                data += filtered_data
-            else:
-                filtered_data.update(data)
-                data = filtered_data
 
-            return Response(data)
-        return Response(queryset)
+        search_topics: Optional[List[Topic]] = self.request.data.get("topics") or []
+        if search_topics:
+            queryset = queryset.filter(topics__slug__in=search_topics).distinct()
+
+        serializer, filtered_serializer = self.get_readonly_serializer_classes()
+        providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+        data = serializer(providers, many=True, context={"request": request})
+        filtered_data = filtered_serializer(filtered_providers, many=True)
+        if isinstance(data, list):
+            data += filtered_data
+        else:
+            filtered_data.update(data)
+            data = filtered_data
+        return Response(data)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):

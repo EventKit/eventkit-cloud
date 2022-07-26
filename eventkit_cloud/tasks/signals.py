@@ -27,7 +27,7 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
         shutil.rmtree(run_dir, ignore_errors=True)
         logger.info("The directory {0} was deleted.".format(run_dir))
     except OSError:
-        logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
+        logger.warning("The directory {0} was already moved or doesn't exist.".format(run_dir))
     instance.delete_notifications()
 
 
@@ -45,7 +45,7 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
         os.remove(full_file_download_path)
         logger.info("The directory {0} was deleted.".format(full_file_download_path))
     except OSError:
-        logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
+        logger.warning("The file {0} was already removed or does not exist.".format(full_file_download_path))
     instance.delete_notifications()
 
 
