@@ -4,8 +4,7 @@ set -e
 
 cmd="$@"
 
-source activate eventkit-cloud
-
+source activate conda_env
 python - << END
 import os
 import django
