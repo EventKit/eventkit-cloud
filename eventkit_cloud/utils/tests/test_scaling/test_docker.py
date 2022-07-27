@@ -73,6 +73,7 @@ class TestDocker(TestCase):
                     "name": app_name,
                     "memory_in_mb": 0.0,
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
+                    "state": "RUNNING",
                 }
             ],
             "pagination": {"total_results": 1},
