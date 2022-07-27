@@ -120,4 +120,5 @@ MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 # Default to 8 hours
 PCF_SCALING: bool = is_true(os.getenv("PCF_SCALING", False))
 CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("TASK_TIMEOUT", 0)) or None
-CELERY_TASK_ALWAYS_EAGER = is_true(os.getenv("DEBUG_CELERY", False))
+DEBUG_CELERY = is_true(os.getenv("DEBUG_CELERY", False))
+CELERY_TASK_ALWAYS_EAGER = DEBUG_CELERY
