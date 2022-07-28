@@ -252,10 +252,10 @@ def create_vector_layers(
 
 
 def update_labels(layer):
-    if layer.supports("SHOWLABELS"):
+    if hasattr(layer, "supports") and layer.supports("SHOWLABELS"):
         for lblClass in layer.listLabelClasses():
             lblClass.visible = True
-    layer.save()
+        layer.save()
 
 
 def add_layer_to_map(
