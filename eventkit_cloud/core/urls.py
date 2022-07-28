@@ -30,7 +30,7 @@ urlpatterns += [
 
 if not settings.ENABLE_ADMIN_LOGIN:
     # This redirects to the standard eventkit login method instead of the admin page.
-    urlpatterns += [re_path(rf"^{settings.ADMIN_ROOT}/login$", RedirectView.as_view(url="/login", permanent=False))]
+    urlpatterns += [re_path(rf"^{settings.ADMIN_ROOT}/login*", RedirectView.as_view(url="/login", permanent=False))]
 if settings.ENABLE_ADMIN:
     admin.autodiscover()
     urlpatterns += [re_path(rf"^{settings.ADMIN_ROOT}/", admin.site.urls)]
