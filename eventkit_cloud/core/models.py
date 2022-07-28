@@ -216,6 +216,13 @@ class FileFieldMixin(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            file_check = type(self).objects.get(pk=self.pk)
+            if file_check.file != self.file:
+                file_check.file.delete(save=False)
+        super().save(*args, **kwargs)
+
 
 class GroupPermissionLevel(Enum):
     NONE = "NONE"

@@ -291,13 +291,6 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin, FileFieldMixin):
         help_text="An optional data provider to associate the file with.",
     )
 
-    def save(self, *args, **kwargs):
-        if self.pk:
-            export_run_file = ExportRunFile.objects.get(id=self.id)
-            if export_run_file.file != self.file:
-                export_run_file.file.delete(save=False)
-        super(ExportRunFile, self).save(*args, **kwargs)
-
 
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
