@@ -1,5 +1,6 @@
 import logging
 
+from eventkit_cloud.utils.scaling import types as scale_types
 from eventkit_cloud.utils.scaling.scale_client import ScaleClient
 
 logger = logging.getLogger(__file__)
@@ -11,9 +12,9 @@ class Dummy(ScaleClient):
     def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
         logger.info("Dummy client called with run_task(%s, %s)", name, command)
 
-    def get_running_tasks(self, app_name: str = None, names: str = None) -> dict:
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> scale_types.ListTaskResponse:
         logger.info("Dummy client called with get_running_tasks(%s, %s)", app_name, names)
-        result = {"resources": [], "pagination": {"total_results": 0}}
+        result: scale_types.ListTaskResponse = {"resources": [], "pagination": {"total_results": 0}}
         return result
 
     def get_running_tasks_memory(self, app_name: str) -> int:
