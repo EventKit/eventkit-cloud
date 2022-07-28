@@ -25,6 +25,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalJustification,
     RegionalPolicy,
+    StyleFile,
     Topic,
     clean_config,
     clean_config_as_str,
@@ -39,6 +40,7 @@ admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(DataProviderTask)
 admin.site.register(Topic)
+admin.site.register(StyleFile)
 
 
 class JobAdmin(OSMGeoAdmin):
