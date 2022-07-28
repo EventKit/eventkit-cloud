@@ -117,8 +117,8 @@ if not BROKER_API_URL:
 
 MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 
-# Default to 8 hours
 PCF_SCALING: bool = is_true(os.getenv("PCF_SCALING", False))
-CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("TASK_TIMEOUT", 0)) or None
-DEBUG_CELERY = is_true(os.getenv("DEBUG_CELERY", False))
-CELERY_TASK_ALWAYS_EAGER = DEBUG_CELERY
+TASK_TIMEOUT: int = int(os.getenv("TASK_TIMEOUT", 0)) or None
+CELERY_TASK_SOFT_TIME_LIMIT: int = TASK_TIMEOUT
+DEBUG_CELERY: bool = is_true(os.getenv("DEBUG_CELERY", False))
+CELERY_TASK_ALWAYS_EAGER: bool = DEBUG_CELERY

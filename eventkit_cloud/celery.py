@@ -5,6 +5,7 @@ from celery import Celery
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 
+
 class TaskPriority(Enum):
     CANCEL = 99  # If cancel isn't higher than new tasks, long running processes will needlessly
     # take resources while the cancel message is blocked.
@@ -18,7 +19,7 @@ class TaskPriority(Enum):
 
 app = Celery("eventkit_cloud")
 
-app.config_from_object("django.conf:settings", namespace='CELERY')
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 app.autodiscover_tasks(related_name="debug_tasks")
 app.autodiscover_tasks(related_name="export_tasks")
