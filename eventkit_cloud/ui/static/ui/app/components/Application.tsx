@@ -312,7 +312,7 @@ export class Application extends React.Component<Props, State> {
     private isSendingUserActivePings: boolean;
     private handleUserActiveInput = debounce(() => {
         this.props.userActive();
-    }, 30 * 1000);
+    }, 15 * 1000, { maxWait: 20 * 1000});
 
     static defaultProps = {
         children: null,
