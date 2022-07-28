@@ -219,10 +219,13 @@ class TestScaleCeleryTask(TestCase):
         mock_pickup.s().apply_async.assert_called_once_with(queue=str(run.uid), routing_key=str(run.uid))
         mock_run_task_command.assert_called_once()
 
+    @patch("eventkit_cloud.tasks.scheduled_tasks.kill_workers")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects")
     @patch("eventkit_cloud.tasks.scheduled_tasks.run_task_command")
     @patch("eventkit_cloud.tasks.scheduled_tasks.get_scale_client")
-    def test_scale_default_tasks(self, mock_get_scale_client, mock_run_task_command, mock_get_all_rabbitmq_objects):
+    def test_scale_default_tasks(
+        self, mock_get_scale_client, mock_run_task_command, mock_get_all_rabbitmq_objects, mock_kill_workers
+    ):
         mock_scale_client = Mock()
         mock_get_scale_client.return_value = mock_scale_client, "test_app"
         celery_tasks = get_celery_tasks_scale_by_run()
@@ -240,6 +243,7 @@ class TestScaleCeleryTask(TestCase):
         mock_scale_client.get_running_tasks.return_value = {"pagination": {"total_results": 1}}
         scale_default_tasks(mock_scale_client, "test_app", celery_tasks)
         mock_run_task_command.assert_not_called()
+        mock_kill_workers.assert_called_once()
 
         # Test scaling up with a message, assuming we're under the running task limit.
         mock_get_all_rabbitmq_objects.return_value = {"celery": {"messages": 1}}

@@ -8,7 +8,8 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini ./setup.cfg ./setup.py ./manage.py ./
+COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini ./setup.cfg \
+                      ./setup.py ./readme.md ./manage.py ./
 COPY --chown=eventkit ./conda ./conda
 COPY --chown=eventkit ./config ./config
 
@@ -39,7 +40,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda clean --yes --all && \
     rm -rf ./conda
 
-COPY --chown=eventkit ./readme.md ./setup.py ./setup.cfg ./manage.py ./eventkit_cloud ./
+COPY --chown=eventkit ./eventkit_cloud ./eventkit_cloud
 
 RUN pip install -e .
 
