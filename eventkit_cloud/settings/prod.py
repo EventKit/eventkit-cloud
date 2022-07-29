@@ -321,6 +321,8 @@ UI_CONFIG = {
         "SITE_ID": os.getenv("MATOMO_SITE_ID", ""),
         "APPNAME": os.getenv("MATOMO_APPNAME", "EventKit"),
     },
+    "AUTO_LOGOUT_SECONDS": os.getenv("AUTO_LOGOUT_SECONDS", 600),
+    "AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT": os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 300),
 }
 
 
