@@ -471,15 +471,6 @@ export class Application extends React.Component<Props, State> {
         return true;
     }
 
-    componentWillUnmount() {
-        this.stopListeningForNotifications();
-
-        if (this.handleUserActiveInput) {
-            this.handleUserActiveInput.cancel();
-            this.handleUserActiveInput = null;
-        }
-    }
-
     onMenuItemClick() {
         if (this.props.width !== 'xl') {
             this.handleToggle();
