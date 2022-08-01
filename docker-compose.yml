@@ -153,7 +153,7 @@ services:
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/var/lib/eventkit/scripts/run-celery-beat.sh
     user: eventkit
     depends_on:
       - postgis
@@ -204,7 +204,7 @@ services:
       - JOB_MAX_EXTENT=1000000
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
+    command: bash ./scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:14
     environment:
