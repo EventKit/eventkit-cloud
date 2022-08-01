@@ -227,6 +227,7 @@ class DataProviderAdmin(admin.ModelAdmin):
         "license__name",
     ]
     actions = [make_display, make_hidden]
+    ordering = ["name"]
 
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
