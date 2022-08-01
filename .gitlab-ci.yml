@@ -13,7 +13,7 @@ variables:
   SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
   SECRET_KEY: "TESTING"
-  VERSION: "1.13.0"
+  VERSION: "1.14.0"
 
 image:
   name: $DOCKER_IMAGE
