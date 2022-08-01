@@ -96,6 +96,7 @@ services:
       - ENABLE_ADMIN
       - ENABLE_ADMIN_LOGIN
       - ADMIN_ROOT
+      - JOB_MAX_EXTENT=1000000
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -200,6 +201,7 @@ services:
       - OAUTH_CLIENT_SECRET
       - OAUTH_LOGOUT_URL
       - ROCKETCHAT_NOTIFICATIONS
+      - JOB_MAX_EXTENT=1000000
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.9/site-packages/scripts/run-celery-beat.sh
