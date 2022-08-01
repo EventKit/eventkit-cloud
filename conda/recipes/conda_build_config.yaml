@@ -33,15 +33,15 @@ bzip2:
 c_ares:
 - 1.18.1
 ca_certificates:
-- 2022.5.18.1
+- 2022.6.15
 cairo:
 - 1.16.0
 celery:
 - 5.2.6
 certifi:
-- 2022.5.18.1
+- 2022.6.15
 cffi:
-- 1.15.0
+- 1.15.1
 cfitsio:
 - 4.1.0
 charset_normalizer:
@@ -55,9 +55,9 @@ click_plugins:
 click_repl:
 - 0.2.0
 cryptography:
-- 36.0.2
+- 37.0.4
 curl:
-- 7.83.0
+- 7.83.1
 cyrus_sasl:
 - 2.1.27
 dj_database_url:
@@ -175,11 +175,11 @@ libblas:
 libcblas:
 - 3.9.0
 libcurl:
-- 7.83.0
+- 7.83.1
 libdap4:
 - 3.20.6
 libdeflate:
-- '1.10'
+- '1.12'
 libdrm_cos7_x86_64:
 - 2.4.97
 libedit:
@@ -239,7 +239,7 @@ libssh2:
 libstdcxx_ng:
 - 12.1.0
 libtiff:
-- 4.3.0
+- 4.4.0
 libunistring:
 - 0.9.10
 libuuid:
@@ -257,7 +257,7 @@ libxml2:
 libzip:
 - 1.8.0
 libzlib:
-- 1.2.11
+- 1.2.12
 lz4_c:
 - 1.9.3
 mapproxy:
@@ -281,7 +281,7 @@ openjpeg:
 openldap:
 - 2.4.59
 openssl:
-- 1.1.1n
+- 1.1.1q
 osmctools:
 - 0.9.0
 pcre:
@@ -293,7 +293,7 @@ pip:
 pixman:
 - 0.40.0
 poppler:
-- 22.01.0
+- 22.04.0
 poppler_data:
 - 0.4.11
 postgresql:
@@ -327,7 +327,7 @@ pyrsistent:
 pysocks:
 - 1.7.1
 python:
-- 3.10.4
+- 3.10.5
 python_abi:
 - '3.10'
 python_crontab:
@@ -355,7 +355,7 @@ ruby:
 s3transfer:
 - 0.5.2
 setuptools:
-- 62.3.2
+- 63.2.0
 shapely:
 - 1.8.0
 six:
@@ -363,9 +363,9 @@ six:
 snappy:
 - 1.1.9
 soupsieve:
-- 2.3.1
+- 2.3.2.post1
 sqlite:
-- 3.38.5
+- 3.39.1
 sqlparse:
 - 0.4.2
 swapper:
@@ -373,7 +373,7 @@ swapper:
 sysroot_linux_64:
 - '2.17'
 tiledb:
-- 2.8.2
+- 2.8.3
 tk:
 - 8.6.12
 typing_extensions:
@@ -433,7 +433,7 @@ yaml:
 zipp:
 - 3.8.0
 zlib:
-- 1.2.11
+- 1.2.12
 zope_event:
 - 4.5.0
 zope_interface:
