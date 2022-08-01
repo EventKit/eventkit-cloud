@@ -297,8 +297,12 @@ SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 DATAPACKS_DEFAULT_SHARED = is_true(os.getenv("DATAPACKS_DEFAULT_SHARED", "false"))
 VERSION = os.getenv("VERSION", "1.10.0")
 
+
+AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
 AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
+if AUTO_LOGOUT_SECONDS:
+    MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 UI_CONFIG = {
     "VERSION": VERSION,
@@ -394,11 +398,6 @@ LAND_DATA_URL = os.getenv(
     "LAND_DATA_URL",
     "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",
 )
-
-AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
-
-if AUTO_LOGOUT_SECONDS:
-    MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
 
