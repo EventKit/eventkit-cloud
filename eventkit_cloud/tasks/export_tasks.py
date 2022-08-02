@@ -1374,7 +1374,7 @@ def arcgis_feature_service_export_task(
     out = None
 
     configuration = load_provider_config(data_provider.config)
-
+    configuration.pop("layers", None)  # Need to deconflict the names with layer variable.
     layers: LayersDescription = {}
     vector_layer_data = data_provider.layers
     for layer_name, layer in vector_layer_data.items():
@@ -1394,7 +1394,7 @@ def arcgis_feature_service_export_task(
         }
 
     try:
-        download_concurrently(list(layers.values()), feature_data=True, **configuration)
+        download_concurrently(layers=list(layers.values()), feature_data=True, **configuration)
     except Exception as e:
         logger.error(f"ArcGIS provider download error: {e}")
         raise e

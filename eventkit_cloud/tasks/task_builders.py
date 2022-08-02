@@ -53,7 +53,7 @@ class TaskChainBuilder(object):
         **kwargs,
     ):
         """
-        Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
+        Create a task chain to be picked up by a celery worker later.
 
         :param primary_export_task: The task which converts the source data to the interchange format (i.e. OSM-> gpkg)
         :param provider_task_uid: A reference uid for the DataProviderTask model.
@@ -61,7 +61,8 @@ class TaskChainBuilder(object):
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
-        :param osm_gpkg: A OSM geopackage with the planet osm schema.
+        :param service_type: The type of service (i.e. wmts) deprecated.
+        :param session_token: A users session token.
         :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
 

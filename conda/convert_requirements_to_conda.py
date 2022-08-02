@@ -13,7 +13,7 @@ def convert_requirements_to_conda():
             # Match the repository name and version from the Github URL.
             repository = "".join(requirement.split("/")[-1:]).split(".")[0]
             version = re.search("(?:@v?(.*?)#)", requirement).group(1)
-            conda_requirements.append(f"{repository}={version}".lower())
+            conda_requirements.append(f"{repository}=={version}".lower())
         else:
             conda_alias = None
             conda_match = re.search("# conda: (.*)", requirement)

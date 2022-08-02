@@ -144,6 +144,9 @@ class ArcGISLayer:
             case {"type": "esriSMS"}:
                 sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
                 return [self.get_cim_solid_stroke(sms), self.get_cim_solid_fill(sms)]
+            case {"type": "esriPMS"}:
+                pms: service_types.PictureMarkerSymbol = cast(service_types.PictureMarkerSymbol, service_symbol)
+                return [self.get_cim_picture_marker(pms)]
             case _:
                 if settings.DEBUG:
                     logger.error("Got an unsupported service symbol type %s", service_symbol)

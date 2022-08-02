@@ -19,10 +19,9 @@ class TaskPriority(Enum):
 
 app = Celery("eventkit_cloud")
 
-app.config_from_object("django.conf:settings")
+app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 app.autodiscover_tasks(related_name="debug_tasks")
 app.autodiscover_tasks(related_name="export_tasks")
 app.autodiscover_tasks(related_name="scheduled_tasks")
-
 app.conf.task_protocol = 1
