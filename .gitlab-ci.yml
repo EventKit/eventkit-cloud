@@ -13,7 +13,7 @@ variables:
   SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
   SECRET_KEY: "TESTING"
-  VERSION: "1.13.0"
+  VERSION: "1.14.0"
 
 image:
   name: $DOCKER_IMAGE
@@ -28,13 +28,13 @@ pending-tests:
     - python scripts/github.py pending "Waiting for tests."
 
 .front:
-  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
+  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
     - cd /var/lib/eventkit
 
 .back:
   image:
-    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
     entrypoint: [ "" ]
   before_script:
     - . activate conda_env
