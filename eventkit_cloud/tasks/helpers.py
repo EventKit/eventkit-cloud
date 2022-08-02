@@ -1119,6 +1119,7 @@ def download_chunks(
             outfile,
             task_points=(task_points * len(tile_bboxes)),
             service_description=service_description,
+            session=session,
             *args,
             **kwargs,
         )
