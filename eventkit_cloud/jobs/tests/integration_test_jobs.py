@@ -6,12 +6,12 @@ from time import sleep
 from typing import Union
 
 from django.conf import settings
+from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
-from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
 
@@ -53,6 +53,7 @@ class TestJob(TestCase):
         self.client: EventKitClient = self.get_client(
             self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
+        self.client.client.headers["Accept"] = "application/json, text/plain, */*"
         self.selection = {
             "type": "FeatureCollection",
             "features": [
@@ -101,58 +102,64 @@ class TestJob(TestCase):
         return client
 
     # TODO: add test_cancel_mapproxy_job
-    def test_cancel_osm_run(self):
-        test_service_slug = "osm"
+    # def test_cancel_osm_run(self):
+    #     test_service_slug = "osm"
+    #
+    #     # update provider to ensure it runs long enough to cancel...
+    #     # The code here is to temporarily increase the zoom level it is commented out to be implemented in
+    #     # test_cancel_mapproxy_job when that is added.
+    #     increased_zoom_level = 19
+    #     # export_provider = DataProvider.objects.get(slug=test_service_slug)
+    #     # original_level_to = export_provider.level_to
+    #     # increased_zoom_level = 19
+    #     # export_provider.level_to = increased_zoom_level
+    #     # export_provider.save()
+    #
+    #     job_data = {
+    #         "name": "osm",
+    #         "description": "Test Description",
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"],
+    #         "max_zoom": increased_zoom_level}],
+    #     }
+    #
+    #     run = self.run_job(job_data, wait_for_run=False)
+    #
+    #     run = self.client.wait_for_task_pickup(job_uid=run["job"]["uid"])
+    #
+    #     export_provider_task = run["provider_tasks"][0]
+    #     self.client.cancel_provider(export_provider_task["uid"])
+    #
+    #     export_provider_task = self.client.get_provider_task(uid=export_provider_task["uid"])
+    #     self.assertEqual(export_provider_task["status"], TaskState.CANCELED.value)
+    #
+    #     run = self.client.wait_for_run(run["uid"])
+    #     self.assertIn(run["status"], [TaskState.CANCELED.value, TaskState.INCOMPLETE.value])
+    #
+    #     # The code here is to temporarily increase the zoom level it is commented out to be implemented in
+    #     # test_cancel_mapproxy_job when that is added.
+    #     # update provider to original setting.
+    #     # export_provider = DataProvider.objects.get(slug=test_service_slug)
+    #     # export_provider.level_to = original_level_to
+    #     # export_provider.save()
 
-        # update provider to ensure it runs long enough to cancel...
-        # The code here is to temporarily increase the zoom level it is commented out to be implemented in
-        # test_cancel_mapproxy_job when that is added.
-        increased_zoom_level = 19
-        # export_provider = DataProvider.objects.get(slug=test_service_slug)
-        # original_level_to = export_provider.level_to
-        # increased_zoom_level = 19
-        # export_provider.level_to = increased_zoom_level
-        # export_provider.save()
-
+    def test_osm_geopackage(self):
+        """
+        This test is to ensure that an OSM job will export a GeoPackage.
+        :returns:
+        """
         job_data = {
-            "name": "osm",
+            "name": "TestThematicGPKG",
+            "include_zipfile": True,
             "description": "Test Description",
             "project": "TestProject",
             "selection": self.selection,
             "tags": [],
-            "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"], "max_zoom": increased_zoom_level}],
+            "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}],
         }
-
-        run = self.run_job(job_data, wait_for_run=False)
-
-        run = self.client.wait_for_task_pickup(job_uid=run["job"]["uid"])
-
-        export_provider_task = run["provider_tasks"][0]
-        self.client.cancel_provider(export_provider_task["uid"])
-
-        export_provider_task = self.client.get_provider_task(uid=export_provider_task["uid"])
-        self.assertEqual(export_provider_task["status"], TaskState.CANCELED.value)
-
-        run = self.client.wait_for_run(run["uid"])
-        self.assertIn(run["status"], [TaskState.CANCELED.value, TaskState.INCOMPLETE.value])
-
-        # The code here is to temporarily increase the zoom level it is commented out to be implemented in
-        # test_cancel_mapproxy_job when that is added.
-        # update provider to original setting.
-        # export_provider = DataProvider.objects.get(slug=test_service_slug)
-        # export_provider.level_to = original_level_to
-        # export_provider.save()
-
-    # def test_osm_geopackage(self):
-    #     """
-    #     This test is to ensure that an OSM job will export a GeoPackage.
-    #     :returns:
-    #     """
-    #     job_data = {"name": "TestThematicGPKG", "include_zipfile": True,
-    #                 "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}]}
-    #     self.assertTrue(self.run_job(job_data))
+        self.assertTrue(self.run_job(job_data))
 
     # def test_osm_sqlite(self):
     #     """
@@ -175,41 +182,53 @@ class TestJob(TestCase):
     #                 "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
-    def test_osm_kml(self):
+    # def test_osm_kml(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a kml file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestKML",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "osm", "formats": ["kml"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
+
+    def test_wms_gpkg(self):
         """
-        This test is to ensure that an OSM job will export a kml file.
+        This test is to ensure that an WMS job will export a gpkg file.
         :returns:
         """
         job_data = {
-            "name": "TestKML",
+            "name": "TestGPKG-WMS",
             "description": "Test Description",
             "include_zipfile": True,
             "project": "TestProject",
             "selection": self.selection,
             "tags": [],
-            "provider_tasks": [{"provider": "osm", "formats": ["kml"]}],
+            "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}],
         }
         self.assertTrue(self.run_job(job_data))
 
-    # def test_wms_gpkg(self):
-    #     """
-    #     This test is to ensure that an WMS job will export a gpkg file.
-    #     :returns:
-    #     """
-    #     job_data = {"name": "TestGPKG-WMS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
-    #     self.assertTrue(self.run_job(job_data))
-
-    # def test_wmts_gpkg(self):
-    #     """
-    #     This test is to ensure that an WMTS job will export a gpkg file.
-    #     :returns:
-    #     """
-    #     job_data = {"name": "TestGPKG-WMTS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
-    #     self.assertTrue(self.run_job(job_data))
+    def test_wmts_gpkg(self):
+        """
+        This test is to ensure that an WMTS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {
+            "name": "TestGPKG-WMTS",
+            "description": "Test Description",
+            "include_zipfile": True,
+            "project": "TestProject",
+            "selection": self.selection,
+            "tags": [],
+            "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}],
+        }
+        self.assertTrue(self.run_job(job_data))
 
     def test_wmts_gtiff(self):
         """
@@ -227,16 +246,21 @@ class TestJob(TestCase):
         }
         self.assertTrue(self.run_job(job_data))
 
-    # def test_arcgis_gpkg(self):
-    #     """
-    #     This test is to ensure that an ArcGIS job will export a gpkg file.
-    #     :returns:
-    #     """
-    #     job_data = {"name": "TestGPKG-Arc-Raster",
-    #                 "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
-    #     self.assertTrue(self.run_job(job_data))
+    def test_arcgis_gpkg(self):
+        """
+        This test is to ensure that an ArcGIS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {
+            "name": "TestGPKG-Arc-Raster",
+            "description": "Test Description",
+            "project": "TestProject",
+            "selection": self.selection,
+            "tags": [],
+            "include_zipfile": True,
+            "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}],
+        }
+        self.assertTrue(self.run_job(job_data))
 
     # def test_wfs_gpkg(self):
     #     """
@@ -304,57 +328,57 @@ class TestJob(TestCase):
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
-    def test_loaded(self):
-        """
-
-        :return: This test will run all currently loaded providers.
-        """
-        provider_tasks = []
-        for data_provider in self.get_all_displayed_provider_slugs():
-            provider_tasks += [{"provider": data_provider, "formats": ["gpkg"]}]
-        job_data = {
-            "name": "Integration Tests - Test Loaded",
-            "description": "An Integration Test ",
-            "project": "Integration Tests",
-            "include_zipfile": True,
-            "provider_tasks": provider_tasks,
-            "selection": self.selection,
-            "tags": [],
-        }
-        self.assertTrue(self.run_job(job_data, run_timeout=1800))  # This needs more time to complete
-
-    def test_all(self):
-        """
-        This test ensures that if all formats and all providers are selected
-        that the test will finish then successfully rerun.
-        :return:
-        """
-        job_data = {
-            "name": "Integration Test - Test All Test Fixtures",
-            "description": "test",
-            "include_zipfile": True,
-            "project": "eventkit-integration-test",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [
-                {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
-                # {"provider": "osm-generic",
-                #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {"provider": "osm", "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
-                {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg", "gtiff"]},
-                # Commented out because the service is down.
-                # {"provider": "eventkit-integration-test-wfs",
-                #  "formats": ["shp", "gpkg", "kml"]},
-                {"provider": "eventkit-integration-test-wcs", "formats": ["gtiff", "hfa"]}
-                # {"provider": "eventkit-integration-test-arc-fs",
-                #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
-            ],
-        }
-        # This is to test creating an initial job.
-        run = self.run_job(job_data, keep_job=True, run_timeout=1800)  # This needs more time to complete
-        # This is to test rerunning that job.
-        self.run_job(job_uid=run["job"]["uid"], run_timeout=1800)  # This needs more time to complete
+    # def test_loaded(self):
+    #     """
+    #
+    #     :return: This test will run all currently loaded providers.
+    #     """
+    #     provider_tasks = []
+    #     for data_provider in self.get_all_displayed_provider_slugs():
+    #         provider_tasks += [{"provider": data_provider, "formats": ["gpkg"]}]
+    #     job_data = {
+    #         "name": "Integration Tests - Test Loaded",
+    #         "description": "An Integration Test ",
+    #         "project": "Integration Tests",
+    #         "include_zipfile": True,
+    #         "provider_tasks": provider_tasks,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #     }
+    #     self.assertTrue(self.run_job(job_data, run_timeout=1800))  # This needs more time to complete
+    #
+    # def test_all(self):
+    #     """
+    #     This test ensures that if all formats and all providers are selected
+    #     that the test will finish then successfully rerun.
+    #     :return:
+    #     """
+    #     job_data = {
+    #         "name": "Integration Test - Test All Test Fixtures",
+    #         "description": "test",
+    #         "include_zipfile": True,
+    #         "project": "eventkit-integration-test",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [
+    #             {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
+    #             # {"provider": "osm-generic",
+    #             #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #             {"provider": "osm", "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #             {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
+    #             {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg", "gtiff"]},
+    #             # Commented out because the service is down.
+    #             # {"provider": "eventkit-integration-test-wfs",
+    #             #  "formats": ["shp", "gpkg", "kml"]},
+    #             {"provider": "eventkit-integration-test-wcs", "formats": ["gtiff", "hfa"]}
+    #             # {"provider": "eventkit-integration-test-arc-fs",
+    #             #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
+    #         ],
+    #     }
+    #     # This is to test creating an initial job.
+    #     run = self.run_job(job_data, keep_job=True, run_timeout=1800)  # This needs more time to complete
+    #     # This is to test rerunning that job.
+    #     self.run_job(job_uid=run["job"]["uid"], run_timeout=1800)  # This needs more time to complete
 
     def run_job(self, data=None, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT, job_uid=None, keep_job=False):
 
@@ -539,15 +563,18 @@ def get_providers_list():
     ]
 
 
+@transaction.atomic
 def load_providers():
     export_providers = get_providers_list()
-    providers = [DataProvider(**export_provider) for export_provider in export_providers]
-    DataProvider.objects.bulk_create(providers)
+    for _provider_data in export_providers:
+        DataProvider.objects.get_or_create(slug=_provider_data["slug"], defaults=_provider_data)
 
 
-def delete_providers():
+def hide_providers():
+    """Ensure that test providers are hidden."""
     export_providers = get_providers_list()
     for export_provider in export_providers:
         provider = DataProvider.objects.using("default").filter(slug=export_provider.get("slug")).first()
         if provider:
-            provider.delete(using="default")
+            provider.hidden = True
+            provider.display = False
