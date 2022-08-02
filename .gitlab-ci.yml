@@ -1,6 +1,6 @@
 stages:
   - pending
-  - lint
+#  - lint
   - test
   - results
 
