@@ -5,6 +5,7 @@ set -e
 cmd="$@"
 
 source activate conda_env
+python scripts/create_bucket.py
 python - << END
 import os
 import django

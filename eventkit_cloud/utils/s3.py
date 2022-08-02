@@ -13,13 +13,13 @@ logger = logging.getLogger(__name__)
 
 def get_s3_client():
     return boto3.client(
-        "s3", aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        "s3", endpoint_url=settings.AWS_ENDPOINT_URL, aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
 
 
 def get_s3_resource():
     return boto3.resource(
-        "s3", aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        "s3", endpoint_url=settings.AWS_ENDPOINT_URL, aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
 
 
