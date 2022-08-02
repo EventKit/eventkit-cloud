@@ -70,11 +70,6 @@ EXPORT_RUN_FILES = os.path.join(EXPORT_STAGING_ROOT, "export_run_files")
 # where export run files can be downloaded
 EXPORT_RUN_FILES_DOWNLOAD = os.getenv("EXPORT_RUN_FILES_DOWNLOAD", "/export_run_files/")
 
-# where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = os.getenv("EXPORT_DOWNLOAD_ROOT", "/var/lib/eventkit/exports_download/")
-
-IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, "images")
-
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
 
@@ -335,6 +330,7 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_SECRET_ACCESS_KEY = listings[0]["credentials"]["secret_access_key"]
             except (KeyError, TypeError):
                 continue
+AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")

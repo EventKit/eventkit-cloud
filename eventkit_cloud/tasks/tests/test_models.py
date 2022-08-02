@@ -214,27 +214,31 @@ class TestExportRunFile(TestCase):
 
     fixtures = ("osm_provider.json",)
 
-    def test_create_export_run_file(self):
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save')
+    def test_create_export_run_file(self, mock_save):
         file_mock = MagicMock(spec=File)
         file_mock.name = "test.pdf"
+        mock_save.return_value = file_mock.name
         directory = "test"
         provider = DataProvider.objects.first()
         file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
         self.assertEqual(file_mock.name, file_model.file.name)
         self.assertEqual(directory, file_model.directory)
         self.assertEqual(provider, file_model.provider)
-        file_model.file.delete()
 
-    def test_delete_export_run_file(self):
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save')
+    def test_delete_export_run_file(self, mock_save, mock_delete):
         file_mock = MagicMock(spec=File)
         file_mock.name = "test.pdf"
+        mock_save.return_value = file_mock.name
         directory = "test"
         provider = DataProvider.objects.first()
         file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
         files = ExportRunFile.objects.all()
         self.assertEqual(1, files.count())
-        file_model.file.delete()
         file_model.delete()
+        mock_delete.assert_called_once()
         self.assertEqual(0, files.count())
 
 
@@ -279,9 +283,8 @@ class TestExportTask(TestCase):
         run.delete()
         delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
-    @patch("os.remove")
     @patch("eventkit_cloud.tasks.signals.delete_from_s3")
-    def test_exporttaskresult_delete_exports(self, delete_from_s3, remove):
+    def test_exporttaskresult_delete_exports(self, delete_from_s3):
 
         # setup
         download_dir = "/test_download_dir"
@@ -298,7 +301,6 @@ class TestExportTask(TestCase):
         # Test
         result.delete()
         delete_from_s3.assert_called_once_with(download_url=download_url)
-        remove.assert_called_once_with(full_download_path)
 
 
 class TestExportTaskException(TestCase):

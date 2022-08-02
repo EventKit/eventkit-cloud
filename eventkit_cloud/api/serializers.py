@@ -12,10 +12,8 @@ import logging
 import pickle
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import ParseResult, urlsplit
 
 from audit_logging.models import AuditEvent
-from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
@@ -232,7 +230,6 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     def get_preview_url(self, obj):
-        from urllib.parse import ParseResult, urlsplit
 
         preview = obj.preview
         if preview is not None:
@@ -1169,7 +1166,6 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return export_formats.distinct()
 
     def get_thumbnail_url(self, obj):
-        from urllib.parse import ParseResult, urlsplit
 
         thumbnail = obj.thumbnail
         if thumbnail is not None:

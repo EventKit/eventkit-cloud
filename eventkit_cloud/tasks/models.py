@@ -3,10 +3,8 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Union
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -284,7 +282,7 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     The ExportRunFile stores additional files to be added to each ExportRun zip archive.
     """
 
-    file = models.FileField(verbose_name="File", storage=S3Boto3Storage())
+    file = models.FileField(verbose_name="File")
     directory = models.CharField(
         max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
     )

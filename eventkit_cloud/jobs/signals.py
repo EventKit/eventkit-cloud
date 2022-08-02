@@ -62,6 +62,7 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     """
     delete_from_s3(download_url=instance.download_url)
 
+
 @receiver(pre_save, sender=DataProvider)
 def provider_pre_save(sender, instance, **kwargs):
     """

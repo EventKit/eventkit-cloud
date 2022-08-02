@@ -69,22 +69,19 @@ class TestImageSnapshot(TestCase):
         mock_thumbnail.save.assert_called()
         self.assertEquals(expected_file_path, returned_path)
 
-    @patch("eventkit_cloud.utils.image_snapshot.make_dirs")
+    @patch("eventkit_cloud.utils.image_snapshot.os")
+    @patch("eventkit_cloud.utils.image_snapshot.s3")
     @patch("eventkit_cloud.utils.image_snapshot.MapImageSnapshot")
-    def test_make_thumbnail_downloadable(self, mock_map_image_snapshot, mock_make_dirs):
+    def test_make_thumbnail_downloadable(self, mock_map_image_snapshot, mock_s3, mock_os):
         example_filepath = "/some/path/file.jpg"
-        example_uid = "UID"
         expected_size = "1000"
         mock_snapshot = MagicMock()
         mock_map_image_snapshot.objects.create.return_value = mock_snapshot
-        with patch("eventkit_cloud.utils.image_snapshot.os") as mock_os, patch(
-            "eventkit_cloud.utils.image_snapshot.shutil"
-        ) as mock_shutil:
-            mock_os.stat().return_value = Mock(expected_size)
-            returned_snapshot = make_thumbnail_downloadable(example_filepath)
-            mock_map_image_snapshot.objects.create.called_once_with(
-                download_url="", filename=example_filepath, size=expected_size
-            )
-            mock_shutil.copy.assert_called_once()
-            mock_snapshot.save.assert_called_once()
-            self.assertEquals(returned_snapshot, mock_snapshot)
+        mock_os.stat().return_value = Mock(expected_size)
+        returned_snapshot = make_thumbnail_downloadable(example_filepath)
+        mock_map_image_snapshot.objects.create.called_once_with(
+            download_url="", filename=example_filepath, size=expected_size
+        )
+        mock_s3.upload_to_s3.assert_called_once()
+        mock_snapshot.save.assert_called_once()
+        self.assertEquals(returned_snapshot, mock_snapshot)

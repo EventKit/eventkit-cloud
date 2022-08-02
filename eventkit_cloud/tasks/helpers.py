@@ -6,7 +6,6 @@ import os
 import pathlib
 import pickle
 import re
-import shutil
 import signal
 import tempfile
 import time
@@ -1404,7 +1403,6 @@ def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Di
 
 
 def download_run_directory(old_run: ExportRun, new_run: ExportRun):
-    download_dir = get_download_path(old_run.uid)
     old_run_dir = get_run_staging_dir(old_run.uid)
     new_run_dir = get_run_staging_dir(new_run.uid)
     cache_key = str(new_run.uid)
