@@ -17,7 +17,6 @@ services:
       - postgis
       - rabbitmq
       - memcached
-      - minio
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
@@ -165,7 +164,6 @@ services:
     links:
       - postgis
       - rabbitmq
-      - minio
     environment:
       - AWS_ENDPOINT_URL
       - AWS_STORAGE_BUCKET_NAME

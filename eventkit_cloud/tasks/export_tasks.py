@@ -197,7 +197,7 @@ class ExportTask(EventKitBaseTask):
 
             # save the task and task result
             result = FileProducingTaskResult.objects.create(
-                filename=str(file_name), size=size, download_url=download_url
+                filename=str(file_name), size=size, download_url=str(file_name)
             )
 
             task.result = result
