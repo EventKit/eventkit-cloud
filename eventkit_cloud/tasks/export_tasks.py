@@ -193,12 +193,10 @@ class ExportTask(EventKitBaseTask):
             file_path = retval["result"]
             stat = os.stat(file_path)
             size = stat.st_size / 1024 / 1024.00
-            file_name, download_url = make_file_downloadable(file_path)
+            # file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(
-                filename=str(file_name), size=size, download_url=str(file_name)
-            )
+            result = FileProducingTaskResult.objects.create(file=file_path)
 
             task.result = result
             task.status = TaskState.SUCCESS.value

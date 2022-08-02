@@ -172,7 +172,30 @@ class UIDMixin(models.Model):
         super(UIDMixin, self).save(*args, **kwargs)
 
 
-class DownloadableMixin(models.Model):
+
+class FileFieldMixin(models.Model):
+    """
+    Mixin for models that have a file(s).
+    """
+
+    storage = S3Boto3Storage()
+    file = models.FileField(verbose_name="File", null=True, blank=True)
+    directory = models.CharField(
+        max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
+    )
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            file_check = type(self).objects.get(pk=self.pk)
+            if file_check.file != self.file:
+                file_check.file.delete(save=False)
+        super().save(*args, **kwargs)
+
+
+class DownloadableMixin(FileFieldMixin):
     """
     Mixin for models that have a downloadable product.
     """
@@ -195,33 +218,6 @@ class DownloadableMixin(models.Model):
         if staging:
             return os.path.join(settings.EXPORT_STAGING_ROOT, self.filename)
         return self.filename
-
-
-class FileFieldMixin(models.Model):
-    """
-    Mixin for models that have a file(s).
-    """
-
-    storage = None
-    if settings.USE_S3:
-        storage = S3Boto3Storage()
-    else:
-        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
-
-    file = models.FileField(verbose_name="File", storage=storage)
-    directory = models.CharField(
-        max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
-    )
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            file_check = type(self).objects.get(pk=self.pk)
-            if file_check.file != self.file:
-                file_check.file.delete(save=False)
-        super().save(*args, **kwargs)
 
 
 class GroupPermissionLevel(Enum):
