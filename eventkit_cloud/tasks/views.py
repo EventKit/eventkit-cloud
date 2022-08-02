@@ -46,10 +46,7 @@ def download(request):
     user_download = UserDownload.objects.create(user=current_user, downloadable=downloadable)
     user_download.save()
 
-    if getattr(settings, "USE_S3", False):
-        url = get_presigned_url(downloadable.download_url)
-    else:
-        url = request.build_absolute_uri(downloadable.download_url)
+    url = get_presigned_url(downloadable.download_url)
     logger.info("Redirecting to {0}".format(url))
     return redirect(url)
 
@@ -69,14 +66,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 
     run_zip_file.message = "Downloading files to be zipped..."
     run_zip_file.status = TaskState.RUNNING.value
-    stage_dir = get_run_staging_dir(run.uid)
-    download_dir = get_download_path(run.uid)
-
-    if getattr(settings, "USE_S3", False):
-        download_folder_from_s3(str(run.uid))
-    else:
-        if not os.path.exists(stage_dir):
-            shutil.copytree(download_dir, stage_dir, ignore=shutil.ignore_patterns("*.zip"))
+    download_folder_from_s3(str(run.uid))
 
     # Kick off the zip process with get_zip_task_chain
     return get_zip_task_chain(

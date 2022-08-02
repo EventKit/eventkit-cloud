@@ -125,7 +125,7 @@ def fit_to_area(image, pixels_x=500, pixels_y=250):
     return image
 
 
-def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
+def make_thumbnail_downloadable(filepath, download_filename=None):
 
     filename = os.path.basename(filepath)
     if download_filename is None:
@@ -133,14 +133,8 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
 
     filesize = os.stat(filepath).st_size
     thumbnail_snapshot = MapImageSnapshot.objects.create(download_url="", filename=filepath, size=filesize)
-    if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(str(thumbnail_snapshot.uid), filepath, download_filename)
-        os.remove(filepath)
-    else:
-        download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
-        download_url = os.path.join(get_provider_image_download_path(provider_uid), download_filename)
-        make_dirs(os.path.split(download_path)[0])
-        shutil.copy(filepath, download_path)
+    download_url = s3.upload_to_s3(str(thumbnail_snapshot.uid), filepath, download_filename)
+    os.remove(filepath)
 
     thumbnail_snapshot.download_url = download_url
     thumbnail_snapshot.save()

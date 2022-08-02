@@ -77,11 +77,11 @@ class TestImageSnapshot(TestCase):
         expected_size = "1000"
         mock_snapshot = MagicMock()
         mock_map_image_snapshot.objects.create.return_value = mock_snapshot
-        with self.settings(USE_S3=False), patch("eventkit_cloud.utils.image_snapshot.os") as mock_os, patch(
+        with patch("eventkit_cloud.utils.image_snapshot.os") as mock_os, patch(
             "eventkit_cloud.utils.image_snapshot.shutil"
         ) as mock_shutil:
             mock_os.stat().return_value = Mock(expected_size)
-            returned_snapshot = make_thumbnail_downloadable(example_filepath, example_uid)
+            returned_snapshot = make_thumbnail_downloadable(example_filepath)
             mock_map_image_snapshot.objects.create.called_once_with(
                 download_url="", filename=example_filepath, size=expected_size
             )

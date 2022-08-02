@@ -60,16 +60,7 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     """
     Delete associated file when deleting a MapImageSnapshot.
     """
-    if getattr(settings, "USE_S3", False):
-        delete_from_s3(download_url=instance.download_url)
-    url_parts = instance.download_url.split("/")
-    full_file_download_path = "/".join([settings.IMAGES_DOWNLOAD_ROOT.rstrip("/"), url_parts[-2], url_parts[-1]])
-    try:
-        os.remove(full_file_download_path)
-        logger.info("The file {0} was deleted.".format(full_file_download_path))
-    except OSError:
-        logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
-
+    delete_from_s3(download_url=instance.download_url)
 
 @receiver(pre_save, sender=DataProvider)
 def provider_pre_save(sender, instance, **kwargs):

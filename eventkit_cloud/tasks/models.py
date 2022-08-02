@@ -284,13 +284,7 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     The ExportRunFile stores additional files to be added to each ExportRun zip archive.
     """
 
-    storage = None
-    if settings.USE_S3:
-        storage = S3Boto3Storage()
-    else:
-        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
-
-    file = models.FileField(verbose_name="File", storage=storage)
+    file = models.FileField(verbose_name="File", storage=S3Boto3Storage())
     directory = models.CharField(
         max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
     )

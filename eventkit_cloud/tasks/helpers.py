@@ -792,10 +792,9 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
         run_zip_file.message = f"Adding {export_run_file.file.name} to zip archive."
         export_run_file_path = os.path.join(settings.EXPORT_RUN_FILES, export_run_file.file.name)
 
-        if settings.USE_S3:
-            request = requests.get(export_run_file.file.url)
-            with open(export_run_file_path, "wb+") as file:
-                file.write(request.content)
+        request = requests.get(export_run_file.file.url)
+        with open(export_run_file_path, "wb+") as file:
+            file.write(request.content)
 
         extra_directory = export_run_file.directory or ""
         if export_run_file.provider:
@@ -1423,17 +1422,7 @@ def download_run_directory(old_run: ExportRun, new_run: ExportRun):
             logger.error(
                 f"Could not copy run data from staging directory {old_run_dir} it might have already been removed."
             )
-        if getattr(settings, "USE_S3", False):
-            download_folder_from_s3(str(old_run.uid), output_dir=new_run_dir)
-        else:
-            try:
-                dir_util.copy_tree(download_dir, new_run_dir)
-            except Exception as e:
-                logger.error(e)
-                logger.error(
-                    f"Could not copy run data from download directory {download_dir} "
-                    f"it might have already been removed."
-                )
+        download_folder_from_s3(str(old_run.uid), output_dir=new_run_dir)
         # TODO: Use ignore on copytree when switching to shutil in python 3.8.
         delete_files = glob.glob(os.path.join(new_run_dir, "run/*.zip"))
         for delete_file in delete_files:
@@ -1456,22 +1445,7 @@ def make_file_downloadable(file_path: Path, skip_copy: bool = False) -> Tuple[Pa
     file_name = Path(file_path)
     if Path(settings.EXPORT_STAGING_ROOT) in file_name.parents:
         file_name = file_name.relative_to(settings.EXPORT_STAGING_ROOT)
-
-    download_url = get_download_url(file_name)
-
-    if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(file_path)
-    else:
-
-        download_path = get_download_path(file_name)
-        make_dirs(os.path.dirname(download_path))
-
-        if not skip_copy:
-            if not os.path.isfile(file_path):
-                logger.error(f"Cannot make file {file_path} downloadable because it does not exist.")
-            else:
-                shutil.copy(file_path, download_path)
-
+    download_url = s3.upload_to_s3(file_path)
     return file_name, download_url
 
 

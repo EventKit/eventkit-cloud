@@ -236,18 +236,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
         preview = obj.preview
         if preview is not None:
-            request = urlsplit(self.context["request"].build_absolute_uri())
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(preview.download_url)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(
-                scheme=request.scheme,
-                netloc=request.netloc,
-                path=f"{preview.download_url}",
-                params="",
-                query="",
-                fragment="",
-            ).geturl()
+            return get_presigned_url(preview.download_url)
         else:
             return ""
 
@@ -1016,19 +1005,7 @@ def basic_data_provider_serializer(
     def get_thumbnail_url(obj):
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(thumbnail.download_url, expires=3000)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            if request:
-                split_request = urlsplit(request.build_absolute_uri())
-                return ParseResult(
-                    scheme=split_request.scheme,
-                    netloc=split_request.netloc,
-                    path=f"{thumbnail.download_url}",
-                    params="",
-                    query="",
-                    fragment="",
-                ).geturl()
+            return get_presigned_url(thumbnail.download_url, expires=3000)
         return ""
 
     serialized_data_provider = {
@@ -1196,20 +1173,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            request = urlsplit(self.context["request"].build_absolute_uri())
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(thumbnail.download_url, expires=3000)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(
-                scheme=request.scheme,
-                netloc=request.netloc,
-                path=f"{thumbnail.download_url}",
-                params="",
-                query="",
-                fragment="",
-            ).geturl()
-        else:
-            return ""
+            return get_presigned_url(thumbnail.download_url, expires=3000)
+        return ""
 
     @staticmethod
     def get_metadata(obj):

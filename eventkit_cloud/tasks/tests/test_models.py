@@ -276,9 +276,8 @@ class TestExportTask(TestCase):
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = DataProviderTaskRecord.objects.create(run=run)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
-        with self.settings(USE_S3=True):
-            run.delete()
-            delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
+        run.delete()
+        delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
     @patch("os.remove")
     @patch("eventkit_cloud.tasks.signals.delete_from_s3")
@@ -297,8 +296,7 @@ class TestExportTask(TestCase):
         self.assertEqual(download_url, task.result.download_url)
 
         # Test
-        with self.settings(USE_S3=True, EXPORT_DOWNLOAD_ROOT=download_dir):
-            result.delete()
+        result.delete()
         delete_from_s3.assert_called_once_with(download_url=download_url)
         remove.assert_called_once_with(full_download_path)
 
