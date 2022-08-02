@@ -145,21 +145,21 @@ class TestJob(TestCase):
     #     # export_provider.level_to = original_level_to
     #     # export_provider.save()
 
-    def test_osm_geopackage(self):
-        """
-        This test is to ensure that an OSM job will export a GeoPackage.
-        :returns:
-        """
-        job_data = {
-            "name": "TestThematicGPKG",
-            "include_zipfile": True,
-            "description": "Test Description",
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
+    # def test_osm_geopackage(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a GeoPackage.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestThematicGPKG",
+    #         "include_zipfile": True,
+    #         "description": "Test Description",
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
     # def test_osm_sqlite(self):
     #     """
@@ -197,22 +197,22 @@ class TestJob(TestCase):
     #         "provider_tasks": [{"provider": "osm", "formats": ["kml"]}],
     #     }
     #     self.assertTrue(self.run_job(job_data))
-
-    def test_wms_gpkg(self):
-        """
-        This test is to ensure that an WMS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "TestGPKG-WMS",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
+    #
+    # def test_wms_gpkg(self):
+    #     """
+    #     This test is to ensure that an WMS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestGPKG-WMS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
     def test_wmts_gpkg(self):
         """
@@ -229,38 +229,38 @@ class TestJob(TestCase):
             "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}],
         }
         self.assertTrue(self.run_job(job_data))
+    #
+    # def test_wmts_gtiff(self):
+    #     """
+    #     This test is to ensure that an WMTS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "Test-gtiff-WMTS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gtiff"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wmts_gtiff(self):
-        """
-        This test is to ensure that an WMTS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "Test-gtiff-WMTS",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gtiff"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
-
-    def test_arcgis_gpkg(self):
-        """
-        This test is to ensure that an ArcGIS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "TestGPKG-Arc-Raster",
-            "description": "Test Description",
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "include_zipfile": True,
-            "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
+    # def test_arcgis_gpkg(self):
+    #     """
+    #     This test is to ensure that an ArcGIS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestGPKG-Arc-Raster",
+    #         "description": "Test Description",
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "include_zipfile": True,
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
     # def test_wfs_gpkg(self):
     #     """
@@ -301,22 +301,22 @@ class TestJob(TestCase):
     #                 "project": "TestProject", "selection": self.selection, "tags": [],
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
     #     self.assertTrue(self.run_job(job_data))
-
-    def test_wcs_hfa(self):
-        """
-        This test is to ensure that a WCS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "TestGPKG-WCS",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
+    #
+    # def test_wcs_hfa(self):
+    #     """
+    #     This test is to ensure that a WCS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestGPKG-WCS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": "TestProject",
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
     # def test_arcgis_feature_service(self):
     #     """
