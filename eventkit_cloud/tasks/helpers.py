@@ -24,7 +24,6 @@ from xml.dom import minidom
 from zipfile import ZipFile
 
 import requests
-import yaml
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.cache import cache
@@ -534,8 +533,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
     for data_provider_task_record in data_provider_task_records:
         data_provider = data_provider_task_record.provider
         provider_type = data_provider.export_provider_type.type_name
-
-        conf = yaml.safe_load(data_provider.config) or dict()
+        conf = data_provider.config or dict()
         cert_info = conf.get("cert_info", None)
         metadata["data_sources"][data_provider_task_record.provider.slug] = {
             "uid": str(data_provider_task_record.uid),

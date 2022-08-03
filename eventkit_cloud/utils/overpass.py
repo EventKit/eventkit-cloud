@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from string import Template
 
-import yaml
 from django.conf import settings
 from requests import exceptions
 
@@ -65,7 +64,8 @@ class Overpass(object):
 
         # extract all nodes / ways and relations within the bounding box
         # see: http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
-        conf: dict = yaml.safe_load(self.config) or dict()
+        # conf: dict = yaml.safe_load(self.config) or dict()
+        conf = config or dict()
         default_template_str = (
             "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
         )
@@ -119,7 +119,8 @@ class Overpass(object):
                 eta=eta,
                 msg="Querying provider data",
             )
-            conf: dict = yaml.safe_load(self.config) or dict()
+            # conf: dict = yaml.safe_load(self.config) or dict()
+            conf = self.config or dict()
             session = get_or_update_session(slug=self.slug, **conf)
             req = session.post(self.url, data=query, stream=True)
             if not req.ok:

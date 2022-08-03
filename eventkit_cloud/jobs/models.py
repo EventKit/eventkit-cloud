@@ -9,7 +9,6 @@ import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Type, Union, cast
 
-import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -20,7 +19,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.db.models import Case, Q, QuerySet, Value, When
 from django.utils import timezone
-from yaml import CDumper, CLoader
 
 from eventkit_cloud import settings
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -265,17 +263,14 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         help_text="This determines the highest zoom level the tile export will seed to.",
     )
-    config = models.TextField(
-        default="",
-        null=True,
-        blank=True,
+    config = models.JSONField(
+        default=dict,
         verbose_name="Configuration",
         help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
                               with a Sources key of imagery and a Service Layer name of imagery; the validator also
                               requires a layers section, but this isn't used.
                               OSM Services also require a YAML configuration.""",
     )
-
     DATA_TYPES = [
         (GeospatialDataType.VECTOR.value, ("Vector")),
         (GeospatialDataType.RASTER.value, ("Raster")),
@@ -326,7 +321,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         db_table = "export_provider"
 
     # Check if config changed to updated geometry
-    __config: str = None
+    __config: dict = None
     __url: str = None
     __layer: str = None
 
@@ -342,8 +337,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         geometry = None
         if self.config != self.__config:
-            orig_extent_url = load_provider_config(self.__config).get("extent_url")
-            config = load_provider_config(self.config)
+            orig_extent_url = self.__config.get("extent_url")
+            config = self.config or dict()
             extent_url = config.get("extent_url")
             if extent_url and extent_url != orig_extent_url:
                 random_uuid = uuid.uuid4()
@@ -372,7 +367,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         Client = get_client(self.export_provider_type.type_name)
         config = None
         if self.config:
-            config = load_provider_config(self.config)
+            config = self.config or dict()
         return Client(url, self.layer, aoi_geojson=None, slug=self.slug, config=config)
 
     def check_status(self, aoi_geojson: dict = None):
@@ -436,9 +431,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config, Loader=CLoader)
-        url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
-        type = config.get("sources", {}).get("info", {}).get("type")
+        url = self.config.get("sources", {}).get("info", {}).get("req", {}).get("url")
+        type = self.config.get("sources", {}).get("info", {}).get("type")
         if url:
             return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
 
@@ -448,9 +442,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        config = yaml.load(self.config, Loader=CLoader)
 
-        url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
+        url = self.config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
             return get_mapproxy_footprint_url(self.slug)
 
@@ -463,7 +456,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if self.data_type != GeospatialDataType.VECTOR.value:
             return {}
         if self.config:
-            config = clean_config(str(self.config))
+            config = clean_config(self.config)
             # As of EK 1.9.0 only vectors support multiple layers in a single provider
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
@@ -499,8 +492,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     @property
     def max_data_size(self):
-        config = yaml.load(self.config, Loader=CLoader)
-        return None if config is None else config.get("max_data_size", None)
+        return None if self.config is None else self.config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
 
@@ -1109,22 +1101,7 @@ def delete(self, *args, **kwargs):
 Group.delete = delete  # type: ignore
 
 
-def load_provider_config(config: Union[str, dict]) -> dict:
-    """
-    Function deserializes a yaml object from a given string.
-    """
-
-    try:
-        if isinstance(config, dict):
-            return copy.deepcopy(config)
-        configuration = yaml.safe_load(config) if config else dict()
-    except yaml.YAMLError as e:
-        logger.error(f"Unable to load provider configuration: {e}")
-        raise Exception(e)
-    return configuration
-
-
-def clean_config(config: Union[str, dict]) -> dict:
+def clean_config(config: dict) -> dict:
     """
     Used to remove adhoc service related values from the configuration.
     :param config: A yaml structured string.
@@ -1141,22 +1118,9 @@ def clean_config(config: Union[str, dict]) -> dict:
         "tile_size",
     ]
 
-    if isinstance(config, str):
-        conf = yaml.safe_load(config)
-    else:
-        conf = copy.deepcopy(config)
+    conf = copy.deepcopy(config)
 
     for service_key in service_keys:
         conf.pop(service_key, None)
 
     return conf
-
-
-def clean_config_as_str(config: str) -> str:
-    """
-    Used to remove adhoc service related values from the configuration.
-    :param config: A yaml structured string.
-    :param return_dict: True if wishing to return config as dictionary.
-    :return: A yaml as a str.
-    """
-    return yaml.dump(clean_config(config), Dumper=CDumper)

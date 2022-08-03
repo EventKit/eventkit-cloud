@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-import yaml
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
@@ -18,7 +17,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase
-from yaml import CDumper, CLoader
 
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import ExportRunViewSet, get_models, get_provider_task
@@ -56,9 +54,7 @@ logger = logging.getLogger(__name__)
 
 def add_max_data_size(provider, max_data_size):
     config = provider.config
-    config = yaml.load(config, Loader=CLoader)
     config["max_data_size"] = max_data_size
-    provider.config = yaml.dump(config, Dumper=CDumper)
     provider.save()
 
 

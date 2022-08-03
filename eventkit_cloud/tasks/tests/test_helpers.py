@@ -164,7 +164,7 @@ class TestHelpers(TestCase):
         mocked_data_provider.slug = expected_provider_slug
         mocked_data_provider.export_provider_type.type_name = "osm"
         mocked_data_provider.service_copyright = expected_copyright = "mocked_copyright"
-        mocked_data_provider.config = f"cert_var: {expected_provider_slug}"
+        mocked_data_provider.config = {"cert_var": expected_provider_slug}
         mocked_data_provider.service_description = expected_data_provider_desc = "example_description"
         mocked_data_provider.layers = example_layers
         mocked_data_provider.get_data_type.return_value = expected_type
