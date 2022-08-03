@@ -1031,7 +1031,6 @@ class TestExportTasks(ExportTaskBase):
         expected_result = {"source": file_path, "result": file_path}
         self.assertEqual(expected_result, wcs_export_task.run())
 
-
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
