@@ -301,7 +301,7 @@ class TestExportTasks(ExportTaskBase):
         expected_provider_slug = "wfs-service"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="wfs")
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = dict()
         self.provider.save()
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
@@ -819,7 +819,7 @@ class TestExportTasks(ExportTaskBase):
         expected_provider_slug = "arcgis-feature-service"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="arcgis-feature")
         self.provider.slug = expected_provider_slug
-        self.provider.config = {}
+        self.provider.config = dict()
         self.provider.save()
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
@@ -1031,51 +1031,6 @@ class TestExportTasks(ExportTaskBase):
         expected_result = {"source": file_path, "result": file_path}
         self.assertEqual(expected_result, wcs_export_task.run())
 
-    # @patch("eventkit_cloud.tasks.export_tasks.convert")
-    # @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
-    # @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    # @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    # @patch("eventkit_cloud.tasks.export_tasks.parse_result")
-    # @patch("celery.app.task.Task.request")
-    # def test_mbtiles_export_task(
-    #         self,
-    #         mock_request,
-    #         mock_parse_result,
-    #         mock_get_export_task_record,
-    #         mock_get_export_filepath,
-    #         mock_task_process,
-    #         mock_convert
-    # ):
-    #     celery_uid = str(uuid.uuid4())
-    #     type(mock_request).id = PropertyMock(return_value=celery_uid)
-    #     file_path = "/path/file.mbtiles"
-    #     mock_convert.return_value = file_path
-    #     expected_result = {"driver": "MBTiles", "result": file_path}
-    #     self.assertEqual(expected_result, mbtiles_export_task.run())
-    #
-    # @patch("eventkit_cloud.tasks.export_tasks.convert")
-    # @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
-    # @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    # @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    # @patch("eventkit_cloud.tasks.export_tasks.parse_result")
-    # @patch("celery.app.task.Task.request")
-    # def test_geopackage_export_task(
-    #         self,
-    #         mock_request,
-    #         mock_parse_result,
-    #         mock_get_export_task_record,
-    #         mock_get_export_filepath,
-    #         mock_task_process,
-    #         mock_convert
-    # ):
-    #     celery_uid = str(uuid.uuid4())
-    #     type(mock_request).id = PropertyMock(return_value=celery_uid)
-    #     file_path = "/path/file.gpkg"
-    #     mock_parse_result.return_value = file_path
-    #     mock_convert.return_value = file_path
-    #     expected_result = {"driver": "gpkg", "result": file_path, "gpkg": file_path}
-    #     self.assertEqual(expected_result, geopackage_export_task.run())
-    #
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("celery.app.task.Task.request")
@@ -1598,7 +1553,7 @@ class TestExportTasks(ExportTaskBase):
         expected_provider_slug = "vector-file"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="vector-file")
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = dict()
         self.provider.save()
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
@@ -1659,7 +1614,7 @@ class TestExportTasks(ExportTaskBase):
         expected_provider_slug = "raster-file"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="raster-file")
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = dict()
         self.provider.save()
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
 
@@ -1722,7 +1677,7 @@ class TestExportTasks(ExportTaskBase):
         out_projection = "3857"
         expected_provider_slug = "some_provider"
         self.provider.slug = expected_provider_slug
-        self.provider.config = None
+        self.provider.config = dict()
         self.provider.save()
         date = default_format_time(timezone.now())
         driver = "tif"
