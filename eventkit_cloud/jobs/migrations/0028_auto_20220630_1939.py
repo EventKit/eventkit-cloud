@@ -9,7 +9,10 @@ class Migration(migrations.Migration):
     def convert_to_json(apps, schema_editor):
         DataProvider = apps.get_model('jobs', 'DataProvider')
         for data_provider in DataProvider.objects.all():
-            data_provider.config_json = yaml.load(data_provider.config, Loader=yaml.CLoader)
+            config = yaml.load(data_provider.config, Loader=yaml.CLoader)
+            if config:
+                print(f"Adding config {type(config)}")
+            data_provider.config_json = config or dict()
             data_provider.save()
 
     def convert_to_yaml(apps, schema_editor):
@@ -20,7 +23,7 @@ class Migration(migrations.Migration):
                 data_provider.save()
             
     dependencies = [
-        ('jobs', '0025_dataprovider_config_json'),
+        ('jobs', '0027_dataprovider_config_json'),
     ]
 
     operations = [
