@@ -8,11 +8,12 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini ./setup.cfg /var/lib/eventkit/
-COPY --chown=eventkit ./conda /var/lib/eventkit/conda
-COPY --chown=eventkit ./config /var/lib/eventkit/config
+COPY --chown=eventkit ./requirements-dev.txt ./environment.yml ./pytest.ini ./setup.cfg \
+                      ./setup.py ./readme.md ./manage.py ./
+COPY --chown=eventkit ./conda ./conda
+COPY --chown=eventkit ./config ./config
 
-ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
+ENV PATH="/home/eventkit/miniconda3/envs/conda_env/bin:/home/eventkit/miniconda3/bin:$PATH"
 ENV CURL_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem"
 ENV REQUESTS_CA_BUNDLE="/var/lib/eventkit/conda/cacert.pem"
 # Install Conda
@@ -26,24 +27,23 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda config --add channels file://var/lib/eventkit/conda/repo && \
     # TODO: get build to work with strict priority
     conda config --set channel_priority flexible && \
-    conda init bash && \
     \
     # Setup certs (might be needed if self-hosting).
-    openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out /var/lib/eventkit/conda/cacert.crt && \
-    conda config --set ssl_verify /var/lib/eventkit/conda/cacert.crt && \
+    openssl x509 -outform der -in $REQUESTS_CA_BUNDLE -out ./conda/cacert.crt && \
+    conda config --set ssl_verify ./conda/cacert.crt && \
     # Create the environment
-    conda env create --force --file /var/lib/eventkit/environment.yml -n eventkit-cloud python=3.10 && \
-    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/pip install -r requirements-dev.txt && \
-    SECRET_KEY=temp_secret_key /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
-    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
+    conda env create --force --file ./environment.yml -n conda_env python=3.10 && \
+    pip install -r requirements-dev.txt && \
+    SECRET_KEY=temp_secret_key python manage.py collectstatic && \
     \
     # Clean up.
     conda clean --yes --all && \
-    rm -rf /var/lib/eventkit/conda && \
-    rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/eventkit_cloud
+    rm -rf ./conda
 
-COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/eventkit_cloud
+COPY --chown=eventkit ./eventkit_cloud ./eventkit_cloud
 
-ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.10/site-packages/scripts/wait-for-postgis.sh"]
+RUN pip install -e .
+
+ENTRYPOINT ["bash", "scripts/wait-for-postgis.sh"]
 
 CMD ["echo", "This image has no default run command."]

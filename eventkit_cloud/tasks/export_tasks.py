@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import copy
 import json
 import logging
 import os
@@ -1368,14 +1368,12 @@ def arcgis_feature_service_export_task(
     gpkg = get_export_filepath(stage_dir, export_task_record, projection, "gpkg")
 
     data_provider = export_task_record.export_provider_task.provider
-    configuration = data_provider.config
+    configuration = copy.deepcopy(data_provider.config)
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
-
-    out = None
-
     layers: LayersDescription = {}
     vector_layer_data = data_provider.layers
+    out = None
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
         path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
@@ -1393,7 +1391,7 @@ def arcgis_feature_service_export_task(
         }
 
     try:
-        download_concurrently(list(layers.values()), feature_data=True, **configuration)
+        download_concurrently(layers=list(layers.values()), feature_data=True, **configuration)
     except Exception as e:
         logger.error(f"ArcGIS provider download error: {e}")
         raise e

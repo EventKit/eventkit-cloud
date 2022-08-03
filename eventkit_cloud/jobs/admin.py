@@ -27,6 +27,8 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalJustification,
     RegionalPolicy,
+    StyleFile,
+    Topic,
     clean_config,
 )
 
@@ -38,6 +40,8 @@ admin.site.register(DataProviderType)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(DataProviderTask)
+admin.site.register(Topic)
+admin.site.register(StyleFile)
 
 
 class JobAdmin(OSMGeoAdmin):
@@ -243,6 +247,7 @@ class DataProviderAdmin(admin.ModelAdmin):
         "license__name",
     ]
     actions = [make_display, make_hidden]
+    ordering = ["name"]
 
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest

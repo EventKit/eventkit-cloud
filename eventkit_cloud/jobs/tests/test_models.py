@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.core.files import File
 from django.test import TestCase
 
-from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,
     DataProvider,
@@ -22,6 +23,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
     Region,
+    StyleFile,
 )
 
 logger = logging.getLogger(__name__)
@@ -489,3 +491,36 @@ class TestDataProvider(TestCase):
         prov_type.use_bbox = True
         self.data_provider.export_provider_type = prov_type
         self.assertEqual(self.data_provider.get_use_bbox(), True)
+
+
+class TestStyleFile(TestCase):
+    """
+    Test cases for StyleFile model
+    """
+
+    fixtures = ("osm_provider.json",)
+
+    def setUp(self):
+        self.directory = "test"
+        self.data_provider = DataProvider.objects.first()
+
+    def test_create_style_file(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.sld"
+        style_model = StyleFile.objects.create(file=file_mock, directory=self.directory, provider=self.data_provider)
+        self.assertEqual(file_mock.name, style_model.file.name)
+        self.assertEqual(self.directory, style_model.directory)
+        self.assertEqual(self.data_provider, style_model.provider)
+        style_model.file.delete()
+        style_model.delete()
+
+    def test_data_provider_relation(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.sld"
+        style_model = StyleFile.objects.create(
+            file=file_mock, directory=self.directory, provider=self.data_provider, style_type=StyleType.ARCGIS.value
+        )
+        style = self.data_provider.style.get(style_type=StyleType.ARCGIS.value)
+        self.assertEqual(style, style_model)
+        style_model.file.delete()
+        style_model.delete()

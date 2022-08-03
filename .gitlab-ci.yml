@@ -13,7 +13,7 @@ variables:
   SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
   SECRET_KEY: "TESTING"
-  VERSION: "1.13.0"
+  VERSION: "1.14.0"
 
 image:
   name: $DOCKER_IMAGE
@@ -28,16 +28,16 @@ pending-tests:
     - python scripts/github.py pending "Waiting for tests."
 
 .front:
-  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}"
+  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
     - cd /var/lib/eventkit
 
 .back:
   image:
-    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}"
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
     entrypoint: [ "" ]
   before_script:
-    - . activate eventkit-cloud
+    - . activate conda_env
 
 .lint:
   stage: lint
@@ -118,9 +118,9 @@ unit-front:
 #    - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
 #    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
 #    - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
-#    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py migrate'
-#    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-#    - docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py run_integration_tests'
+#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
+#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
+#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests'
 
 
 

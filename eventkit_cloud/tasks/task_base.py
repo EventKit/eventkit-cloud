@@ -18,9 +18,9 @@ class EventKitBaseTask(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         # This will only run in the PCF environment to shut down unused workers.
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-        pcf_scaling = settings.PCF_SCALING  # type: ignore  # issue with django-stubs
+        pcf_scaling = settings.PCF_SCALING
         if pcf_scaling:
-            from eventkit_cloud.tasks.scheduled_tasks import kill_worker  # type: ignore
+            from eventkit_cloud.tasks.util_tasks import kill_worker
 
             queue_type, hostname = self.request.hostname.split("@")
 

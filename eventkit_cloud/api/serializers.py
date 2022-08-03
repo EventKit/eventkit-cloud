@@ -47,6 +47,7 @@ from eventkit_cloud.jobs.models import (
     RegionalJustification,
     RegionalPolicy,
     RegionMask,
+    Topic,
     UserJobActivity,
     UserLicense,
 )
@@ -375,6 +376,14 @@ class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = License
         fields = ("slug", "name", "text")
+
+
+class TopicSerializer(serializers.ModelSerializer):
+    """Serialize Topics."""
+
+    class Meta:
+        model = Topic
+        fields = ("slug", "name", "uid", "topic_description")
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
@@ -1055,6 +1064,10 @@ def basic_data_provider_serializer(
     }
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
+    if hasattr(data_provider, "download_count_rank"):
+        serialized_data_provider["download_count_rank"] = getattr(data_provider, "download_count_rank")
+    if hasattr(data_provider, "download_date_rank"):
+        serialized_data_provider["download_date_rank"] = getattr(data_provider, "download_date_rank")
     return serialized_data_provider
 
 

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
+from unittest import SkipTest
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
-from eventkit_cloud.utils.scaling.docker import APIError, Docker
+from eventkit_cloud.utils.scaling.docker import Docker
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ class TestDocker(TestCase):
                     "name": app_name,
                     "memory_in_mb": 0.0,
                     "disk_in_mb": 0,  # Docker doesn't provider disk stats.
+                    "state": "RUNNING",
                 }
             ],
             "pagination": {"total_results": 1},
@@ -87,10 +89,15 @@ class TestDocker(TestCase):
         self.assertEqual(expected_memory, self.docker.get_running_tasks_memory("test"))
 
     def test_terminate_task(self):
+        try:
+            import docker  # noqa
+        except ImportError:
+            raise SkipTest("Docker not installed.")
+
         mock_container = Mock()
         self.docker.client.containers.list.return_value = [mock_container]
         self.docker.terminate_task("test")
         mock_container.stop.assert_called_once()
         with self.assertRaises(TaskTerminationError):
-            mock_container.stop.side_effect = APIError("Failed to stop.")
+            mock_container.stop.side_effect = docker.errors.APIError("Failed to stop.")
             self.docker.terminate_task("test")

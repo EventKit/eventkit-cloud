@@ -25,6 +25,12 @@ This should random, kept secret, and shared between any webserver portions of th
 Set CONTENT_SECURITY_POLICY for the browser to allow external resources. 
 <pre>CONTENT_SECURITY_POLICY="default-src 'none'; style-src cdn.example.com;"</pre>
 
+Change the default configuration for the admin page.
+<pre>ENABLE_ADMIN_LOGIN=False</pre>
+<pre>ENABLE_ADMIN=False</pre>
+<pre>ADMIN_ROOT=admin</pre>
+
+
 ### Storage
 
 #### S3 Storage
@@ -291,7 +297,7 @@ if `SSL_VERIFICATION` does not point to certificate, then `REQUESTS_CA_BUNDLE` s
 
 #### Version
 The version number will be display on the Login page and the About page.
-<pre>VERSION='1.13.0'</pre>
+<pre>VERSION='1.14.0'</pre>
 #### Contact Url
 The contact url will be displayed as a link on the About page.
 <pre>CONTACT_URL='mailto:my.team@domain.com'</pre>
@@ -331,6 +337,11 @@ Estimates are provided for time to finish, data size, as well as in progress est
 This is enabled by default, but if adding new services or deploying eventkit for the first time, these values may not
 be very accurate.  To disable these estimates:
 <pre>SERVE_ESTIMATES='false'</pre>
+#### Data Provider Ranking
+Products in the UI can be sorted by most downloaded.  The `DATA_PROVIDER_WINDOW` changes the
+the window for counting the number of products to be included. A longer window is better for sparse usage, 
+and a shorter window will provide more relevant results during higher usage. 
+<pre>DATA_PROVIDER_WINDOW='90'</pre>
 
 #### Matomo
 | Variable Name | Description |

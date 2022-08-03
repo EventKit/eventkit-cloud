@@ -156,6 +156,8 @@ interface State {
             SERVE_ESTIMATES?: boolean;
             DATAPACKS_DEFAULT_SHARED?: boolean;
             MATOMO?: any;
+            AUTO_LOGOUT_SECONDS?: string;
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: string;
         }
     };
     autoLogoutWarningText: string;
@@ -310,9 +312,7 @@ export class Application extends React.Component<Props, State> {
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
-    private handleUserActiveInput = debounce(() => {
-        this.props.userActive();
-    }, 30 * 1000);
+    private handleUserActiveInput = null;
 
     static defaultProps = {
         children: null,
@@ -334,6 +334,8 @@ export class Application extends React.Component<Props, State> {
             DATAPACK_PAGE_SIZE: PropTypes.string,
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
+            AUTO_LOGOUT_SECONDS: PropTypes.string,
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.string,
         }),
     };
 
@@ -356,6 +358,7 @@ export class Application extends React.Component<Props, State> {
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
+        this.createActivityDebounceHandler = this.createActivityDebounceHandler.bind(this);
         this.state = {
             childContext: {config: {}},
             autoLogoutWarningText: '',
@@ -407,6 +410,9 @@ export class Application extends React.Component<Props, State> {
         }
 
         if (!prevState.loggedIn && this.state.loggedIn) {
+            if (this.handleUserActiveInput == null) {
+                this.handleUserActiveInput = this.createActivityDebounceHandler();
+            }
             this.startCheckingForAutoLogout();
             this.startSendingUserActivePings();
             this.startListeningForNotifications();
@@ -463,11 +469,6 @@ export class Application extends React.Component<Props, State> {
 
         // if the status is not the update we can default to true
         return true;
-    }
-
-    componentWillUnmount() {
-        this.stopListeningForNotifications();
-        this.handleUserActiveInput.cancel();
     }
 
     onMenuItemClick() {
@@ -555,6 +556,13 @@ export class Application extends React.Component<Props, State> {
             pageSize: this.notificationsPageSize,
             isAuto: true,
         });
+    }
+
+    createActivityDebounceHandler() {
+        const secondsUntilWarning = Number(this.state.childContext.config.AUTO_LOGOUT_SECONDS) - Number(this.state.childContext.config.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT);
+        return debounce(() => {
+            this.props.userActive();
+        },  (secondsUntilWarning * 0.5) * 1000, { maxWait: (secondsUntilWarning - 5) * 1000});
     }
 
     startCheckingForAutoLogout() {

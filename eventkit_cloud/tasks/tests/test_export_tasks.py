@@ -941,9 +941,9 @@ class TestExportTasks(ExportTaskBase):
             bbox=bbox,
         )
 
-        _, args, _ = mock_download_concurrently.mock_calls[0]
+        _, _, kwargs = mock_download_concurrently.mock_calls[0]
 
-        self.assertEqual(list(args[0]), list(expected_layers.values()))
+        self.assertEqual(kwargs["layers"], list(expected_layers.values()))
         self.assertEqual(mock_convert.call_count, 2)
 
         mock_convert.assert_any_call(

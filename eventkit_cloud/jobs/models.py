@@ -26,12 +26,13 @@ from eventkit_cloud.core.models import (
     AttributeClass,
     CachedModelMixin,
     DownloadableMixin,
+    FileFieldMixin,
     GroupPermissionLevel,
     LowerCaseCharField,
     TimeStampedModelMixin,
     UIDMixin,
 )
-from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.utils.services import get_client
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.types import LayersDescription
@@ -537,6 +538,53 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return self.slug.lower()
         else:
             return str(self.data_type)
+
+
+class Topic(UIDMixin, TimeStampedModelMixin):
+    """
+    Model for a Topic
+    """
+
+    name = models.CharField(verbose_name="Topic Name", unique=True, max_length=100)
+    slug = LowerCaseCharField(max_length=40, unique=True, default="")
+    providers = models.ManyToManyField(DataProvider, related_name="topics")
+    topic_description = models.TextField(
+        verbose_name="Description",
+        null=True,
+        default="",
+        blank=True,
+        help_text="This information is used to provide information about the Topic.",
+    )
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+
+class StyleFile(TimeStampedModelMixin, FileFieldMixin):
+    """
+    Model for Style File
+    """
+
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="style")
+    STYLE_TYPES = [
+        (StyleType.ARCGIS.value, "ArcGIS Layer"),
+        (StyleType.QGIS.value, "QGIS Layer"),
+        (StyleType.MAPBOX.value, "Mapbox"),
+        (StyleType.SLD.value, "SLD"),
+        (StyleType.KML.value, "KML"),
+    ]
+    style_type = models.CharField(
+        choices=STYLE_TYPES,
+        max_length=20,
+        verbose_name="Style Type",
+        null=True,
+        default="",
+        blank=True,
+        help_text="The type of style provided (e.g. arcgis, qgis, mapbox)",
+    )
+
+    def __str__(self):
+        return f"{self.style_type}"
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):

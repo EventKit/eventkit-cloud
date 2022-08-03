@@ -107,7 +107,7 @@ NOTIFICATIONS_SOFT_DELETE = True
 
 
 # checks for boolean option
-def is_true(option):
+def is_true(option) -> bool:
     if option and option.lower() in ["y", "yes", "t", "true", 1]:
         return True
     return False

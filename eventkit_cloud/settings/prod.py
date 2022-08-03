@@ -4,6 +4,7 @@
 import json
 import os
 import socket
+from typing import Union
 
 import dj_database_url
 
@@ -295,6 +296,14 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 DATAPACKS_DEFAULT_SHARED = is_true(os.getenv("DATAPACKS_DEFAULT_SHARED", "false"))
 VERSION = os.getenv("VERSION", "1.10.0")
+
+
+AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
+AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
+if AUTO_LOGOUT_SECONDS:
+    MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
+
 UI_CONFIG = {
     "VERSION": VERSION,
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -320,6 +329,8 @@ UI_CONFIG = {
         "SITE_ID": os.getenv("MATOMO_SITE_ID", ""),
         "APPNAME": os.getenv("MATOMO_APPNAME", "EventKit"),
     },
+    "AUTO_LOGOUT_SECONDS": AUTO_LOGOUT_SECONDS,
+    "AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT": AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT,
 }
 
 
@@ -376,6 +387,7 @@ LOGGING = {
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
 ssl_verification_settings = os.getenv("SSL_VERIFICATION", "true")
+SSL_VERIFICATION: Union[str, bool]
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
     os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
@@ -387,13 +399,6 @@ LAND_DATA_URL = os.getenv(
     "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",
 )
 
-AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
-
-AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
-AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
-if AUTO_LOGOUT_SECONDS:
-    MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
-
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
 
 ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))
@@ -403,6 +408,12 @@ REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIME
 OSM_MAX_TMPFILE_SIZE = os.getenv("OSM_MAX_TMPFILE_SIZE", "100")
 OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 
-DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.13.0")
+DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.14.0-0")
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 2621440))
+
+ENABLE_ADMIN_LOGIN: bool = is_true(os.getenv("ENABLE_ADMIN_LOGIN", False))
+ENABLE_ADMIN: bool = is_true(os.getenv("ENABLE_ADMIN", False))
+ADMIN_ROOT: str = os.getenv("ADMIN_ROOT", "admin")
+# Used to as the time window for DataProvider ranking.
+DATA_PROVIDER_WINDOW: int = int(os.getenv("DATA_PROVIDER_WINDOW", 90))
