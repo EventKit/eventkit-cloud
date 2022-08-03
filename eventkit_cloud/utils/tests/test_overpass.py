@@ -3,7 +3,6 @@ import logging
 import os
 from unittest.mock import Mock, patch
 
-import yaml
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -64,7 +63,8 @@ class TestOverpass(TestCase):
         expected_query = (
             f"{example_max_size}-{example_timeout}-{self.bbox[1]},{self.bbox[0]},{self.bbox[3]},{self.bbox[2]}"
         )
-        config = yaml.dump({"overpass_query": example_template})
+        # config = yaml.dump({"overpass_query": example_template})
+        config = {"overpass_query": example_template}
         with self.settings(OVERPASS_MAX_SIZE=example_max_size, OVERPASS_TIMEOUT=example_timeout):
             overpass = Overpass(stage_dir=self.path + "/files/", bbox=self.bbox, job_name="testjob", config=config)
         query = overpass.get_query()
