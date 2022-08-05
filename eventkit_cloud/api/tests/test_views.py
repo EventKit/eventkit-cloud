@@ -4,7 +4,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -1146,7 +1146,16 @@ class TestRunZipFileViewSet(APITestCase):
         )
 
         filename = "test.zip"
-        self.downloadable_file = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        storage_mock = MagicMock(
+            get_valid_name=Mock(return_value=filename),
+            save=Mock(return_value=filename),
+            url=Mock(return_value=filename),
+            size=Mock(return_value=20),
+        )
+        with patch("builtins.open", mock_open(read_data="data")), patch(
+            "django.core.files.storage.default_storage._wrapped", storage_mock
+        ):
+            self.downloadable_file = FileProducingTaskResult.objects.create(file=filename)
         self.task = ExportTaskRecord.objects.create(
             export_provider_task=self.data_provider_task_record,
             name="Shapefile Export",

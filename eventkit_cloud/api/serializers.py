@@ -61,7 +61,6 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.s3 import get_presigned_url
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -233,7 +232,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
         preview = obj.preview
         if preview is not None:
-            return get_presigned_url(preview.download_url)
+            return preview.file.url
         else:
             return ""
 
@@ -1002,7 +1001,7 @@ def basic_data_provider_serializer(
     def get_thumbnail_url(obj):
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            return get_presigned_url(thumbnail.download_url, expires=3000)
+            return thumbnail.file.url
         return ""
 
     serialized_data_provider = {
@@ -1169,7 +1168,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            return get_presigned_url(thumbnail.download_url, expires=3000)
+            return thumbnail.file.url
         return ""
 
     @staticmethod

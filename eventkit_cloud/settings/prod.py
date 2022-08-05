@@ -67,11 +67,9 @@ IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, "images")
 # where export run files to be added to every datapack are stored
 EXPORT_RUN_FILES = os.path.join(EXPORT_STAGING_ROOT, "export_run_files")
 
-# where export run files can be downloaded
-EXPORT_RUN_FILES_DOWNLOAD = os.getenv("EXPORT_RUN_FILES_DOWNLOAD", "/export_run_files/")
-
 # the root url for export downloads
-EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
+EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", EXPORT_STAGING_ROOT)
+MEDIA_ROOT = os.path.abspath(EXPORT_MEDIA_ROOT)
 
 # url to overpass api endpoint
 OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
@@ -294,8 +292,8 @@ VERSION = os.getenv("VERSION", "1.10.0")
 
 
 AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
-AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
-AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
+AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 600))
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", AUTO_LOGOUT_SECONDS - 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
@@ -341,6 +339,7 @@ if os.getenv("VCAP_SERVICES"):
             except (KeyError, TypeError):
                 continue
 AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL") or AWS_ENDPOINT_URL
 AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")

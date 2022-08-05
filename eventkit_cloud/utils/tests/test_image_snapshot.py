@@ -3,12 +3,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 
-from eventkit_cloud.utils.image_snapshot import (
-    get_tile,
-    get_wmts_snapshot_image,
-    make_thumbnail_downloadable,
-    save_thumbnail,
-)
+from eventkit_cloud.utils.image_snapshot import get_tile, get_wmts_snapshot_image, save_thumbnail
 
 logger = logging.getLogger(__name__)
 
@@ -68,20 +63,3 @@ class TestImageSnapshot(TestCase):
         mock_thumbnail.thumbnail.called_once_with(thumbnail_size)
         mock_thumbnail.save.assert_called()
         self.assertEquals(expected_file_path, returned_path)
-
-    @patch("eventkit_cloud.utils.image_snapshot.os")
-    @patch("eventkit_cloud.utils.image_snapshot.s3")
-    @patch("eventkit_cloud.utils.image_snapshot.MapImageSnapshot")
-    def test_make_thumbnail_downloadable(self, mock_map_image_snapshot, mock_s3, mock_os):
-        example_filepath = "/some/path/file.jpg"
-        expected_size = "1000"
-        mock_snapshot = MagicMock()
-        mock_map_image_snapshot.objects.create.return_value = mock_snapshot
-        mock_os.stat().return_value = Mock(expected_size)
-        returned_snapshot = make_thumbnail_downloadable(example_filepath)
-        mock_map_image_snapshot.objects.create.called_once_with(
-            download_url="", filename=example_filepath, size=expected_size
-        )
-        mock_s3.upload_to_s3.assert_called_once()
-        mock_snapshot.save.assert_called_once()
-        self.assertEquals(returned_snapshot, mock_snapshot)

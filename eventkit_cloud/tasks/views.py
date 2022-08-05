@@ -9,7 +9,7 @@ from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult, RunZipFile, UserDownload
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
-from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
+from eventkit_cloud.utils.s3 import download_folder_from_s3
 
 logger = getLogger(__name__)
 
@@ -42,9 +42,8 @@ def download(request):
     user_download = UserDownload.objects.create(user=current_user, downloadable=downloadable)
     user_download.save()
 
-    url = get_presigned_url(downloadable.download_url)
-    logger.info("Redirecting to {0}".format(url))
-    return redirect(url)
+    logger.info("Redirecting to {0}".format(downloadable.file.url))
+    return redirect(downloadable.file.url)
 
 
 def generate_zipfile(data_provider_task_record_uids, run_zip_file):

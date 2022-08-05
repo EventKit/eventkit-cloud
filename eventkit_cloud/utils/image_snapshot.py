@@ -1,19 +1,16 @@
 import copy
 import logging
-import os
 from io import BytesIO
 from typing import Union
 from urllib.parse import urlparse
 
 from django.conf import settings
-from mapproxy.grid import tile_grid
 from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
-from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
+from mapproxy.grid import tile_grid
 
 logger = logging.getLogger(__name__)
 
@@ -120,20 +117,3 @@ def fit_to_area(image, pixels_x=500, pixels_y=250):
 
     image.thumbnail(size=(pixels_x, pixels_y))
     return image
-
-
-def make_thumbnail_downloadable(filepath, download_filename=None):
-
-    filename = os.path.basename(filepath)
-    if download_filename is None:
-        download_filename = filename
-
-    filesize = os.stat(filepath).st_size
-    thumbnail_snapshot = MapImageSnapshot.objects.create(download_url="", filename=filepath, size=filesize)
-    download_url = s3.upload_to_s3(str(thumbnail_snapshot.uid), filepath, download_filename)
-    os.remove(filepath)
-
-    thumbnail_snapshot.download_url = download_url
-    thumbnail_snapshot.save()
-
-    return thumbnail_snapshot

@@ -1,9 +1,9 @@
 import logging
 
-from django.db.models.signals import post_delete, pre_delete
+from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.tasks.models import ExportRun, ExportRunFile, FileProducingTaskResult
+from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult
 from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__file__)
@@ -26,10 +26,4 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     """
     Delete associated files when deleting the FileProducingTaskResult.
     """
-    delete_from_s3(download_url=instance.download_url)
     instance.delete_notifications()
-
-
-@receiver(post_delete, sender=ExportRunFile)
-def export_run_file_delete(sender, instance, using, **kwargs):
-    instance.file.delete(save=False)
