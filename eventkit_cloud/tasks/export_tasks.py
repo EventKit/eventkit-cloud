@@ -10,7 +10,7 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Type, Union
+from typing import List, Type, Union, cast
 from urllib.parse import urlencode, urljoin
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -79,9 +79,9 @@ from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, 
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess, get_format_field_from_config
 from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
@@ -2265,22 +2265,16 @@ def get_ogcapi_data(
     if download_path is None:
         raise Exception("A download path is required to download ogcapi data.")
 
-    configuration = config
+    export_task_record = get_export_task_record(task_uid)
 
     geom: GEOSGeometry = get_geometry(bbox, selection)
 
     try:
-        ogc_process = OgcApiProcess(
-            url=service_url,
-            config=configuration["ogcapi_process"],
-            session_token=session_token,
-            task_id=task_uid,
-            cred_var=configuration.get("cred_var"),
-            cert_info=configuration.get("cert_info"),
-            cred_token=configuration.get("cred_token"),
-            login_url=configuration.get("login_url"),
+        ogc_process: OGCAPIProcess = cast(
+            OGCAPIProcess, export_task_record.export_provider_task.provider.get_service_client()
         )
         ogc_process.create_job(geom, file_format=export_format_slug)
+        update_progress(task_uid, progress=25, subtask_percentage=50)
         download_url = ogc_process.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
@@ -2289,18 +2283,8 @@ def get_ogcapi_data(
 
     update_progress(task_uid, progress=50, subtask_percentage=50)
 
-    download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
-    basic_auth = download_credentials.get("cred_var")
-    username = password = session = None
-    if basic_auth:
-        username, password = os.getenv(basic_auth).split(":")
-    if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(
-            getattr(settings, "SITE_URL"),
-            username=username,
-            password=password,
-        ).client
-    download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
+    process_session = ogc_process.get_process_session(download_url)
+    download_path = download_data(task_uid, download_url, download_path, session=process_session)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path

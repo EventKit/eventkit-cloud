@@ -40,6 +40,7 @@ from eventkit_cloud.utils.types.django_helpers import ListOrQuerySet
 
 if TYPE_CHECKING:
     from eventkit_cloud.utils.services.base import GisClient
+    from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 
 logger = logging.getLogger(__name__)
 
@@ -402,9 +403,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     def update_export_formats(self):
         # TODO: Refactor utils/ogc_apiprocess into services.
-        from eventkit_cloud.utils.ogcapi_process import get_process_formats
-
-        process_formats = get_process_formats(self)
+        client = self.get_service_client()
+        process_formats: OGCAPIProcess = cast(OGCAPIProcess, client.get_process_formats())
         logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)

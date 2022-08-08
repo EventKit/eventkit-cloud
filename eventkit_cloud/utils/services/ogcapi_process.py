@@ -1,21 +1,159 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import copy
 import json
 import logging
-from typing import Dict, Optional
+import os
+import time
+from typing import TYPE_CHECKING, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
+from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry, Polygon, WKTWriter
+from django.core.cache import cache
 from jsonschema import ValidationError, validate
 
+from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.tasks.enumerations import OGC_Status
+from eventkit_cloud.utils.client import EventKitClient
+from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.services.base import GisClient
 from eventkit_cloud.utils.services.check_result import CheckResult
 from eventkit_cloud.utils.services.errors import ProviderCheckError
+from eventkit_cloud.utils.services.types import ProcessFormat
 
+if TYPE_CHECKING:
+    from eventkit_cloud.jobs.models import DataProvider
 logger = logging.getLogger(__name__)
+
+PROCESS_CACHE_TIMEOUT = 600
 
 
 class OGCAPIProcess(GisClient):
+
+    job_url = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.job_url = None
+        self.process_config = self.config["ogcapi_process"]
+
+    def get_bbox(self, element):
+        raise NotImplementedError("Get BBOX isn't supported for OGCAPI Processes")
+
+    def get_layer_name(self):
+        raise NotImplementedError("Get Layer Name isn't supported for OGCAPI Processes")
+
+    def get_layers(self):
+        raise NotImplementedError("Get Layers isn't supported for OGCAPI Processes")
+
+    def get_layer_geometry(self, element):
+        raise NotImplementedError("Get Layer Geometry isn't supported for OGCAPI Processes")
+
+    def download_geometry(self) -> Optional[Polygon]:
+        raise NotImplementedError("Download Geometry isn't supported for OGCAPI Processes")
+
+    def find_layers(self, process):
+        raise NotImplementedError("Find Layers isn't supported for OGCAPI Processes")
+
+    def create_job(self, geometry: GEOSGeometry, file_format: str = None):
+        payload = self.get_job_payload(geometry, file_format=file_format)
+        jobs_endpoint = urljoin(self.base_url, "jobs/")
+        response = None
+        try:
+            logger.debug(jobs_endpoint)
+            logger.debug(json.dumps(payload))
+
+            response = self.session.post(jobs_endpoint, json=payload)
+            response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            logger.error("Failed to post OGC Process payload:")
+            if payload:
+                try:
+                    logger.error("payload: %s", json.dumps(payload))
+                except Exception:
+                    logger.error("payload: %s", payload)
+            else:
+                logger.error("config %s", self.config)
+            logger.error(jobs_endpoint)
+            if response:
+                logger.error("Response Content: %s", response.content)
+            raise Exception("Failed to post request to remote service.") from e
+
+        response_content = response.json()
+        job_id = response_content.get("jobID")
+        if not job_id:
+            logger.error(response_content)
+            raise Exception("Unable to post to OGC process request.")
+
+        self.job_url = urljoin(jobs_endpoint, f"{job_id}/")
+
+        return response_content
+
+    def get_job_results(self):
+        """
+        Fetches the job results
+        Returns the results' download URL.
+        """
+
+        # poll job status
+        ogc_job = self.wait_for_ogc_process_job(self.job_url)
+        if ogc_job.get("status") != OGC_Status.SUCCESSFUL.value:
+            logger.error(ogc_job)
+            raise Exception(f"Unsuccessful OGC export. {ogc_job.get('status')}: {ogc_job.get('message')}")
+
+        # fetch job results
+        try:
+            response = self.session.get(urljoin(self.job_url, "results/"))
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Unsuccessful request:{e}")
+
+        response_content = response.json()
+        download_url = response_content.get("archive_format", dict()).get("href")
+
+        if not download_url:
+            logger.error(response_content)
+            raise Exception("The OGC Process server did not produce a download.")
+
+        return download_url
+
+    @retry
+    def wait_for_ogc_process_job(self, job_url, interval=5):
+        """
+        Function polls an OGC process' job until it is done processing.
+        Returns the final response's content, which includes the job' status.
+        """
+
+        job_status = None
+        counter = 0
+        while job_status not in OGC_Status.get_finished_status():
+            counter += interval
+            time.sleep(interval)
+            try:
+                response = self.session.get(job_url)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"Unsuccessful request:{e}")
+            response_content = response.json()
+            job_status = response_content.get("status")
+            if not job_status:
+                logger.error(response_content)
+                raise Exception("OGC API Process service did not provide a valid status.")
+
+        if job_status in OGC_Status.get_finished_status():
+            return response_content
+
+    def get_process_session(self, url):
+        credentials = self.config.get("download_credentials", dict())
+        session = get_or_update_session(**credentials)
+        if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in url:
+            session = EventKitClient(getattr(settings, "SITE_URL"), **credentials, session=session).session
+        return session
+
     def get_response(self, url: Optional[str] = None, query: Optional[Dict[str, str]] = None) -> requests.Response:
         url = url or self.service_url
         query_params = copy.deepcopy(query) or self.query
@@ -69,7 +207,7 @@ class OGCAPIProcess(GisClient):
         Checks if the configured process is valid based on the allowed inputs of the provider.
         """
 
-        url = f"{self.service_url.rstrip('/')}/processes/{self.config['ogcapi_process']['id']}?format=json"
+        url = f"{self.service_url.rstrip('/')}/processes/{self.process_config['id']}?format=json"
         response = self.session.get(url=url, timeout=self.timeout)
 
         if response.status_code != 200:
@@ -83,7 +221,7 @@ class OGCAPIProcess(GisClient):
             return False
 
         allowed_inputs = data["inputs"]
-        configured_inputs = self.config["ogcapi_process"]["inputs"].items()
+        configured_inputs = self.process_config["inputs"].items()
 
         for configured_input_key, configured_input_value in configured_inputs:
             allowed_keys = allowed_inputs.keys()
@@ -98,3 +236,102 @@ class OGCAPIProcess(GisClient):
                 return False
 
         return True
+
+    def get_process(self):
+        process = self.process_config.get("id")
+        cache_key = f"{process}-cache"
+        process_json = cache.get(cache_key)
+        if process_json is None:
+            try:
+                response = self.session.get(
+                    f"{self.service_url}/processes/{process}",
+                    stream=True,
+                )
+                response.raise_for_status()
+                process_json = json.loads(response.content)
+                cache.set(cache_key, process_json, timeout=PROCESS_CACHE_TIMEOUT)
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Could not access OGC Process:{e}")
+
+        return process_json
+
+    def find_format_field(self, schema):
+        format_field = None
+        for input_field, data in schema.items():
+            if "format" in input_field:
+                return None, input_field
+            if isinstance(data, dict):
+                _, format_field = self.find_format_field(data)
+            if format_field:
+                return input_field, format_field
+        return None, None
+
+    def get_job_payload(self, geometry: GEOSGeometry, file_format: str = None):
+        """
+        Function generates the request body needed for a POST request to the OGC /jobs endpoint.
+        """
+        payload = copy.deepcopy(self.config)
+
+        if file_format:
+            input_field, format_field = self.find_format_field(payload)
+            if format_field:
+                if input_field:
+                    payload["inputs"][input_field][format_field] = file_format
+                else:
+                    payload["inputs"][format_field] = file_format
+        payload["mode"] = "async"
+        payload["response"] = "document"
+        payload["outputs"] = payload["outputs"] or {}
+        for output in payload["outputs"]:
+            payload["outputs"][output]["transmissionMode"] = "reference"
+        payload = self.convert_geometry(payload, geometry)
+        return payload
+
+    @staticmethod
+    def convert_geometry(original_payload, geometry):
+        """Converts the user requested geometry into the format supported by the ogcapi process services"""
+        # This is configured for a single implementation to be more flexible would require parsing the process description,
+        # and attempting to map the values to the correct schema type.
+        payload = copy.deepcopy(original_payload)
+        area = payload.get("area")
+        payload["inputs"]["geometry"] = {"format": area["type"]}
+        if area["type"] == "wkt":
+            payload["inputs"]["geometry"]["input"] = WKTWriter().write(geometry).decode()
+        if area["type"] == "geojson":
+            payload["inputs"]["geometry"]["input"] = {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "geometry": json.loads(geometry.geojson)}],
+            }
+        if area["type"] == "bbox":
+            payload["inputs"]["geometry"]["input"] = list(geometry.extent)
+        return payload
+
+    @staticmethod
+    def get_process_formats_from_json(process_json: dict, product_slug: str) -> list[ProcessFormat]:
+        """Extract format information from a valid JSON object representing an OGC Process."""
+        all_products = process_json["inputs"]["product"]["schema"]["oneOf"]
+        product_data = None
+        for product in all_products:
+            if product["properties"]["id"]["const"] == product_slug:
+                product_data = product
+        if not product_data:
+            raise Exception(f"A product matching {product_slug} was not found.")
+        file_formats = product_data["properties"]["file_format"]["oneOf"]
+        return [
+            {
+                "name": file_format["title"],
+                "slug": file_format["const"],
+                "description": file_format.get("description") or file_format["title"],
+            }
+            for file_format in file_formats
+        ]
+
+    def get_process_formats(self, provider: DataProvider) -> list[ProcessFormat]:
+        """Retrieve formats for a given provider if it is an ogc-process type."""
+        process_formats = []
+
+        if provider.export_provider_type and "ogcapi-process" in provider.export_provider_type.type_name:
+            process_json = self.get_process()
+            if process_json:
+                process_formats = self.get_process_formats_from_json(process_json, provider.config)
+        return process_formats

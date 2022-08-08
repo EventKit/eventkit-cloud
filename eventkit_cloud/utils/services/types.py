@@ -24,3 +24,9 @@ class Layer(LayerConfiguration, LayerDescription):
 layer_name = str
 
 LayersDescription = Dict[layer_name, Layer]
+
+
+class ProcessFormat(TypedDict):
+    name: str
+    slug: str
+    description: str

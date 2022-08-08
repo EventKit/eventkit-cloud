@@ -4,7 +4,7 @@ import logging
 import requests_mock
 from django.test import TestCase
 
-from eventkit_cloud.utils.ogcapi_process import get_format_field_from_config
+from eventkit_cloud.utils.services.ogcapi_process import get_format_field_from_config
 
 logger = logging.getLogger(__name__)
 
