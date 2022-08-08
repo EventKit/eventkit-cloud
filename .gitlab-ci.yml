@@ -117,7 +117,7 @@ integration-tests:
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download || echo $?
 #    - adduser $USER 100000 || echo "Could not add $USER to group 100000"
 #    - adduser 8800 100000 || echo "Could not add 8800 to group 100000"
-    - docker-compose run --rm -d --user=root eventkit && docker-composer run --rm -d --user=root celery || echo $?
+    - docker-compose run --rm -d --user=root eventkit && docker-compose run --rm -d --user=root celery || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests'  || docker-compose ps; docker-compose logs --no-log-prefix --tail=1000 eventkit; docker-compose logs --no-log-prefix --tail=1000 celery; exit 1
