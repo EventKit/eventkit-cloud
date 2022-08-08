@@ -116,7 +116,7 @@ integration-tests:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
     - ls -al /var/run/docker.sock
-    - usermod -aG docker $USER
+    - /usr/sbin/usermod -aG 100000 $USER
     - docker-compose up -d && docker-compose stop flower map mkdocs || echo $?
     - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
