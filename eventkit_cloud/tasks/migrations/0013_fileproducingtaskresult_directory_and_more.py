@@ -25,4 +25,9 @@ class Migration(migrations.Migration):
             name='file',
             field=models.FileField(blank=True, null=True, upload_to='', verbose_name='File'),
         ),
+        migrations.AlterField(
+            model_name='fileproducingtaskresult',
+            name='download_url',
+            field=models.URLField(blank=True, null=True, max_length=508),
+        )
     ]

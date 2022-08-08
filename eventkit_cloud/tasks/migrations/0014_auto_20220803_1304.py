@@ -9,18 +9,29 @@ class Migration(migrations.Migration):
         FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
         ExportRunFile = apps.get_model('tasks', 'ExportRunFile')
         for Model in (FileProducingTaskResult, ExportRunFile):
+            models = []
             for model in Model.objects.all():
                 if os.path.exists(model.download_url):
                     with open(model.download_url, 'rb') as doc_file:
-                        model.file.save(model.filename, File(doc_file), save=True)
+                        model.file.save(model.filename, File(doc_file), save=False)
                 else:
                     model.file = model.filename
-                    model.save()
+                models.append(model)
+            Model.objects.bulk_update(models, ["file"])
+
+    def add_download_url(apps, schema_editor):
+        FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
+        results = []
+        for result in FileProducingTaskResult.objects.filter(download_url__isnull=True):
+            result.download_url = result.filename
+            result.save()
+            results.append(result)
+        FileProducingTaskResult.objects.bulk_update(results, ["download_url"])
 
     dependencies = [
         ('tasks', '0013_fileproducingtaskresult_directory_and_more'),
     ]
 
     operations = [
-        migrations.RunPython(move_file_to_s3),
+        migrations.RunPython(move_file_to_s3, add_download_url),
     ]

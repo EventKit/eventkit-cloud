@@ -5,15 +5,17 @@ stages:
   - results
 
 variables:
-  MOUNT_POINT: $CI_PROJECT_DIR
+  AWS_ENDPOINT_URL: "http://minio:9000/eventkit"
+  BASE_URL: "http://host.docker.internal:6080"
   BRANCH: "master"
+  CURL_CA_BUNDLE: "./conda/cacert.pem"
+  MOUNT_POINT: $CI_PROJECT_DIR
   NEXUS_BASE_URL: $NEXUS_BASE_URL
   NEXUS_REPO: "EventKit_eventkit"
-  BASE_URL: "http://host.docker.internal:6080"
-  AWS_ENDPOINT_URL: "http://minio:9000/eventkit"
+  REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
+  SECRET_KEY: "TESTING"
   SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
-  SECRET_KEY: "TESTING"
   VERSION: "1.14.0"
 
 image:

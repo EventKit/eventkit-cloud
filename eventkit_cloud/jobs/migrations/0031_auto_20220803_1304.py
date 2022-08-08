@@ -6,21 +6,29 @@ import os
 class Migration(migrations.Migration):
 
     def move_file_to_s3(apps, schema_editor):
-        FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
-        ExportRunFile = apps.get_model('tasks', 'ExportRunFile')
-        for Model in (FileProducingTaskResult, ExportRunFile):
-            for model in Model.objects.all():
-                if os.path.exists(model.download_url):
-                    with open(model.download_url, 'rb') as doc_file:
-                        model.file.save(model.filename, File(doc_file), save=True)
-                else:
-                    model.file = model.filename
-                    model.save()
+        MapImageSnapshot = apps.get_model('tasks', 'MapImageSnapshot')
+        images = []
+        for map_image in MapImageSnapshot.objects.all():
+            if os.path.exists(map_image.download_url):
+                with open(map_image.download_url, 'rb') as doc_file:
+                    map_image.file.save(map_image.filename, File(doc_file), save=False)
+            else:
+                map_image.file = map_image.filename
+            images.append(map_image)
+        MapImageSnapshot.objects.bulk_update(images, ["file"])
+
+    def add_download_url(apps, schema_editor):
+        MapImageSnapshot = apps.get_model('jobs', 'MapImageSnapshot')
+        images = []
+        for map_image in MapImageSnapshot.objects.all():
+            map_image.download_url = map_image.file.name
+            images.append(map_image)
+        MapImageSnapshot.objects.bulk_update(images, ["download_url"])
 
     dependencies = [
         ('jobs', '0030_mapimagesnapshot_directory_mapimagesnapshot_file_and_more'),
     ]
 
     operations = [
-        migrations.RunPython(move_file_to_s3),
+        migrations.RunPython(move_file_to_s3, add_download_url),
     ]
