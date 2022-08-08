@@ -107,17 +107,17 @@ pending-tests:
 #  script:
 #    - npm run coverage
 
-# TODO: Add back after debugging connection issues in pipeline.
 integration-tests:
   when: always
-  stage: test
+  extends: .test
   tags:
     - dind
   script:
-    - make initial
     - python scripts/ci_utils.py
-    - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - ls -al /var/run/docker.sock
+    - usermod -aG docker $USER
+    - docker-compose up -d && docker-compose stop flower map mkdocs || echo $?
     - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
