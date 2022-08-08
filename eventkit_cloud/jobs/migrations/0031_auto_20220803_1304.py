@@ -6,7 +6,7 @@ import os
 class Migration(migrations.Migration):
 
     def move_file_to_s3(apps, schema_editor):
-        MapImageSnapshot = apps.get_model('tasks', 'MapImageSnapshot')
+        MapImageSnapshot = apps.get_model('jobs', 'MapImageSnapshot')
         images = []
         for map_image in MapImageSnapshot.objects.all():
             if os.path.exists(map_image.download_url):
