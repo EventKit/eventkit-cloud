@@ -115,18 +115,12 @@ integration-tests:
   script:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
-    - whoami
-    - echo $UID
-    - ls -al /var/run/docker.sock
-    - ls -al /usr
-    - ls -al /usr/sbin
-    - ls -al /sbin
-    - /usr/sbin/usermod -aG 100000 $USER
+    - adduser $USER 100000 || echo "Could not add $USER to group 100000"
     - docker-compose -f docker-compose.yml -f docker-compose.debug.yml up -d && docker-compose stop flower map mkdocs || echo $?
-    - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
+    - docker-compose run --rm -d --user=root celery
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-    - bash -c "for i in {1..10}; do docker-compose run --rm celery python scripts/debug_celery.py; date ; sleep 20; done" & docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests' || docker-compose ps; docker-compose logs --no-log-prefix --tail=1000 eventkit; docker-compose logs --no-log-prefix --tail=1000 celery; exit 1
+    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests'  || docker-compose ps; docker-compose logs --no-log-prefix --tail=1000 eventkit; docker-compose logs --no-log-prefix --tail=1000 celery; exit 1
 
 
 pass-tests:
