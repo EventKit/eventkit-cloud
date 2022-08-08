@@ -114,6 +114,7 @@ integration-tests:
   tags:
     - dind
   script:
+    - make initial
     - python scripts/ci_utils.py
     - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
     - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
