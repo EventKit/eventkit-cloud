@@ -1,6 +1,6 @@
 stages:
   - pending
-  - lint
+#  - lint
   - test
   - results
 
@@ -39,73 +39,73 @@ pending-tests:
   before_script:
     - . activate conda_env
 
-.lint:
-  stage: lint
-  extends: .default
-
-
-eslint:
-  extends:
-    - .front
-    - .lint
-  script:
-    - npm run eslint
-
-black:
-  extends:
-    - .back
-    - .lint
-  script:
-    - black --check eventkit_cloud
-
-isort:
-  extends:
-    - .back
-    - .lint
-  script:
-    - isort eventkit_cloud
-
-flake8:
-  extends:
-    - .back
-    - .lint
-  script:
-    - flake8 eventkit_cloud
-
-mypy:
-  extends:
-    - .back
-    - .lint
-  script:
-    - mypy eventkit_cloud
-
-migrations:
-  extends:
-    - .back
-    - .lint
-  script:
-    - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
+#.lint:
+#  stage: lint
+#  extends: .default
+#
+#
+#eslint:
+#  extends:
+#    - .front
+#    - .lint
+#  script:
+#    - npm run eslint
+#
+#black:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - black --check eventkit_cloud
+#
+#isort:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - isort eventkit_cloud
+#
+#flake8:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - flake8 eventkit_cloud
+#
+#mypy:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - mypy eventkit_cloud
+#
+#migrations:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
 
 .test:
   stage: test
   extends: .default
 
-unit-back:
-  extends:
-    - .test
-  tags:
-    - dind
-  script:
-    - python scripts/ci_utils.py
-    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
-    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+#unit-back:
+#  extends:
+#    - .test
+#  tags:
+#    - dind
+#  script:
+#    - python scripts/ci_utils.py
+#    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+#    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
 
-unit-front:
-  extends:
-    - .front
-    - .test
-  script:
-    - npm run coverage
+#unit-front:
+#  extends:
+#    - .front
+#    - .test
+#  script:
+#    - npm run coverage
 
 # TODO: Add back after debugging connection issues in pipeline.
 integration-tests:
@@ -120,7 +120,7 @@ integration-tests:
     - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests'
+    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests' || dc ps; dc logs --no-log-prefix --tail=1000 eventkit; dc logs --no-log-prefix --tail=1000 celery; exit 1
 
 
 
