@@ -437,7 +437,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             if url and type:
                 return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
             return None
-        except (AttributeError, TypeError):
+        except (AttributeError, KeyError):
             return None
 
     @property
