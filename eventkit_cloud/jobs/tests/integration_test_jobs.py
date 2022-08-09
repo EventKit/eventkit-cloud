@@ -229,7 +229,7 @@ class TestJob(TestCase):
             "tags": [],
             "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}],
         }
-        self.assertTrue(self.run_job(job_data, run_timeout=600))
+        self.assertTrue(self.run_job(job_data, run_timeout=120))
     #
     # def test_wmts_gtiff(self):
     #     """
