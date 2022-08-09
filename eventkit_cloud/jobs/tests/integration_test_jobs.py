@@ -230,6 +230,7 @@ class TestJob(TestCase):
             "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}],
         }
         self.assertTrue(self.run_job(job_data, run_timeout=120))
+
     #
     # def test_wmts_gtiff(self):
     #     """
@@ -436,90 +437,221 @@ class TestJob(TestCase):
 
 
 def get_providers_list():
-    return [{'created_at': '2016-10-06T17:44:54.837Z', 'updated_at': '2016-10-06T17:44:54.837Z',
-             'name': 'eventkit-integration-test-wms', 'slug': 'eventkit-integration-test-wms',
-             'url': 'https://basemap.nationalmap.gov:443/arcgis/services/USGSImageryOnly/MapServer/WmsServer',
-             'layer': 'default', 'export_provider_type': DataProviderType.objects.using("default").get(type_name="wms"),
-             'level_from': 10, 'level_to': 10, 'max_selection': '2000.000',
-             'config': json.dumps({'layers': [{'name': 'default', 'title': 'imagery', 'sources': ['default']}], 'sources': {
-                 'default': {'type': 'wms', 'grid': 'default', 'req': {
-                     'url': 'https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WMSServer',
-                     'layers': 0}}}, 'grids': {'default': {'srs': 'EPSG:4326', 'tile_size': [256, 256], 'origin': 'nw',
-                                                           'res': [0.7031249999999999, 0.35156249999999994,
-                                                                   0.17578124999999997, 0.08789062499999999,
-                                                                   0.04394531249999999, 0.021972656249999997,
-                                                                   0.010986328124999998, 0.005493164062499999,
-                                                                   0.0027465820312499996, 0.0013732910156249998,
-                                                                   0.0006866455078124999, 0.00034332275390624995,
-                                                                   0.00017166137695312497, 8.583068847656249e-05,
-                                                                   4.291534423828124e-05, 2.145767211914062e-05,
-                                                                   1.072883605957031e-05, 5.364418029785155e-06,
-                                                                   2.6822090148925777e-06, 1.3411045074462889e-06,
-                                                                   6.705522537231444e-07]}}})
-             },
-            {'created_at': '2016-10-06T17:45:46.213Z', 'updated_at': '2016-10-06T17:45:46.213Z',
-             'name': 'eventkit-integration-test-wmts', 'slug': 'eventkit-integration-test-wmts',
-             'url': 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s',
-             'layer': 'default',
-             'export_provider_type': DataProviderType.objects.using("default").get(type_name="wmts"), 'level_from': 10,
-             'level_to': 10, 'config': json.dumps({'layers': [{'name': 'default', 'title': 'imagery', 'sources': ['default']}],
-                                        'sources': {'default': {'type': 'tile',
-                                                                'url': 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s',
-                                                                'grid': 'default'}}, 'grids': {
-                    'default': {'srs': 'EPSG:4326', 'tile_size': [256, 256], 'origin': 'nw',
-                                'res': [0.7031249999999999, 0.35156249999999994, 0.17578124999999997,
-                                        0.08789062499999999, 0.04394531249999999, 0.021972656249999997,
-                                        0.010986328124999998, 0.005493164062499999, 0.0027465820312499996,
-                                        0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,
-                                        0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05,
-                                        2.145767211914062e-05, 1.072883605957031e-05, 5.364418029785155e-06,
-                                        2.6822090148925777e-06, 1.3411045074462889e-06, 6.705522537231444e-07]}}})},
-            {'created_at': '2016-10-06T19:17:28.770Z', 'updated_at': '2016-10-06T19:17:28.770Z',
-             'name': 'eventkit-integration-test-arc-raster', 'slug': 'eventkit-integration-test-arc-raster',
-             'url': 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer',
-             'layer': 'default',
-             'export_provider_type': DataProviderType.objects.using("default").get(type_name="arcgis-raster"),
-             'level_from': 10, 'level_to': 10,
-             'config': json.dumps({'layers': [{'name': 'default', 'title': 'default', 'sources': ['default']}], 'sources': {
-                 'default': {'type': 'arcgis', 'grid': 'default', 'req': {
-                     'url': 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer',
-                     'layers': {'show': 0}}}}, 'grids': {
-                 'default': {'srs': 'EPSG:4326', 'tile_size': [256, 256], 'origin': 'nw',
-                             'res': [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,
-                                     0.04394531249999999, 0.021972656249999997, 0.010986328124999998,
-                                     0.005493164062499999, 0.0027465820312499996, 0.0013732910156249998,
-                                     0.0006866455078124999, 0.00034332275390624995, 0.00017166137695312497,
-                                     8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,
-                                     1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06,
-                                     1.3411045074462889e-06, 6.705522537231444e-07]},
-                 'webmercator': {'srs': 'EPSG:3857', 'tile_size': [256, 256], 'origin': 'nw'}}})},
-            {'created_at': '2016-10-13T17:23:26.890Z', 'updated_at': '2016-10-13T17:23:26.890Z',
-             'name': 'eventkit-integration-test-wfs', 'slug': 'eventkit-integration-test-wfs',
-             'url': 'https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326',
-             'layer': 'structures:USGS_TNM_Structures',
-             'export_provider_type': DataProviderType.objects.using("default").get(type_name="wfs"), 'level_from': 0,
-             'level_to': 8, 'config': json.dumps({})},
-            {'created_at': '2016-10-13T17:23:26.890Z', 'updated_at': '2016-10-13T17:23:26.890Z',
-             'name': 'eventkit-integration-test-wcs', 'slug': 'eventkit-integration-test-wcs',
-             'url': 'https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer',
-             'layer': 'DEP3Elevation',
-             'export_provider_type': DataProviderType.objects.using("default").get(type_name="wcs"), 'level_from': 10,
-             'level_to': 10, 'config': json.dumps({'service': {'scale': '15', 'coverages': 'DEP3Elevation'},
-                                        'params': {'TRANSPARENT': True, 'FORMAT': 'geotiff', 'VERSION': '1.0.0',
-                                                   'CRS': 'EPSG:4326', 'REQUEST': 'GetCoverage'}})},
-            #     , {
-            #     "created_at": "2016-10-21T14:30:27.066Z",
-            #     "updated_at": "2016-10-21T14:30:27.066Z",
-            #     "name": "eventkit-integration-test-arc-fs",
-            #     "slug": "eventkit-integration-test-arc-fs",
-            #     "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer",
-            #     "layer": "2",
-            #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
-            #     "level_from": 0,
-            #     "level_to": 2,
-            #     "config": json.dumps({})
-            # }
-            ]
+    return [
+        {
+            "created_at": "2016-10-06T17:44:54.837Z",
+            "updated_at": "2016-10-06T17:44:54.837Z",
+            "name": "eventkit-integration-test-wms",
+            "slug": "eventkit-integration-test-wms",
+            "url": "https://basemap.nationalmap.gov:443/arcgis/services/USGSImageryOnly/MapServer/WmsServer",
+            "layer": "default",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="wms"),
+            "level_from": 10,
+            "level_to": 10,
+            "max_selection": "2000.000",
+            "config": json.dumps(
+                {
+                    "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
+                    "sources": {
+                        "default": {
+                            "type": "wms",
+                            "grid": "default",
+                            "req": {
+                                "url": "https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WMSServer",
+                                "layers": 0,
+                            },
+                        }
+                    },
+                    "grids": {
+                        "default": {
+                            "srs": "EPSG:4326",
+                            "tile_size": [256, 256],
+                            "origin": "nw",
+                            "res": [
+                                0.7031249999999999,
+                                0.35156249999999994,
+                                0.17578124999999997,
+                                0.08789062499999999,
+                                0.04394531249999999,
+                                0.021972656249999997,
+                                0.010986328124999998,
+                                0.005493164062499999,
+                                0.0027465820312499996,
+                                0.0013732910156249998,
+                                0.0006866455078124999,
+                                0.00034332275390624995,
+                                0.00017166137695312497,
+                                8.583068847656249e-05,
+                                4.291534423828124e-05,
+                                2.145767211914062e-05,
+                                1.072883605957031e-05,
+                                5.364418029785155e-06,
+                                2.6822090148925777e-06,
+                                1.3411045074462889e-06,
+                                6.705522537231444e-07,
+                            ],
+                        }
+                    },
+                }
+            ),
+        },
+        {
+            "created_at": "2016-10-06T17:45:46.213Z",
+            "updated_at": "2016-10-06T17:45:46.213Z",
+            "name": "eventkit-integration-test-wmts",
+            "slug": "eventkit-integration-test-wmts",
+            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+            "layer": "default",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
+            "level_from": 10,
+            "level_to": 10,
+            "config": json.dumps(
+                {
+                    "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
+                    "sources": {
+                        "default": {
+                            "type": "tile",
+                            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+                            "grid": "default",
+                        }
+                    },
+                    "grids": {
+                        "default": {
+                            "srs": "EPSG:4326",
+                            "tile_size": [256, 256],
+                            "origin": "nw",
+                            "res": [
+                                0.7031249999999999,
+                                0.35156249999999994,
+                                0.17578124999999997,
+                                0.08789062499999999,
+                                0.04394531249999999,
+                                0.021972656249999997,
+                                0.010986328124999998,
+                                0.005493164062499999,
+                                0.0027465820312499996,
+                                0.0013732910156249998,
+                                0.0006866455078124999,
+                                0.00034332275390624995,
+                                0.00017166137695312497,
+                                8.583068847656249e-05,
+                                4.291534423828124e-05,
+                                2.145767211914062e-05,
+                                1.072883605957031e-05,
+                                5.364418029785155e-06,
+                                2.6822090148925777e-06,
+                                1.3411045074462889e-06,
+                                6.705522537231444e-07,
+                            ],
+                        }
+                    },
+                }
+            ),
+        },
+        {
+            "created_at": "2016-10-06T19:17:28.770Z",
+            "updated_at": "2016-10-06T19:17:28.770Z",
+            "name": "eventkit-integration-test-arc-raster",
+            "slug": "eventkit-integration-test-arc-raster",
+            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer",
+            "layer": "default",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-raster"),
+            "level_from": 10,
+            "level_to": 10,
+            "config": json.dumps(
+                {
+                    "layers": [{"name": "default", "title": "default", "sources": ["default"]}],
+                    "sources": {
+                        "default": {
+                            "type": "arcgis",
+                            "grid": "default",
+                            "req": {
+                                "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer",
+                                "layers": {"show": 0},
+                            },
+                        }
+                    },
+                    "grids": {
+                        "default": {
+                            "srs": "EPSG:4326",
+                            "tile_size": [256, 256],
+                            "origin": "nw",
+                            "res": [
+                                0.7031249999999999,
+                                0.35156249999999994,
+                                0.17578124999999997,
+                                0.08789062499999999,
+                                0.04394531249999999,
+                                0.021972656249999997,
+                                0.010986328124999998,
+                                0.005493164062499999,
+                                0.0027465820312499996,
+                                0.0013732910156249998,
+                                0.0006866455078124999,
+                                0.00034332275390624995,
+                                0.00017166137695312497,
+                                8.583068847656249e-05,
+                                4.291534423828124e-05,
+                                2.145767211914062e-05,
+                                1.072883605957031e-05,
+                                5.364418029785155e-06,
+                                2.6822090148925777e-06,
+                                1.3411045074462889e-06,
+                                6.705522537231444e-07,
+                            ],
+                        },
+                        "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
+                    },
+                }
+            ),
+        },
+        {
+            "created_at": "2016-10-13T17:23:26.890Z",
+            "updated_at": "2016-10-13T17:23:26.890Z",
+            "name": "eventkit-integration-test-wfs",
+            "slug": "eventkit-integration-test-wfs",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+            "layer": "structures:USGS_TNM_Structures",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
+            "level_from": 0,
+            "level_to": 8,
+        },
+        {
+            "created_at": "2016-10-13T17:23:26.890Z",
+            "updated_at": "2016-10-13T17:23:26.890Z",
+            "name": "eventkit-integration-test-wcs",
+            "slug": "eventkit-integration-test-wcs",
+            "url": "https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer",
+            "layer": "DEP3Elevation",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="wcs"),
+            "level_from": 10,
+            "level_to": 10,
+            "config": json.dumps(
+                {
+                    "service": {"scale": "15", "coverages": "DEP3Elevation"},
+                    "params": {
+                        "TRANSPARENT": True,
+                        "FORMAT": "geotiff",
+                        "VERSION": "1.0.0",
+                        "CRS": "EPSG:4326",
+                        "REQUEST": "GetCoverage",
+                    },
+                }
+            ),
+        },
+        #     , {
+        #     "created_at": "2016-10-21T14:30:27.066Z",
+        #     "updated_at": "2016-10-21T14:30:27.066Z",
+        #     "name": "eventkit-integration-test-arc-fs",
+        #     "slug": "eventkit-integration-test-arc-fs",
+        #     "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer",
+        #     "layer": "2",
+        #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
+        #     "level_from": 0,
+        #     "level_to": 2,
+        #     "config": json.dumps({})
+        # }
+    ]
 
 
 @transaction.atomic

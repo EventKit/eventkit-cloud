@@ -431,10 +431,14 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         if not self.config:
             return None
-        url = self.config.get("sources", {}).get("info", {}).get("req", {}).get("url")
-        type = self.config.get("sources", {}).get("info", {}).get("type")
-        if url:
-            return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
+        try:
+            url = self.config["sources"]["info"]["req"]["url"]
+            type = self.config["sources"]["info"]["type"]
+            if url and type:
+                return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
+            return None
+        except (AttributeError, TypeError):
+            return None
 
     @property
     def footprint_url(self):
