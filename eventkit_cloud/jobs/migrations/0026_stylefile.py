@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('file', models.FileField(storage=django.core.files.storage.FileSystemStorage(base_url='/export_run_files/', location='/var/lib/eventkit/exports_stage/export_run_files'), upload_to='', verbose_name='File')),
                 ('directory', models.CharField(blank=True, help_text='An optional directory name to store the file in.', max_length=100, null=True)),
                 ('style_type', models.CharField(blank=True, choices=[('arcgis_layer', 'ArcGIS Layer'), ('qgis_layer', 'QGIS Layer'), ('mapbox', 'Mapbox'), ('sld', 'SLD'), ('kml', 'KML')], default='', help_text='The type of style provided (e.g. arcgis, qgis, mapbox)', max_length=20, null=True, verbose_name='Style Type')),
-                ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='style', to='jobs.dataprovider')),
+                ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='styles', to='jobs.dataprovider')),
             ],
             options={
                 'abstract': False,

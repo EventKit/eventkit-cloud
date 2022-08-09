@@ -37,7 +37,8 @@ from numpy import linspace
 from requests import Response, Session
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
-from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
+from eventkit_cloud.jobs.models import StyleFile
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
 from eventkit_cloud.tasks.enumerations import PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS, Directory
 from eventkit_cloud.tasks.exceptions import FailedException
@@ -660,16 +661,32 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
         pathlib.Path(file_info["file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
     )
 
-    service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
     metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
-    arcgis_layer = ArcGISLayer(
-        data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
-    )
-    doc = arcgis_layer.get_cim_layer_document()
+    try:
+        style_file = data_provider_task_record.provider.styles.get(style_type=StyleType.ARCGIS.value)
+        style_info = json.loads(style_file.file.read())
+        doc = update_style_file_path(style_info, os.path.basename(file_info["file_path"]))
+    except StyleFile.DoesNotExist:
+        service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
+        arcgis_layer = ArcGISLayer(
+            data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
+        )
+        doc = arcgis_layer.get_cim_layer_document()
 
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
     return {layer_filepath_stage: layer_filepath_archive}
+
+
+def update_style_file_path(style_info, file_path):
+    wcs = "AUTHENTICATION_MODE=OSA;" + file_path
+    try:
+        layer_defs = style_info["layerDefinitions"]
+        for layer in layer_defs:
+            if layer["type"] in ["CIMFeatureLayer"]:
+                layer["featureTable"]["dataConnection"]["workspaceConnectionString"] = wcs
+    except ValueError:
+        return
 
 
 def get_arcgis_metadata(metadata):
