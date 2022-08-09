@@ -359,6 +359,7 @@ export class Application extends React.Component<Props, State> {
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.createActivityDebounceHandler = this.createActivityDebounceHandler.bind(this);
+        this.validAutologoutSettings = this.validAutologoutSettings.bind(this);
         this.state = {
             childContext: {config: {}},
             autoLogoutWarningText: '',
@@ -410,11 +411,11 @@ export class Application extends React.Component<Props, State> {
         }
 
         if (!prevState.loggedIn && this.state.loggedIn) {
-            if (this.handleUserActiveInput == null) {
+            if (this.handleUserActiveInput == null && this.validAutologoutSettings(Number(this.state.childContext.config.AUTO_LOGOUT_SECONDS), Number(this.state.childContext.config.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT))) {
                 this.handleUserActiveInput = this.createActivityDebounceHandler();
+                this.startCheckingForAutoLogout();
+                this.startSendingUserActivePings();
             }
-            this.startCheckingForAutoLogout();
-            this.startSendingUserActivePings();
             this.startListeningForNotifications();
         }
 
@@ -558,11 +559,16 @@ export class Application extends React.Component<Props, State> {
         });
     }
 
+    validAutologoutSettings(logoutSeconds, warningSeconds) {
+        return logoutSeconds > 0 && logoutSeconds > warningSeconds;
+    }
+
     createActivityDebounceHandler() {
         const secondsUntilWarning = Number(this.state.childContext.config.AUTO_LOGOUT_SECONDS) - Number(this.state.childContext.config.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT);
+        const debounceDelay = secondsUntilWarning * 0.5 * 1000;
         return debounce(() => {
             this.props.userActive();
-        },  (secondsUntilWarning * 0.5) * 1000, { maxWait: (secondsUntilWarning - 5) * 1000});
+        },  debounceDelay, { maxWait: debounceDelay, leading: true, trailing: true});
     }
 
     startCheckingForAutoLogout() {
@@ -632,6 +638,9 @@ export class Application extends React.Component<Props, State> {
         // Remove input event listeners.
         this.userActiveInputTypes.forEach((eventType: string) => {
             window.removeEventListener(eventType, this.handleUserActiveInput);
+            if (this.handleUserActiveInput) {
+                this.handleUserActiveInput.cancel();
+            }
         });
     }
 
