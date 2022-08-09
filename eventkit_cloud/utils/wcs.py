@@ -5,7 +5,6 @@ import subprocess
 import tempfile
 from string import Template
 
-import yaml
 from gdal_utils import get_dimensions, get_meta, merge_geotiffs
 
 from eventkit_cloud.core.helpers import get_or_update_session
@@ -49,7 +48,8 @@ class WCSConverter(object):
         :param eta: ETA estimator
         :param task_uid:
         """
-        self.config = yaml.safe_load(config) if config is not None else None
+        # self.config = yaml.safe_load(config) if config is not None else None
+        self.config = config if config is not None else None
         self.out = out
         self.bbox = bbox
         self.service_url = service_url

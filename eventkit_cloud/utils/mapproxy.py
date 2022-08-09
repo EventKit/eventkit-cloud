@@ -9,7 +9,6 @@ from multiprocessing.dummy import DummyProcess
 from typing import Any, Dict, Tuple, cast
 
 import mapproxy
-import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
@@ -175,7 +174,7 @@ class MapproxyGeopackage(object):
         Create a MapProxy configuration object and verifies its validity
         """
         if self.config or self.projection:
-            conf_dict = yaml.safe_load(self.config) or dict()
+            conf_dict = self.config or dict()
         else:
             raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
@@ -271,7 +270,7 @@ class MapproxyGeopackage(object):
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            conf = yaml.safe_load(self.config) or dict()
+            conf = self.config or dict()
             cert_info = conf.get("cert_info")
             auth_requests.patch_https(cert_info=cert_info)
 
@@ -494,7 +493,7 @@ def get_conf_dict(slug: str) -> dict:
 
         # Load and "clean" mapproxy config for displaying a map.
     try:
-        conf_dict = yaml.safe_load(provider.config)
+        conf_dict = provider.config
 
         # Pop layers out so that the default layer configuration above is used.
         conf_dict.pop("layers", "")

@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
-import yaml
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.core.files import File
 from django.test import TestCase
-from yaml import CDumper
 
-from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,
     DataProvider,
@@ -24,6 +23,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     JobPermissionLevel,
     Region,
+    StyleFile,
 )
 
 logger = logging.getLogger(__name__)
@@ -433,8 +433,7 @@ class TestDataProvider(TestCase):
         expected_url = "http://ek.test/metadata/"
         expected_metadata = {"url": expected_url, "type": "arcgis"}
         mock_get_mapproxy_metadata_url.return_value = expected_url
-        config = {"sources": {"info": {"type": "arcgis", "req": {"url": example_url}}}}
-        self.data_provider.config = yaml.dump(config, Dumper=CDumper)
+        self.data_provider.config = {"sources": {"info": {"type": "arcgis", "req": {"url": example_url}}}}
         self.assertEqual(expected_metadata, self.data_provider.metadata)
 
     @patch("eventkit_cloud.utils.mapproxy.get_mapproxy_footprint_url")
@@ -442,8 +441,7 @@ class TestDataProvider(TestCase):
         example_url = "http://test.test"
         expected_url = "http://ek.test/footprint/"
         mock_get_mapproxy_footprint_url.return_value = expected_url
-        config = {"sources": {"footprint": {"req": {"url": example_url}}}}
-        self.data_provider.config = yaml.dump(config, Dumper=CDumper)
+        self.data_provider.config = {"sources": {"footprint": {"req": {"url": example_url}}}}
         self.assertEqual(expected_url, self.data_provider.footprint_url)
 
     def test_layers(self):
@@ -466,7 +464,7 @@ class TestDataProvider(TestCase):
 
         # Test OSM configuration
         layers = ["layer1", "layer2"]
-        example_layers = yaml.dump({layer: "data" for layer in layers}, Dumper=CDumper)
+        example_layers = {layer: "data" for layer in layers}
         expected_layers = {"layer1": "data", "layer2": "data"}
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = example_layers
@@ -474,7 +472,7 @@ class TestDataProvider(TestCase):
 
         # Test multilayer feature service
         layers = ["layer1", "layer2"]
-        example_layers = yaml.dump({"vector_layers": [{"name": layer} for layer in layers]}, Dumper=CDumper)
+        example_layers = {"vector_layers": [{"name": layer} for layer in layers]}
         expected_layers = {"layer1": {"name": "layer1"}, "layer2": {"name": "layer2"}}
 
         self.data_provider.export_provider_type.type_name = "wfs"
@@ -493,3 +491,36 @@ class TestDataProvider(TestCase):
         prov_type.use_bbox = True
         self.data_provider.export_provider_type = prov_type
         self.assertEqual(self.data_provider.get_use_bbox(), True)
+
+
+class TestStyleFile(TestCase):
+    """
+    Test cases for StyleFile model
+    """
+
+    fixtures = ("osm_provider.json",)
+
+    def setUp(self):
+        self.directory = "test"
+        self.data_provider = DataProvider.objects.first()
+
+    def test_create_style_file(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.sld"
+        style_model = StyleFile.objects.create(file=file_mock, directory=self.directory, provider=self.data_provider)
+        self.assertEqual(file_mock.name, style_model.file.name)
+        self.assertEqual(self.directory, style_model.directory)
+        self.assertEqual(self.data_provider, style_model.provider)
+        style_model.file.delete()
+        style_model.delete()
+
+    def test_data_provider_relation(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.sld"
+        style_model = StyleFile.objects.create(
+            file=file_mock, directory=self.directory, provider=self.data_provider, style_type=StyleType.ARCGIS.value
+        )
+        style = self.data_provider.style.get(style_type=StyleType.ARCGIS.value)
+        self.assertEqual(style, style_model)
+        style_model.file.delete()
+        style_model.delete()

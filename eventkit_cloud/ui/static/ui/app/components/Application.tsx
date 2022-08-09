@@ -156,6 +156,8 @@ interface State {
             SERVE_ESTIMATES?: boolean;
             DATAPACKS_DEFAULT_SHARED?: boolean;
             MATOMO?: any;
+            AUTO_LOGOUT_SECONDS?: string;
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: string;
         }
     };
     autoLogoutWarningText: string;
@@ -310,9 +312,7 @@ export class Application extends React.Component<Props, State> {
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
-    private handleUserActiveInput = debounce(() => {
-        this.props.userActive();
-    }, 30 * 1000);
+    private handleUserActiveInput = null;
 
     static defaultProps = {
         children: null,
@@ -334,6 +334,8 @@ export class Application extends React.Component<Props, State> {
             DATAPACK_PAGE_SIZE: PropTypes.string,
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
+            AUTO_LOGOUT_SECONDS: PropTypes.string,
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.string,
         }),
     };
 
@@ -356,6 +358,8 @@ export class Application extends React.Component<Props, State> {
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
+        this.createActivityDebounceHandler = this.createActivityDebounceHandler.bind(this);
+        this.validAutologoutSettings = this.validAutologoutSettings.bind(this);
         this.state = {
             childContext: {config: {}},
             autoLogoutWarningText: '',
@@ -407,8 +411,11 @@ export class Application extends React.Component<Props, State> {
         }
 
         if (!prevState.loggedIn && this.state.loggedIn) {
-            this.startCheckingForAutoLogout();
-            this.startSendingUserActivePings();
+            if (this.handleUserActiveInput == null && this.validAutologoutSettings(Number(this.state.childContext.config.AUTO_LOGOUT_SECONDS), Number(this.state.childContext.config.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT))) {
+                this.handleUserActiveInput = this.createActivityDebounceHandler();
+                this.startCheckingForAutoLogout();
+                this.startSendingUserActivePings();
+            }
             this.startListeningForNotifications();
         }
 
@@ -463,11 +470,6 @@ export class Application extends React.Component<Props, State> {
 
         // if the status is not the update we can default to true
         return true;
-    }
-
-    componentWillUnmount() {
-        this.stopListeningForNotifications();
-        this.handleUserActiveInput.cancel();
     }
 
     onMenuItemClick() {
@@ -557,6 +559,18 @@ export class Application extends React.Component<Props, State> {
         });
     }
 
+    validAutologoutSettings(logoutSeconds, warningSeconds) {
+        return logoutSeconds > 0 && logoutSeconds > warningSeconds;
+    }
+
+    createActivityDebounceHandler() {
+        const secondsUntilWarning = Number(this.state.childContext.config.AUTO_LOGOUT_SECONDS) - Number(this.state.childContext.config.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT);
+        const debounceDelay = secondsUntilWarning * 0.5 * 1000;
+        return debounce(() => {
+            this.props.userActive();
+        },  debounceDelay, { maxWait: debounceDelay, leading: true, trailing: true});
+    }
+
     startCheckingForAutoLogout() {
         if (this.checkAutoLogoutIntervalId) {
             console.warn('Already checking for auto logout.');
@@ -624,6 +638,9 @@ export class Application extends React.Component<Props, State> {
         // Remove input event listeners.
         this.userActiveInputTypes.forEach((eventType: string) => {
             window.removeEventListener(eventType, this.handleUserActiveInput);
+            if (this.handleUserActiveInput) {
+                this.handleUserActiveInput.cancel();
+            }
         });
     }
 
