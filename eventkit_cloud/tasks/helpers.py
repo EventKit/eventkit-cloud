@@ -679,12 +679,12 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
 
 
 def update_style_file_path(style_info, file_path):
-    wcs = "AUTHENTICATION_MODE=OSA;" + file_path
+    wcs = "AUTHENTICATION_MODE=OSA;DATABASE=" + file_path
     try:
-        layer_defs = style_info["layerDefinitions"]
-        for layer in layer_defs:
+        for layer in style_info["layerDefinitions"]:
             if layer["type"] in ["CIMFeatureLayer"]:
                 layer["featureTable"]["dataConnection"]["workspaceConnectionString"] = wcs
+        return style_info
     except ValueError:
         return
 
