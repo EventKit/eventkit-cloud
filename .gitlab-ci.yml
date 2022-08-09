@@ -120,7 +120,7 @@ integration-tests:
     - docker-compose up -d && docker-compose stop celery webpack flower httpd && docker-compose run --rm -d --user=root --name=celery_worker celery || echo $?
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests' || docker-compose ps; docker logs -n 1000 celery_worker; docker-compose logs --no-log-prefix --tail=1000 eventkit; exit 1
+    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests' || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit 1
 
 
 pass-tests:
