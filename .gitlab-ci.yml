@@ -112,9 +112,6 @@ integration-tests:
   extends: .test
   tags:
     - dind
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
   variables:
     DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     BROKER_URL: amqp://guest:guest@rabbitmq:5672/
