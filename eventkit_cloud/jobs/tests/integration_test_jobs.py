@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import os
 import shutil
@@ -31,6 +30,7 @@ DEFAULT_TIMEOUT = 600
 # redundant.  They are left here to provide a quick utility for a dev to test when adding a feature or debugging.
 
 EVENT_NAME = "EVENTKIT-INTEGRATION-TEST"  # Use a suffix which is unique and can be filtered against.
+
 
 class TestJob(TestCase):
     """
@@ -111,9 +111,9 @@ class TestJob(TestCase):
         # update provider to ensure it runs long enough to cancel...
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in
         # test_cancel_mapproxy_job when that is added.
-        export_provider = DataProvider.objects.get(slug=test_service_slug)
+        # export_provider = DataProvider.objects.get(slug=test_service_slug)
         # original_level_to = export_provider.level_to
-        increased_zoom_level = 19
+        # increased_zoom_level = 19
         # export_provider.level_to = increased_zoom_level
         # export_provider.save()
 
@@ -125,7 +125,7 @@ class TestJob(TestCase):
             "selection": self.selection,
             "tags": [],
             "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"]}],
-            "max_zoom": increased_zoom_level
+            # "max_zoom": increased_zoom_level,
         }
         run = self.run_job(job_data, wait_for_run=False)
 
@@ -169,10 +169,13 @@ class TestJob(TestCase):
         This test is to ensure that an OSM job will export a sqlite file.
         :returns:
         """
-        job_data = {"name": "TestThematicSQLITE", "include_zipfile": True,
-                    "description": "Test Description",
-                    "project": EVENT_NAME,
-                    "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}]}
+        job_data = {
+            "name": "TestThematicSQLITE",
+            "include_zipfile": True,
+            "description": "Test Description",
+            "project": EVENT_NAME,
+            "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}],
+        }
         self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_osm_shp(self):
@@ -180,9 +183,13 @@ class TestJob(TestCase):
         This test is to ensure that an OSM job will export a shp.
         :returns:
         """
-        job_data = {"name": "TestSHP", "description": "Test Description", "include_zipfile": True,
-                    "project": EVENT_NAME,
-                    "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
+        job_data = {
+            "name": "TestSHP",
+            "description": "Test Description",
+            "include_zipfile": True,
+            "project": EVENT_NAME,
+            "provider_tasks": [{"provider": "osm", "formats": ["shp"]}],
+        }
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_kml(self):
@@ -459,7 +466,8 @@ def get_providers_list():
                         "type": "wms",
                         "grid": "default",
                         "req": {
-                            "url": "https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WMSServer",
+                            "url": "https://basemap.nationalmap.gov/arcgis/"
+                                   "services/USGSImageryOnly/MapServer/WMSServer",
                             "layers": 0,
                         },
                     }
@@ -501,7 +509,9 @@ def get_providers_list():
             "updated_at": "2016-10-06T17:45:46.213Z",
             "name": "eventkit-integration-test-wmts",
             "slug": "eventkit-integration-test-wmts",
-            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+            "url": "https://basemap.nationalmap.gov/arcgis/"
+                   "rest/services/USGSImageryOnly/MapServer/WMTS/"
+                   "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
             "layer": "default",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
             "level_from": 10,
@@ -511,7 +521,9 @@ def get_providers_list():
                 "sources": {
                     "default": {
                         "type": "tile",
-                        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+                        "url": "https://basemap.nationalmap.gov/arcgis/"
+                               "rest/services/USGSImageryOnly/MapServer/WMTS/"
+                               "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
                         "grid": "default",
                     }
                 },
@@ -607,7 +619,10 @@ def get_providers_list():
             "updated_at": "2016-10-13T17:23:26.890Z",
             "name": "eventkit-integration-test-wfs",
             "slug": "eventkit-integration-test-wfs",
-            "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/"
+                   "services/structures/MapServer/WFSServer"
+                   "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature"
+                   "&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
             "layer": "structures:USGS_TNM_Structures",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
             "level_from": 0,

@@ -292,7 +292,7 @@ class EventKitClient(object):
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception(f"Run timeout ({run_timeout}s) exceeded")
         if errors:
-            error_string = '\n'.join(errors)
+            error_string = "\n".join(errors)
             raise Exception(f"The run failed with errors: {error_string}")
         assert response_json is not None
         return response_json[0]
@@ -315,7 +315,6 @@ class EventKitClient(object):
             except IndexError:
                 logger.error(response)
         return response[0]
-
 
     def check_provider(self, provider_slug):
         """

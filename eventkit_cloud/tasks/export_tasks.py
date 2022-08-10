@@ -2149,7 +2149,7 @@ def cancel_export_provider_task(
                 kwargs={"result": result, "task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue=queue,
                 priority=TaskPriority.CANCEL.value,
-                routing_key=queue
+                routing_key=queue,
             )
 
         # Add canceled to the cache so processes can check in to see if they should abort.
