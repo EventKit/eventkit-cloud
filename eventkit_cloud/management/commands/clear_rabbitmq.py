@@ -15,5 +15,5 @@ class Command(BaseCommand):
         rabbit_classes = ["queues"]
         if options["all"]:
             rabbit_classes = ["queues", "exchanges"]
-        api_url = getattr(settings, "BROKER_API_URL")
+        api_url = settings.CELERY_BROKER_API_URL
         delete_rabbit_objects(api_url, rabbit_classes=rabbit_classes, force=options["force"])

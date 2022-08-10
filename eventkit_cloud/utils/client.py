@@ -255,7 +255,7 @@ class EventKitClient(object):
             raise Exception("Failed to properly delete job: {}".format(job_uid))
 
     def cancel_provider(self, provider_uid):
-        url = "{}/{}".format(self.provider_tasks_url.rstrip("/"), provider_uid)
+        url = f"{self.provider_tasks_url.rstrip('/')}/{provider_uid}"
         response = self.client.patch(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
         if response.status_code != 200:
             logger.info(response.status_code)
@@ -290,23 +290,32 @@ class EventKitClient(object):
                                 for type, message in error.items():
                                     errors.append(f"{type}: {message}")
             if last_check - first_check > timedelta(seconds=run_timeout):
-                raise Exception("Run timeout ({}s) exceeded".format(run_timeout))
+                raise Exception(f"Run timeout ({run_timeout}s) exceeded")
         if errors:
-            raise Exception("The run failed with errors: {}".format("\n".join(errors)))
+            error_string = '\n'.join(errors)
+            raise Exception(f"The run failed with errors: {error_string}")
         assert response_json is not None
         return response_json[0]
 
-    def wait_for_task_pickup(self, job_uid):
+    def wait_for_task_pickup(self, job_uid, timeout=DEFAULT_TIMEOUT):
         picked_up = False
         response = None
+        first_check = datetime.now()
         while not picked_up:
-            sleep(1)
-            response = self.client.get(
-                self.runs_url, params={"job_uid": job_uid}, headers={"X-CSRFToken": self.csrftoken}
-            ).json()
-            if response[0].get("provider_tasks"):
-                picked_up = True
+            try:
+                sleep(1)
+                response = self.client.get(
+                    self.runs_url, params={"job_uid": job_uid}, headers={"X-CSRFToken": self.csrftoken}
+                ).json()
+                last_check = datetime.now()
+                if response[0].get("provider_tasks"):
+                    picked_up = True
+                if last_check - first_check > timedelta(seconds=timeout):
+                    raise Exception(f"Wait timeout ({timeout}s) exceeded")
+            except IndexError:
+                logger.error(response)
         return response[0]
+
 
     def check_provider(self, provider_slug):
         """
