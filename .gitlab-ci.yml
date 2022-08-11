@@ -105,6 +105,7 @@ unit-back:
   script:
     - python scripts/ci_utils.py
     - mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
+    - echo "id $AWS_ACCESS_KEY_ID url $AWS_ENDPOINT_URL secret $AWS_SECRET_ACCESS_KEY bucket $AWS_STORAGE_BUCKET_NAME"
     - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
 
 unit-front:
