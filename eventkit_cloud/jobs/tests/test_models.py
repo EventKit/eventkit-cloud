@@ -520,7 +520,7 @@ class TestStyleFile(TestCase):
         style_model = StyleFile.objects.create(
             file=file_mock, directory=self.directory, provider=self.data_provider, style_type=StyleType.ARCGIS.value
         )
-        style = self.data_provider.style.get(style_type=StyleType.ARCGIS.value)
+        style = self.data_provider.styles.get(style_type=StyleType.ARCGIS.value)
         self.assertEqual(style, style_model)
         style_model.file.delete()
         style_model.delete()
