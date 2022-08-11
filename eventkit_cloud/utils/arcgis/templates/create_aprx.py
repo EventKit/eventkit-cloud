@@ -497,6 +497,8 @@ class CreateAPRX(object):
 
         if all([parameters[0].altered, not parameters[1].altered, load_metadata(str(parameters[0].value))]):
             parameters[1].value = get_aprx_file_name(str(parameters[0].value))
+        if (parameters[1].valueAsText is not None) and (not os.path.splitext(parameters[1].valueAsText)[0] == ".aprx"):
+            parameters[1].value = os.path.splitext(parameters[1].valueAsText)[0] + ".aprx"
         return
 
     def updateMessages(self, parameters):
