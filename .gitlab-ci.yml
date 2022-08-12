@@ -77,7 +77,7 @@ mypy:
     - .back
     - .lint
   script:
-    - mypy eventkit_cloud
+    - mypy --no-incremental eventkit_cloud
 
 migrations:
   extends:
