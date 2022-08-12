@@ -467,7 +467,7 @@ def get_providers_list():
                         "grid": "default",
                         "req": {
                             "url": "https://basemap.nationalmap.gov/arcgis/"
-                                   "services/USGSImageryOnly/MapServer/WMSServer",
+                            "services/USGSImageryOnly/MapServer/WMSServer",
                             "layers": 0,
                         },
                     }
@@ -510,8 +510,8 @@ def get_providers_list():
             "name": "eventkit-integration-test-wmts",
             "slug": "eventkit-integration-test-wmts",
             "url": "https://basemap.nationalmap.gov/arcgis/"
-                   "rest/services/USGSImageryOnly/MapServer/WMTS/"
-                   "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+            "rest/services/USGSImageryOnly/MapServer/WMTS/"
+            "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
             "layer": "default",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
             "level_from": 10,
@@ -522,8 +522,8 @@ def get_providers_list():
                     "default": {
                         "type": "tile",
                         "url": "https://basemap.nationalmap.gov/arcgis/"
-                               "rest/services/USGSImageryOnly/MapServer/WMTS/"
-                               "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+                        "rest/services/USGSImageryOnly/MapServer/WMTS/"
+                        "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
                         "grid": "default",
                     }
                 },
@@ -620,9 +620,9 @@ def get_providers_list():
             "name": "eventkit-integration-test-wfs",
             "slug": "eventkit-integration-test-wfs",
             "url": "https://cartowfs.nationalmap.gov/arcgis/"
-                   "services/structures/MapServer/WFSServer"
-                   "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature"
-                   "&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+            "services/structures/MapServer/WFSServer"
+            "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature"
+            "&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
             "layer": "structures:USGS_TNM_Structures",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
             "level_from": 0,

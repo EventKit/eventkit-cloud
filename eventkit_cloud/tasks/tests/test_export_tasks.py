@@ -1323,10 +1323,10 @@ class TestExportTasks(ExportTaskBase):
             data_provider_task_uid=export_provider_task.uid, canceling_username=user.username
         )
         mock_kill_task.apply_async.assert_called_once_with(
-            kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
-            queue="{0}.priority".format(worker_name),
+            kwargs={"result": {}, "task_pid": task_pid, "celery_uid": celery_uid},
+            queue=f"{self.run.uid}.priority",
             priority=TaskPriority.CANCEL.value,
-            routing_key="{0}.priority".format(worker_name),
+            routing_key=f"{self.run.uid}.priority",
         )
         export_task = ExportTaskRecord.objects.get(uid=export_task.uid)
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task.uid)

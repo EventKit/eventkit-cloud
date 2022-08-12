@@ -86,7 +86,7 @@ if os.getenv("VCAP_SERVICES"):
 CELERYD_USER = os.getenv("CELERYD_USER", CELERYD_USER)
 CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
-CELERY_BROKER_URL = None
+CELERY_BROKER_URL: Optional[str] = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
@@ -101,7 +101,7 @@ if os.getenv("VCAP_SERVICES"):
 if not CELERY_BROKER_URL:
     CELERY_BROKER_URL = os.environ.get("BROKER_URL", "amqp://guest:guest@localhost:5672//")
 
-CELERY_BROKER_API_URL = None
+CELERY_BROKER_API_URL: Optional[str] = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
