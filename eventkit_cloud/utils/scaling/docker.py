@@ -4,6 +4,7 @@ import shlex
 import uuid
 
 import requests
+from django.conf import settings
 
 from eventkit_cloud.utils.scaling import types as scale_types
 from eventkit_cloud.utils.scaling.exceptions import TaskTerminationError
@@ -60,6 +61,7 @@ class Docker(ScaleClient):
             auto_remove=True,
             entrypoint="/bin/bash -c ",
             volumes=volumes,
+            extra_hosts={settings.SITE_NAME: "host-gateway"},
             user="eventkit",
             links={"celery": "celery"},
             name=f"/eventkit-cloud_celery_{container_number}",
