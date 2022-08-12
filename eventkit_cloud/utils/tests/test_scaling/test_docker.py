@@ -33,9 +33,12 @@ class TestDocker(TestCase):
         command = "test_command"
         app_name = "test_app_name"
         memory = 2
+        site_name = "TEST_SITE"
         with patch.dict(
             "eventkit_cloud.utils.scaling.docker.os.environ", {"BIND_MOUNT_LOCATION": bind_mount_location}, clear=True
-        ) as mock_environ, patch("eventkit_cloud.utils.scaling.docker.uuid.uuid4") as mock_uuid4:
+        ) as mock_environ, patch("eventkit_cloud.utils.scaling.docker.uuid.uuid4") as mock_uuid4, self.settings(
+            SITE_NAME=site_name
+        ):
             container_number = "12345678"
             mock_uuid4.return_value = Mock(int=container_number)
             self.docker.run_task(name, command, memory_in_mb=memory, app_name=app_name)
@@ -49,6 +52,7 @@ class TestDocker(TestCase):
                 auto_remove=True,
                 entrypoint="/bin/bash -c ",
                 volumes=volumes,
+                extra_hosts={site_name: "host-gateway"},
                 user="eventkit",
                 links={"celery": "celery"},
                 name=f"/eventkit-cloud_celery_{container_number}",

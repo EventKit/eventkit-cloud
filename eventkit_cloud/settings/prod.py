@@ -67,16 +67,9 @@ IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, "images")
 # where export run files to be added to every datapack are stored
 EXPORT_RUN_FILES = os.path.join(EXPORT_STAGING_ROOT, "export_run_files")
 
-# where export run files can be downloaded
-EXPORT_RUN_FILES_DOWNLOAD = os.getenv("EXPORT_RUN_FILES_DOWNLOAD", "/export_run_files/")
-
-# where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = os.getenv("EXPORT_DOWNLOAD_ROOT", "/var/lib/eventkit/exports_download/")
-
-IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, "images")
-
 # the root url for export downloads
-EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
+EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", EXPORT_STAGING_ROOT)
+MEDIA_ROOT = os.path.abspath(EXPORT_MEDIA_ROOT)
 
 # url to overpass api endpoint
 OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
@@ -299,8 +292,8 @@ VERSION = os.getenv("VERSION", "1.10.0")
 
 
 AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
-AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
-AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
+AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 600))
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", AUTO_LOGOUT_SECONDS - 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
@@ -333,11 +326,7 @@ UI_CONFIG = {
     "AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT": AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT,
 }
 
-
-USE_S3 = is_true(os.getenv("USE_S3"))
-
-if USE_S3:
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_STORAGE_BUCKET_NAME = AWS_ACCESS_KEY_ID = AWS_SECRET_ACCESS_KEY = None
 if os.getenv("VCAP_SERVICES"):
@@ -349,9 +338,13 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_SECRET_ACCESS_KEY = listings[0]["credentials"]["secret_access_key"]
             except (KeyError, TypeError):
                 continue
-AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
-AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or AWS_SECRET_ACCESS_KEY
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL") or AWS_ENDPOINT_URL
+AWS_S3_ACCESS_KEY_ID = os.getenv("AWS_S3_ACCESS_KEY_ID") or AWS_ACCESS_KEY_ID
+AWS_S3_SECRET_ACCESS_KEY = os.getenv("AWS_S3_SECRET_ACCESS_KEY") or AWS_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME") or AWS_STORAGE_BUCKET_NAME
 
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_DEFAULT_ACL: str = None
