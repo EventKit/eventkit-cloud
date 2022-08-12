@@ -36,6 +36,9 @@ pending-tests:
   image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
     entrypoint: [ "" ]
+  variables:
+    CURL_CA_BUNDLE: "./conda/cacert.pem"
+    REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   before_script:
     - . activate conda_env
     - pip install -e .
