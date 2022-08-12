@@ -8,18 +8,14 @@ from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
 from typing import Any, Dict, Tuple, cast
 
-import mapproxy
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
-from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import ConfigurationError, ProxyConfiguration, validate_references
-from mapproxy.grid import tile_grid
-from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
+import mapproxy
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
@@ -34,6 +30,10 @@ from eventkit_cloud.utils.geopackage import (
     set_gpkg_contents_bounds,
 )
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from mapproxy.config.config import load_config, load_default_config
+from mapproxy.config.loader import ConfigurationError, ProxyConfiguration, validate_references
+from mapproxy.grid import tile_grid
+from mapproxy.wsgiapp import MapProxyApp
 
 # Mapproxy uses processes by default, but we can run child processes in demonized process, so we use
 # a dummy process which relies on threads.  This fixes a bunch of deadlock issues which happen when using billiard.
@@ -211,7 +211,7 @@ class MapproxyGeopackage(object):
             )
 
         # Need something listed as a service to pass the mapproxy validation.
-        conf_dict["services"] = ["demo"]
+        conf_dict["services"] = conf_dict.get("services") or {"demo": None}
 
         # disable SSL cert checks
 
@@ -441,7 +441,7 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
                     "sources": [get_footprint_layer_name(slug)],
                 }
             ]
-        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, slug, None)
+        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, slug, user)
         try:
             mapproxy_config = load_default_config()
             load_config(mapproxy_config, config_dict=base_config)
@@ -493,10 +493,10 @@ def get_conf_dict(slug: str) -> dict:
 
         # Load and "clean" mapproxy config for displaying a map.
     try:
-        conf_dict = provider.config
+        conf_dict = copy.deepcopy(provider.config)
 
         # Pop layers out so that the default layer configuration above is used.
-        conf_dict.pop("layers", "")
+        conf_dict.pop("layers", None)
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
             if not ssl_verify:

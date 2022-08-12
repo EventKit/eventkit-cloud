@@ -1352,13 +1352,12 @@ class TestExportTasks(ExportTaskBase):
         task_pid = 55
         filename = "test.gpkg"
         celery_uid = uuid.uuid4()
-        run_uid = self.run.uid
         self.job.include_zipfile = True
         self.job.save()
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, name="test_provider_task", status=TaskState.COMPLETED.value, provider=self.provider
         )
-        result = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        result = FileProducingTaskResult(file=filename).save(write_file=False)
         ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task,
             status=TaskState.COMPLETED.value,
@@ -1369,13 +1368,10 @@ class TestExportTasks(ExportTaskBase):
             result=result,
         )
 
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/")
-        run_dir = os.path.join(download_root, str(run_uid))
         finalize_export_provider_task.run(
             result={"status": TaskState.SUCCESS.value},
             run_uid=self.run.uid,
             data_provider_task_uid=export_provider_task.uid,
-            run_dir=run_dir,
             status=TaskState.COMPLETED.value,
         )
         export_provider_task.refresh_from_db()

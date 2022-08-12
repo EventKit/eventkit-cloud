@@ -67,7 +67,6 @@ endif
 setup:
 ifeq ($(detected_OS),Linux)
 	sudo chmod -R g+rw .
-	mkdir -p exports_download && sudo chown eventkit:eventkit exports_download
 	mkdir -p exports_stage && sudo chown eventkit:eventkit exports_stage
 	mkdir -p coverage && sudo chown eventkit:eventkit coverage
 	docker-compose run --rm eventkit python manage.py runinitial setup

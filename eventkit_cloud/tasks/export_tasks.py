@@ -58,7 +58,6 @@ from eventkit_cloud.tasks.helpers import (
     get_provider_staging_dir,
     get_run_staging_dir,
     get_style_files,
-    make_file_downloadable,
     pickle_exception,
     progressive_kill,
     update_progress,
@@ -189,14 +188,9 @@ class ExportTask(EventKitBaseTask):
             task.pid = -1
             # get the output
             file_path = retval["result"]
-            stat = os.stat(file_path)
-            size = stat.st_size / 1024 / 1024.00
-            file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(
-                filename=str(file_name), size=size, download_url=download_url
-            )
+            result = FileProducingTaskResult.objects.create(file=file_path)
 
             task.result = result
             task.status = TaskState.SUCCESS.value
@@ -2072,12 +2066,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
         )
         fit_to_area(preview)
         preview.save(filepath)
-
-        filename, download_path = make_file_downloadable(filepath, skip_copy=False)
-        filesize = os.stat(filepath).st_size
-        data_provider_task_record.preview = MapImageSnapshot.objects.create(
-            download_url=download_path, filename=str(filename), size=filesize
-        )
+        data_provider_task_record.preview = MapImageSnapshot.objects.create(file=str(filepath))
         data_provider_task_record.save()
 
         result["preview"] = filepath

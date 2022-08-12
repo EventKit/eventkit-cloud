@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db.models.functions import Area, Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
-from django.core.files import File
 from django.test import TestCase
 
 from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
@@ -380,13 +379,11 @@ class TestDataProvider(TestCase):
         self.data_provider = DataProvider.objects.get(slug="osm-generic")
 
     @patch("eventkit_cloud.jobs.signals.make_dirs")
-    @patch("eventkit_cloud.jobs.signals.make_file_downloadable")
     @patch("eventkit_cloud.jobs.signals.save_thumbnail")
-    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_file_downloadable, makedirs):
+    def test_snapshot_signal(self, mock_save_thumbnail, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = "/var/lib/downloads/images/test_thumb.jpg"
         # An instance of MapImageSnapshot
-        mock_make_file_downloadable.return_value = 1
         stat = os.stat
 
         # We don't want to interfere with any other os.stat functions
@@ -405,7 +402,6 @@ class TestDataProvider(TestCase):
             self.data_provider.preview_url = "http://url.com"
             self.data_provider.save()
             makedirs.assert_called()
-            mock_make_file_downloadable.assert_called()
 
     @patch("eventkit_cloud.core.models.cache")
     def test_cached_model_on_save(self, mocked_cache):
@@ -501,26 +497,26 @@ class TestStyleFile(TestCase):
     fixtures = ("osm_provider.json",)
 
     def setUp(self):
+        self.file_name = "test.aprx"
         self.directory = "test"
         self.data_provider = DataProvider.objects.first()
 
     def test_create_style_file(self):
-        file_mock = MagicMock(spec=File)
-        file_mock.name = "test.sld"
-        style_model = StyleFile.objects.create(file=file_mock, directory=self.directory, provider=self.data_provider)
-        self.assertEqual(file_mock.name, style_model.file.name)
+        style_model = StyleFile(file=self.file_name, directory=self.directory, provider=self.data_provider)
+        style_model.save(write_file=False)
+        self.assertEqual(self.file_name, style_model.filename)
         self.assertEqual(self.directory, style_model.directory)
         self.assertEqual(self.data_provider, style_model.provider)
-        style_model.file.delete()
-        style_model.delete()
 
     def test_data_provider_relation(self):
-        file_mock = MagicMock(spec=File)
-        file_mock.name = "test.sld"
-        style_model = StyleFile.objects.create(
-            file=file_mock, directory=self.directory, provider=self.data_provider, style_type=StyleType.ARCGIS.value
+        style_file = StyleFile(
+            file=self.file_name,
+            directory=self.directory,
+            provider=self.data_provider,
+            style_type=StyleType.ARCGIS.value,
         )
         style = self.data_provider.styles.get(style_type=StyleType.ARCGIS.value)
         self.assertEqual(style, style_model)
         style_model.file.delete()
         style_model.delete()
+
