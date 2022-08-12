@@ -515,8 +515,6 @@ class TestStyleFile(TestCase):
             provider=self.data_provider,
             style_type=StyleType.ARCGIS.value,
         )
+        style_file.save(write_file=False)
         style = self.data_provider.styles.get(style_type=StyleType.ARCGIS.value)
-        self.assertEqual(style, style_model)
-        style_model.file.delete()
-        style_model.delete()
-
+        self.assertEqual(style, style_file)
