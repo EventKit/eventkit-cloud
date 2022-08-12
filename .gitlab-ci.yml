@@ -6,7 +6,7 @@ stages:
 
 variables:
   AWS_ACCESS_KEY_ID: AWS_ID
-  AWS_ENDPOINT_URL: "http://minio:9000/eventkit"
+  AWS_ENDPOINT_URL: "http://minio:9000"
   AWS_SECRET_ACCESS_KEY: AWS_SECRET
   AWS_STORAGE_BUCKET_NAME: eventkit
   BASE_URL: "http://host.docker.internal:6080"

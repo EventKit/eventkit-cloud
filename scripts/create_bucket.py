@@ -4,12 +4,11 @@ import sys
 import botocore
 
 import django
-import time
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()
 
-from eventkit_cloud.utils.s3 import get_s3_resource
+from eventkit_cloud.utils.s3 import get_s3_resource, get_s3_client
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,24 +23,22 @@ def create_bucket(bucket_name):
     :param region: String region to create bucket in, e.g., 'us-west-2'
     :return: True if bucket created, else False
     """
-    tries = 3
-    while tries:
-        try:
-            s3 = get_s3_resource()
-            s3.create_bucket(Bucket=bucket_name)
-            return True
-        except botocore.exceptions.ClientError as e:
-            if "NoSuchBucket" in str(e):
-                tries -= 1
-                if not tries:
-                    raise
-                logger.info("Waiting for S3 Connection to try to create the bucket.")
-                time.sleep(1)
-            elif "BucketAlreadyOwnedByYou" in str(e):
-                logger.info("Bucket already created.")
-                return True
-            else:
-                raise
+    try:
+        s3 = get_s3_resource()
+        s3.create_bucket(Bucket=bucket_name)
+    except botocore.exceptions.ClientError as e:
+        if "NoSuchBucket" in str(e):
+            client = get_s3_client()
+            response = client.list_buckets()
+            for bucket in response.get("Buckets"):
+                if bucket["Name"] == bucket_name:
+                    return True
+            logger.error("Received no such bucket error, this can happen due to a hostname resolution error.")
+            logger.error("Also check that the AWS Endpoint URL is correct and isn't a bucket path.")
+            logger.error("Could not find the bucket using list buckets.")
+            raise
+        elif "BucketAlreadyOwnedByYou" not in str(e):
+            raise
     return True
 
 
