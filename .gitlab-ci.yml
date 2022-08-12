@@ -38,6 +38,7 @@ pending-tests:
     entrypoint: [ "" ]
   before_script:
     - . activate conda_env
+    - pip install -e .
 
 .lint:
   stage: lint
