@@ -562,7 +562,7 @@ class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     Model for Style File
     """
 
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="style")
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="styles")
     STYLE_TYPES = [
         (StyleType.ARCGIS.value, "ArcGIS Layer"),
         (StyleType.QGIS.value, "QGIS Layer"),
