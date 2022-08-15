@@ -6,8 +6,7 @@ import json
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Dict, Optional
-from urllib.parse import urljoin
+from typing import Dict, Optional
 
 import requests
 from django.conf import settings
@@ -24,8 +23,6 @@ from eventkit_cloud.utils.services.check_result import CheckResult
 from eventkit_cloud.utils.services.errors import ProviderCheckError
 from eventkit_cloud.utils.services.types import ProcessFormat
 
-if TYPE_CHECKING:
-    from eventkit_cloud.jobs.models import DataProvider
 logger = logging.getLogger(__name__)
 
 PROCESS_CACHE_TIMEOUT = 600
@@ -37,8 +34,12 @@ class OGCAPIProcess(GisClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.job_url = None
+        self.base_url = self.service_url.removesuffix('/')
+        self.jobs_url = f"{self.base_url}/jobs"
         self.process_config = self.config["ogcapi_process"]
+        self.processes_url = f"{self.base_url}/processes"
+        self.process_url = f"{self.base_url}/processes/{self.process_config['id']}"
+
 
     def get_bbox(self, element):
         raise NotImplementedError("Get BBOX isn't supported for OGCAPI Processes")
@@ -60,13 +61,12 @@ class OGCAPIProcess(GisClient):
 
     def create_job(self, geometry: GEOSGeometry, file_format: str = None):
         payload = self.get_job_payload(geometry, file_format=file_format)
-        jobs_endpoint = urljoin(self.base_url, "jobs/")
         response = None
         try:
-            logger.debug(jobs_endpoint)
+            logger.debug(self.jobs_url)
             logger.debug(json.dumps(payload))
 
-            response = self.session.post(jobs_endpoint, json=payload)
+            response = self.session.post(self.jobs_url, json=payload)
             response.raise_for_status()
 
         except requests.exceptions.RequestException as e:
@@ -78,7 +78,6 @@ class OGCAPIProcess(GisClient):
                     logger.error("payload: %s", payload)
             else:
                 logger.error("config %s", self.config)
-            logger.error(jobs_endpoint)
             if response:
                 logger.error("Response Content: %s", response.content)
             raise Exception("Failed to post request to remote service.") from e
@@ -89,7 +88,7 @@ class OGCAPIProcess(GisClient):
             logger.error(response_content)
             raise Exception("Unable to post to OGC process request.")
 
-        self.job_url = urljoin(jobs_endpoint, f"{job_id}/")
+        self.job_url = f"{self.jobs_url}/{job_id}"
 
         return response_content
 
@@ -107,7 +106,7 @@ class OGCAPIProcess(GisClient):
 
         # fetch job results
         try:
-            response = self.session.get(urljoin(self.job_url, "results/"))
+            response = self.session.get(f"{self.job_url}/results")
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Unsuccessful request:{e}")
@@ -155,11 +154,10 @@ class OGCAPIProcess(GisClient):
         return session
 
     def get_response(self, url: Optional[str] = None, query: Optional[Dict[str, str]] = None) -> requests.Response:
-        url = url or self.service_url
+        url = url or self.process_url
         query_params = copy.deepcopy(query) or self.query
-        service_url = url.rstrip("/\\")
-        processes_endpoint = urljoin(service_url, "processes/")
-        return self.session.get(url=processes_endpoint, params=query_params, timeout=self.timeout)
+        logger.error("Making request to %s", url)
+        return self.session.get(url=url, params=query_params, timeout=self.timeout)
 
     def check_response(self):
         """
@@ -170,8 +168,7 @@ class OGCAPIProcess(GisClient):
                 raise ProviderCheckError(CheckResult.NO_URL)
 
             response = self.get_response()
-            logger.error(self.service_url)
-            logger.error(response.content)
+            logger.debug(response)
             if response.status_code in [401, 403]:
                 raise ProviderCheckError(CheckResult.UNAUTHORIZED)
 
@@ -181,10 +178,14 @@ class OGCAPIProcess(GisClient):
             if not response.ok:
                 raise ProviderCheckError(CheckResult.UNAVAILABLE, status=response.status_code)
 
-            if not self.has_valid_process_inputs():
+            if not self.has_valid_process_inputs(response):
                 raise ProviderCheckError(CheckResult.INVALID_CONFIGURATION)
 
             return response
+
+        except ProviderCheckError:
+            # Since we are catching all exceptions below ensure we raise the providercheckerror.
+            raise
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
@@ -202,15 +203,18 @@ class OGCAPIProcess(GisClient):
             logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
             raise ProviderCheckError(CheckResult.UNKNOWN_ERROR)
 
-    def has_valid_process_inputs(self) -> bool:
+    def has_valid_process_inputs(self, response=None) -> bool:
         """
         Checks if the configured process is valid based on the allowed inputs of the provider.
         """
 
-        url = f"{self.service_url.rstrip('/')}/processes/{self.process_config['id']}?format=json"
-        response = self.session.get(url=url, timeout=self.timeout)
+        if not response:
+            url = f"{self.processes_url}/{self.process_config['id']}?format=json"
+            logger.info("Making request to %s", url)
+            response = self.session.get(url=url, timeout=self.timeout)
 
         if response.status_code != 200:
+            logger.error("The configured process returned invalid status_code: %s", response.status_code)
             return False
 
         data = response.json()
@@ -232,6 +236,7 @@ class OGCAPIProcess(GisClient):
             try:
                 validate(instance=configured_input_value, schema=allowed_inputs[configured_input_key]["schema"])
             except ValidationError as ve:
+                logger.error("The provider has an invalid schema")
                 logger.error(json.dumps({k: str(v) for k, v in vars(ve).items()}))
                 return False
 
@@ -244,7 +249,7 @@ class OGCAPIProcess(GisClient):
         if process_json is None:
             try:
                 response = self.session.get(
-                    f"{self.service_url}/processes/{process}",
+                    f"{self.processes_url}/{process}",
                     stream=True,
                 )
                 response.raise_for_status()
@@ -255,13 +260,15 @@ class OGCAPIProcess(GisClient):
 
         return process_json
 
-    def find_format_field(self, schema):
+    def get_product_id(self):
+        return self.process_config["inputs"]["product"]["id"]
+    def get_format_field(self):
         format_field = None
-        for input_field, data in schema.items():
+        for input_field, data in self.process_config.items():
             if "format" in input_field:
                 return None, input_field
             if isinstance(data, dict):
-                _, format_field = self.find_format_field(data)
+                _, format_field = self.get_format_field(data)
             if format_field:
                 return input_field, format_field
         return None, None
@@ -273,7 +280,7 @@ class OGCAPIProcess(GisClient):
         payload = copy.deepcopy(self.config)
 
         if file_format:
-            input_field, format_field = self.find_format_field(payload)
+            input_field, format_field = self.get_format_field(payload)
             if format_field:
                 if input_field:
                     payload["inputs"][input_field][format_field] = file_format
@@ -326,12 +333,11 @@ class OGCAPIProcess(GisClient):
             for file_format in file_formats
         ]
 
-    def get_process_formats(self, provider: DataProvider) -> list[ProcessFormat]:
+    def get_process_formats(self) -> list[ProcessFormat]:
         """Retrieve formats for a given provider if it is an ogc-process type."""
         process_formats = []
 
-        if provider.export_provider_type and "ogcapi-process" in provider.export_provider_type.type_name:
-            process_json = self.get_process()
-            if process_json:
-                process_formats = self.get_process_formats_from_json(process_json, provider.config)
+        process_json = self.get_process()
+        if process_json:
+            process_formats = self.get_process_formats_from_json(process_json, self.get_product_id())
         return process_formats

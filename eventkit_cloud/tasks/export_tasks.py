@@ -11,7 +11,7 @@ import time
 import traceback
 from pathlib import Path
 from typing import List, Type, Union, cast
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from audit_logging.file_logging import logging_open
@@ -75,12 +75,11 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
-from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
-from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess, get_format_field_from_config
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
@@ -789,11 +788,13 @@ def ogc_result_task(
     export_task_record = get_export_task_record(task_uid)
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
-    ogcapi_config = data_provider.config.get("ogcapi_process")
+    client: OGCAPIProcess = cast(OGCAPIProcess, data_provider.get_service_client())
+    ogcapi_config = client.process_config
     # check to see if file format that we're processing is the same one as the
     # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
-        format_field, format_prop = get_format_field_from_config(ogcapi_config)
+        client: OGCAPIProcess = cast(OGCAPIProcess, data_provider.get_service_client())
+        format_field, format_prop = client.get_format_field()
         if format_field:
             export_format = ogcapi_config["inputs"][format_field]
         if format_prop:
@@ -1436,7 +1437,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         if bbox is None:
             query_params["geometry"] = "BBOX_PLACEHOLDER"
         query_str = urlencode(query_params, safe="=*")
-        query_url = urljoin(f"{service_url}/", f"query?{query_str}")
+        query_url = f"{service_url}/query?{query_str}"
 
     return query_url
 
