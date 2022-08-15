@@ -715,7 +715,7 @@ def get_message_count(queue_name: str, message_type: str = "messages") -> int:
     :param message_type: The type of message you want.  e.g. messages or messages_ready
     :return: An integer count of pending messages.
     """
-    broker_api_url = getattr(settings, "BROKER_API_URL")
+    broker_api_url = settings.CELERY_BROKER_API_URL
     queue_class = "queues"
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
