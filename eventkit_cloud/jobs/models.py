@@ -25,7 +25,6 @@ from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
     AttributeClass,
     CachedModelMixin,
-    DownloadableMixin,
     FileFieldMixin,
     GroupPermissionLevel,
     LowerCaseCharField,
@@ -57,7 +56,7 @@ def get_upload_path(instance, *args):
     return path
 
 
-class MapImageSnapshot(DownloadableMixin, UIDMixin):
+class MapImageSnapshot(FileFieldMixin, UIDMixin):
     """
     A MapImageSnapshot is an image snapshot capturing a map in a particular state or time.
     """
@@ -563,7 +562,7 @@ class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     Model for Style File
     """
 
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="style")
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="styles")
     STYLE_TYPES = [
         (StyleType.ARCGIS.value, "ArcGIS Layer"),
         (StyleType.QGIS.value, "QGIS Layer"),
