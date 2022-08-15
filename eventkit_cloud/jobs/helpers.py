@@ -27,29 +27,6 @@ def get_provider_thumbnail_name(provider_slug):
     return f"{provider_slug}_thmb"
 
 
-def get_provider_image_download_dir(provider_uid):
-    """
-    Get the download path for images of a specified provider.
-
-    :param provider_uid: uid from the DataProvider model.
-    """
-    return os.path.join(settings.IMAGES_DOWNLOAD_ROOT.rstrip("\/"), "providers", str(provider_uid))
-
-
-def get_provider_image_download_path(provider_uid):
-    """
-    Get the download path for images of a specified provider.
-
-    :param provider_uid: uid from the DataProvider model.
-    """
-    return os.path.join(
-        settings.EXPORT_MEDIA_ROOT.rstrip("\/"),
-        "images",
-        "providers",
-        str(provider_uid),
-    )
-
-
 def get_valid_regional_justification(regional_policy, user: DjangoUserType):
     """
     Checks if a user has an active regional justification for a specific regional policy.
