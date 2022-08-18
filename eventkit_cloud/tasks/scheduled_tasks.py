@@ -223,9 +223,9 @@ def scale_by_runs(max_tasks_memory):
 
 
 def scale_default_tasks(client, app_name, celery_tasks):
-    broker_api_url = getattr(settings, "BROKER_API_URL")
+    broker_api_url = settings.CELERY_BROKER_API_URL
     queues = get_all_rabbitmq_objects(broker_api_url, "queues")
-    queue = queues.get("celery")
+    queue = queues.get("celery") or {}
     queue_name = queue.get("name")
     pending_messages = queue.get("messages", 0)
     logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
@@ -246,7 +246,7 @@ def scale_by_tasks(celery_tasks, max_tasks_memory):
 
     client, app_name = get_scale_client()
 
-    broker_api_url = getattr(settings, "BROKER_API_URL")
+    broker_api_url = settings.CELERY_BROKER_API_URL
     queue_class = "queues"
 
     celery_pcf_task_details = get_celery_task_details(client, app_name, celery_tasks)
@@ -416,7 +416,7 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 @app.task(name="Clean Up Queues", base=EventKitBaseTask)
 def clean_up_queues_task():
     """Deletes all of the queues that don't have any consumers or messages"""
-    api_url = getattr(settings, "BROKER_API_URL")
+    api_url = settings.CELERY_BROKER_API_URL
     delete_rabbit_objects(api_url, rabbit_classes=["queues", "exchanges"])
 
 

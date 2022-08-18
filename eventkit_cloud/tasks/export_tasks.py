@@ -2132,11 +2132,14 @@ def cancel_export_provider_task(
             task_result.soft_delete()
 
         if int(export_task.pid) > 0 and export_task.worker:
+            run_uid = data_provider_task_record.run.uid
+            queue = f"{get_celery_queue_group(run_uid=run_uid, worker=export_task.worker)}.priority"
+            logger.error("Canceling queue: %s", queue)
             kill_task.apply_async(
-                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.priority".format(export_task.worker),
+                kwargs={"result": result, "task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
+                queue=queue,
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.priority".format(export_task.worker),
+                routing_key=queue,
             )
 
         # Add canceled to the cache so processes can check in to see if they should abort.

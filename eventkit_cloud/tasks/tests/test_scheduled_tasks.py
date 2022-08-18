@@ -397,6 +397,6 @@ class TestCleanUpRabbit(TestCase):
     @patch("eventkit_cloud.tasks.scheduled_tasks.delete_rabbit_objects")
     def test_clean_up_queues_task(self, mock_delete_rabbit_objects):
         example_api_url = "https://test/api"
-        with self.settings(BROKER_API_URL=example_api_url):
+        with self.settings(CELERY_BROKER_API_URL=example_api_url):
             clean_up_queues_task()
             mock_delete_rabbit_objects.assert_called_once_with(example_api_url, rabbit_classes=["queues", "exchanges"])
