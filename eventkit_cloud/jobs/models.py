@@ -403,8 +403,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     def update_export_formats(self):
         # TODO: Refactor utils/ogc_apiprocess into services.
-        client = self.get_service_client()
-        process_formats: OGCAPIProcess = client.get_process_formats()
+        client: OGCAPIProcess = cast(OGCAPIProcess, self.get_service_client())
+        process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)

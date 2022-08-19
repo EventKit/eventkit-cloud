@@ -30,7 +30,7 @@ PROCESS_CACHE_TIMEOUT = 600
 
 class OGCAPIProcess(GisClient):
 
-    job_url = None
+    job_url: str = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
