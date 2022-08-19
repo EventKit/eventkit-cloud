@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Any, Dict, cast
 
-import requests
-
 from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
@@ -18,7 +16,7 @@ DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 
 class EventKitClient(object):
-    def __init__(self, url, username=None, password=None, certificate=None, session=None, verify=True):
+    def __init__(self, url, username=None, password=None, certificate=None, session=None, verify=True, *args, **kwargs):
         self.base_url = url.rstrip("/")
         self.login_url = self.base_url + "/api/login/"
         self.cert_url = self.base_url + "/oauth"
@@ -36,7 +34,7 @@ class EventKitClient(object):
 
         if certificate:
             self.session.get(self.cert_url, cert=certificate)
-        elif any([hasattr(adapter.ssl_context) for adapter in self.session.adapters.values()]):
+        elif any([hasattr(adapter, "ssl_context") for adapter in self.session.adapters.values()]):
             self.session.get(self.cert_url)
         elif username and password:
             login_data = dict(

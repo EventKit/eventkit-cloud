@@ -9,7 +9,7 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from eventkit_cloud.core.models import AttributeClass, attribute_class_filter
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat, Job, Projection
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, DataProviderType, ExportFormat, Job, Projection
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,9 @@ class TestAttributeClassFilter(APITestCase):
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
+        data_provider_type = DataProviderType.objects.create(type_name="test")
         self.data_provider = DataProvider.objects.create(
-            name="test1", slug="test1", attribute_class=self.attribute_class
+            name="test1", slug="test1", attribute_class=self.attribute_class, export_provider_type=data_provider_type
         )
         self.data_providers = DataProvider.objects.all()
         self.job = Job.objects.create(

@@ -6,11 +6,11 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import requests
 from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry, Polygon, WKTWriter
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, WKTWriter
 from django.core.cache import cache
 from jsonschema import ValidationError, validate
 
@@ -34,12 +34,11 @@ class OGCAPIProcess(GisClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.base_url = self.service_url.removesuffix('/')
-        self.jobs_url = f"{self.base_url}/jobs"
+        self.base_url = self.service_url.removesuffix("/")
+        self.jobs_url = f"{self.base_url}/jobs/"
         self.process_config = self.config["ogcapi_process"]
-        self.processes_url = f"{self.base_url}/processes"
+        self.processes_url = f"{self.base_url}/processes/"
         self.process_url = f"{self.base_url}/processes/{self.process_config['id']}"
-
 
     def get_bbox(self, element):
         raise NotImplementedError("Get BBOX isn't supported for OGCAPI Processes")
@@ -88,7 +87,7 @@ class OGCAPIProcess(GisClient):
             logger.error(response_content)
             raise Exception("Unable to post to OGC process request.")
 
-        self.job_url = f"{self.jobs_url}/{job_id}"
+        self.job_url = f"{self.jobs_url}{job_id}"
 
         return response_content
 
@@ -147,10 +146,12 @@ class OGCAPIProcess(GisClient):
             return response_content
 
     def get_process_session(self, url):
-        credentials = self.config.get("download_credentials", dict())
+        credentials = self.process_config.get("download_credentials", dict())
         session = get_or_update_session(**credentials)
         if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in url:
-            session = EventKitClient(getattr(settings, "SITE_URL"), **credentials, session=session).session
+            session = EventKitClient(
+                getattr(settings, "SITE_URL"), username=session.auth[0], password=session.auth[1], session=session
+            ).session
         return session
 
     def get_response(self, url: Optional[str] = None, query: Optional[Dict[str, str]] = None) -> requests.Response:
@@ -209,7 +210,7 @@ class OGCAPIProcess(GisClient):
         """
 
         if not response:
-            url = f"{self.processes_url}/{self.process_config['id']}?format=json"
+            url = f"{self.processes_url}{self.process_config['id']}?format=json"
             logger.info("Making request to %s", url)
             response = self.session.get(url=url, timeout=self.timeout)
 
@@ -249,7 +250,7 @@ class OGCAPIProcess(GisClient):
         if process_json is None:
             try:
                 response = self.session.get(
-                    f"{self.processes_url}/{process}",
+                    f"{self.processes_url}{process}",
                     stream=True,
                 )
                 response.raise_for_status()
@@ -262,13 +263,15 @@ class OGCAPIProcess(GisClient):
 
     def get_product_id(self):
         return self.process_config["inputs"]["product"]["id"]
-    def get_format_field(self):
+
+    @staticmethod
+    def get_format_field(config: dict):
         format_field = None
-        for input_field, data in self.process_config.items():
+        for input_field, data in config.items():
             if "format" in input_field:
                 return None, input_field
             if isinstance(data, dict):
-                _, format_field = self.get_format_field(data)
+                _, format_field = OGCAPIProcess.get_format_field(data)
             if format_field:
                 return input_field, format_field
         return None, None
@@ -277,10 +280,10 @@ class OGCAPIProcess(GisClient):
         """
         Function generates the request body needed for a POST request to the OGC /jobs endpoint.
         """
-        payload = copy.deepcopy(self.config)
+        payload = copy.deepcopy(self.process_config)
 
         if file_format:
-            input_field, format_field = self.get_format_field(payload)
+            input_field, format_field = self.get_format_field(payload["inputs"])
             if format_field:
                 if input_field:
                     payload["inputs"][input_field][format_field] = file_format
@@ -295,10 +298,12 @@ class OGCAPIProcess(GisClient):
         return payload
 
     @staticmethod
-    def convert_geometry(original_payload, geometry):
+    def convert_geometry(original_payload: dict, geometry: Union[Polygon, MultiPolygon, GEOSGeometry]):
         """Converts the user requested geometry into the format supported by the ogcapi process services"""
-        # This is configured for a single implementation to be more flexible would require parsing the process description,
-        # and attempting to map the values to the correct schema type.
+        # This is configured for a single implementation to be more flexible would require parsing the process
+        # description, and attempting to map the values to the correct schema type.
+        if isinstance(geometry, Polygon):
+            geometry = MultiPolygon(geometry)
         payload = copy.deepcopy(original_payload)
         area = payload.get("area")
         payload["inputs"]["geometry"] = {"format": area["type"]}

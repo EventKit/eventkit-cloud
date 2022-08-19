@@ -396,7 +396,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
-        self.update_export_formats()
+        if self.export_provider_type and "ogcapi-process" in self.export_provider_type.type_name:
+            self.update_export_formats()
 
         super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
 

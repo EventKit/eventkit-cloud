@@ -194,9 +194,7 @@ def get_or_update_session(*args, **session_info):
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-    print(f"session_info: {session_info}", flush=True)
     if cert_path and cert_pass:
-        print(f"adding cert: {cert_path}", flush=True)
         try:
             logger.debug(f"setting {cert_path} for session")
             adapter = requests_pkcs12.Pkcs12Adapter(

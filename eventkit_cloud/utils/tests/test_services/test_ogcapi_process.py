@@ -18,9 +18,8 @@ class TestOgcApiProcess(TestCase):
                 "download_credentials": {"cred_var": "user:pass"},
             }
         }
-        self.client = OGCAPIProcess(self.url, self.layer, aoi_geojson=None, slug=None, max_area=0, config= self.config)
+        self.client = OGCAPIProcess(self.url, self.layer, aoi_geojson=None, slug=None, max_area=0, config=self.config)
 
     def test_get_format_field_from_config(self):
-        self.assertEqual(
-            ("products", self.format_field), self.client.get_file_field()
-        )
+        input_config = self.client.process_config["inputs"]
+        self.assertEqual(("products", self.format_field), OGCAPIProcess.get_format_field(input_config))

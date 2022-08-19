@@ -22,6 +22,7 @@ client_type_map: Dict[str, str] = {
 
 DEFAULT_CACHE_TIMEOUT = 60 * 30  # 30 minutes
 
+
 def get_client(provider_type_name):
     provider_type_class = client_type_map.get(provider_type_name) or client_type_map.get("default")
     # instantiate the required class.

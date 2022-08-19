@@ -793,13 +793,12 @@ def ogc_result_task(
     # check to see if file format that we're processing is the same one as the
     # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
-        client: OGCAPIProcess = cast(OGCAPIProcess, data_provider.get_service_client())
-        format_field, format_prop = client.get_format_field()
+        format_field, format_prop = OGCAPIProcess.get_format_field(ogcapi_config["inputs"])
         if format_field:
             export_format = ogcapi_config["inputs"][format_field]
         if format_prop:
             export_format = ogcapi_config["inputs"][format_field][format_prop]
-        if export_format and export_format.lower() == export_format_slug.lower():
+        if export_format and export_format.lower() == export_format_slug.lower() and result.get("ogcapi_process"):
             result["result"] = result["ogcapi_process"]
             return result
         else:
@@ -1735,7 +1734,12 @@ def create_zip_task(
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
             for file in path.rglob("*"):
-                meta_files[str(file)] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
+                relative_metadata_path = Path(file).relative_to(
+                    get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug
+                )
+                meta_files[str(file)] = str(
+                    Path("data", data_provider_task_record_slug, "metadata", relative_metadata_path)
+                )
 
         meta_files.update(get_style_files())
         meta_files.update(get_arcgis_templates(metadata))
@@ -2263,12 +2267,12 @@ def get_ogcapi_data(
     geom: GEOSGeometry = get_geometry(bbox, selection)
 
     try:
-        ogc_process: OGCAPIProcess = cast(
+        client: OGCAPIProcess = cast(
             OGCAPIProcess, export_task_record.export_provider_task.provider.get_service_client()
         )
-        ogc_process.create_job(geom, file_format=export_format_slug)
+        client.create_job(geom, file_format=export_format_slug)
         update_progress(task_uid, progress=25, subtask_percentage=50)
-        download_url = ogc_process.get_job_results()
+        download_url = client.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
     except Exception as e:
@@ -2276,7 +2280,7 @@ def get_ogcapi_data(
 
     update_progress(task_uid, progress=50, subtask_percentage=50)
 
-    process_session = ogc_process.get_process_session(download_url)
+    process_session = client.get_process_session(download_url)
     download_path = download_data(task_uid, download_url, download_path, session=process_session)
     extract_metadata_files(download_path, stage_dir)
 
