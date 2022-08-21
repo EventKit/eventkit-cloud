@@ -13,6 +13,7 @@ from django.shortcuts import redirect, render
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.views.defaults import page_not_found
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
@@ -385,8 +386,8 @@ def internal_error_view(request):
     return render(request, "ui/500.html", {}, status=500)
 
 
-def not_found_error_view(request):
-    return render(request, "ui/404.html", {}, status=404)
+def not_found_error_view(request, exception):
+    return page_not_found(request, exception)
 
 
 def not_allowed_error_view(request):
