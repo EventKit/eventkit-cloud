@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase
+from mapproxy.config.config import load_default_config
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskState
@@ -24,7 +25,6 @@ from eventkit_cloud.utils.mapproxy import (
     get_width,
     mapproxy_config_keys_index,
 )
-from mapproxy.config.config import load_default_config
 
 logger = logging.getLogger(__name__)
 

@@ -11,9 +11,8 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from django.conf import settings
-from requests_pkcs12 import create_pyopenssl_sslcontext
-
 from mapproxy.client import http as mapproxy_http
+from requests_pkcs12 import create_pyopenssl_sslcontext
 
 logger = logging.getLogger(__name__)
 
