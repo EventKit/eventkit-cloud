@@ -175,6 +175,7 @@ class TaskChainBuilder(object):
                         export_format_slug=current_format.slug,
                         bbox=bbox,
                         session_token=session_token,
+                        projection=default_projection,
                         provider_slug=data_provider.slug,
                         export_provider_task_record_uid=data_provider_task_record.uid,
                         worker=worker,
@@ -251,6 +252,7 @@ class TaskChainBuilder(object):
             service_url=data_provider.url,
             config=data_provider.config,
             session_token=session_token,
+            projection=default_projection,
         )
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name

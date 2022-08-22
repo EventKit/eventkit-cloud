@@ -445,7 +445,6 @@ class TestExportTasks(ExportTaskBase):
     def test_mbtiles_export_task(self, mock_request, mock_convert, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        input_projection = 4326
         output_projection = 3857
         driver = "MBTiles"
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
@@ -472,7 +471,6 @@ class TestExportTasks(ExportTaskBase):
             driver=driver,
             input_files=sample_input,
             output_file=expected_output_path,
-            src_srs=input_projection,
             projection=output_projection,
             boundary=None,
             use_translate=True,
@@ -638,6 +636,7 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
+            projection=4326
         )
 
         mock_convert.reset_mock()
@@ -652,6 +651,7 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
+            projection=4326
         )
 
         mock_convert.reset_mock()
@@ -676,6 +676,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
+            projection=4326
         )
         mock_convert.reset_mock()
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir)
@@ -685,6 +686,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
+            projection=4326
         )
 
     def test_pbf_export_task(self):
