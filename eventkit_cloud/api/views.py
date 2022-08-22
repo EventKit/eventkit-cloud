@@ -983,9 +983,7 @@ class DataProviderViewSet(EventkitViewSet):
             )
             .annotate(
                 favorite=Exists(
-                    UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(
-                        user=self.request.user
-                    )
+                    UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
                 )
             )
             .order_by(*self.ordering)
