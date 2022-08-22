@@ -262,7 +262,7 @@ class EventKitClient(object):
             logger.info(response.content.decode())
             raise Exception("Failed to properly cancel provider task: {}".format(provider_uid))
 
-    def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT):
+    def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT, ignore_errors=False):
         finished = False
         response_json = None
         first_check = datetime.now()
@@ -282,18 +282,18 @@ class EventKitClient(object):
             if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
                 finished = True
             last_check = datetime.now()
-            for run_details in response_json:
-                for provider_task in run_details["provider_tasks"]:
-                    for task in provider_task["tasks"]:
-                        if task["status"] == "FAILED":
-                            for error in task.get("errors", []):
-                                for type, message in error.items():
-                                    errors.append(f"{type}: {message}")
+            for provider_task in response_json[0]["provider_tasks"]:
+                for task in provider_task["tasks"]:
+                    if task["status"] == "FAILED":
+                        for error in task.get("errors", []):
+                            for type, message in error.items():
+                                errors.append(f"{type}: {message}")
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception(f"Run timeout ({run_timeout}s) exceeded")
         if errors:
             error_string = "\n".join(errors)
-            raise Exception(f"The run failed with errors: {error_string}")
+            if not ignore_errors:
+                raise Exception(f"The run failed with errors: {error_string}")
         assert response_json is not None
         return response_json[0]
 
