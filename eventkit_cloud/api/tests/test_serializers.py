@@ -49,6 +49,7 @@ class TestSerializers(TestCase):
         drf_serializer = json.loads(
             JSONRenderer().render(DataProviderSerializer(queryset, many=True, context={"request": None}).data)
         )
+
         self.assertCountEqual(readonly_serializer[0], drf_serializer[0])
         data_provider = DataProvider.objects.first()
         readonly_serializer = json.loads(JSONRenderer().render(basic_data_provider_list_serializer(data_provider)))
