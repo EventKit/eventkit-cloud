@@ -506,21 +506,25 @@ class TestStyleFile(TestCase):
 
     def test_create_style_file(self):
         file_mock = MagicMock(spec=File)
-        file_mock.name = "test.sld"
+        file_mock.name = "test1.sld"
         style_model = StyleFile.objects.create(file=file_mock, directory=self.directory, provider=self.data_provider)
-        self.assertEqual(file_mock.name, style_model.file.name)
-        self.assertEqual(self.directory, style_model.directory)
-        self.assertEqual(self.data_provider, style_model.provider)
-        style_model.file.delete()
-        style_model.delete()
+        try:
+            self.assertEqual(file_mock.name, style_model.file.name)
+            self.assertEqual(self.directory, style_model.directory)
+            self.assertEqual(self.data_provider, style_model.provider)
+        finally:
+            style_model.file.delete()
+            style_model.delete()
 
     def test_data_provider_relation(self):
         file_mock = MagicMock(spec=File)
-        file_mock.name = "test.sld"
+        file_mock.name = "test2.sld"
         style_model = StyleFile.objects.create(
             file=file_mock, directory=self.directory, provider=self.data_provider, style_type=StyleType.ARCGIS.value
         )
         style = self.data_provider.style.get(style_type=StyleType.ARCGIS.value)
-        self.assertEqual(style, style_model)
-        style_model.file.delete()
-        style_model.delete()
+        try:
+            self.assertEqual(style, style_model)
+        finally:
+            style_model.file.delete()
+            style_model.delete()

@@ -558,6 +558,15 @@ class Topic(UIDMixin, TimeStampedModelMixin):
         return "{0}".format(self.name)
 
 
+class UserFavoriteProduct(TimeStampedModelMixin):
+    """
+    Model for a user's favorite product
+    """
+
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="user_favorites")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
+
+
 class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     """
     Model for Style File

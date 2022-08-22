@@ -1068,6 +1068,10 @@ def basic_data_provider_serializer(
         serialized_data_provider["download_count_rank"] = getattr(data_provider, "download_count_rank")
     if hasattr(data_provider, "download_date_rank"):
         serialized_data_provider["download_date_rank"] = getattr(data_provider, "download_date_rank")
+    if hasattr(data_provider, "favorite"):
+        serialized_data_provider["favorited"] = getattr(data_provider, "favorite")
+    else:
+        serialized_data_provider["favorited"] = False
     return serialized_data_provider
 
 

@@ -16,7 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import F, Func, OuterRef, Q, QuerySet, Subquery, Window
+from django.db.models import Exists, F, Func, OuterRef, Q, QuerySet, Subquery, Window
 from django.db.models.functions import DenseRank
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -114,6 +114,7 @@ from eventkit_cloud.jobs.models import (
     RegionalPolicy,
     RegionMask,
     Topic,
+    UserFavoriteProduct,
     UserJobActivity,
     VisibilityState,
 )
@@ -970,6 +971,7 @@ class DataProviderViewSet(EventkitViewSet):
             .order_by("-downloaded_at")
             .values("downloaded_at")[:1]
         )
+
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
@@ -979,8 +981,62 @@ class DataProviderViewSet(EventkitViewSet):
             .annotate(
                 download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
             )
+            .annotate(
+                favorite=Exists(
+                    UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(
+                        Q(user=self.request.user) | Q(user=None)
+                    )
+                )
+            )
             .order_by(*self.ordering)
         )
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+
+        Used to update user favorite.
+
+        Request data can be posted as `application/json`.
+
+        * request: the HTTP request in JSON.
+
+        Example:
+
+                {"favorites": {
+                    "osm": true,
+                    "usgs": false
+                    }
+                }
+
+        Expected Response Example:
+                {
+                    "added": ["osm"],
+                    "removed": ["usgs"]
+                }
+        """
+
+        queryset = self.get_queryset()
+        user = request.user
+        favorites = request.data.get("favorites")
+        response_data = {}
+        added = []
+        removed = []
+        for product_slug, is_favorite in favorites.items():
+            if is_favorite:
+                provider = queryset.objects.get(slug=product_slug)
+                user_favorite_product, created = UserFavoriteProduct.objects.get_or_create(provider=provider, user=user)
+                if created:
+                    added.append(product_slug)
+            else:
+                UserFavoriteProduct.objects.filter(provider=provider).delete()
+                removed.append(product_slug)
+
+        if added:
+            response_data["added"] = added
+        if removed:
+            response_data["removed"] = removed
+
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
