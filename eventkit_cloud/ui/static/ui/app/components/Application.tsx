@@ -20,7 +20,7 @@ import NotificationsDropdown from './Notification/NotificationsDropdown';
 import Loadable from 'react-loadable';
 import {connectedReduxRedirect} from 'redux-auth-wrapper/history4/redirect';
 import createBrowserHistory from '../utils/history';
-import {Redirect, Route, RouteComponentProps, Router} from 'react-router';
+import {Redirect, Route, RouteComponentProps, Router, Switch} from 'react-router';
 import {routerActions} from 'connected-react-router';
 import debounce from 'lodash/debounce';
 import PageLoading from './common/PageLoading';
@@ -277,8 +277,9 @@ const NotificationsPage = Loadable({
 const history = createBrowserHistory;
 const routes = (
     <Router history={history}>
-        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
-        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
+        <Switch >
+        <Route path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
+        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
 
         <Route path="/logout" component={Logout}/>
         <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
@@ -299,6 +300,7 @@ const routes = (
                 <Redirect to="/dashboard"/>
             )}
         />
+        </Switch>
     </Router>
 );
 
