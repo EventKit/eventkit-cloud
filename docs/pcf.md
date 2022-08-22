@@ -1,85 +1,74 @@
-## Deploying on Pivotal Cloud Foundry
+# Deploying on Pivotal Cloud Foundry
 
-The application can be deployed on Pivotal Cloud Foundry.  However some special considerations need to be made. 
+The application can be deployed on Pivotal Cloud Foundry.  However some special considerations need to be made.
 
 The python buildpack uses conda to install dependencies.  Prior to pushing your PCF application you need to build the
-conda dependencies and store them in a nexus repo.  Then list your custom repo (and/or public repos) in the 
+conda dependencies and store them in a nexus repo.  Then list your custom repo (and/or public repos) in the
 environment.yml file.  
 
-### Settings
+## Settings
 
-If wishing to use some PCF features to autoscale celery the following settings can be provided to the environment. 
+If wishing to use some PCF features to autoscale celery the following settings can be provided to the environment.
 Additionally you need to start celery with at least one process listening to the `scale` queue.
 
-```
-PCF_SCALING=<True|False>
-```
+- `PCF_SCALING=<True|False>`
+
 Enable or disable Celery scaling on PCF.
 
-```
-PCF_API_URL=https://pcf.api.test/
-```
+- `PCF_API_URL=https://pcf.api.test/`
+
 A PCF API url to access the hosted app.
-```
-PCF_USER=PCF.USER
-```
+
+- `PCF_USER=PCF.USER`
+
 A PCF User account who has permission to view the apps and run tasks in the org.
 
-```
-PCF_PASS=<Secret>
-```
+- `PCF_PASS=<Secret>`
+
 The password for the PCF_USER.
 
-```
-PCF_ORG=My_Org
-```
+- `PCF_ORG=My_Org`
+
 The org hosting the PCF application
 
-```
-PCF_SPACE=My_Space
-```
+- `PCF_SPACE=My_Space`
+
 The space hosting the PCF application
 
-```
-PCF_APP_NAME=My_App_Name
-```
-The application to run the CELERY_TASKS on when the scale task is executed.  By default this will be the 
-app that is listening to the scale queue. 
+- `PCF_APP_NAME=My_App_Name`
 
-```
-CELERY_MAX_TASKS_MEMORY=<integer in mb>
-```
-The amount of memory that shouldn't be exceeded when running tasks.  Ideally enough memory should be set to allow all 
-queues to run at one time, about 10240 with the default settings. 
+The application to run the CELERY_TASKS on when the scale task is executed.  By default this will be the
+app that is listening to the scale queue.
 
-```
-CELERY_TASK_APP=<app name>
-```
+- `CELERY_MAX_TASKS_MEMORY=<integer in mb>`
+
+The amount of memory that shouldn't be exceeded when running tasks.  Ideally enough memory should be set to allow all
+queues to run at one time, about 10240 with the default settings.
+
+- `CELERY_TASK_APP=<app name>`
+
 If desired, the Celery task application name can be set, otherwise it will default to `application_name`.
 
-```
-CELERY_GROUP_NAME=<app name>
-```
+- `CELERY_GROUP_NAME=<app name>`
+
 The group name for the scheduled PCF tasks for celery.
 
-```
-CELERY_DEFAULT_TASK_SETTINGS='{"CELERY_MAX_DEFAULT_TASKS": 3,
+```json
+CELERY_DEFAULT_TASK_SETTINGS='{ "CELERY_MAX_DEFAULT_TASKS": 3,
                                 "CELERY_DEFAULT_DISK_SIZE": 3072,
-                                "CELERY_DEFAULT_MEMORY_SIZE": 3072}'
+                                "CELERY_DEFAULT_MEMORY_SIZE": 3072
+                              }'
 ```
 
 A dictionary of settings to use to scale control the sizes and limits on the celery workers.
 
-#### CELERY TASKS
+## CELERY TASKS
 
-```
-CELERY_TASKS=<json_object>
-```
+- `CELERY_TASKS=<json_object>`
 
 `CELERY_TASKS` is optional. A JSON can be passed in with the following structure.
 
 ```json
-
 { "<queue_name>" : 
   { "command" : "<celery command to call>",
     "disk" : "<An integer disk size to use in mb>",
@@ -90,6 +79,7 @@ CELERY_TASKS=<json_object>
 ```
 
 For example the default looks something like...
+
 ```json
 {
     "$CELERY_GROUP_NAME": {
@@ -123,8 +113,9 @@ For example the default looks something like...
 }
 ```
 
-The `disk` and `memory` values can be set globally, instead of having to set them for each task. 
-```
+The `disk` and `memory` values can be set globally, instead of having to set them for each task.
+
+```env
 CELERY_TASK_DISK=<disk_size_in_MB>
 CELERY_TASK_MEMORY=<memory_in_MB>
 ```
