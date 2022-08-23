@@ -55,13 +55,12 @@ class TestRegionalJustificationHelpers(TestCase):
     def test_get_valid_regional_justification(self):
         with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=None):
             self.job.user.last_login = timezone.now()
-            self.downloadable = FileProducingTaskResult.objects.create(
-                download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
-            )
-            self.task.result = self.downloadable
+            downloadable = FileProducingTaskResult(file=f"{self.run.uid}/file.txt")
+            downloadable.save(write_file=False)
+            self.task.result = downloadable
             self.task.save()
 
-            self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable)
+            self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=downloadable)
             self.data_provider_task_records = [self.data_provider_task_record]
             self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
 

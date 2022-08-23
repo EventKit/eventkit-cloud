@@ -12,10 +12,12 @@ services:
       - postgis
       - rabbitmq
       - memcached
+      - minio
     links:
       - postgis
       - rabbitmq
       - memcached
+      - minio
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
@@ -45,7 +47,7 @@ services:
       - PYTHONWARNINGS
       - SSL_VERIFICATION
       - MAX_EXPORTRUN_EXPIRATION_DAYS
-      - USE_S3
+      - AWS_ENDPOINT_URL
       - AWS_STORAGE_BUCKET_NAME
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
@@ -98,7 +100,7 @@ services:
       - ADMIN_ROOT
       - JOB_MAX_EXTENT=1000000
     extra_hosts:
-      - "${SITE_NAME}:${SITE_IP}"
+      - "${SITE_NAME}:host-gateway"
   map:
     image: eventkit/eventkit-base:1.14.0-0
     volumes:
@@ -133,7 +135,7 @@ services:
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
-      - USE_S3
+      - AWS_ENDPOINT_URL
       - AWS_STORAGE_BUCKET_NAME
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
@@ -141,7 +143,7 @@ services:
       - SECRET_KEY
       - EVENTKIT_CERT_PASS
     extra_hosts:
-      - "${SITE_NAME}:${SITE_IP}"
+      - "${SITE_NAME}:host-gateway"
   memcached:
     image: eventkit/eventkit-base:1.14.0-0
     expose:
@@ -159,10 +161,15 @@ services:
       - postgis
       - rabbitmq
       - eventkit
+      - minio
     links:
       - postgis
       - rabbitmq
     environment:
+      - AWS_ENDPOINT_URL
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
@@ -203,7 +210,7 @@ services:
       - ROCKETCHAT_NOTIFICATIONS
       - JOB_MAX_EXTENT=1000000
     extra_hosts:
-      - "${SITE_NAME}:${SITE_IP}"
+      - "${SITE_NAME}:host-gateway"
     command: bash ./scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:14
@@ -240,7 +247,6 @@ services:
     volumes:
       - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./exports_download:/var/lib/eventkit/exports_download
       - ./exports_stage:/var/lib/eventkit/exports_stage
       - ./site:/var/lib/eventkit/site
     links:
@@ -270,7 +276,7 @@ services:
       - "49555:5555"
     command: celery flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
     extra_hosts:
-      - "${SITE_NAME}:${SITE_IP}"
+      - "${SITE_NAME}:host-gateway"
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -310,9 +316,21 @@ services:
     expose:
       - "9229"
     extra_hosts:
-      - "${SITE_NAME}:${SITE_IP}"
+      - "${SITE_NAME}:host-gateway"
     #if wishing to use the dev server uncomment this or run it via the command line
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    volumes:
+      - "minio_data:/data"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=AWS_ID
+      - MINIO_ROOT_PASSWORD=AWS_SECRET
 volumes:
   postgis_database:
   rabbitmq:
+  minio_data:

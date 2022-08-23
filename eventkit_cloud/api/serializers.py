@@ -12,10 +12,8 @@ import logging
 import pickle
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import ParseResult, urlsplit
 
 from audit_logging.models import AuditEvent
-from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
@@ -63,7 +61,6 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
-from eventkit_cloud.utils.s3 import get_presigned_url
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -232,22 +229,10 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     def get_preview_url(self, obj):
-        from urllib.parse import ParseResult, urlsplit
 
         preview = obj.preview
         if preview is not None:
-            request = urlsplit(self.context["request"].build_absolute_uri())
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(preview.download_url)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(
-                scheme=request.scheme,
-                netloc=request.netloc,
-                path=f"{preview.download_url}",
-                params="",
-                query="",
-                fragment="",
-            ).geturl()
+            return preview.file.url
         else:
             return ""
 
@@ -1016,19 +1001,7 @@ def basic_data_provider_serializer(
     def get_thumbnail_url(obj):
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(thumbnail.download_url, expires=3000)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            if request:
-                split_request = urlsplit(request.build_absolute_uri())
-                return ParseResult(
-                    scheme=split_request.scheme,
-                    netloc=split_request.netloc,
-                    path=f"{thumbnail.download_url}",
-                    params="",
-                    query="",
-                    fragment="",
-                ).geturl()
+            return thumbnail.file.url
         return ""
 
     serialized_data_provider = {
@@ -1195,24 +1168,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
         return export_formats.distinct()
 
     def get_thumbnail_url(self, obj):
-        from urllib.parse import ParseResult, urlsplit
 
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            request = urlsplit(self.context["request"].build_absolute_uri())
-            if getattr(settings, "USE_S3", False):
-                return get_presigned_url(thumbnail.download_url, expires=3000)
-            # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(
-                scheme=request.scheme,
-                netloc=request.netloc,
-                path=f"{thumbnail.download_url}",
-                params="",
-                query="",
-                fragment="",
-            ).geturl()
-        else:
-            return ""
+            return thumbnail.file.url
+        return ""
 
     @staticmethod
     def get_metadata(obj):

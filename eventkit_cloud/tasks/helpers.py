@@ -6,7 +6,6 @@ import os
 import pathlib
 import pickle
 import re
-import shutil
 import signal
 import tempfile
 import time
@@ -20,7 +19,7 @@ from functools import reduce
 from json import JSONDecodeError
 from operator import itemgetter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 from xml.dom import minidom
 from zipfile import ZipFile
 
@@ -37,13 +36,13 @@ from numpy import linspace
 from requests import Response, Session
 
 from eventkit_cloud.core.helpers import get_or_update_session, handle_auth
-from eventkit_cloud.jobs.enumerations import GeospatialDataType
+from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
+from eventkit_cloud.jobs.models import StyleFile
 from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRATION, set_cache_value
-from eventkit_cloud.tasks.enumerations import PREVIEW_TAIL, UNSUPPORTED_CARTOGRAPHY_FORMATS, Directory
+from eventkit_cloud.tasks.enumerations import UNSUPPORTED_CARTOGRAPHY_FORMATS, Directory
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.tasks.task_process import TaskProcess
-from eventkit_cloud.utils import s3
 from eventkit_cloud.utils.arcgis.arcgis_layer import ArcGISLayer
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
@@ -66,25 +65,6 @@ def get_run_staging_dir(run_uid):
     return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(run_uid))
 
 
-def get_download_path(folder_name):
-    """
-    The download dir is where all files are stored after they are processed.
-    It is a unique space to ensure that files aren't being improperly modified.
-    :param folder_name: The unique value to store the directory for the data.
-    :return: The path to the directory.
-    """
-    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(folder_name))
-
-
-def get_download_url(file_name):
-    """
-    A URL path to the run data
-    :param file_name: The unique identifier for the data.
-    :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
-    """
-    return f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(file_name)}"
-
-
 def get_provider_staging_dir(run_uid, provider_slug):
     """
     The provider staging dir is where all files are stored while they are being processed.
@@ -95,37 +75,6 @@ def get_provider_staging_dir(run_uid, provider_slug):
     """
     run_staging_dir = get_run_staging_dir(run_uid)
     return os.path.join(run_staging_dir, provider_slug)
-
-
-def get_provider_staging_preview(run_uid, provider_slug):
-    """
-    The provider staging dir is where all files are stored while they are being processed.
-    It is a unique space to ensure that files aren't being improperly modified.
-    :param run_uid: The unique id for the run.
-    :param provider_slug: The unique value to store the directory for the provider data.
-    :return: The path to the provider directory.
-    """
-    run_staging_dir = get_run_staging_dir(run_uid)
-    return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
-
-
-def get_archive_data_path(provider_slug=None, file_name=None, archive=True):
-    """
-    Gets a datapath for the files to be placed in the zip file.
-    :param provider_slug: An optional unique value to store files.
-    :param file_name: The name of a file.
-    :return:
-    """
-    if archive:
-        file_path = Directory.DATA.value
-    else:
-        file_path = ""
-
-    if provider_slug:
-        file_path = os.path.join(file_path, provider_slug)
-    if file_name:
-        file_path = os.path.join(file_path, file_name)
-    return file_path
 
 
 def default_format_time(date_time):
@@ -660,16 +609,32 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
         pathlib.Path(file_info["file_path"]).parent.joinpath(f"{data_provider_task_record.provider.slug}.lyrx")
     )
 
-    service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
     metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
-    arcgis_layer = ArcGISLayer(
-        data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
-    )
-    doc = arcgis_layer.get_cim_layer_document()
+    try:
+        style_file = data_provider_task_record.provider.styles.get(style_type=StyleType.ARCGIS.value)
+        style_info = json.loads(style_file.file.read())
+        doc = update_style_file_path(style_info, os.path.basename(file_info["file_path"]))
+    except StyleFile.DoesNotExist:
+        service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
+        arcgis_layer = ArcGISLayer(
+            data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
+        )
+        doc = arcgis_layer.get_cim_layer_document()
 
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
     return {layer_filepath_stage: layer_filepath_archive}
+
+
+def update_style_file_path(style_info, file_path):
+    wcs = "AUTHENTICATION_MODE=OSA;DATABASE=" + file_path
+    try:
+        for layer in style_info["layerDefinitions"]:
+            if layer["type"] in ["CIMFeatureLayer"]:
+                layer["featureTable"]["dataConnection"]["workspaceConnectionString"] = wcs
+        return style_info
+    except ValueError:
+        return
 
 
 def get_arcgis_metadata(metadata):
@@ -750,7 +715,7 @@ def get_message_count(queue_name: str, message_type: str = "messages") -> int:
     :param message_type: The type of message you want.  e.g. messages or messages_ready
     :return: An integer count of pending messages.
     """
-    broker_api_url = getattr(settings, "BROKER_API_URL")
+    broker_api_url = settings.CELERY_BROKER_API_URL
     queue_class = "queues"
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
@@ -790,10 +755,9 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
         run_zip_file.message = f"Adding {export_run_file.file.name} to zip archive."
         export_run_file_path = os.path.join(settings.EXPORT_RUN_FILES, export_run_file.file.name)
 
-        if settings.USE_S3:
-            request = requests.get(export_run_file.file.url)
-            with open(export_run_file_path, "wb+") as file:
-                file.write(request.content)
+        request = requests.get(export_run_file.file.url)
+        with open(export_run_file_path, "wb+") as file:
+            file.write(request.content)
 
         extra_directory = export_run_file.directory or ""
         if export_run_file.provider:
@@ -1403,7 +1367,6 @@ def create_license_file(data_provider_task_record: DataProviderTaskRecord) -> Di
 
 
 def download_run_directory(old_run: ExportRun, new_run: ExportRun):
-    download_dir = get_download_path(old_run.uid)
     old_run_dir = get_run_staging_dir(old_run.uid)
     new_run_dir = get_run_staging_dir(new_run.uid)
     cache_key = str(new_run.uid)
@@ -1421,56 +1384,13 @@ def download_run_directory(old_run: ExportRun, new_run: ExportRun):
             logger.error(
                 f"Could not copy run data from staging directory {old_run_dir} it might have already been removed."
             )
-        if getattr(settings, "USE_S3", False):
-            download_folder_from_s3(str(old_run.uid), output_dir=new_run_dir)
-        else:
-            try:
-                dir_util.copy_tree(download_dir, new_run_dir)
-            except Exception as e:
-                logger.error(e)
-                logger.error(
-                    f"Could not copy run data from download directory {download_dir} "
-                    f"it might have already been removed."
-                )
+        download_folder_from_s3(str(old_run.uid), output_dir=new_run_dir)
         # TODO: Use ignore on copytree when switching to shutil in python 3.8.
         delete_files = glob.glob(os.path.join(new_run_dir, "run/*.zip"))
         for delete_file in delete_files:
             os.unlink(delete_file)
         cache.delete(cache_key)
     return new_run_dir
-
-
-def make_file_downloadable(file_path: Path, skip_copy: bool = False) -> Tuple[Path, str]:
-    """Construct the filesystem location and url needed to download the file at filepath.
-    Copy filepath to the filesystem location required for download.
-    @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
-    @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
-        generally can be ignored
-    @return A url to reach filepath.
-    """
-
-    # File name is the relative path, e.g. run/provider_slug/file.ext.
-    # File path is an absolute path e.g. /var/lib/eventkit/export_stage/run/provider_slug/file.ext.
-    file_name = Path(file_path)
-    if Path(settings.EXPORT_STAGING_ROOT) in file_name.parents:
-        file_name = file_name.relative_to(settings.EXPORT_STAGING_ROOT)
-
-    download_url = get_download_url(file_name)
-
-    if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(file_path)
-    else:
-
-        download_path = get_download_path(file_name)
-        make_dirs(os.path.dirname(download_path))
-
-        if not skip_copy:
-            if not os.path.isfile(file_path):
-                logger.error(f"Cannot make file {file_path} downloadable because it does not exist.")
-            else:
-                shutil.copy(file_path, download_path)
-
-    return file_name, download_url
 
 
 @contextmanager

@@ -4,7 +4,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -164,6 +164,7 @@ class TestJobViewSet(APITestCase):
                     "level_to": 1,
                     "url": "http://coolproviderurl.test",
                     "preview_url": "http://coolproviderurl.test",
+                    "export_provider_type_id": 1,
                 }
             ],
             "user": serializers.serialize("json", [self.user]),
@@ -1146,7 +1147,16 @@ class TestRunZipFileViewSet(APITestCase):
         )
 
         filename = "test.zip"
-        self.downloadable_file = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        storage_mock = MagicMock(
+            get_valid_name=Mock(return_value=filename),
+            save=Mock(return_value=filename),
+            url=Mock(return_value=filename),
+            size=Mock(return_value=20),
+        )
+        with patch("builtins.open", mock_open(read_data="data")), patch(
+            "django.core.files.storage.default_storage._wrapped", storage_mock
+        ):
+            self.downloadable_file = FileProducingTaskResult.objects.create(file=filename)
         self.task = ExportTaskRecord.objects.create(
             export_provider_task=self.data_provider_task_record,
             name="Shapefile Export",
@@ -1468,9 +1478,15 @@ class TestLicenseViewSet(APITestCase):
             License.objects.create(slug="test0", name="name0", text="text0"),
             License.objects.create(slug="test1", name="name1", text="text1"),
         ]
+        data_provider_type = DataProviderType.objects.create(type_name="test")
+
         self.data_providers = [
-            DataProvider.objects.create(name="test0", slug="test0", license=self.licenses[0]),
-            DataProvider.objects.create(name="test1", slug="test1", license=self.licenses[1]),
+            DataProvider.objects.create(
+                name="test0", slug="test0", license=self.licenses[0], export_provider_type=data_provider_type
+            ),
+            DataProvider.objects.create(
+                name="test1", slug="test1", license=self.licenses[1], export_provider_type=data_provider_type
+            ),
         ]
         self.attribute_class = AttributeClass.objects.create(
             name="test", slug="test", exclude={"username__in": self.user.username}
@@ -1546,10 +1562,17 @@ class TestTopicViewSet(APITestCase):
             Topic.objects.create(slug="topicslug0", name="topicname0", topic_description="topicdesc0"),
             Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
         ]
+        data_provider_type = DataProviderType.objects.create(type_name="test")
         self.data_providers = [
-            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
-            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
-            DataProvider.objects.create(name="providername2", slug="providerslug2"),
+            self.topics[0].providers.create(
+                name="providername0", slug="providerslug0", export_provider_type=data_provider_type
+            ),
+            self.topics[1].providers.create(
+                name="providername1", slug="providerslug1", export_provider_type=data_provider_type
+            ),
+            DataProvider.objects.create(
+                name="providername2", slug="providerslug2", export_provider_type=data_provider_type
+            ),
         ]
         for topic in self.topics:
             topic.providers.add(self.data_providers[-1])

@@ -12,7 +12,6 @@ from notifications.models import Notification
 
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.core.models import (
-    DownloadableMixin,
     FileFieldMixin,
     LowerCaseCharField,
     TimeStampedModelMixin,
@@ -80,7 +79,7 @@ class NotificationModelMixin(models.Model):
         abstract = True
 
 
-class FileProducingTaskResult(UIDMixin, DownloadableMixin, NotificationModelMixin):
+class FileProducingTaskResult(UIDMixin, FileFieldMixin, NotificationModelMixin):
     """
     A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
@@ -244,7 +243,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         # since cloning and managing datapacks is mostly done at the run level.  If managing data fell to the data
         # provider or task level, then it doesn't make sense to have a
         # complicated helper function like this for each model.
-        from eventkit_cloud.tasks.helpers import download_run_directory, make_file_downloadable
+        from eventkit_cloud.tasks.helpers import download_run_directory
 
         previous_run = self.parent_run
         download_run_directory(previous_run, self)
@@ -267,10 +266,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
                 if not file_model:
                     continue
                 # strip the old run uid off the filename and add a new one.
-                filename = Path(str(self.uid)).joinpath(Path(file_model.filename).relative_to(str(previous_run.uid)))
+                filename = Path(str(self.uid)).joinpath(Path(file_model.file.name).relative_to(str(previous_run.uid)))
+                file_model.file = str(filename)
                 file_model.filename = str(filename)
-                filename, download_url = make_file_downloadable(file_model.get_file_path(staging=True))
-                file_model.download_url = download_url
                 file_model.save()
 
         self.is_cloning = False
@@ -290,6 +288,13 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin, FileFieldMixin):
         blank=True,
         help_text="An optional data provider to associate the file with.",
     )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            export_run_file = ExportRunFile.objects.get(id=self.id)
+            if export_run_file.file != self.file:
+                export_run_file.file.delete(save=False)
+        super(ExportRunFile, self).save(*args, **kwargs)
 
 
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):

@@ -34,11 +34,11 @@ Change the default configuration for the admin page.
 ### Storage
 
 #### S3 Storage
-If you want your export files to be stored on S3 rather than locally add:
-<pre>USE_S3=True
-AWS_STORAGE_BUCKET_NAME='my-bucket'
-AWS_ACCESS_KEY_ID='my-access-key'
-AWS_SECRET_ACCESS_KEY='my-secret-key'</pre>
+By default the dev environmnet uses minio, change these settings to use AWS:
+AWS_ENDPOINT_URL="http://minio:9000"
+AWS_STORAGE_BUCKET_NAME='eventkit'
+AWS_ACCESS_KEY_ID='AWS_ID'
+AWS_SECRET_ACCESS_KEY='AWS_SECRET'</pre>
 
 #### Database
 To use your own database connection string add:

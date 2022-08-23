@@ -194,7 +194,6 @@ def get_or_update_session(*args, **session_info):
         adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-
     if cert_path and cert_pass:
         try:
             logger.debug(f"setting {cert_path} for session")

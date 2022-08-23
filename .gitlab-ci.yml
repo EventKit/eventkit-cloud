@@ -5,14 +5,20 @@ stages:
   - results
 
 variables:
-  MOUNT_POINT: $CI_PROJECT_DIR
+  AWS_ACCESS_KEY_ID: AWS_ID
+  AWS_ENDPOINT_URL: "http://minio:9000"
+  AWS_SECRET_ACCESS_KEY: AWS_SECRET
+  AWS_STORAGE_BUCKET_NAME: eventkit
+  BASE_URL: "http://host.docker.internal:6080"
   BRANCH: "master"
+  CURL_CA_BUNDLE: "./conda/cacert.pem"
+  MOUNT_POINT: $CI_PROJECT_DIR
   NEXUS_BASE_URL: $NEXUS_BASE_URL
   NEXUS_REPO: "EventKit_eventkit"
-  BASE_URL: "http://host.docker.internal:6080"
+  REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
+  SECRET_KEY: "TESTING"
   SITE_NAME: "host.docker.internal"
   SITE_IP: "127.0.0.1"
-  SECRET_KEY: "TESTING"
   VERSION: "1.14.0"
 
 image:
@@ -36,8 +42,12 @@ pending-tests:
   image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
     entrypoint: [ "" ]
+  variables:
+    CURL_CA_BUNDLE: "./conda/cacert.pem"
+    REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   before_script:
     - . activate conda_env
+    - pip install -e .
 
 .lint:
   stage: lint
@@ -77,7 +87,7 @@ mypy:
     - .back
     - .lint
   script:
-    - mypy eventkit_cloud
+    - mypy --no-incremental eventkit_cloud
 
 migrations:
   extends:
@@ -97,7 +107,8 @@ unit-back:
     - dind
   script:
     - python scripts/ci_utils.py
-    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+    - mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
+    - echo "id $AWS_ACCESS_KEY_ID url $AWS_ENDPOINT_URL secret $AWS_SECRET_ACCESS_KEY bucket $AWS_STORAGE_BUCKET_NAME"
     - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
 
 unit-front:
@@ -116,7 +127,7 @@ unit-front:
 #  script:
 #    - python scripts/ci_utils.py
 #    - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
-#    - mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
+#    - mkdir -p exports_stage && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
 #    - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
 #    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
 #    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?

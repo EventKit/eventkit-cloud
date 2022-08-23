@@ -25,7 +25,6 @@ from eventkit_cloud.core.helpers import get_or_update_session
 from eventkit_cloud.core.models import (
     AttributeClass,
     CachedModelMixin,
-    DownloadableMixin,
     FileFieldMixin,
     GroupPermissionLevel,
     LowerCaseCharField,
@@ -56,7 +55,7 @@ def get_upload_path(instance, *args):
     return path
 
 
-class MapImageSnapshot(DownloadableMixin, UIDMixin):
+class MapImageSnapshot(FileFieldMixin, UIDMixin):
     """
     A MapImageSnapshot is an image snapshot capturing a map in a particular state or time.
     """
@@ -396,15 +395,17 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 self.slug = self.slug[0:39]
         cache.delete(f"base-config-{self.slug}")
 
-        self.update_export_formats()
+        if self.export_provider_type and "ogcapi-process" in self.export_provider_type.type_name:
+            self.update_export_formats()
 
         super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
 
     def update_export_formats(self):
         # TODO: Refactor utils/ogc_apiprocess into services.
-        from eventkit_cloud.utils.ogcapi_process import get_process_formats
+        from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 
-        process_formats = get_process_formats(self)
+        client: OGCAPIProcess = cast(OGCAPIProcess, self.get_service_client())
+        process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)
@@ -572,7 +573,7 @@ class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     Model for Style File
     """
 
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="style")
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="styles")
     STYLE_TYPES = [
         (StyleType.ARCGIS.value, "ArcGIS Layer"),
         (StyleType.QGIS.value, "QGIS Layer"),

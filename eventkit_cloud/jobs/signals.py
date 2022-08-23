@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.signals import user_logged_in
 from django.core.cache import cache
-from django.db.models.signals import post_save, pre_delete, pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch.dispatcher import receiver
 
 from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
@@ -18,11 +18,9 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionalPolicy,
 )
-from eventkit_cloud.tasks.helpers import make_file_downloadable
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.image_snapshot import save_thumbnail
 from eventkit_cloud.utils.mapproxy import clear_mapproxy_config_cache, get_mapproxy_config_template
-from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
 
@@ -55,24 +53,16 @@ def job_post_save(sender, instance, created, **kwargs):
         jp.save()
 
 
-@receiver(pre_delete, sender=MapImageSnapshot)
-def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
-    """
-    Delete associated file when deleting a MapImageSnapshot.
-    """
-    if getattr(settings, "USE_S3", False):
-        delete_from_s3(download_url=instance.download_url)
-    url_parts = instance.download_url.split("/")
-    full_file_download_path = "/".join([settings.IMAGES_DOWNLOAD_ROOT.rstrip("/"), url_parts[-2], url_parts[-1]])
-    try:
-        os.remove(full_file_download_path)
-        logger.info("The file {0} was deleted.".format(full_file_download_path))
-    except OSError:
-        logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
+# @receiver(pre_delete, sender=MapImageSnapshot)
+# def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
+#     """
+#     Delete associated file when deleting a MapImageSnapshot.
+#     """
+#     delete_from_s3(download_url=instance.download_url)
 
 
 @receiver(pre_save, sender=DataProvider)
-def provider_pre_save(sender, instance, **kwargs):
+def provider_pre_save(sender, instance: DataProvider, **kwargs):
     """
     This method is executed whenever a DataProvider is created or updated.
     """
@@ -99,18 +89,10 @@ def provider_pre_save(sender, instance, **kwargs):
                     os.path.join(provider_image_dir, f"{get_provider_thumbnail_name(instance.slug)}.jpg"),
                 )
 
-                # TODO: This is redundant to code in export_tasks.py after __call__
-                filename, download_url = make_file_downloadable(filepath, skip_copy=False)
-                stat = os.stat(filepath)
-                size = stat.st_size / 1024 / 1024.00
-
                 if instance.thumbnail:
-                    prev_thumb = instance.thumbnail
-                    instance.thumbnail = None
-                    prev_thumb.delete()
-                instance.thumbnail = MapImageSnapshot.objects.create(
-                    filename=str(filename), size=size, download_url=download_url
-                )
+                    instance.thumbnail.delete()
+                instance.thumbnail = MapImageSnapshot.objects.create(file=str(filepath))
+                instance.save()
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
             # a thumbnail creation error occurs.

@@ -4,11 +4,10 @@ import json
 import logging
 import os
 import uuid
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.core.files import File
 from django.test import TestCase
 from django.utils import timezone
 
@@ -37,6 +36,13 @@ from eventkit_cloud.tasks.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_file_producing_export_task(run_uid):
+    file_name = os.path.join(str(run_uid), "file.txt")
+    fptr = FileProducingTaskResult(file=file_name)
+    fptr.save(write_file=False)
+    return fptr
 
 
 class TestExportRun(TestCase):
@@ -149,28 +155,33 @@ class TestExportRun(TestCase):
         mock_download_data.assert_called_once()
 
     @patch("eventkit_cloud.tasks.helpers.download_run_directory")
-    @patch("eventkit_cloud.tasks.helpers.make_file_downloadable")
-    def test_download_data(self, mock_make_file_downloadable, mock_download_run_directory):
+    def test_download_data(self, mock_download_run_directory):
         job = Job.objects.first()
         parent_run = ExportRun.objects.create(job=job, user=job.user)
         run = ExportRun.objects.create(job=job, user=job.user, parent_run=parent_run)
-        mock_make_file_downloadable.return_value = ["string1", "string2"]
 
         filename = f"{parent_run.uid}/test.pdf"
-        file_model = MapImageSnapshot.objects.create(filename=filename, size=100, download_url="download.url")
-        export_provider_task = DataProviderTaskRecord.objects.create(
+        file_model = MapImageSnapshot(file=filename)
+        file_model.save(write_file=False)
+        data_provider_task_record = DataProviderTaskRecord.objects.create(
             run=run, provider=DataProvider.objects.first(), preview=file_model
         )
 
-        ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=str(uuid.uuid4()))
-
-        run.download_data()
+        ExportTaskRecord.objects.create(export_provider_task=data_provider_task_record, uid=str(uuid.uuid4()))
+        storage_mock = MagicMock(
+            get_valid_name=Mock(return_value=filename),
+            save=Mock(return_value=filename),
+            url=Mock(return_value=filename),
+            size=Mock(return_value=20),
+        )
+        with patch("builtins.open", mock_open(read_data="data")), patch(
+            "django.core.files.storage.default_storage._wrapped", storage_mock
+        ):
+            run.download_data()
         mock_download_run_directory.assert_called_once_with(parent_run, run)
-        mock_make_file_downloadable.assert_called_once_with(f"/var/lib/eventkit/exports_stage/{run.uid}/test.pdf")
 
 
 class TestRunZipFile(TestCase):
-
     fixtures = ("osm_provider.json",)
 
     @classmethod
@@ -215,27 +226,14 @@ class TestExportRunFile(TestCase):
     fixtures = ("osm_provider.json",)
 
     def test_create_export_run_file(self):
-        file_mock = MagicMock(spec=File)
-        file_mock.name = "test.pdf"
         directory = "test"
+        file_name = "test.zip"
         provider = DataProvider.objects.first()
-        file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
-        self.assertEqual(file_mock.name, file_model.file.name)
+        file_model = ExportRunFile(file=file_name, directory=directory, provider=provider)
+        file_model.save(write_file=False)
+        self.assertEqual(file_name, file_model.file.name)
         self.assertEqual(directory, file_model.directory)
         self.assertEqual(provider, file_model.provider)
-        file_model.file.delete()
-
-    def test_delete_export_run_file(self):
-        file_mock = MagicMock(spec=File)
-        file_mock.name = "test.pdf"
-        directory = "test"
-        provider = DataProvider.objects.first()
-        file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
-        files = ExportRunFile.objects.all()
-        self.assertEqual(1, files.count())
-        file_model.file.delete()
-        file_model.delete()
-        self.assertEqual(0, files.count())
 
 
 class TestExportTask(TestCase):
@@ -276,31 +274,8 @@ class TestExportTask(TestCase):
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = DataProviderTaskRecord.objects.create(run=run)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
-        with self.settings(USE_S3=True):
-            run.delete()
-            delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
-
-    @patch("os.remove")
-    @patch("eventkit_cloud.tasks.signals.delete_from_s3")
-    def test_exporttaskresult_delete_exports(self, delete_from_s3, remove):
-
-        # setup
-        download_dir = "/test_download_dir"
-        file_name = "file.txt"
-        full_download_path = os.path.join(download_dir, str(self.run.uid), file_name)
-        download_url = "http://testserver/media/{0}/{1}".format(str(self.run.uid), file_name)
-        task = ExportTaskRecord.objects.get(uid=self.task_uid)
-        self.assertEqual(task, self.task)
-        self.assertIsNone(task.result)
-        result = FileProducingTaskResult.objects.create(download_url=download_url)
-        task.result = result
-        self.assertEqual(download_url, task.result.download_url)
-
-        # Test
-        with self.settings(USE_S3=True, EXPORT_DOWNLOAD_ROOT=download_dir):
-            result.delete()
-        delete_from_s3.assert_called_once_with(download_url=download_url)
-        remove.assert_called_once_with(full_download_path)
+        run.delete()
+        delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
 
 class TestExportTaskException(TestCase):
@@ -453,11 +428,8 @@ class TestFileProducingTaskResult(TestCase):
         self.assertEqual(task, self.task)
 
         self.assertIsNone(task.result)
-        result = FileProducingTaskResult.objects.create(
-            download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
-        )
-        task.result = result
-        self.assertEqual("http://testserver/media/{0}/file.txt".format(self.run.uid), task.result.download_url)
+        task.result = get_file_producing_export_task(self.run.uid)
+        self.assertIn(task.result.file.name, task.result.download_url)
         task.result.soft_delete()
         task.result.refresh_from_db()
         self.assertTrue(task.result.deleted)
@@ -468,9 +440,7 @@ class TestFileProducingTaskResult(TestCase):
         Test user_can_download method of FileProducingTaskResult
         """
         self.job.user.last_login = timezone.now()
-        self.downloadable = FileProducingTaskResult.objects.create(
-            download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
-        )
+        self.downloadable = get_file_producing_export_task(self.run.uid)
         self.task.result = self.downloadable
         self.task.save()
 
@@ -617,10 +587,8 @@ class TestUserDownload(TestCase):
             )
 
     def test_clone(self):
-
-        downloadable = FileProducingTaskResult.objects.create(
-            download_url="http://testserver/media/self.run.uid/file.txt"
-        )
+        uid = "1234"
+        downloadable = get_file_producing_export_task(uid)
         user_download = UserDownload.objects.create(user=self.user, downloadable=downloadable)
 
         old_user_download = UserDownload.objects.get(uid=user_download.uid)

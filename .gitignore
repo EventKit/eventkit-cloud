@@ -94,7 +94,6 @@ conda/recipes/eventkit-cloud/conda-requirements.txt
 *.iml
 
 # temp and generated data
-exports_download
 exports_stage
 cache_data
 tile_cache

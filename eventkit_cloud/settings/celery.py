@@ -24,6 +24,7 @@ CELERY_TRACK_STARTED = True
 CELERYD_PREFETCH_MULTIPLIER = 1
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
+CELERY_CACHE_BACKEND = "django-cache"
 
 # Pickle used to be the default, and accepting pickled content is a security concern.  Using the new default json,
 # causes a circular reference error, that will need to be resolved.
@@ -85,35 +86,35 @@ if os.getenv("VCAP_SERVICES"):
 CELERYD_USER = os.getenv("CELERYD_USER", CELERYD_USER)
 CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
-BROKER_URL = None
+CELERY_BROKER_URL: Optional[str] = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
             if "rabbitmq" in service:
-                BROKER_URL = listings[0]["credentials"]["protocols"]["amqp"]["uri"]
+                CELERY_BROKER_URL = listings[0]["credentials"]["protocols"]["amqp"]["uri"]
             if "cloudamqp" in service:
-                BROKER_URL = listings[0]["credentials"]["uri"]
+                CELERY_BROKER_URL = listings[0]["credentials"]["uri"]
         except KeyError:
             continue
-        if BROKER_URL:
+        if CELERY_BROKER_URL:
             break
-if not BROKER_URL:
-    BROKER_URL = os.environ.get("BROKER_URL", "amqp://guest:guest@localhost:5672//")
+if not CELERY_BROKER_URL:
+    CELERY_BROKER_URL = os.environ.get("BROKER_URL", "amqp://guest:guest@localhost:5672//")
 
-BROKER_API_URL = None
+CELERY_BROKER_API_URL: Optional[str] = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
             if "rabbitmq" in service:
-                BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
+                CELERY_BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
             if "cloudamqp" in service:
-                BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
+                CELERY_BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
         except KeyError:
             continue
-        if BROKER_API_URL:
+        if CELERY_BROKER_API_URL:
             break
-if not BROKER_API_URL:
-    BROKER_API_URL = os.environ.get("BROKER_API_URL", "http://guest:guest@localhost:15672/api/")
+if not CELERY_BROKER_API_URL:
+    CELERY_BROKER_API_URL = os.environ.get("BROKER_API_URL", "http://guest:guest@localhost:15672/api/")
 
 MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
 

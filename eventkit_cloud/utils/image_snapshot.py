@@ -1,7 +1,5 @@
 import copy
 import logging
-import os
-import shutil
 from io import BytesIO
 from typing import Union
 from urllib.parse import urlparse
@@ -12,10 +10,6 @@ from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
-from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
-from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.utils import s3
-from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
 
 logger = logging.getLogger(__name__)
@@ -123,26 +117,3 @@ def fit_to_area(image, pixels_x=500, pixels_y=250):
 
     image.thumbnail(size=(pixels_x, pixels_y))
     return image
-
-
-def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
-
-    filename = os.path.basename(filepath)
-    if download_filename is None:
-        download_filename = filename
-
-    filesize = os.stat(filepath).st_size
-    thumbnail_snapshot = MapImageSnapshot.objects.create(download_url="", filename=filepath, size=filesize)
-    if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(str(thumbnail_snapshot.uid), filepath, download_filename)
-        os.remove(filepath)
-    else:
-        download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
-        download_url = os.path.join(get_provider_image_download_path(provider_uid), download_filename)
-        make_dirs(os.path.split(download_path)[0])
-        shutil.copy(filepath, download_path)
-
-    thumbnail_snapshot.download_url = download_url
-    thumbnail_snapshot.save()
-
-    return thumbnail_snapshot

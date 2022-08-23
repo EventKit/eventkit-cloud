@@ -1323,10 +1323,10 @@ class TestExportTasks(ExportTaskBase):
             data_provider_task_uid=export_provider_task.uid, canceling_username=user.username
         )
         mock_kill_task.apply_async.assert_called_once_with(
-            kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
-            queue="{0}.priority".format(worker_name),
+            kwargs={"result": {}, "task_pid": task_pid, "celery_uid": celery_uid},
+            queue=f"{self.run.uid}.priority",
             priority=TaskPriority.CANCEL.value,
-            routing_key="{0}.priority".format(worker_name),
+            routing_key=f"{self.run.uid}.priority",
         )
         export_task = ExportTaskRecord.objects.get(uid=export_task.uid)
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task.uid)
@@ -1352,13 +1352,12 @@ class TestExportTasks(ExportTaskBase):
         task_pid = 55
         filename = "test.gpkg"
         celery_uid = uuid.uuid4()
-        run_uid = self.run.uid
         self.job.include_zipfile = True
         self.job.save()
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, name="test_provider_task", status=TaskState.COMPLETED.value, provider=self.provider
         )
-        result = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        result = FileProducingTaskResult(file=filename).save(write_file=False)
         ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task,
             status=TaskState.COMPLETED.value,
@@ -1369,13 +1368,10 @@ class TestExportTasks(ExportTaskBase):
             result=result,
         )
 
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/")
-        run_dir = os.path.join(download_root, str(run_uid))
         finalize_export_provider_task.run(
             result={"status": TaskState.SUCCESS.value},
             run_uid=self.run.uid,
             data_provider_task_uid=export_provider_task.uid,
-            run_dir=run_dir,
             status=TaskState.COMPLETED.value,
         )
         export_provider_task.refresh_from_db()
@@ -1913,18 +1909,18 @@ class TestExportTasks(ExportTaskBase):
             executor=self.task_process().start_process,
         )
 
+    @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.extract_metadata_files")
     @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.download_data")
-    @patch("eventkit_cloud.tasks.export_tasks.OgcApiProcess")
     @patch("eventkit_cloud.tasks.export_tasks.get_geometry")
     def test_get_ogcapi_data(
         self,
         mock_get_geometry,
-        mock_ogc_api_process,
         mock_download_data,
         mock_update_progress,
         mock_extract_metadata_files,
+        mock_get_export_task_record,
     ):
         bbox = [1, 2, 3, 4]
         example_geojson = "/path/to/geo.json"
@@ -1945,12 +1941,15 @@ class TestExportTasks(ExportTaskBase):
             "cert_info": {"cert_path": "something", "cert_pass": "something"},
         }
 
-        configuration = config["ogcapi_process"]
         service_url = "http://example.test/v1/"
         session_token = "_some_token_"
         example_download_url = "https://example.test/path.zip"
         example_download_path = "/example/file.gpkg"
-        mock_ogc_api_process().get_job_results.return_value = example_download_url
+        mock_client = MagicMock()
+        mock_client.get_job_results.return_value = example_download_url
+        mock_get_export_task_record().export_provider_task.provider.get_service_client.return_value = mock_client
+        mock_session = Mock()
+        mock_client.get_process_session.return_value = mock_session
         mock_download_data.return_value = example_download_path
         result = get_ogcapi_data(
             config=config,
@@ -1965,21 +1964,10 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEqual(result, example_download_path)
-        mock_ogc_api_process.called_with(
-            url=service_url,
-            config=config,
-            session_token=session_token,
-            task_id=task_uid,
-            cred_var=configuration.get("cred_var"),
-            cert_info=configuration.get("cert_info"),
-        )
-        mock_ogc_api_process().create_job.called_once_with(mock_geometry, file_format=example_format_slug)
+
+        mock_client.create_job.called_once_with(mock_geometry, file_format=example_format_slug)
         mock_download_data.assert_called_once_with(
-            task_uid,
-            example_download_url,
-            example_download_path,
-            session=None,
-            cert_info={"cert_path": "something", "cert_pass": "something"},
+            task_uid, example_download_url, example_download_path, session=mock_session
         )
         mock_extract_metadata_files.assert_called_once_with(example_download_path, self.stage_dir)
 

@@ -10,8 +10,8 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Type, Union
-from urllib.parse import urlencode, urljoin
+from typing import List, Type, Union, cast
+from urllib.parse import urlencode
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from audit_logging.file_logging import logging_open
@@ -58,7 +58,6 @@ from eventkit_cloud.tasks.helpers import (
     get_provider_staging_dir,
     get_run_staging_dir,
     get_style_files,
-    make_file_downloadable,
     pickle_exception,
     progressive_kill,
     update_progress,
@@ -76,12 +75,11 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
-from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
@@ -189,14 +187,9 @@ class ExportTask(EventKitBaseTask):
             task.pid = -1
             # get the output
             file_path = retval["result"]
-            stat = os.stat(file_path)
-            size = stat.st_size / 1024 / 1024.00
-            file_name, download_url = make_file_downloadable(file_path)
 
             # save the task and task result
-            result = FileProducingTaskResult.objects.create(
-                filename=str(file_name), size=size, download_url=download_url
-            )
+            result = FileProducingTaskResult.objects.create(file=file_path)
 
             task.result = result
             task.status = TaskState.SUCCESS.value
@@ -795,16 +788,17 @@ def ogc_result_task(
     export_task_record = get_export_task_record(task_uid)
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
-    ogcapi_config = data_provider.config.get("ogcapi_process")
+    client: OGCAPIProcess = cast(OGCAPIProcess, data_provider.get_service_client())
+    ogcapi_config = client.process_config
     # check to see if file format that we're processing is the same one as the
     # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
-        format_field, format_prop = get_format_field_from_config(ogcapi_config)
+        format_field, format_prop = OGCAPIProcess.get_format_field(ogcapi_config["inputs"])
         if format_field:
             export_format = ogcapi_config["inputs"][format_field]
         if format_prop:
             export_format = ogcapi_config["inputs"][format_field][format_prop]
-        if export_format and export_format.lower() == export_format_slug.lower():
+        if export_format and export_format.lower() == export_format_slug.lower() and result.get("ogcapi_process"):
             result["result"] = result["ogcapi_process"]
             return result
         else:
@@ -1442,7 +1436,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         if bbox is None:
             query_params["geometry"] = "BBOX_PLACEHOLDER"
         query_str = urlencode(query_params, safe="=*")
-        query_url = urljoin(f"{service_url}/", f"query?{query_str}")
+        query_url = f"{service_url}/query?{query_str}"
 
     return query_url
 
@@ -1740,7 +1734,12 @@ def create_zip_task(
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
             for file in path.rglob("*"):
-                meta_files[str(file)] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
+                relative_metadata_path = Path(file).relative_to(
+                    get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug
+                )
+                meta_files[str(file)] = str(
+                    Path("data", data_provider_task_record_slug, "metadata", relative_metadata_path)
+                )
 
         meta_files.update(get_style_files())
         meta_files.update(get_arcgis_templates(metadata))
@@ -2072,12 +2071,7 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
         )
         fit_to_area(preview)
         preview.save(filepath)
-
-        filename, download_path = make_file_downloadable(filepath, skip_copy=False)
-        filesize = os.stat(filepath).st_size
-        data_provider_task_record.preview = MapImageSnapshot.objects.create(
-            download_url=download_path, filename=str(filename), size=filesize
-        )
+        data_provider_task_record.preview = MapImageSnapshot.objects.create(file=str(filepath))
         data_provider_task_record.save()
 
         result["preview"] = filepath
@@ -2142,11 +2136,14 @@ def cancel_export_provider_task(
             task_result.soft_delete()
 
         if int(export_task.pid) > 0 and export_task.worker:
+            run_uid = data_provider_task_record.run.uid
+            queue = f"{get_celery_queue_group(run_uid=run_uid, worker=export_task.worker)}.priority"
+            logger.error("Canceling queue: %s", queue)
             kill_task.apply_async(
-                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.priority".format(export_task.worker),
+                kwargs={"result": result, "task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
+                queue=queue,
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.priority".format(export_task.worker),
+                routing_key=queue,
             )
 
         # Add canceled to the cache so processes can check in to see if they should abort.
@@ -2265,23 +2262,17 @@ def get_ogcapi_data(
     if download_path is None:
         raise Exception("A download path is required to download ogcapi data.")
 
-    configuration = config
+    export_task_record = get_export_task_record(task_uid)
 
     geom: GEOSGeometry = get_geometry(bbox, selection)
 
     try:
-        ogc_process = OgcApiProcess(
-            url=service_url,
-            config=configuration["ogcapi_process"],
-            session_token=session_token,
-            task_id=task_uid,
-            cred_var=configuration.get("cred_var"),
-            cert_info=configuration.get("cert_info"),
-            cred_token=configuration.get("cred_token"),
-            login_url=configuration.get("login_url"),
+        client: OGCAPIProcess = cast(
+            OGCAPIProcess, export_task_record.export_provider_task.provider.get_service_client()
         )
-        ogc_process.create_job(geom, file_format=export_format_slug)
-        download_url = ogc_process.get_job_results()
+        client.create_job(geom, file_format=export_format_slug)
+        update_progress(task_uid, progress=25, subtask_percentage=50)
+        download_url = client.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
     except Exception as e:
@@ -2289,18 +2280,8 @@ def get_ogcapi_data(
 
     update_progress(task_uid, progress=50, subtask_percentage=50)
 
-    download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
-    basic_auth = download_credentials.get("cred_var")
-    username = password = session = None
-    if basic_auth:
-        username, password = os.getenv(basic_auth).split(":")
-    if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(
-            getattr(settings, "SITE_URL"),
-            username=username,
-            password=password,
-        ).client
-    download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
+    process_session = client.get_process_session(download_url)
+    download_path = download_data(task_uid, download_url, download_path, session=process_session)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path

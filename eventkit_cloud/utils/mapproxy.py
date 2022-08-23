@@ -211,7 +211,7 @@ class MapproxyGeopackage(object):
             )
 
         # Need something listed as a service to pass the mapproxy validation.
-        conf_dict["services"] = ["demo"]
+        conf_dict["services"] = conf_dict.get("services") or {"demo": None}
 
         # disable SSL cert checks
 
@@ -441,7 +441,7 @@ def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
                     "sources": [get_footprint_layer_name(slug)],
                 }
             ]
-        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, slug, None)
+        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, slug, user)
         try:
             mapproxy_config = load_default_config()
             load_config(mapproxy_config, config_dict=base_config)
@@ -493,10 +493,10 @@ def get_conf_dict(slug: str) -> dict:
 
         # Load and "clean" mapproxy config for displaying a map.
     try:
-        conf_dict = provider.config
+        conf_dict = copy.deepcopy(provider.config)
 
         # Pop layers out so that the default layer configuration above is used.
-        conf_dict.pop("layers", "")
+        conf_dict.pop("layers", None)
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
             if not ssl_verify:

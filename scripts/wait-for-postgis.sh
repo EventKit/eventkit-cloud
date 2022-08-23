@@ -2,9 +2,8 @@
 
 set -e
 
-cmd="$@"
-
 source activate conda_env
+python scripts/create_bucket.py eventkit
 python - << END
 import os
 import django
@@ -25,4 +24,4 @@ while True:
         sleep(1)
 END
 
-exec $cmd
+exec $@

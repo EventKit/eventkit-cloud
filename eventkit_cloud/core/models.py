@@ -5,19 +5,19 @@ import os
 import unicodedata
 import uuid
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.core.cache import cache
-from django.core.files.storage import FileSystemStorage
+from django.core.files import File
 from django.db import transaction
 from django.db.models import Case, Count, Q, QuerySet, Value, When
 from django.utils import timezone
 from django.utils.text import slugify
 from notifications.models import Notification
-from storages.backends.s3boto3 import S3Boto3Storage
 
 from eventkit_cloud.tasks.enumerations import Directory
 
@@ -172,56 +172,61 @@ class UIDMixin(models.Model):
         super(UIDMixin, self).save(*args, **kwargs)
 
 
-class DownloadableMixin(models.Model):
-    """
-    Mixin for models that have a downloadable product.
-    """
-
-    filename = models.CharField(max_length=508, blank=True, editable=False)
-    size = models.FloatField(null=True, editable=False)
-    download_url = models.URLField(verbose_name="URL to export task result output.", max_length=508)
-
-    class Meta:
-        abstract = True
-
-    def get_file_path(self, staging: bool = True, archive: bool = False):
-        """
-        A helper method to consolidate the logic for storing the files within datapacks and in the staging directory.
-
-        This and the get_export_filepath should be used when handling file paths to minimize adhoc filenaming logic.
-        """
-        if archive:
-            return os.path.join(Directory.DATA.value, "/".join(self.filename.split("/")[1:]))
-        if staging:
-            return os.path.join(settings.EXPORT_STAGING_ROOT, self.filename)
-        return self.filename
-
-
 class FileFieldMixin(models.Model):
     """
     Mixin for models that have a file(s).
     """
 
-    storage = None
-    if settings.USE_S3:
-        storage = S3Boto3Storage()
-    else:
-        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
-
-    file = models.FileField(verbose_name="File", storage=storage)
+    filename = models.CharField(max_length=508, blank=True, editable=False)
+    file = models.FileField(verbose_name="File", null=True, blank=True)
+    size = models.FloatField(null=True, editable=False)
     directory = models.CharField(
         max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
     )
 
+    @property
+    def download_url(self):
+        return self.file.url
+
     class Meta:
         abstract = True
 
-    def save(self, *args, **kwargs):
+    def save(self, write_file=True, *args, **kwargs):
+        # File path is where the file is on disk before push.
+        #  Example: /some/local/stage/path/file.txt
+        file_path = Path(self.file.name)
+        self.filename = self.file.name
+        if Path(settings.EXPORT_STAGING_ROOT) in file_path.parents:
+            # The file name is the relative path for the file.
+            #  Example: path/file.txt
+            self.filename = str(file_path.relative_to(settings.EXPORT_STAGING_ROOT))
         if self.pk:
-            file_check = type(self).objects.get(pk=self.pk)
-            if file_check.file != self.file:
-                file_check.file.delete(save=False)
+            try:
+                # We are updating an existing file, and need to delete the old one
+                # before uploading the new one.
+                stored_file = type(self).objects.get(pk=self.pk)
+                if stored_file.file.name != self.file.name:
+                    stored_file.file.delete(save=False)
+                else:
+                    write_file = False
+            except self.DoesNotExist:
+                # Manually setting a Pk?, eitherway this is new.
+                self.file.delete(save=False)
+        if write_file:
+            with open(str(file_path), "rb") as open_file:
+                self.file.save(self.filename, File(open_file), save=False)
+            self.size = self.file.size / 1_000_000
         super().save(*args, **kwargs)
+
+    def get_file_path(self, staging: bool = True, archive: bool = False):
+        """
+        A helper method to consolidate the logic for storing the files within datapacks and in the staging directory.
+        """
+        if archive:
+            return os.path.join(Directory.DATA.value, *self.filename.split("/")[1:])
+        if staging:
+            return os.path.join(settings.EXPORT_STAGING_ROOT, self.filename)
+        return self.filename
 
 
 class GroupPermissionLevel(Enum):

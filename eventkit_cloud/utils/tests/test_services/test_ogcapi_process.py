@@ -1,20 +1,12 @@
-# -*- coding: utf-8 -*-
-import logging
-
-import requests_mock
 from django.test import TestCase
 
-from eventkit_cloud.utils.ogcapi_process import get_format_field_from_config
-
-logger = logging.getLogger(__name__)
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 
 
 class TestOgcApiProcess(TestCase):
     def setUp(self):
-        self.mock_requests = requests_mock.Mocker()
-        self.mock_requests.start()
-        self.addCleanup(self.mock_requests.stop)
-
+        self.layer = "test_layer"
+        self.url = "http://ogcapi-process.test"
         self.format_field = "file_format"
         self.config = {
             "ogcapi_process": {
@@ -26,8 +18,8 @@ class TestOgcApiProcess(TestCase):
                 "download_credentials": {"cred_var": "user:pass"},
             }
         }
+        self.client = OGCAPIProcess(self.url, self.layer, aoi_geojson=None, slug=None, max_area=0, config=self.config)
 
     def test_get_format_field_from_config(self):
-        self.assertEqual(
-            ("products", self.format_field), get_format_field_from_config(self.config.get("ogcapi_process"))
-        )
+        input_config = self.client.process_config["inputs"]
+        self.assertEqual(("products", self.format_field), OGCAPIProcess.get_format_field(input_config))
