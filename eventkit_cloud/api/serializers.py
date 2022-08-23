@@ -1038,9 +1038,15 @@ def basic_data_provider_serializer(
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
 
-    serialized_data_provider["download_count_rank"] = getattr(data_provider, "download_count_rank") if hasattr(data_provider, "download_count_rank") else None
-    serialized_data_provider["download_date_rank"] = getattr(data_provider, "download_date_rank") if hasattr(data_provider, "download_date_rank") else None
-    serialized_data_provider["favorite"] = getattr(data_provider, "favorite") if hasattr(data_provider, "favorite") else False
+    serialized_data_provider["download_count_rank"] = (
+        getattr(data_provider, "download_count_rank") if hasattr(data_provider, "download_count_rank") else None
+    )
+    serialized_data_provider["download_date_rank"] = (
+        getattr(data_provider, "download_date_rank") if hasattr(data_provider, "download_date_rank") else None
+    )
+    serialized_data_provider["favorite"] = (
+        getattr(data_provider, "favorite") if hasattr(data_provider, "favorite") else False
+    )
     return serialized_data_provider
 
 
