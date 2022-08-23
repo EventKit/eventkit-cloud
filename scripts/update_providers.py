@@ -99,9 +99,11 @@ def clean_fixtures(fixtures, skip_missing=False):
             if field not in exclude:
                 if field == "config":
                     if not value:
-                        value = dict()
+                        value = json.dumps(dict())
                     elif isinstance(value, str):
                         value = yaml.safe_load(value)
+                    elif value:
+                        value = json.dumps(value)
                 if value:
                     new_fixture[field] = value
             try:
