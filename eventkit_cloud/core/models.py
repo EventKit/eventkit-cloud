@@ -210,11 +210,12 @@ class FileFieldMixin(models.Model):
                 else:
                     write_file = False
             except self.DoesNotExist:
-                # Manually setting a Pk?, eitherway this is new.
+                # Manually setting a PK?, either way this is new.
                 self.file.delete(save=False)
         if write_file:
             with open(str(file_path), "rb") as open_file:
-                self.file.save(self.filename, File(open_file), save=False)
+                f = File(open_file)
+                self.file.save(self.filename, f, save=False)
             self.size = self.file.size / 1_000_000
         super().save(*args, **kwargs)
 
