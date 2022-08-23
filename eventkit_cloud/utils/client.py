@@ -258,7 +258,7 @@ class EventKitClient(object):
 
     def cancel_provider(self, provider_uid):
         url = f"{self.provider_tasks_url.rstrip('/')}/{provider_uid}"
-        response = self.client.patch(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        response = self.session.patch(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
         if response.status_code != 200:
             logger.info(response.status_code)
             logger.info(response.content.decode())
@@ -306,7 +306,7 @@ class EventKitClient(object):
         while not picked_up:
             try:
                 sleep(1)
-                response = self.client.get(
+                response = self.session.get(
                     self.runs_url, params={"job_uid": job_uid}, headers={"X-CSRFToken": self.csrftoken}
                 ).json()
                 last_check = datetime.now()

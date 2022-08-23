@@ -56,7 +56,7 @@ class TestJob(TestCase):
         self.client: EventKitClient = self.get_client(
             self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
-        self.client.client.headers["Accept"] = "application/json, text/plain, */*"
+        self.client.session.headers["Accept"] = "application/json, text/plain, */*"
         self.selection = {
             "type": "FeatureCollection",
             "features": [
