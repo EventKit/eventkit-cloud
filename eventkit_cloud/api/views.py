@@ -989,7 +989,7 @@ class DataProviderViewSet(EventkitViewSet):
             .order_by(*self.ordering)
         )
 
-    def partial_update(self, request, *args, **kwargs):
+    def partial_update(self, request, slug=None, *args, **kwargs):
         """
 
         Used to update user favorite.
@@ -1000,41 +1000,26 @@ class DataProviderViewSet(EventkitViewSet):
 
         Example:
 
-                {"favorites": {
-                    "osm": true,
-                    "usgs": false
-                    }
+                {
+                    "favorite": true
                 }
 
         Expected Response Example:
                 {
-                    "added": ["osm"],
-                    "removed": ["usgs"]
+                    <updated model>
                 }
         """
 
-        queryset = self.get_queryset()
+        data_provider = DataProvider.objects.get(slug=slug)
         user = request.user
-        favorites = request.data.get("favorites")
-        response_data = {}
-        added = []
-        removed = []
-        for product_slug, is_favorite in favorites.items():
-            if is_favorite:
-                provider = queryset.objects.get(slug=product_slug)
-                user_favorite_product, created = UserFavoriteProduct.objects.get_or_create(provider=provider, user=user)
-                if created:
-                    added.append(product_slug)
-            else:
-                UserFavoriteProduct.objects.filter(provider=provider).delete()
-                removed.append(product_slug)
+        favorite = request.data.get("favorite")
 
-        if added:
-            response_data["added"] = added
-        if removed:
-            response_data["removed"] = removed
+        if favorite:
+            user_favorite, created = UserFavoriteProduct.objects.get_or_create(provider=data_provider, user=user)
+        else:
+            UserFavoriteProduct.objects.filter(provider=data_provider, user=user).delete()
 
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
