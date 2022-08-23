@@ -636,7 +636,7 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
-            projection=4326
+            projection=4326,
         )
 
         mock_convert.reset_mock()
@@ -651,7 +651,7 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
-            projection=4326
+            projection=4326,
         )
 
         mock_convert.reset_mock()
@@ -676,7 +676,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
-            projection=4326
+            projection=4326,
         )
         mock_convert.reset_mock()
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir)
@@ -686,7 +686,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
-            projection=4326
+            projection=4326,
         )
 
     def test_pbf_export_task(self):
