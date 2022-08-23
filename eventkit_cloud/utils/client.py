@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Any, Dict, cast
 
-import requests
+from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 
 class EventKitClient(object):
-    def __init__(self, url, username=None, password=None, certificate=None, verify=True):
+    def __init__(self, url, username=None, password=None, certificate=None, session=None, verify=True, *args, **kwargs):
         self.base_url = url.rstrip("/")
         self.login_url = self.base_url + "/api/login/"
         self.cert_url = self.base_url + "/oauth"
@@ -27,31 +27,33 @@ class EventKitClient(object):
         self.provider_tasks_url = self.base_url + "/api/provider_tasks"
         self.download_url = self.base_url + "/download"
 
-        self.client = requests.session()
-        self.client.verify = verify
-        self.client.get(self.login_url)
-        self.csrftoken = self.client.cookies.get("csrftoken")
+        self.session = get_or_update_session(session=session)
+        self.session.verify = verify
+        self.session.get(self.login_url)
+        self.csrftoken = self.session.cookies.get("csrftoken")
 
         if certificate:
-            self.client.get(self.cert_url, cert=certificate)
+            self.session.get(self.cert_url, cert=certificate)
+        elif any([hasattr(adapter, "ssl_context") for adapter in self.session.adapters.values()]):
+            self.session.get(self.cert_url)
         elif username and password:
             login_data = dict(
                 username=username, password=password, submit="Log in", csrfmiddlewaretoken=self.csrftoken, next="/"
             )
-            self.client.post(
+            self.session.post(
                 self.login_url, data=login_data, headers=dict(Referer=self.login_url), auth=(username, password)
             )
         else:
             raise Exception("Unable to login without a certificate or username/password.")
-        response = self.client.get(self.providers_url)
+        response = self.session.get(self.providers_url)
         if response.status_code in [401, 403]:
             raise Exception("Invalid Credentials were provided to EventKitClient")
-        self.client.get(self.base_url)
-        self.client.get(self.create_export_url)
-        self.csrftoken = self.client.cookies.get("csrftoken")
+        self.session.get(self.base_url)
+        self.session.get(self.create_export_url)
+        self.csrftoken = self.session.cookies.get("csrftoken")
 
     def get_providers(self):
-        response = self.client.get(
+        response = self.session.get(
             self.providers_url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url}
         )
         if response.status_code != 200:
@@ -61,7 +63,7 @@ class EventKitClient(object):
         return response.json()
 
     def get_provider_task(self, uid):
-        response = self.client.get(
+        response = self.session.get(
             f"{self.provider_tasks_url.rstrip('/')}/{uid}",
             headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
         )
@@ -77,7 +79,7 @@ class EventKitClient(object):
         runs = []
         while True:
             params["page"] = page
-            response = self.client.get(
+            response = self.session.get(
                 "{0}/filter".format(self.runs_url),
                 params=params,
                 headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
@@ -95,7 +97,7 @@ class EventKitClient(object):
         return runs
 
     def get_runs(self, params=dict()):
-        response = self.client.get(self.runs_url, params=params)
+        response = self.session.get(self.runs_url, params=params)
         if not response.ok:
             logger.info(response.content.decode())
             raise Exception("Could not search for runs with params: {}".format(params))
@@ -126,7 +128,7 @@ class EventKitClient(object):
             "tags": [],
             "provider_tasks": provider_tasks,
         }
-        response = self.client.post(
+        response = self.session.post(
             self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url}
         )
         if response.status_code != 202:
@@ -142,14 +144,14 @@ class EventKitClient(object):
         """
         url = f"{self.jobs_url}/{job_uid}/run?format=json"
 
-        response = self.client.post(url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url})
+        response = self.session.post(url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url})
         if not response.ok:
             logger.error(response.content.decode())
             logger.error(url)
         return response.json()
 
     def download_file(self, result_uid, file_path=None):
-        response = self.client.get(self.download_url, params={"uid": result_uid}, stream=True)
+        response = self.session.get(self.download_url, params={"uid": result_uid}, stream=True)
         if response.ok:
             with open(file_path, "wb") as open_file:
                 for chunk in response:
@@ -240,7 +242,7 @@ class EventKitClient(object):
 
     def delete_run(self, run_uid):
         url = "{}/{}".format(self.runs_url.rstrip("/"), run_uid)
-        response = self.client.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        response = self.session.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
         if response.status_code != 204:
             logger.info(response.status_code)
             logger.info(response.content.decode())
@@ -248,7 +250,7 @@ class EventKitClient(object):
 
     def delete_job(self, job_uid):
         url = "{}/{}".format(self.jobs_url.rstrip("/"), job_uid)
-        response = self.client.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        response = self.session.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
         if response.status_code != 204:
             logger.info(response.status_code)
             logger.info(response.content.decode())
@@ -271,7 +273,7 @@ class EventKitClient(object):
             sleep(1)
             run_url = self.runs_url.rstrip("/"), run_uid
             logger.debug(run_url)
-            response = self.client.get(
+            response = self.session.get(
                 "{}/{}".format(self.runs_url.rstrip("/"), run_uid), headers={"X-CSRFToken": self.csrftoken}
             )
             if not response.ok:
@@ -323,7 +325,7 @@ class EventKitClient(object):
         """
 
         url = "{}/{}/status".format(self.providers_url, provider_slug)
-        response = self.client.get(url)
+        response = self.session.get(url)
         if not response.ok:
             logger.error(response.content.decode())
             raise Exception("Failed to get the status of {}".format(provider_slug))

@@ -164,6 +164,7 @@ class TestJobViewSet(APITestCase):
                     "level_to": 1,
                     "url": "http://coolproviderurl.test",
                     "preview_url": "http://coolproviderurl.test",
+                    "export_provider_type_id": 1,
                 }
             ],
             "user": serializers.serialize("json", [self.user]),
@@ -1477,9 +1478,15 @@ class TestLicenseViewSet(APITestCase):
             License.objects.create(slug="test0", name="name0", text="text0"),
             License.objects.create(slug="test1", name="name1", text="text1"),
         ]
+        data_provider_type = DataProviderType.objects.create(type_name="test")
+
         self.data_providers = [
-            DataProvider.objects.create(name="test0", slug="test0", license=self.licenses[0]),
-            DataProvider.objects.create(name="test1", slug="test1", license=self.licenses[1]),
+            DataProvider.objects.create(
+                name="test0", slug="test0", license=self.licenses[0], export_provider_type=data_provider_type
+            ),
+            DataProvider.objects.create(
+                name="test1", slug="test1", license=self.licenses[1], export_provider_type=data_provider_type
+            ),
         ]
         self.attribute_class = AttributeClass.objects.create(
             name="test", slug="test", exclude={"username__in": self.user.username}
@@ -1555,10 +1562,17 @@ class TestTopicViewSet(APITestCase):
             Topic.objects.create(slug="topicslug0", name="topicname0", topic_description="topicdesc0"),
             Topic.objects.create(slug="topicslug1", name="topicname1", topic_description="topicdesc1"),
         ]
+        data_provider_type = DataProviderType.objects.create(type_name="test")
         self.data_providers = [
-            self.topics[0].providers.create(name="providername0", slug="providerslug0"),
-            self.topics[1].providers.create(name="providername1", slug="providerslug1"),
-            DataProvider.objects.create(name="providername2", slug="providerslug2"),
+            self.topics[0].providers.create(
+                name="providername0", slug="providerslug0", export_provider_type=data_provider_type
+            ),
+            self.topics[1].providers.create(
+                name="providername1", slug="providerslug1", export_provider_type=data_provider_type
+            ),
+            DataProvider.objects.create(
+                name="providername2", slug="providerslug2", export_provider_type=data_provider_type
+            ),
         ]
         for topic in self.topics:
             topic.providers.add(self.data_providers[-1])
