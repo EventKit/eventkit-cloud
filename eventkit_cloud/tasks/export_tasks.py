@@ -430,6 +430,7 @@ def osm_data_collection_pipeline(
         driver="gpkg",
         is_raster=False,
         access_mode="append",
+        projection=projection,
         layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
         executor=task_process.start_process,
     )
@@ -964,7 +965,6 @@ def mbtiles_export_task(
     task_process = TaskProcess(task_uid=task_uid)
     mbtiles = convert(
         driver="MBTiles",
-        src_srs=4326,
         input_files=source_dataset,
         output_file=mbtiles_out_dataset,
         boundary=selection,
@@ -1013,6 +1013,7 @@ def geotiff_export_task(
             warp_params=warp_params,
             translate_params=translate_params,
             executor=task_process.start_process,
+            projection=projection,
         )
 
     result["file_extension"] = "tif"
@@ -1040,7 +1041,8 @@ def nitf_export_task(
     nitf_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     nitf_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "nitf")
-
+    if projection != 4326:
+        raise Exception("NITF only supports 4236.")
     creation_options = ["ICORDS=G"]
     task_process = TaskProcess(task_uid=task_uid)
     nitf = convert(
@@ -1049,6 +1051,7 @@ def nitf_export_task(
         output_file=nitf_out_dataset,
         creation_options=creation_options,
         executor=task_process.start_process,
+        projection=4326,
     )
 
     result["driver"] = "nitf"
@@ -1075,7 +1078,11 @@ def hfa_export_task(
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
     task_process = TaskProcess(task_uid=task_uid)
     hfa = convert(
-        driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, executor=task_process.start_process
+        driver="hfa",
+        input_files=hfa_in_dataset,
+        output_file=hfa_out_dataset,
+        projection=projection,
+        executor=task_process.start_process,
     )
 
     result["file_extension"] = "img"
