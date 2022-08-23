@@ -9,7 +9,7 @@ variables:
   AWS_ENDPOINT_URL: "http://minio:9000"
   AWS_SECRET_ACCESS_KEY: AWS_SECRET
   AWS_STORAGE_BUCKET_NAME: eventkit
-  BASE_URL: "http://host.docker.internal:6080"
+  BASE_URL: "http://127.0.0.1:6080"
   BRANCH: "master"
   CURL_CA_BUNDLE: "./conda/cacert.pem"
   MOUNT_POINT: $CI_PROJECT_DIR
@@ -17,8 +17,7 @@ variables:
   NEXUS_REPO: "EventKit_eventkit"
   REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   SECRET_KEY: "TESTING"
-  SITE_NAME: "host.docker.internal"
-  SITE_IP: "127.0.0.1"
+  SITE_NAME: "127.0.0.1"
   VERSION: "1.14.0"
 
 image:
