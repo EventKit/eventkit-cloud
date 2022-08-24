@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   eventkit:
     build:
@@ -100,7 +100,7 @@ services:
       - ADMIN_ROOT
       - JOB_MAX_EXTENT=1000000
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      - "${SITE_NAME:-host-gateway}"
   map:
     image: eventkit/eventkit-base:1.14.0-0
     volumes:
@@ -143,7 +143,7 @@ services:
       - SECRET_KEY
       - EVENTKIT_CERT_PASS
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      - "${SITE_NAME:-host-gateway}"
   memcached:
     image: eventkit/eventkit-base:1.14.0-0
     expose:
@@ -210,7 +210,7 @@ services:
       - ROCKETCHAT_NOTIFICATIONS
       - JOB_MAX_EXTENT=1000000
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      - "${SITE_NAME:-host-gateway}"
     command: bash ./scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:14
@@ -276,7 +276,7 @@ services:
       - "49555:5555"
     command: celery flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      - "${SITE_NAME:-host-gateway}"
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -316,7 +316,7 @@ services:
     expose:
       - "9229"
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      - "${SITE_NAME:-host-gateway}"
     #if wishing to use the dev server uncomment this or run it via the command line
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
   minio:
