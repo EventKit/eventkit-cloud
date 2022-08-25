@@ -32,11 +32,14 @@ class TestAuthViews(TestCase):
             example_refresh_token = "refresh"
 
             request = MagicMock(GET={"code": "1234"})
+
+
             group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
             with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
                 mock_group.objects.get.return_value = group
             user = User.objects.create(username="test", email="test@email.com")
             OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
+            request.user = user
             mock_get_tokens.return_value = example_access_token, example_refresh_token
             mock_get_user.return_value = None
             response = callback(request)
@@ -51,6 +54,8 @@ class TestAuthViews(TestCase):
             mock_login.reset_mock()
             example_state = base64.b64encode("/status/12345".encode())
             request = MagicMock(GET={"code": "1234", "state": example_state})
+            request.user = user
+
             mock_get_tokens.return_value = example_access_token, example_refresh_token
             mock_get_user.return_value = user
             response = callback(request)
@@ -96,9 +101,13 @@ class TestAuthViews(TestCase):
                 fetch_redirect_response=False,
             )
 
+            user = User.objects.create(username="test", password="password", email="test@email.com")
+            OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
             mock_request = MagicMock()
             mock_request.META = {"HTTP_REFERER": referer}
             mock_request.GET = {"query": None}
+            mock_request.user = user
+
             response = oauth(mock_request)
             params = urllib.parse.urlencode(
                 (
@@ -153,14 +162,17 @@ class TestAuthViews(TestCase):
         OAUTH_TOKEN_KEY="access_token",
         OAUTH_REFRESH_KEY="refresh_token",
     )
-    @patch("eventkit_cloud.auth.views.refresh_access_tokens")
     @patch("eventkit_cloud.auth.views.fetch_user_from_token")
-    def test_check_oauth_authentication(self, mock_fetch_user, mock_refresh_tokens):
+    @patch("eventkit_cloud.auth.views.refresh_access_tokens")
+    def test_check_oauth_authentication(self, mock_refresh_tokens, mock_fetch_user):
         invalid_token = "invalid_token"
         example_token = "token"
         example_refresh_token = "refresh"
+        user = User.objects.create(username="test", password="password", email="test@email.com")
+        OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
 
         request = RequestFactory().get("/")
+        request.user = user
         middleware = SessionMiddleware(lambda x: x)
         middleware.process_request(request)
         request.session.save()
