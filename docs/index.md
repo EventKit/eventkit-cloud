@@ -16,33 +16,50 @@ Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/o
 
 - It's also required that you change some of the default Docker settings.  
   - You'll want to update your Docker resources settings to include at least 2 CPUs and a minimum of 8GB of RAM.
+    - On Windows, in WSL, you will need to update your `.wslconfig` file. [Link to documentation](https://docs.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file)
+    - For Mac, follow one of the answers from here: [StackOverflow](https://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac)
+    - In Linux, Docker can use all available memory already
 
 ### Installation
 
 Prior to using the EventKit docker setup, two variables must be set in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
-Typically `SITE_NAME` is set to `host.docker.internal` and `SITE_IP` is `127.0.0.1`.  If needing to run the integration tests,
-then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
+Typically `SITE_NAME` is set to `host.docker.internal` and `SITE_IP` is `127.0.0.1`.
 
-This is usually done by using `export SITE_NAME=host.docker.internal` on OSX/Linux or `setx SITE_NAME host.docker.internal` on Windows.
+If needing to run the integration tests, then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
+
+This is usually done by using
+
+- `export SITE_NAME=host.docker.internal` on OSX/Linux
+- or
+- `setx SITE_NAME host.docker.internal` on Windows.
+
+> You can also set these in your bashrc file or in the `.env` file in this project repo
 
 You'll also need to open an elevated shell/command prompt add host.docker.internal to the hosts file:
 
 - On Linux: `echo "127.0.0.1  host.docker.internal" >> /etc/hosts`
 - On Windows: `echo "127.0.0.1  host.docker.internal" >> "C:\Windows\System32\drivers\etc\hosts"`
 
+> ### Note: Ensure that your host file in Windows has proper line endings (`\r\n`) or you may corrupt the file
+
 If you changed the `SITE_IP` to a local available IP address instead of `127.0.0.1`, you'll want to use that same IP in the hosts file.
 
 After you have the above steps completed you can proceed on to either the Makefile based automated build or the manual build process outlined below.
 
-> ### Note: Ensure that your host file in Windows has proper line endings (`\r\n`) or you may corrupt the file
-
 ## Quick Start
 
-A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
+> A note for Windows WSL users, having the project be located on the WSL side will improve build and load times
 
-After running `make fresh` you can hit the site directly at the URL you chose for the `SITE_NAME` which is generally `host.docker.internal`.
+A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux and WSL hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
 
+After running `make fresh` you can hit the site directly at the URL you chose for the `SITE_NAME` which is generally [host.docker.internal](host.docker.internal).
+
+For more developer setup, continue to the [Developers section](#for-developers)
+
+To start using the application, continue to the [Next Steps](#next-steps)
+
+---
 ---
 
 ## Manual Setup
@@ -62,13 +79,11 @@ cd conda
 docker-compose run --rm conda
 ```
 
-> Now grab a warm beverage perhaps a nice technical manual to read through...
+> Now grab a warm beverage; perhaps a nice technical manual to read through...
 
 In the future it may be nice to host prebuilt artifacts but the ability to build these locally allows us to upgrade dependencies without needing to rely on third-party hosting.
 
 After conda successfully builds you can now build and start the EventKit application.
-
-_Note: if running the docker setup with an IP set other than 127.0.0.1, then the application will be made available to other computer that can access the host machine at the `SITE_IP` address._
 
 ```shell
 git clone https://repo_server/repo_org/eventkit-cloud.git
@@ -121,6 +136,10 @@ By default, the Eventkit webpack is configured for development, if you need to c
 
 The built EventKit containers can be pushed to a platform like Kubernetes or some other container service.
 Additionally it can be deployed on [Pivotal Cloud Foundry](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).
+
+For more developer setup, continue to the [Developers section](#for-developers)
+
+To start using the application, continue to the [Next Steps](#next-steps)
 
 ---
 
@@ -182,3 +201,43 @@ Black is an auto formatting tool for Python that will allow you to handle most o
 make black
 make black-format
 ```
+
+Be sure check out the other documentation:
+
+- [Sources](./sources.md)
+- [Settings breakdown](./settings.md)
+- [Pivotal Cloud Foundry](./pcf.md)
+
+Other useful links for development
+
+- [Main Dashboard](http://host.docker.internal/dashboard)
+- [Admin page](http://host.docker.internal/admin/)
+- [API testing page](http://host.docker.internal/api/docs/)
+
+---
+
+## Next steps
+
+### Initial prep
+
+For the ease of keeping track on your personal files, make a directory at root called `adhoc` (This file and contents are already ignored by git)
+
+#### Enabling sources
+
+By default, EventKit does not have any sources enabled.
+
+To enable it for local testing, you will need to get a definition file (likely called `fixture.json`). You can get this file from the team.
+> This file cannot be stored in the project since it contains passwords
+
+Once you have this file, place it in the `adhoc` folder, then run the following command
+> EventKit needs to be up and running before running this
+
+- `docker-compose run --rm eventkit python scripts/update_providers.py adhoc/fixture.json`
+
+You can verify if this worked by checking the admin page [Data provider status](http://host.docker.internal/admin/jobs/dataproviderstatus/)
+
+#### Custom sources
+
+If you are developing/testing custom sources, you can add new providers [here](http://host.docker.internal/admin/jobs/dataprovider/)
+
+More information, and a full breakdown, can be found in the [Sources readme](./sources.md)
