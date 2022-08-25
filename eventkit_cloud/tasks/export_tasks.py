@@ -10,8 +10,8 @@ import sqlite3
 import time
 import traceback
 from pathlib import Path
-from typing import List, Type, Union
-from urllib.parse import urlencode, urljoin
+from typing import List, Type, Union, cast
+from urllib.parse import urlencode
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from audit_logging.file_logging import logging_open
@@ -75,12 +75,11 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
-from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.generic import retry
 from eventkit_cloud.utils.helpers import make_dirs
-from eventkit_cloud.utils.ogcapi_process import OgcApiProcess, get_format_field_from_config
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 from eventkit_cloud.utils.services.types import LayersDescription
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
@@ -431,6 +430,7 @@ def osm_data_collection_pipeline(
         driver="gpkg",
         is_raster=False,
         access_mode="append",
+        projection=projection,
         layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
         executor=task_process.start_process,
     )
@@ -789,16 +789,17 @@ def ogc_result_task(
     export_task_record = get_export_task_record(task_uid)
     selection = parse_result(result, "selection")
     data_provider: DataProvider = export_task_record.export_provider_task.provider
-    ogcapi_config = data_provider.config.get("ogcapi_process")
+    client: OGCAPIProcess = cast(OGCAPIProcess, data_provider.get_service_client())
+    ogcapi_config = client.process_config
     # check to see if file format that we're processing is the same one as the
     # primary task (ogcapi_process_export_task); if so, return data rather than downloading again
     if ogcapi_config:
-        format_field, format_prop = get_format_field_from_config(ogcapi_config)
+        format_field, format_prop = OGCAPIProcess.get_format_field(ogcapi_config["inputs"])
         if format_field:
             export_format = ogcapi_config["inputs"][format_field]
         if format_prop:
             export_format = ogcapi_config["inputs"][format_field][format_prop]
-        if export_format and export_format.lower() == export_format_slug.lower():
+        if export_format and export_format.lower() == export_format_slug.lower() and result.get("ogcapi_process"):
             result["result"] = result["ogcapi_process"]
             return result
         else:
@@ -964,7 +965,6 @@ def mbtiles_export_task(
     task_process = TaskProcess(task_uid=task_uid)
     mbtiles = convert(
         driver="MBTiles",
-        src_srs=4326,
         input_files=source_dataset,
         output_file=mbtiles_out_dataset,
         boundary=selection,
@@ -1013,6 +1013,7 @@ def geotiff_export_task(
             warp_params=warp_params,
             translate_params=translate_params,
             executor=task_process.start_process,
+            projection=projection,
         )
 
     result["file_extension"] = "tif"
@@ -1040,7 +1041,8 @@ def nitf_export_task(
     nitf_in_dataset = parse_result(result, "source")
     export_task_record = get_export_task_record(task_uid)
     nitf_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "nitf")
-
+    if projection != 4326:
+        raise Exception("NITF only supports 4236.")
     creation_options = ["ICORDS=G"]
     task_process = TaskProcess(task_uid=task_uid)
     nitf = convert(
@@ -1049,6 +1051,7 @@ def nitf_export_task(
         output_file=nitf_out_dataset,
         creation_options=creation_options,
         executor=task_process.start_process,
+        projection=4326,
     )
 
     result["driver"] = "nitf"
@@ -1075,7 +1078,11 @@ def hfa_export_task(
     hfa_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "img")
     task_process = TaskProcess(task_uid=task_uid)
     hfa = convert(
-        driver="hfa", input_files=hfa_in_dataset, output_file=hfa_out_dataset, executor=task_process.start_process
+        driver="hfa",
+        input_files=hfa_in_dataset,
+        output_file=hfa_out_dataset,
+        projection=projection,
+        executor=task_process.start_process,
     )
 
     result["file_extension"] = "img"
@@ -1436,7 +1443,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         if bbox is None:
             query_params["geometry"] = "BBOX_PLACEHOLDER"
         query_str = urlencode(query_params, safe="=*")
-        query_url = urljoin(f"{service_url}/", f"query?{query_str}")
+        query_url = f"{service_url}/query?{query_str}"
 
     return query_url
 
@@ -1734,7 +1741,12 @@ def create_zip_task(
         if os.path.isdir(ogc_metadata_dir):
             path = Path(ogc_metadata_dir)
             for file in path.rglob("*"):
-                meta_files[str(file)] = str(Path(file).relative_to(settings.EXPORT_STAGING_ROOT))
+                relative_metadata_path = Path(file).relative_to(
+                    get_run_staging_dir(metadata["run_uid"]), data_provider_task_record_slug
+                )
+                meta_files[str(file)] = str(
+                    Path("data", data_provider_task_record_slug, "metadata", relative_metadata_path)
+                )
 
         meta_files.update(get_style_files())
         meta_files.update(get_arcgis_templates(metadata))
@@ -2257,23 +2269,17 @@ def get_ogcapi_data(
     if download_path is None:
         raise Exception("A download path is required to download ogcapi data.")
 
-    configuration = config
+    export_task_record = get_export_task_record(task_uid)
 
     geom: GEOSGeometry = get_geometry(bbox, selection)
 
     try:
-        ogc_process = OgcApiProcess(
-            url=service_url,
-            config=configuration["ogcapi_process"],
-            session_token=session_token,
-            task_id=task_uid,
-            cred_var=configuration.get("cred_var"),
-            cert_info=configuration.get("cert_info"),
-            cred_token=configuration.get("cred_token"),
-            login_url=configuration.get("login_url"),
+        client: OGCAPIProcess = cast(
+            OGCAPIProcess, export_task_record.export_provider_task.provider.get_service_client()
         )
-        ogc_process.create_job(geom, file_format=export_format_slug)
-        download_url = ogc_process.get_job_results()
+        client.create_job(geom, file_format=export_format_slug)
+        update_progress(task_uid, progress=25, subtask_percentage=50)
+        download_url = client.get_job_results()
         if not download_url:
             raise Exception("Invalid response from OGC API server")
     except Exception as e:
@@ -2281,18 +2287,8 @@ def get_ogcapi_data(
 
     update_progress(task_uid, progress=50, subtask_percentage=50)
 
-    download_credentials = configuration["ogcapi_process"].get("download_credentials", dict())
-    basic_auth = download_credentials.get("cred_var")
-    username = password = session = None
-    if basic_auth:
-        username, password = os.getenv(basic_auth).split(":")
-    if getattr(settings, "SITE_NAME", os.getenv("HOSTNAME")) in download_url:
-        session = EventKitClient(
-            getattr(settings, "SITE_URL"),
-            username=username,
-            password=password,
-        ).client
-    download_path = download_data(task_uid, download_url, download_path, session=session, **download_credentials)
+    process_session = client.get_process_session(download_url)
+    download_path = download_data(task_uid, download_url, download_path, session=process_session)
     extract_metadata_files(download_path, stage_dir)
 
     return download_path

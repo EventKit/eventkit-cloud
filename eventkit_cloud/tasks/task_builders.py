@@ -116,11 +116,12 @@ class TaskChainBuilder(object):
             },
         )
 
-        skip_primary_export_task = False
-        if set(item.name.lower() for item in formats).issubset(
-            set(item.name.lower() for item in get_proxy_formats(data_provider))
-        ):
-            skip_primary_export_task = True
+        # TODO: Fix skip_primary_export_task task it fails to run the job in some situations.
+        # skip_primary_export_task = False
+        # if set(item.name.lower() for item in formats).issubset(
+        #     set(item.name.lower() for item in get_proxy_formats(data_provider))
+        # ):
+        # skip_primary_export_task = True
 
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
@@ -174,6 +175,7 @@ class TaskChainBuilder(object):
                         export_format_slug=current_format.slug,
                         bbox=bbox,
                         session_token=session_token,
+                        projection=default_projection,
                         provider_slug=data_provider.slug,
                         export_provider_task_record_uid=data_provider_task_record.uid,
                         worker=worker,
@@ -250,17 +252,18 @@ class TaskChainBuilder(object):
             service_url=data_provider.url,
             config=data_provider.config,
             session_token=session_token,
+            projection=default_projection,
         )
         primary_export_task_signature = primary_export_task_signature.set(
             queue=queue_routing_key_name, routing_key=queue_routing_key_name
         )
-        if skip_primary_export_task:
-            tasks = chain(format_tasks)
-            primary_export_task_record.delete()
-        else:
-            tasks = chain(primary_export_task_signature, format_tasks)
+        # if skip_primary_export_task:
+        #     tasks = chain(format_tasks)
+        #     primary_export_task_record.delete()
+        # else:
+        tasks = chain(primary_export_task_signature, format_tasks)
 
-        tasks = chain(tasks)
+        # tasks = chain(tasks)
 
         return data_provider_task_record.uid, tasks
 

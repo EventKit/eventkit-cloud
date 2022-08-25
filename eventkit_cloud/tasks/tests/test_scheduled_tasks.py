@@ -14,7 +14,7 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from notifications.models import Notification
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus, Job
+from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus, DataProviderType, Job
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import list_to_dict
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord
@@ -355,8 +355,13 @@ class TestCheckProviderAvailabilityTask(TestCase):
 
         perform_provider_check_mock.return_value = CheckResult.SUCCESS.value
         DataProvider.check_status = perform_provider_check_mock
-        first_provider = DataProvider.objects.create(slug="first_provider", name="first_provider")
-        DataProvider.objects.create(slug="second_provider", name="second_provider")
+        data_provider_type = DataProviderType.objects.create(type_name="test")
+        first_provider = DataProvider.objects.create(
+            slug="first_provider", name="first_provider", export_provider_type=data_provider_type
+        )
+        DataProvider.objects.create(
+            slug="second_provider", name="second_provider", export_provider_type=data_provider_type
+        )
         DataProviderStatus.objects.create(related_provider=first_provider)
 
         check_provider_availability_task()

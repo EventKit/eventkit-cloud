@@ -55,14 +55,16 @@ def get_cert_info(kwargs_dict):
     :return:tuple (cert_path, cert_pass_var) either may be None
     """
     cert_info = kwargs_dict.pop("cert_info", None)
-    if not cert_info:
-        return None, None
-    cert_path = cert_info.get("cert_path")
-    cert_pass_var = cert_info.get("cert_pass_var", "")
+    if cert_info:
+        cert_path = cert_info.get("cert_path")
+        cert_pass_var = cert_info.get("cert_pass_var", "")
+    else:
+        cert_path = kwargs_dict.get("cert_path")
+        cert_pass_var = kwargs_dict.get("cert_pass_var", "")
     cert_pass = os.getenv(cert_pass_var)
-    if not (cert_path and cert_pass):
+    if (cert_info or cert_path) and not (cert_path and cert_pass):
         logger.error(
-            f"Cert_info was passed in but cert_path={cert_path} or cert_pass_var={cert_pass_var})"
+            f"Cert information was passed in but cert_path={cert_path} or cert_pass_var={cert_pass_var})"
             f"are not correctly configured"
         )
         raise Exception("Certificate information is improperly configured.")

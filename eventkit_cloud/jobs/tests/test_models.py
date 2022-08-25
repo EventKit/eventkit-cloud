@@ -339,7 +339,10 @@ class TestJobPermission(TestCase):
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.data_provider = DataProvider.objects.create(name="test1", slug="test1")
+        data_provider_type = DataProviderType.objects.create(type_name="test")
+        self.data_provider = DataProvider.objects.create(
+            name="test1", slug="test1", export_provider_type=data_provider_type
+        )
         self.data_providers = DataProvider.objects.all()
         self.job = Job.objects.create(
             name="test1", description="Test description", the_geom=the_geom, user=self.user1, json_tags={}

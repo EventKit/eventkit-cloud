@@ -85,8 +85,8 @@ class BenchmarkEventkit(object):
                 if run.get('user') == self.username:
                     job_url = run['job']['url']
                     if job_url:
-                        self.client.client.delete(run['job']['url'],
-                                                  headers={'X-CSRFToken': self.client.csrftoken})
+                        self.client.session.delete(run['job']['url'],
+                                                   headers={'X-CSRFToken': self.client.csrftoken})
             response = self.client.search_runs()
 
     def wait_for_run(self, job_uid, run_timeout=0):
@@ -95,7 +95,7 @@ class BenchmarkEventkit(object):
         first_check = time.time()
         while not finished:
             time.sleep(1)
-            response = self.client.client.get(
+            response = self.client.session.get(
                 self.client.runs_url,
                 params={"job_uid": job_uid},
                 headers={'X-CSRFToken': self.client.csrftoken

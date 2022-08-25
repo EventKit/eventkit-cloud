@@ -280,12 +280,11 @@ ogcapi_process:
   inputs:
     input_key_name: "a_value"
     another_input_key_name: 
-       prop_a: "an object property"
-       prop_b: "an object property"
+       prop_a: "an input object property"
+       prop_b: "another input object property"
   outputs:
      output_key_name: 
-       format:
-         mediaType: "application/zip"
+       prop_a: "an output object property"
   area:
       name: "geojson"
       type: "geojson"
