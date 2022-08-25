@@ -567,6 +567,9 @@ class UserFavoriteProduct(TimeStampedModelMixin):
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="user_favorites")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
 
+    # TODO Override save/delete for cache clearing
+    # user_cache
+
 
 class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     """
