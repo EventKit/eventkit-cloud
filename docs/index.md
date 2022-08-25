@@ -156,3 +156,17 @@ Black is an auto formatting tool for Python that will allow you to handle most o
 make black
 make black-format
 </pre>
+
+### Run checks concurrently
+
+A helper script is available to run all of the linters and tests concurrently which can help speed up the time to quickly check what needs to be fixed.
+
+<pre>
+python scripts/check_code.py
+</pre>
+or 
+<pre>
+make check
+</pre>
+
+
