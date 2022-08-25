@@ -307,7 +307,7 @@ The optional fields are:
 
 An example:
 
-```json
+```env
 OAUTH_PROFILE_SCHEMA = {"identification": "ID",
                         "username": "username",
                         "email": ["email","mail", "login"],
@@ -508,7 +508,7 @@ After this size a file is used on disk next to the source data.
 
 Pass in this environment variable with your RocketChat settings to enable notifications about failed DataPacks to specific channel(s) or user(s).
 
-```json
+```env
 ROCKETCHAT_NOTIFICATIONS={  "auth_token": "personal_access_token", 
                             "user_id": "personal_user_id", 
                             "channels": ["#channel", "@username"], 

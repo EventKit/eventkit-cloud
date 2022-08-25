@@ -13,15 +13,13 @@ EventKit can request data from a variety of data sources including:
 - Vector File
 - Raster File
 
-The support varies a little by services.  For example all data will be loaded by default in the style sheets however WCS is expected to be elevation, so it may not appear correctly in the styles.
-Additionally WFS and ArcGIS Feature currently have no way to implement custom styles.
+The support varies a little by services.  For example all data will be loaded by default in the style sheets however WCS is expected to be elevation, so it may not appear correctly in the styles. Additionally WFS and ArcGIS Feature currently have no way to implement custom styles.
 
 ## Configuration
 
 The tooling for configuring getting the data varies slightly but it is generally using GDAL/OGR and [MapProxy](https://mapproxy.org/docs/nightly/configuration.html).
 
-To configure a new data source navigate to the data providers section in the admin page (i.e. `/admin/jobs/dataprovider/`)
-and select "Add Data Provider".
+To configure a new data source navigate to the data providers section in the admin page (i.e. [http://host.docker.internal/admin/jobs/dataprovider/](http://host.docker.internal/admin/jobs/dataprovider/)) and select `Add Data Provider`.
 
 ### General Settings
 
@@ -57,8 +55,7 @@ MapProxy configuration can be fairly complicated.  The `Configuration` section i
 
 In general you need a Layers, Sources, and Grids section.
 
-Each section that will be used for collecting the data needs to be labeled default.  Additionally it is required
-that the final output layer is 4326.  If the input layer is something else it needs to be configured to be reprojected.
+Each section that will be used for collecting the data needs to be labeled default.  Additionally it is required that the final output layer is 4326.  If the input layer is something else it needs to be configured to be reprojected.
 
 Whatever is the Service Layer needs to be listed as a Source in the Sources section. You need to also list that Layer in the layers section. The source for that layer MUST be `default`. EventKit will configure the cache for you, or you can override the cache with your own cache section. The cache type *MUST* be geopackage and the filename *must* be 'geopackage'.  EventKit relies on having geopackages in `4326`, to convert to other formats and projections.
 
@@ -200,8 +197,7 @@ You can change the default overpass query in the configuration section by adding
 overpass_query: <Some overpass query>
 ```
 
-Additionally if wishing **NOT** to use overpass a PBF file can be used, however there are many known limitations. The user will have no idea of the bounds of the PBF file, so they will likely extract areas outside of a PBF, unless a planet size PBF is used. Because of the way PBF is read from GDAL processing PBF data will take a significant amount of time regardless of selection area.
-Small PBF files will take a small amount of time but that time gets worse as the PBF file grows. It could take 8 hours to do a 1000 km area from a planet sized PBF, however it may only take 8 hours to also do the whole planet.
+Additionally if wishing **NOT** to use overpass a PBF file can be used, however there are many known limitations. The user will have no idea of the bounds of the PBF file, so they will likely extract areas outside of a PBF, unless a planet size PBF is used. Because of the way PBF is read from GDAL processing PBF data will take a significant amount of time regardless of selection area. Small PBF files will take a small amount of time but that time gets worse as the PBF file grows. It could take 8 hours to do a 1000 km area from a planet sized PBF, however it may only take 8 hours to also do the whole planet.
 
 Therefore PBF is a reasonable option if wishing create OSM extracts that are continent or planet scale. Lastly it can take a significant amount of storage space to process the data and there should be 3 times the size of the PBF file per worker on the system. If using a 10GB PBF file, with one worker processing an OSM job there should be more than 30 GB of storage available to that worker for both the exported geopackage as well as for the geometry index used by GDAL. [GDAL Performance Tweaking](https://gdal.org/drivers/vector/osm.html#internal-working-and-performance-tweaking)
 
@@ -271,8 +267,7 @@ To set up a vector or raster file provider:
 
 ##### OGC Process Configuration
 
-An OGC API process provider can be configured through the use of YAML syntax.
-Below is a sample configuration.
+An OGC API process provider can be configured through the use of YAML syntax. Below is a sample configuration.
 
 ```yaml
 ogcapi_process:
@@ -302,3 +297,11 @@ ogcapi_process:
 The *source* in `source_config` refers to the provider the bundler will fetch data from.
 
 `GPKG` and `zip` are the only file and archive formats currently supported by the EventKit OGC provider.
+
+#### Adding providers via the api (can handle batches)
+
+> EventKit needs to be up and running before running this
+
+- `docker-compose run --rm eventkit python scripts/update_providers.py <provider(s)>.json`
+
+You can verify if these steps worked by checking the admin page [Data provider status](http://host.docker.internal/admin/jobs/dataproviderstatus/)

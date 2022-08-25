@@ -53,7 +53,7 @@ If desired, the Celery task application name can be set, otherwise it will defau
 
 The group name for the scheduled PCF tasks for celery.
 
-```json
+```env
 CELERY_DEFAULT_TASK_SETTINGS='{ "CELERY_MAX_DEFAULT_TASKS": 3,
                                 "CELERY_DEFAULT_DISK_SIZE": 3072,
                                 "CELERY_DEFAULT_MEMORY_SIZE": 3072

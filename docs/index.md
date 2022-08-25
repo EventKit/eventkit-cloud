@@ -222,22 +222,6 @@ Other useful links for development
 
 For the ease of keeping track on your personal files, make a directory at root called `adhoc` (This file and contents are already ignored by git)
 
-#### Enabling sources
-
-By default, EventKit does not have any sources enabled.
-
-To enable it for local testing, you will need to get a definition file (likely called `fixture.json`). You can get this file from the team.
-> This file cannot be stored in the project since it contains passwords
-
-Once you have this file, place it in the `adhoc` folder, then run the following command
-> EventKit needs to be up and running before running this
-
-- `docker-compose run --rm eventkit python scripts/update_providers.py adhoc/fixture.json`
-
-You can verify if this worked by checking the admin page [Data provider status](http://host.docker.internal/admin/jobs/dataproviderstatus/)
-
-#### Custom sources
-
-If you are developing/testing custom sources, you can add new providers [here](http://host.docker.internal/admin/jobs/dataprovider/)
+#### Adding sources
 
 More information, and a full breakdown, can be found in the [Sources readme](./sources.md)
