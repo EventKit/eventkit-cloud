@@ -33,7 +33,6 @@ class TestAuthViews(TestCase):
 
             request = MagicMock(GET={"code": "1234"})
 
-
             group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
             with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
                 mock_group.objects.get.return_value = group
