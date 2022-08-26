@@ -26,6 +26,11 @@ image:
 
 .default:
   when: always
+  except:
+    changes:
+      - scripts/*
+      - docs/*
+      - hooks/*
 
 pending-tests:
   when: always
