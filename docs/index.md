@@ -202,6 +202,18 @@ make black
 make black-format
 ```
 
+### Run checks concurrently
+
+A helper script is available to run all of the linters and tests concurrently which can help speed up the time to quickly check what needs to be fixed.
+
+```shell
+python scripts/check_code.py
+```
+or 
+```shell
+make check
+```
+
 Be sure check out the other documentation:
 
 - [Sources](./sources.md)
@@ -225,3 +237,5 @@ For the ease of keeping track on your personal files, make a directory at root c
 #### Adding sources
 
 More information, and a full breakdown, can be found in the [Sources readme](./sources.md)
+
+
