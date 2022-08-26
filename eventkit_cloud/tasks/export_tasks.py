@@ -430,6 +430,7 @@ def osm_data_collection_pipeline(
         driver="gpkg",
         is_raster=False,
         access_mode="append",
+        src_srs=4326,
         projection=projection,
         layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
         executor=task_process.start_process,
@@ -562,6 +563,7 @@ def shp_export_task(
         input_files=shp_in_dataset,
         output_file=shp_out_dataset,
         boundary=selection,
+        src_srs=4326,
         projection=projection,
         executor=task_process.start_process,
     )
@@ -608,6 +610,7 @@ def kml_export_task(
             input_files=kml_in_dataset,
             output_file=kml_out_dataset,
             boundary=selection,
+            src_srs=4326,
             projection=projection,
             executor=task_process.start_process,
         )
@@ -646,6 +649,7 @@ def gpx_export_task(
             input_files=input_file,
             output_file=gpx_file,
             driver="GPX",
+            src_srs=4326,
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             creation_options=["-explodecollections"],
             boundary=selection,
@@ -749,6 +753,7 @@ def ogcapi_process_export_task(
                 driver=driver,
                 input_files=source_data,
                 output_file=output_file,
+                src_srs=4326,
                 projection=projection,
                 boundary=bbox,
                 executor=task_process.start_process,
@@ -855,6 +860,7 @@ def sqlite_export_task(
         input_files=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
         boundary=selection,
+        src_srs=4326,
         projection=projection,
         executor=task_process.start_process,
     )
@@ -927,6 +933,7 @@ def geopackage_export_task(
                 input_files=gpkg_in_dataset,
                 output_file=gpkg_out_dataset,
                 boundary=selection,
+                src_srs=4326,
                 projection=projection,
                 executor=task_process.start_process,
             )
@@ -968,6 +975,7 @@ def mbtiles_export_task(
         input_files=source_dataset,
         output_file=mbtiles_out_dataset,
         boundary=selection,
+        src_srs=4326,
         projection=projection,
         use_translate=True,
         executor=task_process.start_process,
@@ -1013,6 +1021,7 @@ def geotiff_export_task(
             warp_params=warp_params,
             translate_params=translate_params,
             executor=task_process.start_process,
+            src_srs=4326,
             projection=projection,
         )
 
@@ -1051,6 +1060,7 @@ def nitf_export_task(
         output_file=nitf_out_dataset,
         creation_options=creation_options,
         executor=task_process.start_process,
+        src_srs=4326,
         projection=4326,
     )
 
@@ -1081,6 +1091,7 @@ def hfa_export_task(
         driver="hfa",
         input_files=hfa_in_dataset,
         output_file=hfa_out_dataset,
+        src_srs=4326,
         projection=projection,
         executor=task_process.start_process,
     )
@@ -1173,6 +1184,7 @@ def reprojection_task(
                 driver=driver,
                 input_files=in_dataset,
                 output_file=out_dataset,
+                src_srs=4326,
                 projection=projection,
                 boundary=selection,
                 warp_params=warp_params,
@@ -1236,6 +1248,7 @@ def wfs_export_task(
             driver="gpkg",
             input_files=layer.get("path"),
             output_file=gpkg,
+            src_srs=4326,
             projection=projection,
             boundary=bbox,
             layer_name=layer_name,
@@ -1405,6 +1418,7 @@ def arcgis_feature_service_export_task(
             input_files=layer.get("path"),
             output_file=gpkg,
             boundary=selection,
+            src_srs=4326,
             projection=projection,
             layer_name=layer_name,
             access_mode="append",
@@ -1474,6 +1488,7 @@ def vector_file_export_task(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
+        src_srs=4326,
         projection=projection,
         layer_name=list(export_task_record.export_provider_task.provider.layers.keys())[0],
         boundary=bbox,
@@ -1515,6 +1530,7 @@ def raster_file_export_task(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
+        src_srs=4326,
         projection=projection,
         boundary=bbox,
         is_raster=True,
@@ -1592,6 +1608,7 @@ def mapproxy_export_task(
             service_type=service_type,
             task_uid=task_uid,
             selection=selection,
+            projection=projection,
         )
         gpkg = w2g.convert()
         result["driver"] = "gpkg"

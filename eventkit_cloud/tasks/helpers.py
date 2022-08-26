@@ -111,7 +111,7 @@ def get_default_projection(supported_projections: List[int], selected_projection
     for supported_projection in supported_projections:
         if supported_projection in selected_projections:
             return supported_projection
-    return None
+    return 4326
 
 
 def get_export_filepath(
