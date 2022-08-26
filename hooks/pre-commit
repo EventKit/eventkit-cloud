@@ -2,13 +2,5 @@
 
 set -e
 
-echo "Running Linters..."
-docker-compose exec -T webpack npm run eslint
-docker-compose exec -T eventkit bash -c 'source activate conda_env && black --check eventkit_cloud'
-docker-compose exec -T eventkit bash -c 'source activate conda_env && flake8 eventkit_cloud'
-docker-compose exec -T eventkit bash -c 'source activate conda_env && isort --check eventkit_cloud'
-docker-compose exec -T eventkit bash -c 'source activate conda_env && mypy eventkit_cloud'
-
-echo "Running Tests..."
-docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py test -v 3 --noinput eventkit_cloud'
-docker-compose exec -T webpack npm test
+echo "Running checks..."
+python scripts/check_code.py
