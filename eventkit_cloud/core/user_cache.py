@@ -24,7 +24,7 @@ class UserCache():
         except ValueError:
             cache_keys.append(key)
             cache.set(self.username, cache_keys)
-        return cache_keys.add(key)
+        return cache_keys.append(key)
 
     def _remove_cache_key(self, key):
         cache_keys: list = self._get_cache_keys()
