@@ -9,6 +9,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
+import Star from "@material-ui/icons/Star";
+import StarBorder from "@material-ui/icons/StarBorder";
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
 import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
@@ -93,7 +95,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         [theme.breakpoints.only('xs')]: {
             padding: '10px 15px',
         },
-    }
+    },
+    star: {
+        verticalAlign: 'bottom',
+        fontSize: 32,
+    },
 });
 
 interface Props {
@@ -128,8 +134,11 @@ interface Props {
         license: string;
         prewrap: string;
         listItemPadding: string;
+        star: string;
     };
 }
+
+
 
 export function DataProvider(props: Props) {
     const {BASEMAP_URL} = useAppContext();
@@ -140,6 +149,7 @@ export function DataProvider(props: Props) {
     const [isOpen, setOpen] = useState(false);
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false)
 
     const {dataSizeInfo, aoiArea, aoiBboxArea, providerLimits} = useJobValidationContext();
     const {haveAvailableEstimates = [], noMaxDataSize = []} = dataSizeInfo || {};
@@ -546,6 +556,20 @@ export function DataProvider(props: Props) {
                         primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
                         secondary={secondary}
                     />
+                    <span style={{flex: '10 1 auto'}}>
+                        {isFavorite ? <Star
+                        id="Favorite"
+                        className={classes.star}
+                        onClick={() => setIsFavorite(!isFavorite)}
+                        color="primary"
+                    /> : <StarBorder
+                                id="UnFavorite"
+                                className={classes.star}
+                                onClick={() => setIsFavorite(!isFavorite)}
+                                color="primary"
+                            />}
+
+                    </span>
                     <ProviderStatusCheck
                         id="ProviderStatus"
                         baseStyle={{marginRight: '40px'}}
