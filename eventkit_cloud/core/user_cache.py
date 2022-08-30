@@ -1,3 +1,4 @@
+import logging
 from multiprocessing.sharedctypes import Value
 from django.core.cache import cache
 
@@ -18,38 +19,48 @@ class UserCache:
     def _add_cache_key(self, key):
         cache_keys: list = self._get_cache_keys()
         try:
+            logging.error("checking if item exists")
             cache_keys.index(key)
+            logging.error("item was found")
         except ValueError:
+            logging.error("item not found, adding")
             cache_keys.append(key)
             cache.set(self.username, cache_keys)
-        return cache_keys.append(key)
 
     def _remove_cache_key(self, key):
+        logging.error("checking if item exists")
         cache_keys: list = self._get_cache_keys()
         try:
+            logging.error("removing item")
             cache_keys.remove(key)
+            logging.error("item removed, updating cache")
             cache.set(self.username, cache_keys)
         except ValueError:
+            logging.error("item not exist, no remove needed")
             # No need to reset cache, nothing changed
             pass
-        return cache_keys.remove(key)
 
     def add(self, key, *args, **kwargs):
-        # print("add user cache item")
-        self._add_cache_key(key)
-        return cache.add(key, *args, **kwargs)
+        logging.error("add user cache item")
+        value = self._add_cache_key(key)
+        return cache.add(key, value, *args, **kwargs)
 
     def delete(self, key, *arg, **kwargs):
-        # print("remove user cache item")
+        logging.error("remove user cache item")
         delete = cache.delete(key, *arg, **kwargs)
         if delete:
+            logging.error("item needs to be removed")
             self._remove_cache_key(key)
         return delete
 
     def get(self, key, *args, **kwargs):
-        # print("get user cache item")
+        logging.error("get user cache item")
         return cache.get(key, *args, **kwargs)
 
+    def get_all_for_user(self, key, *args, **kwargs):
+        logging.error("get all user cache items")
+        return self._get_cache_keys(key, *args, **kwargs)
+
     def set(self, key, *args, **kwargs):
-        # print("set user cache item")
+        logging.error("set user cache item")
         return cache.set(key, *args, **kwargs)

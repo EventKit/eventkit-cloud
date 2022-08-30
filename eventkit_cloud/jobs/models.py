@@ -571,12 +571,12 @@ class UserFavoriteProduct(TimeStampedModelMixin):
     # TODO Override save/delete for cache clearing
     def save(self, *args, **kwargs):
         user_cache = UserCache(self.user.username)
-        user_cache.delete(provider)
-        user_cache.set(provider)
+        user_cache.delete(self.provider)
+        user_cache.add(self.provider)
 
     def delete(self, *args, **kwargs):
         user_cache = UserCache(self.user.username)
-        user_cache.delete(provider)
+        user_cache.delete(self.provider)
 
 
 class StyleFile(TimeStampedModelMixin, FileFieldMixin):
