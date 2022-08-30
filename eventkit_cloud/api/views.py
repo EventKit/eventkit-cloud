@@ -1056,8 +1056,7 @@ class DataProviderViewSet(EventkitViewSet):
 
         # The cache_key will be different if serializing a geojson or an api json.
         cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)
-        # data = user_cache.get(cache_key)
-        data = cache.get(cache_key)
+        data = user_cache.get(cache_key)
 
         if not data:
             queryset = self.get_queryset()
@@ -1066,8 +1065,7 @@ class DataProviderViewSet(EventkitViewSet):
             filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
             data = data + filtered_data
 
-            # if user_cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
-            if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
+            if user_cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 DataProvider.update_cache_key_list(cache_key)
 
         return Response(data)

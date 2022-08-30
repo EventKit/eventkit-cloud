@@ -31,6 +31,7 @@ from eventkit_cloud.core.models import (
     TimeStampedModelMixin,
     UIDMixin,
 )
+from eventkit_cloud.core.user_cache import UserCache
 from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.utils.services import get_client
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
@@ -568,7 +569,14 @@ class UserFavoriteProduct(TimeStampedModelMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
 
     # TODO Override save/delete for cache clearing
-    # user_cache
+    def save(self, *args, **kwargs):
+        user_cache = UserCache(self.user.username)
+        user_cache.delete(provider)
+        user_cache.set(provider)
+
+    def delete(self, *args, **kwargs):
+        user_cache = UserCache(self.user.username)
+        user_cache.delete(provider)
 
 
 class StyleFile(TimeStampedModelMixin, FileFieldMixin):

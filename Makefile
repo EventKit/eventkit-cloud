@@ -104,3 +104,11 @@ refresh: initial install-hooks clean build setup up logs
 
 check:
 	python scripts/check_code.py
+
+add-providers:
+	docker-compose run --rm eventkit python scripts/update_providers.py adhoc/fixture.json
+image:
+	docker-compose build eventkit
+check_code: image black-format
+bring_up: image
+	docker-compose up -d

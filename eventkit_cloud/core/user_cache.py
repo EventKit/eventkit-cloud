@@ -1,10 +1,8 @@
 from multiprocessing.sharedctypes import Value
 from django.core.cache import cache
 
-from eventkit_cloud.jobs.models import delete
 
-
-class UserCache():
+class UserCache:
     """
     Interacts with the caches related to username
     """
