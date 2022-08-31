@@ -79,7 +79,7 @@ media/*
 nohup.out
 api/tests/examples
 celerybeat.pid
-celerybeat-schedule
+celerybeat-schedule*
 
 # PyCharm
 .idea
@@ -110,7 +110,7 @@ e2e_reports/
 screenshots/*
 !screenshots/baseline
 
-conda/repo
+conda/repo/*
 venv/
 *_jb_*
 
@@ -126,3 +126,5 @@ setupFile.js
 tsconfig.json
 tslint.json
 webpack.config.js
+
+adhoc/*
