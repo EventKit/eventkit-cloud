@@ -8,6 +8,9 @@ export const types = {
     GETTING_PROVIDER_TASK: 'GETTING_PROVIDER_TASK',
     RECEIVED_PROVIDER_TASK: 'RECEIVED_PROVIDER_TASK',
     GETTING_PROVIDER_TASK_ERROR: 'GETTING_PROVIDER_TASK_ERROR',
+    PATCHING_PROVIDER_FAVORITE: 'PATCHING_PROVIDER_FAVORITE',
+    PATCHED_PROVIDER_FAVORITE: 'PATCHED_PROVIDER_FAVORITE',
+    PATCH_PROVIDER_FAVORITE_ERROR: 'PATCH_PROVIDER_FAVORITE_ERROR',
 };
 
 export function getProviders(selectedArea, selectedTopics) {
@@ -67,4 +70,17 @@ export function cancelProviderTask(uid) {
         url: `/api/provider_tasks/${uid}`,
         method: 'PATCH',
     };
+}
+
+export function updateProviderFavorite(slug, favorite) {
+    return {
+        types: [
+            types.PATCHING_PROVIDER_FAVORITE,
+            types.PATCHED_PROVIDER_FAVORITE,
+            types.PATCH_PROVIDER_FAVORITE_ERROR,
+        ],
+        url: `/api/providers/${slug}`,
+        data: { favorite },
+        method: 'PATCH',
+    }
 }
