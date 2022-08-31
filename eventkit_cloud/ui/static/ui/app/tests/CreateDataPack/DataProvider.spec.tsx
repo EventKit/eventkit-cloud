@@ -1,5 +1,30 @@
 import * as sinon from 'sinon';
-import {shallow} from 'enzyme';
+import { Provider } from "react-redux";
+import theme from "../../styles/eventkit_theme";
+import rootReducer from "../../reducers/rootReducer";
+import {createStore} from "redux";
+import {render} from "@testing-library/react";
+
+jest.doMock("../../components/CreateDataPack/ProviderStatusCheck", () => {
+    return (props) => (<div className="qa-ProviderStatusIcon">{props.children}</div>);
+});
+
+jest.doMock("../../components/Dialog/BaseDialog", () => {
+    return (props) => (<div className="dialog">{props.children}</div>);
+});
+
+jest.doMock("../../components/CreateDataPack/FormatSelector", () => {
+    return (props) => (<div className="format-selector"/>);
+});
+
+jest.doMock( "../../components/CreateDataPack/context/JobValidation", () => ({
+    useJobValidationContext: jest.fn().mockReturnValue({ providerLimits: [], dataSizeInfo: {}, aoiArea: 0, aoiBboxArea: 0 })
+}));
+
+jest.doMock("../../components/MapTools/ProviderPreviewMap", () => {
+    return (props) => (<div className="preview-map"/>);
+})
+
 import { DataProvider } from '../../components/CreateDataPack/DataProvider';
 
 const formats = [
@@ -28,6 +53,56 @@ const formats = [
 describe('DataProvider component', () => {
     let wrapper;
 
+    const getInitialState = () => (
+        {
+            aoiInfo: {
+                geojson: {},
+            },
+            exportInfo: {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                providers: [],
+                providerInfo: {
+                    'osm': {
+                        availability: {
+                            status: 'STAT'
+                        },
+                    }
+                },
+                exportOptions: {
+                    '123': {
+                        minZoom: 0,
+                        maxZoom: 2,
+                    }
+                },
+                projections: [],
+            },
+            providers: [],
+            projections: [],
+            formats,
+            topics: [],
+        }
+    );
+
+    const renderWithRedux = (
+        component,
+        {initialState, store = createStore(rootReducer,initialState)}: any = {}
+    ) => {
+        return {
+            ...render(<Provider store={store}>{component}</Provider>),
+            store,
+        }
+    };
+
+    const renderComponent = (propsOverride = {}) => {
+        const props = {
+        ...defaultProps(),
+        ...propsOverride
+        };
+        wrapper = renderWithRedux(<DataProvider {...props} />, {initialState: getInitialState()});
+    };
+
     const defaultProps = () => ({
         provider: {
             uid: '123',
@@ -41,6 +116,7 @@ describe('DataProvider component', () => {
                 name: 'test license',
             },
             supported_formats: formats,
+            favorite: false,
         },
         exportInfo: {
             exportOptions: {123: {minZoom: 0, maxZoom: 1, formats: ['gpkg']}}
@@ -69,24 +145,18 @@ describe('DataProvider component', () => {
         alt: false,
         classes: {},
         setRef: sinon.spy(),
+        theme: theme,
         ...(global as any).eventkit_test_props,
     });
 
-    const setup = (propsOverride = {}) => {
-        const props = {
-            ...defaultProps(),
-            ...propsOverride,
-        };
-        wrapper = shallow(<DataProvider {...props} />);
-    };
-
-    beforeEach(setup);
+    beforeEach(renderComponent);
 
     describe('it handles providers correctly', () => {
 
         it('it renders ZoomLevelSlider when type is valid', () => {
-            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(1);
-            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(1);
+            const {container} = wrapper;
+            expect(container.getElementsByClassName('qa-DataProvider-ListItem-zoomSelection')).toHaveLength(1);
+            expect(container.getElementsByClassName('qa-DataProvider-ListItem-zoomMap')).toHaveLength(1);
         });
 
         it('it renders zoom not supported message when type invalid', () => {
@@ -102,9 +172,31 @@ describe('DataProvider component', () => {
                 },
                 supported_formats: formats,
             };
-            setup({provider});
-            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(0);
-            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(0);
+            renderComponent({provider});
+            const {container} = wrapper;
+            expect(container.getElementsByClassName('qa-DataProvider-ListItem-zoomSelection')).toHaveLength(0);
         });
+
+        it( 'renders provider with favorite icon', () => {
+            expect(wrapper.getAllByTestId('NotFavorite')).toHaveLength(1)
+        })
+
+        it( 'renders provider with filled favorite icon', () => {
+            const provider = {
+                uid: '123',
+                name: 'test provider',
+                max_selection: '10000',
+                type: 'osm',
+                service_description: 'test description',
+                license: {
+                    text: 'test license text',
+                    name: 'test license',
+                },
+                supported_formats: formats,
+                favorite: true,
+            };
+            renderComponent({provider});
+            expect(wrapper.getAllByTestId('Favorite')).toHaveLength(1)
+        })
     });
 });

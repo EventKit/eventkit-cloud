@@ -180,6 +180,7 @@ export function DataProvider(props: Props) {
         try {
             setProviderFavorite(provider.slug, !isFavorite);
             setIsFavorite(!isFavorite);
+            provider.favorite = !isFavorite;
         }
         catch(e) {
             console.log("Unable to update provider favorite.", e)
@@ -585,11 +586,11 @@ export function DataProvider(props: Props) {
                     />
                     <span className={classes.starContainer}>
                         {isFavorite ? <Star
-                        id="Favorite"
+                        data-testid="Favorite"
                         className={classes.selectedStar}
                         onClick={handleProviderFavorite}
                     /> : <StarBorder
-                                id="UnFavorite"
+                                data-testid="NotFavorite"
                                 className={classes.star}
                                 onClick={handleProviderFavorite}
                             />}
