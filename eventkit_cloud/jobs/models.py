@@ -562,13 +562,21 @@ class Topic(UIDMixin, TimeStampedModelMixin):
 
 class UserFavoriteProduct(TimeStampedModelMixin):
     """
-    Model for a user's favorite product
+    Model for a user's favorite product.
+    Save and delete have been overridden to interact with the cache
     """
 
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="user_favorites")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
 
-    # TODO Override save/delete for cache clearing
+    class Meta:
+        ordering = ["user"]
+        managed = True
+        db_table = "user_provider_favorites"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "provider"], name="unique_user_favorite_provider"),
+        ]
+
     def save(self, *args, **kwargs):
         user_cache = UserCache(self.user.username)
         user_cache.set(self.provider)

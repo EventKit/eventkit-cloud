@@ -105,6 +105,7 @@ refresh: initial install-hooks clean build setup up logs
 check:
 	python scripts/check_code.py
 
+## Useful commands for development
 add-providers:
 	docker-compose run --rm eventkit python scripts/update_providers.py adhoc/fixture.json
 image:
@@ -112,3 +113,14 @@ image:
 check_code: image black-format
 bring_up: image
 	docker-compose up -d
+
+# Create new migration files after model changes.
+make-migrations:
+	docker-compose run --rm eventkit python manage.py makemigrations
+# Run the migrations in the database...
+run-migrations:
+	docker-compose run --rm eventkit python manage.py migrate
+# If you need to roll back migrations
+# docker-compose run --rm eventkit python manage.py migrate <appname> <migration number>
+# for example
+# docker-compose run --rm eventkit python manage.py migrate jobs 0030
