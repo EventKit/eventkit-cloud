@@ -570,9 +570,6 @@ class UserFavoriteProduct(TimeStampedModelMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
 
     class Meta:
-        ordering = ["user"]
-        managed = True
-        db_table = "user_provider_favorites"
         constraints = [
             models.UniqueConstraint(fields=["user", "provider"], name="unique_user_favorite_provider"),
         ]
