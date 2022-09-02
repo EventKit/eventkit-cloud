@@ -23,6 +23,19 @@ export function getProvidersReducer(state = initialStateProviders, action) {
                 fetching: false,
                 objects: action.providers,
             };
+        case types.PATCHED_PROVIDER_FAVORITE:
+            return {
+                ...state,
+                objects: state.objects.map((provider) => {
+                    if (provider.slug === action.slug) {
+                        return {
+                            ...provider,
+                            favorite: action.favorite,
+                        };
+                    }
+                    return provider;
+                }),
+            };
         default:
             return state;
     }

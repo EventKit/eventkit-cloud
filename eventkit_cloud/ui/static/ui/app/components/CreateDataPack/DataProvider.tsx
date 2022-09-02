@@ -9,12 +9,14 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
+import Star from "@material-ui/icons/Star";
+import StarBorder from "@material-ui/icons/StarBorder";
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
 import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
-import {connect} from "react-redux";
+import {connect, useDispatch} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
 import debounce from 'lodash/debounce';
 import FormatSelector from "./FormatSelector";
@@ -36,6 +38,7 @@ import {useJobValidationContext} from "./context/JobValidation";
 import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
 import {renderIf} from "../../utils/renderIf";
 import ZoomOutAtZoomLevel from "../MapTools/OpenLayers/ZoomOutAtZoomLevel";
+import {updateProviderFavorite} from '../../actions/providerActions'
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -93,6 +96,19 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         [theme.breakpoints.only('xs')]: {
             padding: '10px 15px',
         },
+    },
+    star: {
+        verticalAlign: 'text-top',
+        fontSize: 24,
+        color: theme.eventkit.colors.primary,
+    },
+    selectedStar: {
+        verticalAlign: 'text-top',
+        fontSize: 24,
+        color: theme.eventkit.colors.success,
+    },
+    starContainer: {
+        flex: '55 1 auto',
     }
 });
 
@@ -128,8 +144,13 @@ interface Props {
         license: string;
         prewrap: string;
         listItemPadding: string;
+        star: string;
+        selectedStar: string;
+        starContainer: string;
     };
 }
+
+
 
 export function DataProvider(props: Props) {
     const {BASEMAP_URL} = useAppContext();
@@ -148,6 +169,20 @@ export function DataProvider(props: Props) {
     const [isProviderLoading, setProviderLoading] = useState(props.checked);
     const debouncerRef = useRef(null);
     const estimateDebouncer = (...args) => debouncerRef.current(...args);
+    const dispatch = useDispatch();
+
+    const setProviderFavorite = (slug, favorite) => {
+        dispatch(updateProviderFavorite(slug, favorite));
+    }
+
+    function handleProviderFavorite(favoriteVal: boolean) {
+        try {
+            setProviderFavorite(provider.slug, favoriteVal);
+        }
+        catch(e) {
+            console.log("Unable to update provider favorite.", e)
+        }
+    }
 
     useEffectOnMount(() => {
         debouncerRef.current = debounce((val) => {
@@ -546,6 +581,18 @@ export function DataProvider(props: Props) {
                         primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
                         secondary={secondary}
                     />
+                    <span className={classes.starContainer}>
+                        {provider.favorite ? <Star
+                        data-testid="Favorite"
+                        className={classes.selectedStar}
+                        onClick={() => handleProviderFavorite(false)}
+                    /> : <StarBorder
+                                data-testid="NotFavorite"
+                                className={classes.star}
+                                onClick={() => handleProviderFavorite(true)}
+                            />}
+
+                    </span>
                     <ProviderStatusCheck
                         id="ProviderStatus"
                         baseStyle={{marginRight: '40px'}}
