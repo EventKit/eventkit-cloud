@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
-from eventkit_cloud.core.user_cache import UserCache
+from eventkit_cloud.core.mapped_cache import MappedCache
 from notifications.models import Notification
 from rest_framework import filters, mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
@@ -1052,7 +1052,7 @@ class DataProviderViewSet(EventkitViewSet):
         """
 
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
-        user_cache = UserCache(request.user.username)
+        user_cache = MappedCache(request.user.username)
 
         # The cache_key will be different if serializing a geojson or an api json.
         cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)

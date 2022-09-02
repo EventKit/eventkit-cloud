@@ -31,7 +31,7 @@ from eventkit_cloud.core.models import (
     TimeStampedModelMixin,
     UIDMixin,
 )
-from eventkit_cloud.core.user_cache import UserCache
+from eventkit_cloud.core.mapped_cache import MappedCache
 from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.utils.services import get_client
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
@@ -575,13 +575,13 @@ class UserFavoriteProduct(TimeStampedModelMixin):
         ]
 
     def save(self, *args, **kwargs):
-        user_cache = UserCache(self.user.username)
-        user_cache.set(self.provider)
+        user_cache = MappedCache(self.user.username)
+        user_cache.delete_all()
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        user_cache = UserCache(self.user.username)
-        user_cache.delete(self.provider)
+        user_cache = MappedCache(self.user.username)
+        user_cache.delete_all()
         super().delete(*args, **kwargs)
 
     def __str__(self):

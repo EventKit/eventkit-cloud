@@ -124,3 +124,12 @@ run-migrations:
 # docker-compose run --rm eventkit python manage.py migrate <appname> <migration number>
 # for example
 # docker-compose run --rm eventkit python manage.py migrate jobs 0030
+
+# If you need to run unit tests
+# docker-compose run --rm eventkit python manage.py test <full package path to test file>
+# for example
+# docker-compose run --rm eventkit python manage.py test eventkit_cloud.core.tests.test_mapped_cache
+# or
+# docker-compose run --rm eventkit bash
+# then inside the image
+# python manage.py test <full package path to test file>
