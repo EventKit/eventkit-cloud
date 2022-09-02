@@ -567,6 +567,9 @@ class UserFavoriteProduct(TimeStampedModelMixin):
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="user_favorites")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
 
+    def __str__(self):
+        return f"{self.user.username} - {self.provider.slug}"
+
 
 class StyleFile(TimeStampedModelMixin, FileFieldMixin):
     """
