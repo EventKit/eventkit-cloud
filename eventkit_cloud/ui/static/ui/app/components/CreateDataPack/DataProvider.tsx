@@ -161,7 +161,6 @@ export function DataProvider(props: Props) {
     const [isOpen, setOpen] = useState(false);
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
-    const [isFavorite, setIsFavorite] = useState(provider.favorite || false)
 
     const {dataSizeInfo, aoiArea, aoiBboxArea, providerLimits} = useJobValidationContext();
     const {haveAvailableEstimates = [], noMaxDataSize = []} = dataSizeInfo || {};
@@ -176,11 +175,9 @@ export function DataProvider(props: Props) {
         dispatch(updateProviderFavorite(slug, favorite));
     }
 
-    function handleProviderFavorite() {
+    function handleProviderFavorite(favoriteVal: boolean) {
         try {
-            setProviderFavorite(provider.slug, !isFavorite);
-            setIsFavorite(!isFavorite);
-            provider.favorite = !isFavorite;
+            setProviderFavorite(provider.slug, favoriteVal);
         }
         catch(e) {
             console.log("Unable to update provider favorite.", e)
@@ -585,14 +582,14 @@ export function DataProvider(props: Props) {
                         secondary={secondary}
                     />
                     <span className={classes.starContainer}>
-                        {isFavorite ? <Star
+                        {provider.favorite ? <Star
                         data-testid="Favorite"
                         className={classes.selectedStar}
-                        onClick={handleProviderFavorite}
+                        onClick={() => handleProviderFavorite(false)}
                     /> : <StarBorder
                                 data-testid="NotFavorite"
                                 className={classes.star}
-                                onClick={handleProviderFavorite}
+                                onClick={() => handleProviderFavorite(true)}
                             />}
 
                     </span>
