@@ -484,6 +484,11 @@ export function ExportInfo(props: Props) {
 
     const [sortOptions, setSortOptions] = useState([
         {
+            name: "Favorites",
+            slug: "favorites",
+            isChecked: false
+        },
+        {
             name: "Alphabetical A-Z",
             slug: "alphabetical-a-z",
             isChecked: false
@@ -876,10 +881,15 @@ export function ExportInfo(props: Props) {
             case "most-recent":
                 sortedProviders = sortMostRecent(currentProviders);
                 break;
+            case "favorites":
+                sortedProviders = sortByFavorites(currentProviders);
+                break;
             default:
                 sortedProviders = sortProvidersAtoZ(currentProviders);
                 break;
         }
+
+
         return sortedProviders;
     };
 
@@ -898,6 +908,16 @@ export function ExportInfo(props: Props) {
     const sortMostRecent = (currentProviders) => {
         return currentProviders.sort((a, b) => a.download_date_rank - b.download_date_rank);
     };
+
+    const sortByFavorites = (currentProviders) => {
+        const favoriteProviders = currentProviders.filter((v) => v.favorite === true);
+        const returnProviders = currentProviders;
+        if (favoriteProviders.length > 0 && returnProviders) {
+            favoriteProviders.forEach(f => returnProviders.splice(returnProviders.findIndex(value => f.slug === value.slug),1))
+            returnProviders.unshift(...favoriteProviders)
+        }
+        return returnProviders;
+    }
 
     const getCurrentProviders = () => {
         let currentProviders = providers.filter(provider => (!provider.hidden && provider.display));
