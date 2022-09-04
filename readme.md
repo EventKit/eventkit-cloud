@@ -1,5 +1,6 @@
-Eventkit-Cloud
-==============
+# Eventkit-Cloud
+
+---
 
 Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/osm-export-tool).  It allows the user to select data from different sources to export into a variety of formats.
   

@@ -36,8 +36,27 @@ pending-tests:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
     - cd /var/lib/eventkit
+  only:
+    changes:
+      - eventkit_cloud/ui/static/ui/*
+      - config/*
+      - package*
+      - .gitlab-ci.yml
+
+.back_rules:
+  only:
+    changes:
+      - conda/*
+      - config/*
+      - requirement*
+      - eventkit_cloud/*
+      - environment*
+      - setup*
+      - docker-compose*
+      - .gitlab-ci.yml
 
 .back:
+  extends: .back_rules
   image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
     entrypoint: [ "" ]
@@ -101,6 +120,7 @@ migrations:
 
 unit-back:
   extends:
+    - .back_rules
     - .test
   tags:
     - dind

@@ -16,7 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import F, Func, OuterRef, Q, QuerySet, Subquery, Window
+from django.db.models import Exists, F, Func, OuterRef, Q, QuerySet, Subquery, Window
 from django.db.models.functions import DenseRank
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -114,6 +114,7 @@ from eventkit_cloud.jobs.models import (
     RegionalPolicy,
     RegionMask,
     Topic,
+    UserFavoriteProduct,
     UserJobActivity,
     VisibilityState,
 )
@@ -970,6 +971,7 @@ class DataProviderViewSet(EventkitViewSet):
             .order_by("-downloaded_at")
             .values("downloaded_at")[:1]
         )
+
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
@@ -979,8 +981,45 @@ class DataProviderViewSet(EventkitViewSet):
             .annotate(
                 download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
             )
+            .annotate(
+                favorite=Exists(
+                    UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
+                )
+            )
             .order_by(*self.ordering)
         )
+
+    def partial_update(self, request, slug=None, *args, **kwargs):
+        """
+
+        Used to update user favorite.
+
+        Request data can be posted as `application/json`.
+
+        * request: the HTTP request in JSON.
+
+        Example:
+
+                {
+                    "favorite": true
+                }
+
+        Expected Response Example:
+                {
+                    <updated model>
+                }
+        """
+
+        data_provider = DataProvider.objects.get(slug=slug)
+        user = request.user
+        favorite = request.data.get("favorite")
+
+        if favorite:
+            user_favorite, created = UserFavoriteProduct.objects.get_or_create(provider=data_provider, user=user)
+        else:
+            UserFavoriteProduct.objects.filter(provider=data_provider, user=user).delete()
+
+        return Response(status=status.HTTP_200_OK)
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
