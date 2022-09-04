@@ -31,6 +31,7 @@ from eventkit_cloud.core.models import (
     TimeStampedModelMixin,
     UIDMixin,
 )
+from eventkit_cloud.core.mapped_cache import MappedCache
 from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
 from eventkit_cloud.utils.services import get_client
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
@@ -561,11 +562,27 @@ class Topic(UIDMixin, TimeStampedModelMixin):
 
 class UserFavoriteProduct(TimeStampedModelMixin):
     """
-    Model for a user's favorite product
+    Model for a user's favorite product.
+    Save and delete have been overridden to interact with the cache
     """
 
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="user_favorites")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_products")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "provider"], name="unique_user_favorite_provider"),
+        ]
+
+    def save(self, *args, **kwargs):
+        user_cache = MappedCache(self.user.username)
+        user_cache.delete_all()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        user_cache = MappedCache(self.user.username)
+        user_cache.delete_all()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} - {self.provider.slug}"
