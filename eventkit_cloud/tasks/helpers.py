@@ -892,8 +892,8 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
         os.mkdir(base_path)
     merge_chunks(
         output_file=layer.get("path"),
-        projection=layer.get("projection"),
         layer_name=layer.get("layer_name"),
+        projection=layer.get("projection"),
         task_uid=layer.get("task_uid"),
         bbox=layer.get("bbox"),
         stage_dir=base_path,

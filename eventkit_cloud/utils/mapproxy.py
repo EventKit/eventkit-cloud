@@ -207,7 +207,7 @@ class MapproxyGeopackage(object):
             conf_dict["caches"]["default"]["meta_size"] = [4, 4]
             conf_dict["caches"]["default"]["bulk_meta_tiles"] = True
             conf_dict["caches"]["default"] = get_cache_template(
-                ["repro_cache"], [str(self.projection)], self.gpkgfile, "default"
+                ["repro_cache"], [str(self.projection)], self.gpkgfile, table_name="default"
             )
 
         # Need something listed as a service to pass the mapproxy validation.

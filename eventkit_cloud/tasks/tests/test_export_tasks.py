@@ -183,7 +183,6 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_output_path,
             output_file=expected_output_path,
             boundary=None,
-            src_srs=4326,
             projection=4326,
             executor=self.task_process().start_process,
         )
@@ -232,7 +231,6 @@ class TestExportTasks(ExportTaskBase):
                 driver="libkml",
                 input_files=expected_output_path,
                 output_file=expected_output_path,
-                src_srs=4326,
                 projection=4326,
                 boundary=None,
                 executor=self.task_process().start_process,
@@ -272,7 +270,6 @@ class TestExportTasks(ExportTaskBase):
             driver="SQLite",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=None,
             executor=self.task_process().start_process,
@@ -332,7 +329,6 @@ class TestExportTasks(ExportTaskBase):
             result=previous_task_result,
             task_uid=str(saved_export_task.uid),
             stage_dir=self.stage_dir,
-            src_srs=4326,
             projection=projection,
             service_url=service_url,
             layer=layer,
@@ -408,7 +404,6 @@ class TestExportTasks(ExportTaskBase):
             result=previous_task_result,
             task_uid=str(saved_export_task.uid),
             stage_dir=self.stage_dir,
-            src_srs=4326,
             projection=projection,
             service_url=service_url,
             layer=layer,
@@ -423,7 +418,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_1,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=[1, 2, 3, 4],
             access_mode="append",
@@ -435,7 +429,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_2,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=[1, 2, 3, 4],
             access_mode="append",
@@ -478,7 +471,6 @@ class TestExportTasks(ExportTaskBase):
             driver=driver,
             input_files=sample_input,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=output_projection,
             boundary=None,
             use_translate=True,
@@ -514,7 +506,6 @@ class TestExportTasks(ExportTaskBase):
             result=previous_task_result,
             task_uid=str(saved_export_task.uid),
             stage_dir=self.stage_dir,
-            src_srs=4326,
             projection=projection,
         )
         mock_rename.assert_called_once_with(expected_output_path, expected_output_path)
@@ -535,7 +526,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=example_input_file,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=None,
             executor=self.task_process().start_process,
@@ -646,7 +636,6 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
-            src_srs=4326,
             projection=4326,
         )
 
@@ -662,7 +651,6 @@ class TestExportTasks(ExportTaskBase):
             warp_params=warp_params,
             translate_params=translate_params,
             executor=self.task_process().start_process,
-            src_srs=4326,
             projection=4326,
         )
 
@@ -688,7 +676,6 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
-            src_srs=4326,
             projection=4326,
         )
         mock_convert.reset_mock()
@@ -699,7 +686,6 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_nitf,
             output_file=expected_outfile,
             executor=self.task_process().start_process,
-            src_srs=4326,
             projection=4326,
         )
 
@@ -757,7 +743,6 @@ class TestExportTasks(ExportTaskBase):
             driver="SQLite",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=None,
             executor=self.task_process().start_process,
@@ -802,7 +787,6 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(
             input_files=example_source,
             output_file=expected_output_path,
-            src_srs=4326,
             driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             creation_options=["-explodecollections"],
@@ -968,7 +952,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_1,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=selection,
             access_mode="append",
@@ -980,7 +963,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_path_2,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=4326,
             boundary=selection,
             access_mode="append",
@@ -1601,7 +1583,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=projection,
             boundary=None,
             layer_name=expected_provider_slug,
@@ -1663,7 +1644,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=expected_output_path,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=projection,
             boundary=None,
             is_raster=True,
@@ -1736,7 +1716,6 @@ class TestExportTasks(ExportTaskBase):
             task_uid=task_uid,
             stage_dir=self.stage_dir,
             job_name=job_name,
-            src_srs=4326,
             projection=out_projection,
             config=config,
         )
@@ -1746,7 +1725,6 @@ class TestExportTasks(ExportTaskBase):
             driver=driver,
             input_files=f"GTIFF_RAW:{expected_input_path}",
             output_file=expected_output_path,
-            src_srs=4326,
             projection=out_projection,
             boundary=selection,
             warp_params=ANY,
@@ -1928,7 +1906,6 @@ class TestExportTasks(ExportTaskBase):
             driver="gpkg",
             input_files=example_source_data,
             output_file=expected_output_path,
-            src_srs=4326,
             projection=projection,
             boundary=bbox,
             executor=self.task_process().start_process,
