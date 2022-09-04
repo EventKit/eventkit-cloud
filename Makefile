@@ -101,3 +101,6 @@ fresh: initial install-hooks clean conda-install build setup up logs
 
 # Run this command if you want to rebuild everything except for the conda dependencies.
 refresh: initial install-hooks clean build setup up logs
+
+check:
+	python scripts/check_code.py

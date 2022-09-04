@@ -125,7 +125,8 @@ def logout(request):
 
 
 def has_valid_access_token(request) -> bool:
-    if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
+    is_oauth = hasattr(request.user, "oauth")
+    if getattr(settings, "OAUTH_AUTHORIZATION_URL", None) and is_oauth:
         if isinstance(request, str):
             access_token = request
         else:
