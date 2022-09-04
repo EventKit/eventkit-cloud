@@ -176,6 +176,7 @@ declare namespace Eventkit {
         hidden: boolean;
         data_type: string;
         the_geom: Geom;
+        favorite: boolean;
     }
 
     interface Format {
