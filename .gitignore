@@ -111,6 +111,7 @@ screenshots/*
 !screenshots/baseline
 
 conda/repo/*
+conda/repo
 venv/
 *_jb_*
 
@@ -128,3 +129,5 @@ tslint.json
 webpack.config.js
 
 adhoc/*
+.mypy_cache/*
+.mypy_cache
