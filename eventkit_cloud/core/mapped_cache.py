@@ -1,5 +1,3 @@
-import logging
-from multiprocessing.sharedctypes import Value
 from django.core.cache import cache
 
 
