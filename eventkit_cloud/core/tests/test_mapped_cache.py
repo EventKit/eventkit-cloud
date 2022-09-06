@@ -2,20 +2,16 @@
 
 
 import logging
-import os
-from unittest.mock import MagicMock, Mock, patch
 
-from django.test import TestCase, override_settings
 from django.core.cache import cache
+from django.test import TestCase
 
-from eventkit_cloud.core.helpers import get_cached_model, get_id, get_model_by_params, get_or_update_session
 from eventkit_cloud.core.mapped_cache import MappedCache
 
 logger = logging.getLogger(__name__)
 
 
 class TestMappedCache(TestCase):
-
     def setUp(self):
         self.username = "test_username"
         self.mapped_cache = MappedCache(self.username)

@@ -282,6 +282,7 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
     try:
         export_task, created = ExportTaskRecord.objects.get_or_create(
             export_provider_task=export_provider_task,
+            name=task_name,
             defaults={"status": "PENDING", "name": task_name, "worker": worker, "display": display},
         )
         logger.debug("Saved task: {0}".format(task_name))

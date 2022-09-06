@@ -77,7 +77,8 @@ class TestTaskBuilder(TestCase):
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
             export_provider_task="ExportProviderTaskName",
-            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": False},
+            name=task_name,
+            defaults={"status": "PENDING", "name": task_name, "worker": "Worker", "display": False},
         )
 
         expected_result = MagicMock(display=True)
@@ -89,7 +90,8 @@ class TestTaskBuilder(TestCase):
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.get_or_create.assert_called_with(
             export_provider_task="ExportProviderTaskName",
-            defaults={"status": "PENDING", "name": "TaskName", "worker": "Worker", "display": True},
+            name=task_name,
+            defaults={"status": "PENDING", "name": task_name, "worker": "Worker", "display": True},
         )
 
         mock_export_task.objects.get_or_create.side_effect = DatabaseError("SomeError")
