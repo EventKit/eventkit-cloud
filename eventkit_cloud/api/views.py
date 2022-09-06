@@ -22,6 +22,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
+from eventkit_cloud.core.mapped_cache import MappedCache
 from notifications.models import Notification
 from rest_framework import filters, mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
@@ -947,8 +948,7 @@ class DataProviderViewSet(EventkitViewSet):
 
     def get_queryset(self):
         """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
+        This view should return a list of all the products for the currently authenticated user.
         """
         # Download Count Subquery
         exptask_q = Q(downloadable__export_task__export_provider_task__provider=OuterRef("pk"))
@@ -975,6 +975,7 @@ class DataProviderViewSet(EventkitViewSet):
         return (
             DataProvider.objects.select_related("attribute_class", "export_provider_type", "thumbnail", "license")
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
+            # This is used for user made data providers, not user permissions
             .filter(Q(user=self.request.user) | Q(user=None))
             .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
@@ -1015,7 +1016,7 @@ class DataProviderViewSet(EventkitViewSet):
         favorite = request.data.get("favorite")
 
         if favorite:
-            user_favorite, created = UserFavoriteProduct.objects.get_or_create(provider=data_provider, user=user)
+            UserFavoriteProduct.objects.get_or_create(provider=data_provider, user=user)
         else:
             UserFavoriteProduct.objects.filter(provider=data_provider, user=user).delete()
 
@@ -1051,10 +1052,12 @@ class DataProviderViewSet(EventkitViewSet):
         """
 
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
+        user_cache = MappedCache(request.user.username)
 
         # The cache_key will be different if serializing a geojson or an api json.
         cache_key = get_query_cache_key(DataProvider, request.user.username, "serialized", serializer)
-        data = cache.get(cache_key)
+        data = user_cache.get(cache_key)
+
         if not data:
             queryset = self.get_queryset()
             providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
@@ -1062,7 +1065,7 @@ class DataProviderViewSet(EventkitViewSet):
             filtered_data = filtered_serializer(filtered_providers, many=True, context={"request": request})
             data = data + filtered_data
 
-            if cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
+            if user_cache.add(cache_key, data, timeout=DEFAULT_TIMEOUT):
                 DataProvider.update_cache_key_list(cache_key)
 
         return Response(data)
@@ -1426,7 +1429,6 @@ class ExportRunViewSet(EventkitViewSet):
 
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
-
         """
         Update the expiration date for an export run. If the user is a superuser,
         then any date may be specified. Otherwise the date must be before  todays_date + MAX_DATAPACK_EXPIRATION_DAYS
@@ -2162,7 +2164,6 @@ class GroupViewSet(EventkitViewSet):
 
     @transaction.atomic
     def destroy(self, request, id=None, *args, **kwargs):
-
         """
         Destroy a group
         """
