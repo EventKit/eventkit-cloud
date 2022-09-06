@@ -39,9 +39,9 @@ pending-tests:
     - cd /var/lib/eventkit
   only:
     changes:
-      - eventkit_cloud/ui/static/ui/*
-      - config/*
-      - package*
+      - eventkit_cloud/ui/static/ui/**/*
+      - config/**/*
+      - package.json
       - .gitlab-ci.yml
 
 .back_rules:

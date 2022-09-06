@@ -10,7 +10,7 @@ black:
 black-format:
 	docker-compose run --rm eventkit black eventkit_cloud
 
-eslint: 
+eslint:
 	docker-compose run --rm webpack npm run eslint
 
 flake8:
