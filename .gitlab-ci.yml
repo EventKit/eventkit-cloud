@@ -61,7 +61,7 @@ pending-tests:
 .back:
   extends: .back_rules
   image:
-    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-1"
     entrypoint: [ "" ]
   variables:
     CURL_CA_BUNDLE: "./conda/cacert.pem"
