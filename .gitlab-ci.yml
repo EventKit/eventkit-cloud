@@ -39,21 +39,23 @@ pending-tests:
     - cd /var/lib/eventkit
   only:
     changes:
-      - eventkit_cloud/ui/static/ui/*
-      - config/*
-      - package*
+      - eventkit_cloud/ui/static/ui/**/*
+      - config/**/*
+      - package.json
       - .gitlab-ci.yml
 
 .back_rules:
   only:
     changes:
-      - conda/*
+      - conda/**/*
       - config/*
-      - requirement*
-      - eventkit_cloud/*
-      - environment*
-      - setup*
-      - docker-compose*
+      - requirements.txt
+      - requirements-dev.txt
+      - eventkit_cloud/**/*
+      - environment.yml
+      - setup.py
+      - setup.cfg
+      - docker-compose.yml
       - .gitlab-ci.yml
 
 .back:
