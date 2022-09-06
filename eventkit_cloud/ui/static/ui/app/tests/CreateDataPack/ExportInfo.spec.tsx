@@ -442,12 +442,12 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By')).toBeInTheDocument();
+        expect(component.queryByText('Filter By:')).toBeInTheDocument();
 
         const applyFilterButton = component.queryByText('Apply');
         fireEvent.click(applyFilterButton);
 
-        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
     });
 
     it('should close the filter section and clear filters when you click cancel', async () => {
@@ -458,7 +458,7 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By')).toBeInTheDocument();
+        expect(component.queryByText('Filter By:')).toBeInTheDocument();
 
         const checkBox = component.getByLabelText('Raster');
         fireEvent.click(checkBox);
@@ -470,7 +470,7 @@ describe('ExportInfo component', () => {
         const cancelFilterButton = component.queryByText('Cancel');
         fireEvent.click(cancelFilterButton);
 
-        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
         providers = component.getAllByTestId('DataProvider');
         expect(providers.length).toBe(3);
     });

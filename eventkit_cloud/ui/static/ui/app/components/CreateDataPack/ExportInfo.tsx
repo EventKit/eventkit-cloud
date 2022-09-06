@@ -142,8 +142,8 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         backgroundColor: theme.eventkit.colors.secondary,
     },
     filterTextField: {
-        backgroundColor: 'aliceblue',
-        marginBottom: '15px',
+        backgroundColor: theme.eventkit.colors.secondary,
+        marginBottom: '10px',
     },
     input: {
         fontSize: '16px',
@@ -188,7 +188,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     checkbox: {
         height: '24px',
-        marginRight: '15px',
         flex: '0 0 auto',
         color: theme.eventkit.colors.primary,
         '&$checked': {
@@ -201,7 +200,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     radio: {
         fontSize: '1em',
         height: '24px',
-        marginRight: '15px',
         flex: '0 0 auto',
         color: theme.eventkit.colors.primary,
         '&$checked': {
@@ -264,6 +262,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     collapseInnerContent: {
         backgroundColor: theme.eventkit.colors.secondary,
+        padding: '3px',
     },
     collapsibleTriggerTitle: {
         display: 'block',
@@ -275,7 +274,19 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     collapseIcon: {
         float: "right",
         color: theme.eventkit.colors.black,
-    }
+    },
+    lineBreak: {
+        marginTop: '0px',
+        marginBottom: '10px',
+        borderTop: `1px solid ${theme.eventkit.colors.grey}`
+    },
+    legendLabel: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+        marginBottom: '5px',
+        borderBottom: 0,
+        color: theme.eventkit.colors.black
+    },
 });
 
 // Use this to keep track of incompatibilities in the user selected DataPack options
@@ -353,6 +364,7 @@ export function ExportInfo(props: Props) {
     const [isRunning, setIsRunning] = useState(false);
     const [providerSearch, setProviderSearch] = useState("");
     const [isFilteringByProviderGeometry, setIsFilteringByProviderGeometry] = useState(true);
+    const [isFilteringByFavorites, setIsFilteringByFavorites] = useState(false);
     const [showProviderFilter, setShowProviderFilter] = useState(false);
     const [showTypeFilter, setShowTypeFilter] = useState(false);
     const [showTopicFilter, setShowTopicFilter] = useState(false);
@@ -863,6 +875,10 @@ export function ExportInfo(props: Props) {
             currentProviders = filteredProviders;
         }
 
+        if (isFilteringByFavorites) {
+            currentProviders = currentProviders.filter(provider => provider.favorite === true);
+        }
+
         return currentProviders;
     };
 
@@ -942,19 +958,36 @@ export function ExportInfo(props: Props) {
                 .indexOf(provider.name) !== -1}
             alt={ix % 2 === 0}
             renderEstimate={appContext.SERVE_ESTIMATES}
-            checkProvider={() => {
-                // Check the provider for updated info.
-                props.checkProvider(provider).then(providerInfo => {
-                    updateExportInfoCallback({
-                        providerInfo: {
-                            ...exportInfo.providerInfo,
-                            [provider.slug]: providerInfo.data,
-                        }
+            checkProvider={(args) => {
+                const {slug, favorite} = args;
+                // This undefined check is deliberate, want to be sure this code is executed when called
+                // for favorite update.
+                if (slug && favorite != undefined) {
+                    if (exportInfo.providers)
+                    {
+                        exportInfo.providers.forEach((p) => {
+                            if (p.slug === slug) {
+                                p.favorite = favorite;
+                            }
+                        });
+                        updateExportInfoCallback({
+                            providers: exportInfo.providers,
+                        });
+                    }
+                } else {
+                    // Check the provider for updated info.
+                    props.checkProvider(provider).then(providerInfo => {
+                        updateExportInfoCallback({
+                            providerInfo: {
+                                ...exportInfo.providerInfo,
+                                [provider.slug]: providerInfo.data,
+                            }
+                        });
+                        // Trigger an estimate calculation update in the parent
+                        // Does not re-request any data, calculates the total from available results.
+                        props.onUpdateEstimate();
                     });
-                    // Trigger an estimate calculation update in the parent
-                    // Does not re-request any data, calculates the total from available results.
-                    props.onUpdateEstimate();
-                });
+                }
             }}
             incompatibilityInfo={incompatibilityInfo}
             clearEstimate={clearEstimate}
@@ -1058,6 +1091,7 @@ export function ExportInfo(props: Props) {
         setProviderSearch("");
         setSelectedTopicsList([]);
         setIsFilteringByProviderGeometry(true);
+        setIsFilteringByFavorites(false);
         clearFilterOptions();
         clearSortOptions();
     };
@@ -1071,6 +1105,12 @@ export function ExportInfo(props: Props) {
         // Have to use a local variable because the state is not updated quickly enough.
         let newIsFilteringByProviderGeometry = !isFilteringByProviderGeometry;
         setIsFilteringByProviderGeometry(newIsFilteringByProviderGeometry);
+    }
+
+    const onFilterFavoritesChanged = () => {
+        // Have to use a local variable because the state is not updated quickly enough.
+        let newFilterFavorites = !isFilteringByFavorites;
+        setIsFilteringByFavorites(newFilterFavorites);
     }
 
     const updateProviders = () => {
@@ -1207,18 +1247,13 @@ export function ExportInfo(props: Props) {
                             ), (providerFilterList.length || providerSearch) && !showProviderFilter)}
                             {renderIf(() => (
                                 <div className={`qa-ExportInfo-filterOptions-container ${classes.filterContainer}`}>
-                                    <FormLabel component="legend" style={{fontSize: '18px', fontWeight: 'bold'}}>Filter
-                                        By</FormLabel>
+                                    <FormLabel component="legend" className={classes.legendLabel}>Filter
+                                        By:</FormLabel>
                                     {filterOptions.map((filterType) => (
                                         renderIf(() => (
                                             <div>
                                                 <FormGroup className={classes.formControlLabelContainer}>
                                                     <div style={{width: '100%'}}>
-                                                        <FormLabel component="legend"
-                                                                   style={{
-                                                                       fontSize: "16px",
-                                                                       fontWeight: 'bold'
-                                                                   }}>Name</FormLabel>
                                                         <TextField
                                                             id="searchByName"
                                                             name="searchByName"
@@ -1228,13 +1263,45 @@ export function ExportInfo(props: Props) {
                                                             className={`qa-ExportInfo-searchBarTextField ${classes.filterTextField}`}
                                                             onChange={e => setProviderSearch(e.target.value)}
                                                             value={providerSearch}
+                                                            placeholder={"Product Name"}
                                                             InputProps={{
+                                                                style: {
+                                                                    fontSize: '16px',
+                                                                },
                                                                 endAdornment: renderIf(() => (
                                                                         <InputAdornment className={classes.searchFieldClear}
                                                                                         position="end"
                                                                                         onClick={() => setProviderSearch("")}>Clear</InputAdornment>),
                                                                     providerSearch.length > 0),
                                                             }}
+                                                        />
+                                                    </div>
+                                                    <div style={{marginTop: "3px", marginBottom: "10px"}}>
+                                                        <FormControlLabel
+                                                            control={<Checkbox
+                                                                className="qa-ExportInfo-CheckBox-filter"
+                                                                classes={{
+                                                                    root: classes.checkbox,
+                                                                    checked: classes.checked
+                                                                }}
+                                                                checked={isFilteringByFavorites}
+                                                                onChange={() => onFilterFavoritesChanged()}
+                                                            />}
+                                                            label={<Typography
+                                                                className={classes.checkboxLabel}>Favorites</Typography>}
+                                                        />
+                                                        <FormControlLabel
+                                                            control={<Checkbox
+                                                                className="qa-ExportInfo-CheckBox-filter"
+                                                                classes={{
+                                                                    root: classes.checkbox,
+                                                                    checked: classes.checked
+                                                                }}
+                                                                checked={isFilteringByProviderGeometry}
+                                                                onChange={() => onProviderGeometryFilterCheckboxChanged()}
+                                                            />}
+                                                            label={<Typography
+                                                                className={classes.checkboxLabel}>Selected Area</Typography>}
                                                         />
                                                     </div>
 
@@ -1276,6 +1343,7 @@ export function ExportInfo(props: Props) {
                                                                  contentInnerClassName={classes.collapseInnerContent}
                                                                  onTriggerOpening={() => setShowTopicFilter(!showTopicFilter)}
                                                                  onTriggerClosing={() => setShowTopicFilter(!showTopicFilter)}
+                                                                 style={{marginBottom: '0px'}}
 
                                                     >
                                                     {topics.map((topic) =>
@@ -1297,35 +1365,18 @@ export function ExportInfo(props: Props) {
                                                         </div>
                                                     )}
                                                     </Collapsible>
-                                                    <FormLabel component="legend"
-                                                               style={{
-                                                                   fontSize: "16px",
-                                                                   fontWeight: 'bold'
-                                                               }}>Geometry</FormLabel>
-                                                    <div>
-                                                            <FormControlLabel
-                                                                control={<Checkbox
-                                                                    className="qa-ExportInfo-CheckBox-filter"
-                                                                    classes={{
-                                                                        root: classes.checkbox,
-                                                                        checked: classes.checked
-                                                                    }}
-                                                                    checked={isFilteringByProviderGeometry}
-                                                                    onChange={() => onProviderGeometryFilterCheckboxChanged()}
-                                                                />}
-                                                                label={<Typography
-                                                                    className={classes.checkboxLabel}>Selected Area</Typography>}
-                                                            />
-                                                        </div>
+
                                                 </FormGroup>
                                             </div>
                                         ), 'options' in filterType)
                                     ))}
 
+                                    <hr className={classes.lineBreak} />
+
                                     <FormControl component="fieldset">
                                         <FormLabel component="legend"
-                                                   style={{fontSize: "18px", fontWeight: 'bold'}}>Sort
-                                            By</FormLabel>
+                                                   className={classes.legendLabel}>Sort
+                                            By:</FormLabel>
                                         <FormGroup className={classes.formControlLabelContainer}>
                                             <RadioGroup>
                                                 {sortOptions.map((sortOption) => (
