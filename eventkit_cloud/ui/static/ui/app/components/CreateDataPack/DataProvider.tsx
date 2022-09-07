@@ -178,6 +178,13 @@ export function DataProvider(props: Props) {
     function handleProviderFavorite(favoriteVal: boolean) {
         try {
             setProviderFavorite(provider.slug, favoriteVal);
+
+            // Selecting a provider is creating a copy of provider (not ideal)
+            // Calling this updates the selected copy of the provider keeping the correct state of favorite
+            props.checkProvider({
+                slug: provider.slug,
+                favorite: favoriteVal
+            });
         }
         catch(e) {
             console.log("Unable to update provider favorite.", e)

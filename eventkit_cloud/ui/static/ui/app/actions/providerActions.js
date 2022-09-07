@@ -82,6 +82,6 @@ export function updateProviderFavorite(slug, favorite) {
         url: `/api/providers/${slug}`,
         data: { favorite },
         method: 'PATCH',
-        onSuccess: (response) => ({slug, favorite}),
-    }
+        onSuccess: () => ({ slug, favorite }),
+    };
 }
