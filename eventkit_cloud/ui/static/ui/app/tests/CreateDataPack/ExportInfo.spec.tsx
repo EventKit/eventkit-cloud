@@ -306,7 +306,7 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Raster')).toBeNull();
         expect(component.queryByText('Vector')).toBeNull();
         expect(component.queryByText('Elevation')).toBeNull();
-        expect(component.queryByText('Sort By')).toBeNull();
+        expect(component.queryByText('Sort By:')).toBeNull();
         expect(component.queryByText('Alphabetical A-Z')).toBeNull();
         expect(component.queryByText('Alphabetical Z-A')).toBeNull();
         expect(component.queryByText('Most Downloaded')).toBeNull();
@@ -325,7 +325,7 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Raster')).toBeInTheDocument();
         expect(component.getByText('Vector')).toBeInTheDocument();
         expect(component.getByText('Elevation')).toBeInTheDocument();
-        expect(component.getByText('Sort By')).toBeInTheDocument();
+        expect(component.getByText('Sort By:')).toBeInTheDocument();
         expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
         expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
         expect(component.getByText('Most Downloaded')).toBeInTheDocument();
