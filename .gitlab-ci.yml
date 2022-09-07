@@ -36,7 +36,8 @@ pending-tests:
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
-    - cp config/ui/* ./
+    - cp -Rf ./* /var/lib/eventkit/
+    - cd /var/lib/eventkit
   only:
     changes:
       - eventkit_cloud/ui/static/ui/**/*
