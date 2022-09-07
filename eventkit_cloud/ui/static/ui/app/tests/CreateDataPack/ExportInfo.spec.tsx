@@ -303,7 +303,6 @@ describe('ExportInfo component', () => {
         const component = renderComponent();
 
         expect(component.queryByText('Filter By:')).toBeNull();
-        expect(component.queryByText('Name')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
         expect(component.queryByText('Vector')).toBeNull();
         expect(component.queryByText('Elevation')).toBeNull();
@@ -324,7 +323,6 @@ describe('ExportInfo component', () => {
         fireEvent.click(sortFilter);
         expect(component.getByText('Filter By:')).toBeInTheDocument();
         expect(component.getByText('Raster')).toBeInTheDocument();
-        expect(component.getByText('Name')).toBeInTheDocument();
         expect(component.getByText('Vector')).toBeInTheDocument();
         expect(component.getByText('Elevation')).toBeInTheDocument();
         expect(component.getByText('Sort By')).toBeInTheDocument();
