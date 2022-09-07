@@ -302,12 +302,11 @@ describe('ExportInfo component', () => {
     it('should have filtering options hidden by default', () => {
         const component = renderComponent();
 
-        expect(component.queryByText('Filter By')).toBeNull();
-        expect(component.queryByText('Name')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
         expect(component.queryByText('Vector')).toBeNull();
         expect(component.queryByText('Elevation')).toBeNull();
-        expect(component.queryByText('Sort By')).toBeNull();
+        expect(component.queryByText('Sort By:')).toBeNull();
         expect(component.queryByText('Alphabetical A-Z')).toBeNull();
         expect(component.queryByText('Alphabetical Z-A')).toBeNull();
         expect(component.queryByText('Most Downloaded')).toBeNull();
@@ -322,12 +321,11 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.getByText('Filter By')).toBeInTheDocument();
+        expect(component.getByText('Filter By:')).toBeInTheDocument();
         expect(component.getByText('Raster')).toBeInTheDocument();
-        expect(component.getByText('Name')).toBeInTheDocument();
         expect(component.getByText('Vector')).toBeInTheDocument();
         expect(component.getByText('Elevation')).toBeInTheDocument();
-        expect(component.getByText('Sort By')).toBeInTheDocument();
+        expect(component.getByText('Sort By:')).toBeInTheDocument();
         expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
         expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
         expect(component.getByText('Most Downloaded')).toBeInTheDocument();
@@ -442,12 +440,12 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By')).toBeInTheDocument();
+        expect(component.queryByText('Filter By:')).toBeInTheDocument();
 
         const applyFilterButton = component.queryByText('Apply');
         fireEvent.click(applyFilterButton);
 
-        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
     });
 
     it('should close the filter section and clear filters when you click cancel', async () => {
@@ -458,7 +456,7 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By')).toBeInTheDocument();
+        expect(component.queryByText('Filter By:')).toBeInTheDocument();
 
         const checkBox = component.getByLabelText('Raster');
         fireEvent.click(checkBox);
@@ -470,7 +468,7 @@ describe('ExportInfo component', () => {
         const cancelFilterButton = component.queryByText('Cancel');
         fireEvent.click(cancelFilterButton);
 
-        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
         providers = component.getAllByTestId('DataProvider');
         expect(providers.length).toBe(3);
     });

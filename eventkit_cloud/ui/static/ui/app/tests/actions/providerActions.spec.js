@@ -16,6 +16,15 @@ describe('providerActions', () => {
                 providers: ret.data,
             });
         });
+
+        it('should attach correct parameters when called with filters', () => {
+            const selectedTopics = ['transportation'];
+            const selectedArea = 'test';
+            expect(actions.getProviders(selectedArea, selectedTopics).data).toEqual({
+                topics: [...selectedTopics],
+                geojson: selectedArea,
+            });
+        });
     });
 
     describe('cancelProviderTask action', () => {
@@ -48,6 +57,16 @@ describe('providerActions', () => {
             expect(actions.getProviderTask().onSuccess(response)).toEqual({
                 data: response.data,
             });
+        });
+    });
+
+    describe('updateProviderFavorite action', () => {
+        it('should return the correct types', () => {
+            expect(actions.updateProviderFavorite('test', true).types).toEqual([
+                actions.types.PATCHING_PROVIDER_FAVORITE,
+                actions.types.PATCHED_PROVIDER_FAVORITE,
+                actions.types.PATCH_PROVIDER_FAVORITE_ERROR,
+            ]);
         });
     });
 });
