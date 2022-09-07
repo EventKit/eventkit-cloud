@@ -34,7 +34,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     # Create the environment
     conda env create --force --file ./environment.yml -n conda_env python=3.10 && \
     pip install -r requirements-dev.txt && \
-    SECRET_KEY=temp_secret_key python manage.py collectstatic && \
+    SECRET_KEY=temp_secret_key python manage.py collectstatic --no-input && \
     \
     # Clean up.
     conda clean --yes --all && \
