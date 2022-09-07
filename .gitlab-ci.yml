@@ -42,8 +42,10 @@ cache:
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
-    - cp -Rf config/ui/* ./ && ls -al
+    - cp -Rf config/ui/* ./
     - npm ci --cache .npm --prefer-offline
+    - "ls -al && chown -R $USER: ."
+    - ls -al
   only:
     changes:
       - eventkit_cloud/ui/static/ui/**/*
