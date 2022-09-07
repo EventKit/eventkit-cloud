@@ -33,10 +33,17 @@ pending-tests:
   script:
     - python scripts/github.py pending "Waiting for tests."
 
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - .npm/
+    - node_modules/
+
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
-    - cd /var/lib/eventkit
+    - cp -rf config/ui/. ./
+    - npm ci --cache .npm --prefer-offline
   only:
     changes:
       - eventkit_cloud/ui/static/ui/**/*
