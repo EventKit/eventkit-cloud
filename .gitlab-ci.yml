@@ -54,19 +54,21 @@ cache:
 .back_rules:
   only:
     changes:
-      - conda/*
+      - conda/**/*
       - config/*
-      - requirement*
-      - eventkit_cloud/*
-      - environment*
-      - setup*
-      - docker-compose*
+      - requirements.txt
+      - requirements-dev.txt
+      - eventkit_cloud/**/*
+      - environment.yml
+      - setup.py
+      - setup.cfg
+      - docker-compose.yml
       - .gitlab-ci.yml
 
 .back:
   extends: .back_rules
   image:
-    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-0"
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-1"
     entrypoint: [ "" ]
   variables:
     CURL_CA_BUNDLE: "./conda/cacert.pem"

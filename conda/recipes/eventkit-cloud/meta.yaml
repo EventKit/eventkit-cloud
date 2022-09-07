@@ -11,9 +11,9 @@ package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 source:
-  git_url: /eventkit-cloud
+  path: /eventkit-cloud
 build:
-  number: 0
+  number: 1
 
 requirements:
   build:
