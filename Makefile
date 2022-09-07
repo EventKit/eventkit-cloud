@@ -10,6 +10,9 @@ black:
 black-format:
 	docker-compose run --rm eventkit black eventkit_cloud
 
+eslint:
+	docker-compose run --rm webpack npm run eslint
+
 flake8:
 	docker-compose run --rm eventkit flake8 eventkit_cloud
 
@@ -22,7 +25,7 @@ isort:
 isort-format:
 	docker-compose run --rm eventkit isort eventkit_cloud
 
-lint: black flake8 isort mypy
+lint: black eslint flake8 isort mypy
 
 test-back:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud

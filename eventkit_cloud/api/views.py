@@ -22,7 +22,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
-from eventkit_cloud.core.mapped_cache import MappedCache
 from notifications.models import Notification
 from rest_framework import filters, mixins, permissions, status, views, viewsets
 from rest_framework.decorators import action
@@ -92,6 +91,7 @@ from eventkit_cloud.api.validators import (
 )
 from eventkit_cloud.auth.views import requires_oauth_authentication
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, get_query_cache_key, sendnotification
+from eventkit_cloud.core.mapped_cache import MappedCache
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,

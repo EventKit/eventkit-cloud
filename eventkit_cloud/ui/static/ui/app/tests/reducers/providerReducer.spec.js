@@ -28,6 +28,50 @@ describe('getProvidersReducer', () => {
             fetching: false, objects: ['one', 'two', 'three'],
         });
     });
+
+    it('should handle GETTING_PROVIDERS_ERROR', () => {
+        expect(reducers.getProvidersReducer(
+            {
+                fetching: true,
+                objects: ['one', 'two', 'three'],
+            },
+            { type: types.GETTING_PROVIDERS_ERROR, providers: [] },
+        )).toEqual({
+            fetching: false, objects: [],
+        });
+    });
+
+    it('should handle PATCHED_PROVIDER_FAVORITE', () => {
+        const providers = [
+            {
+                slug: 'test1',
+                favorite: false,
+            },
+            {
+                slug: 'test2',
+                favorite: true,
+            }];
+        const expected = [
+            {
+                slug: 'test1',
+                favorite: true,
+            },
+            {
+                slug: 'test2',
+                favorite: true,
+            }];
+        const result = reducers.getProvidersReducer(
+            {
+                fetching: false,
+                objects: [...providers],
+            },
+            { type: types.PATCHED_PROVIDER_FAVORITE, slug: 'test1', favorite: true },
+        );
+        expect(result).toEqual({
+            fetching: false,
+            objects: [...expected],
+        });
+    });
 });
 
 describe('cancelProviderTask Reducer', () => {
