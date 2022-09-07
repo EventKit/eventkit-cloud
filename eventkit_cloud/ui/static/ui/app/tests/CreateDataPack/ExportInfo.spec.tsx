@@ -302,7 +302,7 @@ describe('ExportInfo component', () => {
     it('should have filtering options hidden by default', () => {
         const component = renderComponent();
 
-        expect(component.queryByText('Filter By')).toBeNull();
+        expect(component.queryByText('Filter By:')).toBeNull();
         expect(component.queryByText('Name')).toBeNull();
         expect(component.queryByText('Raster')).toBeNull();
         expect(component.queryByText('Vector')).toBeNull();
@@ -322,7 +322,7 @@ describe('ExportInfo component', () => {
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.getByText('Filter By')).toBeInTheDocument();
+        expect(component.getByText('Filter By:')).toBeInTheDocument();
         expect(component.getByText('Raster')).toBeInTheDocument();
         expect(component.getByText('Name')).toBeInTheDocument();
         expect(component.getByText('Vector')).toBeInTheDocument();
