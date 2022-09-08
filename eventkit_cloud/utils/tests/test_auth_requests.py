@@ -7,9 +7,9 @@ from unittest.mock import ANY, MagicMock, mock_open, patch
 
 import requests
 from django.test import TransactionTestCase
-from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
 
 from eventkit_cloud.utils import auth_requests
+from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
 
 logger = logging.getLogger(__name__)
 
