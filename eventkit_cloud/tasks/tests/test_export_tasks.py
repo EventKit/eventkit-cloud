@@ -304,9 +304,10 @@ class TestExportTasks(ExportTaskBase):
         self.provider.config = dict()
         self.provider.save()
 
-        mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
-
+        expected_base_path = "/path/to"
+        expected_outfile = os.path.join(expected_base_path, "file.ext")
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
+        mock_get_export_filepath.return_value = expected_output_path
         mock_exists.return_value = True
 
         layer = "foo"
@@ -357,9 +358,8 @@ class TestExportTasks(ExportTaskBase):
         layer_2 = "ham"
 
         mock_layers.return_value = {layer_1: {"name": layer_1, "url": url_1}, layer_2: {"name": layer_2, "url": url_2}}
-
-        expected_path_1 = f"{layer_1}.gpkg"
-        expected_path_2 = f"{layer_2}.gpkg"
+        expected_path_1 = os.path.join(expected_base_path, f"{layer_1}.gpkg")
+        expected_path_2 = os.path.join(expected_base_path, f"{layer_2}.gpkg")
 
         expected_url_1 = (
             f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}"
@@ -374,7 +374,7 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
-                "base_path": f"{self.stage_dir.rstrip('/')}/{layer_1}-{projection}",
+                "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_1,
                 "projection": projection,
@@ -384,7 +384,7 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
-                "base_path": f"{self.stage_dir.rstrip('/')}/{layer_2}-{projection}",
+                "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_2,
                 "projection": projection,
@@ -823,8 +823,12 @@ class TestExportTasks(ExportTaskBase):
         self.provider.slug = expected_provider_slug
         self.provider.config = dict()
         self.provider.save()
-        mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
+
+        expected_base_path = "/path/to"
+        expected_outfile = os.path.join(expected_base_path, "file.ext")
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
+        mock_get_export_filepath.return_value = expected_output_path
+
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, 3, 4]
         query_string = "query?where=objectid=objectid&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
@@ -896,8 +900,8 @@ class TestExportTasks(ExportTaskBase):
 
         mock_layers.return_value = vector_layers
 
-        expected_path_1 = f"{layer_name_1}.gpkg"
-        expected_path_2 = f"{layer_name_2}.gpkg"
+        expected_path_1 = os.path.join(expected_base_path, f"{layer_name_1}.gpkg")
+        expected_path_2 = os.path.join(expected_base_path, f"{layer_name_2}.gpkg")
         expected_url_1 = f"{url_1}/{query_string}"
         expected_url_2 = f"{url_2}/{query_string}"
         expected_layers = {
@@ -905,7 +909,7 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_1,
                 "path": expected_path_1,
-                "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_1}-{projection}",
+                "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "level": 15,
                 "projection": projection,
@@ -916,7 +920,7 @@ class TestExportTasks(ExportTaskBase):
                 "task_uid": str(saved_export_task.uid),
                 "url": expected_url_2,
                 "path": expected_path_2,
-                "base_path": f"{self.stage_dir.rstrip('/')}/{layer_name_2}-{projection}",
+                "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "level": 15,
                 "projection": projection,
@@ -1897,7 +1901,7 @@ class TestExportTasks(ExportTaskBase):
             "source": expected_output_path,
             "gpkg": expected_output_path,
             "selection": example_geojson,
-            "result": expected_outzip_path,
+            "result": expected_output_path,
         }
 
         self.assertEqual(result, expected_result)
