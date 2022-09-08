@@ -124,9 +124,12 @@ class TestJob(TestCase):
             "project": EVENT_NAME,
             "selection": self.selection,
             "tags": [],
+            "projections": [4326],
             "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"]}],
             # "max_zoom": increased_zoom_level,
+            "visibility": "PRIVATE",
         }
+
         run = self.run_job(job_data, wait_for_run=False)
 
         job_uid = run["job"]["uid"]
@@ -377,17 +380,19 @@ class TestJob(TestCase):
             "project": EVENT_NAME,
             "selection": self.selection,
             "tags": [],
+            "projections": [4326, 3857],
+            "visibility": "PRIVATE",
             "provider_tasks": [
-                # {"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]},
+                # {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "osm-generic",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                # {"provider": "osm", "formats": ["gpkg", "sqlite"]},
-                # {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]},
+                # {"provider": "osm", "formats": ["gpkg", "shp"]},
+                # {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]},
                 # Commented out because the service is down.
                 # {"provider": "eventkit-integration-test-wfs",
                 #  "formats": ["shp", "gpkg", "kml"]},
-                {"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}
+                {"provider": "eventkit-integration-test-wcs", "formats": ["hfa", "gtiff"]},
                 # {"provider": "eventkit-integration-test-arc-fs",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
             ],
@@ -655,18 +660,18 @@ def get_providers_list():
                 },
             },
         },
-        #     , {
-        #     "created_at": "2016-10-21T14:30:27.066Z",
-        #     "updated_at": "2016-10-21T14:30:27.066Z",
-        #     "name": "eventkit-integration-test-arc-fs",
-        #     "slug": "eventkit-integration-test-arc-fs",
-        #     "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer",
-        #     "layer": "2",
-        #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
-        #     "level_from": 0,
-        #     "level_to": 2,
-        #     "config": {}}
-        # }
+        {
+            "created_at": "2016-10-21T14:30:27.066Z",
+            "updated_at": "2016-10-21T14:30:27.066Z",
+            "name": "eventkit-integration-test-arc-fs",
+            "slug": "eventkit-integration-test-arc-fs",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/rest/services/transportation/MapServer/4",
+            "layer": "2",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-feature"),
+            "level_from": 0,
+            "level_to": 2,
+            "config": {},
+        },
     ]
 
 
