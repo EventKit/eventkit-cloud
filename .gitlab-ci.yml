@@ -42,7 +42,7 @@ cache:
 .front_rules:
   before_script:
     - shopt -s expand_aliases
-    - alias front_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH eventkit_cloud/ui/static/ui/**/* config/**/* package.json .gitlab-ci.yml"
+    - alias front_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH -- eventkit_cloud/ui/static/ui/**/* config/**/* package.json .gitlab-ci.yml"
 
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
@@ -54,7 +54,7 @@ cache:
 .back_rules:
   before_script:
     - shopt -s expand_aliases
-    - alias back_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH conda/**/* config/* requirements.txt requirements-dev.txt eventkit_cloud/**/* environment.yml setup.py setup.cfg docker-compose.yml .gitlab-ci.yml"
+    - alias back_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH -- conda/**/* config/* requirements.txt requirements-dev.txt eventkit_cloud/**/* environment.yml setup.py setup.cfg docker-compose.yml .gitlab-ci.yml"
 
 .back:
   extends: .back_rules
