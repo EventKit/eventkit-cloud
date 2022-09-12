@@ -81,14 +81,6 @@ eslint:
     - .front
     - .lint
   script:
-    - ls -al
-    - git --help
-    - git log
-    - git status
-    - git branch -a
-    - echo "CI_DEFAULT_BRANCH $CI_DEFAULT_BRANCH"
-    - echo "CI_COMMIT_REF_NAME $CI_COMMIT_REF_NAME"
-    - env
     - front_diff || npm run eslint
 
 black:
