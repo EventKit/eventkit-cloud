@@ -918,11 +918,11 @@ export function ExportInfo(props: Props) {
     };
 
     const sortMostDownloaded = (currentProviders) => {
-        return currentProviders.sort((a, b) => a.download_count_rank - b.download_count_rank);
+        return currentProviders.sort((a, b) => a.download_count - b.download_count);
     };
 
     const sortMostRecent = (currentProviders) => {
-        return currentProviders.sort((a, b) => a.download_date_rank - b.download_date_rank);
+        return currentProviders.sort((a, b) => a.download_date - b.download_date);
     };
 
     const sortByFavorites = (currentProviders) => {

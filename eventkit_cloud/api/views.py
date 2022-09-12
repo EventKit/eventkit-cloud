@@ -977,11 +977,13 @@ class DataProviderViewSet(EventkitViewSet):
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             # This is used for user made data providers, not user permissions
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
-            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
-            .annotate(
-                download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
-            )
+            .annotate(download_count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
+            # TODO: Add download date query in
+            .annotate(download_date=Subquery(latest_subquery), latest_download=Subquery(latest_subquery))
+            # .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
+            # .annotate(
+            #     download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
+            # )
             .annotate(
                 favorite=Exists(
                     UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
@@ -1093,8 +1095,10 @@ class DataProviderViewSet(EventkitViewSet):
         :param kwargs:
         :return: the serialized data providers
         """
-        queryset = self.filter_queryset(self.get_queryset())
-
+        import time
+        start = time.time()
+        qu = self.get_queryset()
+        queryset = self.filter_queryset(qu)
         search_geojson = self.request.data.get("geojson", None)
         if search_geojson is not None:
             geometry = (
@@ -1115,13 +1119,18 @@ class DataProviderViewSet(EventkitViewSet):
 
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
         providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
+
         data = serializer(providers, many=True, context={"request": request})
+
         filtered_data = filtered_serializer(filtered_providers, many=True)
+
         if isinstance(data, list):
             data += filtered_data
         else:
             filtered_data.update(data)
             data = filtered_data
+
+        logger.info(f"Time: {time.time() - start}")
         return Response(data)
 
 
