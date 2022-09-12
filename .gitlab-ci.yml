@@ -150,7 +150,7 @@ integration-tests:
   before_script:
     - !reference [.back_rules, before_script]
     - !reference [.front_rules, before_script]
-    - alias branch_diff=(back_diff && front_diff)
+    - alias branch_diff="back_diff && front_diff"
   script:
     - branch_diff || python scripts/ci_utils.py
     - branch_diff || mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download || echo $?
