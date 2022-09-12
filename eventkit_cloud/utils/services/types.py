@@ -7,7 +7,7 @@ class LayerConfiguration(TypedDict, total=False):
     base_path: str
     bbox: List[int]
     layer_name: str
-    projection: str
+    projection: int
     distinct_field: str
 
 

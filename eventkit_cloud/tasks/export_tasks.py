@@ -399,7 +399,13 @@ def osm_data_collection_pipeline(
     geom = get_geometry(bbox, selection)
 
     g = geopackage.Geopackage(
-        pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid
+        pbf_filepath,
+        gpkg_filepath,
+        stage_dir,
+        feature_selection,
+        geom,
+        export_task_record_uid=export_task_record_uid,
+        projection=projection,
     )
 
     osm_gpkg = g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
@@ -424,7 +430,7 @@ def osm_data_collection_pipeline(
     task_process = TaskProcess()
     convert(
         boundary=selection,
-        input_files=in_dataset,
+        input_files=[in_dataset],
         output_file=gpkg_filepath,
         layers=["land_polygons"],
         driver="gpkg",
@@ -474,6 +480,7 @@ def osm_data_collection_task(
     bbox=None,
     user_details=None,
     config=None,
+    projection=4326,
     *args,
     **kwargs,
 ):
@@ -499,6 +506,7 @@ def osm_data_collection_task(
             slug=provider_slug,
             job_name=job_name,
             bbox=bbox,
+            projection=projection,
             user_details=user_details,
             selection=selection,
             url=overpass_url,
@@ -708,6 +716,7 @@ def ogcapi_process_export_task(
     result = result or {}
     selection = parse_result(result, "selection")
     export_task_record = get_export_task_record(task_uid)
+    output_file = None
     if export_task_record.export_provider_task.provider.data_type == GeospatialDataType.ELEVATION.value:
         output_file = get_export_filepath(stage_dir, export_task_record, projection, "tif")
         driver = "gtiff"
@@ -735,6 +744,7 @@ def ogcapi_process_export_task(
         selection=selection,
         download_path=download_path,
     )
+    out = None
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
         source_data = find_in_zip(
@@ -743,7 +753,7 @@ def ogcapi_process_export_task(
             extension=ogc_config.get("output_file_ext"),
             extract=not bool(driver),
         )
-        if driver:
+        if driver and output_file:
             task_process = TaskProcess(task_uid=task_uid)
             out = convert(
                 driver=driver,
@@ -762,7 +772,7 @@ def ogcapi_process_export_task(
         result["source"] = out
         result[driver] = out
 
-    result["result"] = download_path
+    result["result"] = out if out else download_path
     return result
 
 
@@ -807,6 +817,7 @@ def ogc_result_task(
             export_format = ExportFormat.objects.get(slug=export_format_slug)
             export_format_slug = export_format.options.get("value") or export_format_slug
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
+
     download_path = get_ogcapi_data(
         config=data_provider.config,
         task_uid=task_uid,
@@ -1219,10 +1230,10 @@ def wfs_export_task(
             "task_uid": task_uid,
             "url": url,
             "path": path,
-            "base_path": os.path.join(stage_dir, f"{layer_name}-{projection}"),
+            "base_path": os.path.dirname(path),
             "bbox": bbox,
             "layer_name": layer_name,
-            "projection": projection,
+            "projection": 4326,
             "level": layer.get("level", 15),
         }
 
@@ -1383,11 +1394,11 @@ def arcgis_feature_service_export_task(
             "task_uid": task_uid,
             "url": url,
             "path": path,
-            "base_path": os.path.join(stage_dir, f"{layer.get('name')}-{projection}"),
+            "base_path": os.path.dirname(path),
             "bbox": bbox,
+            "projection": 4326,
             "layer_name": layer_name,
             "level": layer.get("level", 15),
-            "projection": projection,
             "distinct_field": layer.get("distinct_field", "OBJECTID"),
         }
 
@@ -1592,6 +1603,7 @@ def mapproxy_export_task(
             service_type=service_type,
             task_uid=task_uid,
             selection=selection,
+            projection=projection,
         )
         gpkg = w2g.convert()
         result["driver"] = "gpkg"
@@ -2062,8 +2074,6 @@ def create_datapack_preview(result=None, task_uid=None, stage_dir=None, **kwargs
     result = result or {}
     try:
         from eventkit_cloud.utils.image_snapshot import fit_to_area, get_wmts_snapshot_image
-
-        check_cached_task_failures(create_datapack_preview.name, task_uid)
 
         data_provider_task_record = (
             DataProviderTaskRecord.objects.select_related("run__job", "provider")

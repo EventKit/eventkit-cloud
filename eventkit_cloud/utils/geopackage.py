@@ -261,6 +261,7 @@ class Geopackage(object):
         per_theme=False,
         progress=None,
         export_task_record_uid=None,
+        projection: int = 4326,
     ):
         """
         Initialize the OSMParser.
@@ -274,6 +275,7 @@ class Geopackage(object):
         self.output_gpkg = output_gpkg
         self.stage_dir = stage_dir
         self.feature_selection = feature_selection
+        self.projection = projection
         self.aoi_geom = aoi_geom
         self.per_theme = per_theme
         # Supplying an ExportTaskRecord ID allows progress updates
@@ -327,6 +329,7 @@ class Geopackage(object):
             output_file=self.output_gpkg,
             driver="GPKG",
             boundary=json.loads(self.aoi_geom.geojson),
+            projection=self.projection,
             config_options=[
                 ("OSM_CONFIG_FILE", conf),
                 ("OGR_INTERLEAVED_READING", "YES"),
