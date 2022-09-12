@@ -6,6 +6,7 @@ from time import sleep
 from typing import Union
 
 from django.conf import settings
+from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +28,8 @@ DEFAULT_TIMEOUT = 600
 # Download data. Ensure there is data in downloaded file.
 # The various tests are commented out because running all of them takes a long time and the tests are fairly
 # redundant.  They are left here to provide a quick utility for a dev to test when adding a feature or debugging.
+
+EVENT_NAME = "EVENTKIT-INTEGRATION-TEST"  # Use a suffix which is unique and can be filtered against.
 
 
 class TestJob(TestCase):
@@ -53,6 +56,7 @@ class TestJob(TestCase):
         self.client: EventKitClient = self.get_client(
             self.base_url, user=user, password=password, certificate=certificate, verify=verify
         )
+        self.client.session.headers["Accept"] = "application/json, text/plain, */*"
         self.selection = {
             "type": "FeatureCollection",
             "features": [
@@ -107,7 +111,6 @@ class TestJob(TestCase):
         # update provider to ensure it runs long enough to cancel...
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in
         # test_cancel_mapproxy_job when that is added.
-        increased_zoom_level = 19
         # export_provider = DataProvider.objects.get(slug=test_service_slug)
         # original_level_to = export_provider.level_to
         # increased_zoom_level = 19
@@ -115,17 +118,22 @@ class TestJob(TestCase):
         # export_provider.save()
 
         job_data = {
-            "name": "osm",
+            "name": "Test Cancel OSM",
             "description": "Test Description",
-            "project": "TestProject",
+            "include_zipfile": True,
+            "project": EVENT_NAME,
             "selection": self.selection,
             "tags": [],
-            "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"], "max_zoom": increased_zoom_level}],
+            "projections": [4326],
+            "provider_tasks": [{"provider": test_service_slug, "formats": ["gpkg"]}],
+            # "max_zoom": increased_zoom_level,
+            "visibility": "PRIVATE",
         }
 
         run = self.run_job(job_data, wait_for_run=False)
 
-        run = self.client.wait_for_task_pickup(job_uid=run["job"]["uid"])
+        job_uid = run["job"]["uid"]
+        run = self.client.wait_for_task_pickup(job_uid=job_uid)
 
         export_provider_task = run["provider_tasks"][0]
         self.client.cancel_provider(export_provider_task["uid"])
@@ -133,9 +141,13 @@ class TestJob(TestCase):
         export_provider_task = self.client.get_provider_task(uid=export_provider_task["uid"])
         self.assertEqual(export_provider_task["status"], TaskState.CANCELED.value)
 
-        run = self.client.wait_for_run(run["uid"])
-        self.assertIn(run["status"], [TaskState.CANCELED.value, TaskState.INCOMPLETE.value])
-
+        try:
+            run = self.client.wait_for_run(run["uid"], ignore_errors=True)
+        except Exception:
+            self.assertIn(run["status"], [TaskState.CANCELED.value, TaskState.INCOMPLETE.value])
+            self.assertIn(
+                TaskState.CANCELED.value, (provider_task["status"] for provider_task in run["provider_tasks"])
+            )
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in
         # test_cancel_mapproxy_job when that is added.
         # update provider to original setting.
@@ -148,94 +160,126 @@ class TestJob(TestCase):
     #     This test is to ensure that an OSM job will export a GeoPackage.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestThematicGPKG", "include_zipfile": True,
-    #                 "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}]}
+    #     job_data = {
+    #         "name": "TestThematicGPKG",
+    #         "include_zipfile": True,
+    #         "description": "Test Description",
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data))
-
+    #
     # def test_osm_sqlite(self):
     #     """
     #     This test is to ensure that an OSM job will export a sqlite file.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestThematicSQLITE", "include_zipfile": True,
-    #                 "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}]}
+    #     job_data = {
+    #         "name": "TestThematicSQLITE",
+    #         "include_zipfile": True,
+    #         "description": "Test Description",
+    #         "selection": self.selection,
+    #         "project": EVENT_NAME,
+    #         "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
-
+    #
     # def test_osm_shp(self):
     #     """
     #     This test is to ensure that an OSM job will export a shp.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestSHP", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
+    #     job_data = {
+    #         "name": "TestSHP",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "selection": self.selection,
+    #         "project": EVENT_NAME,
+    #         "provider_tasks": [{"provider": "osm", "formats": ["shp"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data))
-
-    def test_osm_kml(self):
-        """
-        This test is to ensure that an OSM job will export a kml file.
-        :returns:
-        """
-        job_data = {
-            "name": "TestKML",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "osm", "formats": ["kml"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
-
+    #
+    # def test_osm_kml(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a kml file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestKML",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "osm", "formats": ["kml"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
+    #
     # def test_wms_gpkg(self):
     #     """
     #     This test is to ensure that an WMS job will export a gpkg file.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestGPKG-WMS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
+    #     job_data = {
+    #         "name": "TestGPKG-WMS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data))
-
+    #
     # def test_wmts_gpkg(self):
     #     """
     #     This test is to ensure that an WMTS job will export a gpkg file.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestGPKG-WMTS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
+    #     job_data = {
+    #         "name": "TestGPKG-WMTS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data, run_timeout=120))
+    #
+    # #
+    # def test_wmts_gtiff(self):
+    #     """
+    #     This test is to ensure that an WMTS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "Test-gtiff-WMTS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gtiff"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data))
-
-    def test_wmts_gtiff(self):
-        """
-        This test is to ensure that an WMTS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "Test-gtiff-WMTS",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gtiff"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
-
+    #
     # def test_arcgis_gpkg(self):
     #     """
     #     This test is to ensure that an ArcGIS job will export a gpkg file.
     #     :returns:
     #     """
-    #     job_data = {"name": "TestGPKG-Arc-Raster",
-    #                 "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
-    #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
+    #     job_data = {
+    #         "name": "TestGPKG-Arc-Raster",
+    #         "description": "Test Description",
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "include_zipfile": True,
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}],
+    #     }
     #     self.assertTrue(self.run_job(job_data))
 
     # def test_wfs_gpkg(self):
@@ -244,7 +288,7 @@ class TestJob(TestCase):
     #     :returns:
     #     """
     #     job_data = {"name": "TestGPKG-WFS", "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
+    #                 "project": EVENT_NAME,
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
@@ -254,7 +298,7 @@ class TestJob(TestCase):
     #     :returns:
     #     """
     #     job_data = {"name": "TestSHP-WFS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "project": EVENT_NAME,
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
     #     self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
@@ -264,7 +308,7 @@ class TestJob(TestCase):
     #     :returns:
     #     """
     #     job_data = {"name": "TestSQLITE-WFS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "project": EVENT_NAME,
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
@@ -274,25 +318,25 @@ class TestJob(TestCase):
     #     :returns:
     #     """
     #     job_data = {"name": "TestKML-WFS", "description": "Test Description", "include_zipfile": True,
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "project": EVENT_NAME,
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
-    def test_wcs_hfa(self):
-        """
-        This test is to ensure that a WCS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {
-            "name": "TestGPKG-WCS",
-            "description": "Test Description",
-            "include_zipfile": True,
-            "project": "TestProject",
-            "selection": self.selection,
-            "tags": [],
-            "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}],
-        }
-        self.assertTrue(self.run_job(job_data))
+    # def test_wcs_hfa(self):
+    #     """
+    #     This test is to ensure that a WCS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {
+    #         "name": "TestGPKG-WCS",
+    #         "description": "Test Description",
+    #         "include_zipfile": True,
+    #         "project": EVENT_NAME,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #         "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}],
+    #     }
+    #     self.assertTrue(self.run_job(job_data))
 
     # def test_arcgis_feature_service(self):
     #     """
@@ -300,29 +344,29 @@ class TestJob(TestCase):
     #     :returns:
     #     """
     #     job_data = {"name": "TestGPKG-Arcfs", "description": "Test Description",
-    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "project": EVENT_NAME,
     #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
     #     self.assertTrue(self.run_job(job_data))
 
-    def test_loaded(self):
-        """
-
-        :return: This test will run all currently loaded providers.
-        """
-        provider_tasks = []
-        for data_provider in self.get_all_displayed_provider_slugs():
-            provider_tasks += [{"provider": data_provider, "formats": ["gpkg"]}]
-        job_data = {
-            "name": "Integration Tests - Test Loaded",
-            "description": "An Integration Test ",
-            "project": "Integration Tests",
-            "include_zipfile": True,
-            "provider_tasks": provider_tasks,
-            "selection": self.selection,
-            "tags": [],
-        }
-        self.assertTrue(self.run_job(job_data, run_timeout=1800))  # This needs more time to complete
-
+    # def test_loaded(self):
+    #     """
+    #
+    #     :return: This test will run all currently loaded providers.
+    #     """
+    #     provider_tasks = []
+    #     for data_provider in self.get_all_displayed_provider_slugs():
+    #         provider_tasks += [{"provider": data_provider, "formats": ["gpkg"]}]
+    #     job_data = {
+    #         "name": "Integration Tests - Test Loaded",
+    #         "description": "An Integration Test ",
+    #         "project": EVENT_NAME,
+    #         "include_zipfile": True,
+    #         "provider_tasks": provider_tasks,
+    #         "selection": self.selection,
+    #         "tags": [],
+    #     }
+    #     self.assertTrue(self.run_job(job_data, run_timeout=1800))  # This needs more time to complete
+    #
     def test_all(self):
         """
         This test ensures that if all formats and all providers are selected
@@ -333,20 +377,22 @@ class TestJob(TestCase):
             "name": "Integration Test - Test All Test Fixtures",
             "description": "test",
             "include_zipfile": True,
-            "project": "eventkit-integration-test",
+            "project": EVENT_NAME,
             "selection": self.selection,
             "tags": [],
+            "projections": [4326, 3857],
+            "visibility": "PRIVATE",
             "provider_tasks": [
-                {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
+                # {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "osm-generic",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {"provider": "osm", "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
-                {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg", "gtiff"]},
+                # {"provider": "osm", "formats": ["gpkg", "shp"]},
+                # {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
+                # {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]},
                 # Commented out because the service is down.
                 # {"provider": "eventkit-integration-test-wfs",
                 #  "formats": ["shp", "gpkg", "kml"]},
-                {"provider": "eventkit-integration-test-wcs", "formats": ["gtiff", "hfa"]}
+                {"provider": "eventkit-integration-test-wcs", "formats": ["hfa", "gtiff"]},
                 # {"provider": "eventkit-integration-test-arc-fs",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
             ],
@@ -357,40 +403,41 @@ class TestJob(TestCase):
         self.run_job(job_uid=run["job"]["uid"], run_timeout=1800)  # This needs more time to complete
 
     def run_job(self, data=None, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT, job_uid=None, keep_job=False):
+        try:
+            if job_uid:
+                run = self.client.rerun_job(job_uid=job_uid)
+            else:
+                job = self.client.create_job(**data)
+                run = self.client.get_runs(params={"job_uid": job["uid"]})[0]
+                job_uid = job["uid"]
 
-        if job_uid:
-            run = self.client.rerun_job(job_uid=job_uid)
-        else:
-            job = self.client.create_job(**data)
-            run = self.client.get_runs(params={"job_uid": job["uid"]})[0]
-            job_uid = job["uid"]
+            if not wait_for_run:
+                return run
 
-        if not wait_for_run:
-            return run
+            run = self.client.wait_for_run(run["uid"], run_timeout=run_timeout)
+            timezone.now().strftime("%Y%m%d")
 
-        run = self.client.wait_for_run(run["uid"], run_timeout=run_timeout)
-        timezone.now().strftime("%Y%m%d")
+            # Get the filename for the zip, to ensure that it exists.
+            for provider_task in run["provider_tasks"]:
+                if provider_task["name"] == "run":
+                    run_provider_task = provider_task
 
-        # Get the filename for the zip, to ensure that it exists.
-        for provider_task in run["provider_tasks"]:
-            if provider_task["name"] == "run":
-                run_provider_task = provider_task
+            for task in run_provider_task["tasks"]:
+                if "zip" in task["name"].lower():
+                    zip_result = task["result"]
 
-        for task in run_provider_task["tasks"]:
-            if "zip" in task["name"].lower():
-                zip_result = task["result"]
+            assert ".zip" in zip_result["filename"]
 
-        assert ".zip" in zip_result["filename"]
-
-        self.assertTrue(run["status"] == "COMPLETED")
-        # TODO: Debug download and check files in ci pipeline.
-        # for provider_task in run["provider_tasks"]:
-        #     check_zoom = True if provider_task.get("provider", {}).get("data_type") == "raster" else False
-        #     for task in provider_task["tasks"]:
-        #         if "geopackage" in task["name"].lower() or "gpkg" in task["name"].lower():
-        #             self.check_geopackage(task["result"]["uid"], check_zoom=check_zoom)
-        if not keep_job:
-            self.client.delete_job(job_uid=job_uid)
+            self.assertTrue(run["status"] == "COMPLETED")
+            # TODO: Debug download and check files in ci pipeline.
+            # for provider_task in run["provider_tasks"]:
+            #     check_zoom = True if provider_task.get("provider", {}).get("data_type") == "raster" else False
+            #     for task in provider_task["tasks"]:
+            #         if "geopackage" in task["name"].lower() or "gpkg" in task["name"].lower():
+            #             self.check_geopackage(task["result"]["uid"], check_zoom=check_zoom)
+        finally:
+            if job_uid and not (keep_job or not wait_for_run):
+                self.client.delete_job(job_uid=job_uid)
         return run
 
     def check_geopackage(self, result_uid, check_zoom=False):
@@ -423,51 +470,105 @@ def get_providers_list():
             "level_from": 10,
             "level_to": 10,
             "max_selection": "2000.000",
-            "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
-            "sources:\r\n"
-            "  default:\r\n"
-            "    type: wms\r\n"
-            "    grid: default\r\n"
-            "    req:\r\n"
-            "      url: https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WMSServer\r\n"
-            "      layers: 0\r\n"
-            "grids:\r\n"
-            "  default:\r\n"
-            "    srs: EPSG:4326\r\n"
-            "    tile_size: [256, 256]\r\n"
-            "    origin: nw\r\n"
-            "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
-            "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
-            "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
-            "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
-            "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
-            "      6.705522537231444e-07]",
+            "config": {
+                "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
+                "sources": {
+                    "default": {
+                        "type": "wms",
+                        "grid": "default",
+                        "req": {
+                            "url": "https://basemap.nationalmap.gov/arcgis/"
+                            "services/USGSImageryOnly/MapServer/WMSServer",
+                            "layers": 0,
+                        },
+                    }
+                },
+                "grids": {
+                    "default": {
+                        "srs": "EPSG:4326",
+                        "tile_size": [256, 256],
+                        "origin": "nw",
+                        "res": [
+                            0.7031249999999999,
+                            0.35156249999999994,
+                            0.17578124999999997,
+                            0.08789062499999999,
+                            0.04394531249999999,
+                            0.021972656249999997,
+                            0.010986328124999998,
+                            0.005493164062499999,
+                            0.0027465820312499996,
+                            0.0013732910156249998,
+                            0.0006866455078124999,
+                            0.00034332275390624995,
+                            0.00017166137695312497,
+                            8.583068847656249e-05,
+                            4.291534423828124e-05,
+                            2.145767211914062e-05,
+                            1.072883605957031e-05,
+                            5.364418029785155e-06,
+                            2.6822090148925777e-06,
+                            1.3411045074462889e-06,
+                            6.705522537231444e-07,
+                        ],
+                    }
+                },
+            },
         },
         {
             "created_at": "2016-10-06T17:45:46.213Z",
             "updated_at": "2016-10-06T17:45:46.213Z",
             "name": "eventkit-integration-test-wmts",
             "slug": "eventkit-integration-test-wmts",
-            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/"
-            "USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+            "url": "https://basemap.nationalmap.gov/arcgis/"
+            "rest/services/USGSImageryOnly/MapServer/WMTS/"
+            "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
             "layer": "default",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
             "level_from": 10,
             "level_to": 10,
-            "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
-            "sources:\r\n"
-            "  default:\r\n"
-            "    type: tile\r\n"
-            "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/"
-            "USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s\r\n"
-            "    grid: default\r\n\r\n"
-            "grids:\r\n  default:\r\n    srs: EPSG:4326\r\n    tile_size: [256, 256]\r\n    origin: nw\r\n"
-            "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
-            "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
-            "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
-            "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
-            "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
-            "      6.705522537231444e-07]",
+            "config": {
+                "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
+                "sources": {
+                    "default": {
+                        "type": "tile",
+                        "url": "https://basemap.nationalmap.gov/arcgis/"
+                        "rest/services/USGSImageryOnly/MapServer/WMTS/"
+                        "tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+                        "grid": "default",
+                    }
+                },
+                "grids": {
+                    "default": {
+                        "srs": "EPSG:4326",
+                        "tile_size": [256, 256],
+                        "origin": "nw",
+                        "res": [
+                            0.7031249999999999,
+                            0.35156249999999994,
+                            0.17578124999999997,
+                            0.08789062499999999,
+                            0.04394531249999999,
+                            0.021972656249999997,
+                            0.010986328124999998,
+                            0.005493164062499999,
+                            0.0027465820312499996,
+                            0.0013732910156249998,
+                            0.0006866455078124999,
+                            0.00034332275390624995,
+                            0.00017166137695312497,
+                            8.583068847656249e-05,
+                            4.291534423828124e-05,
+                            2.145767211914062e-05,
+                            1.072883605957031e-05,
+                            5.364418029785155e-06,
+                            2.6822090148925777e-06,
+                            1.3411045074462889e-06,
+                            6.705522537231444e-07,
+                        ],
+                    }
+                },
+            },
         },
         {
             "created_at": "2016-10-06T19:17:28.770Z",
@@ -479,36 +580,64 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-raster"),
             "level_from": 10,
             "level_to": 10,
-            "config": "layers:\r\n  - name: default\r\n    title: default\r\n    sources: [default]\r\n\r\n"
-            "sources:\r\n"
-            "  default:\r\n"
-            "    type: arcgis\r\n"
-            "    grid: default\r\n"
-            "    req:\r\n"
-            "      url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer\r\n"
-            "      layers: \r\n"
-            "        show: 0\r\n\r\n"
-            "grids:\r\n  default:\r\n    srs: EPSG:4326\r\n    tile_size: [256, 256]\r\n    origin: nw\r\n"
-            "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
-            "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
-            "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
-            "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
-            "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
-            "      6.705522537231444e-07]\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n"
-            "    origin: nw",
+            "config": {
+                "layers": [{"name": "default", "title": "default", "sources": ["default"]}],
+                "sources": {
+                    "default": {
+                        "type": "arcgis",
+                        "grid": "default",
+                        "req": {
+                            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer",
+                            "layers": {"show": 0},
+                        },
+                    }
+                },
+                "grids": {
+                    "default": {
+                        "srs": "EPSG:4326",
+                        "tile_size": [256, 256],
+                        "origin": "nw",
+                        "res": [
+                            0.7031249999999999,
+                            0.35156249999999994,
+                            0.17578124999999997,
+                            0.08789062499999999,
+                            0.04394531249999999,
+                            0.021972656249999997,
+                            0.010986328124999998,
+                            0.005493164062499999,
+                            0.0027465820312499996,
+                            0.0013732910156249998,
+                            0.0006866455078124999,
+                            0.00034332275390624995,
+                            0.00017166137695312497,
+                            8.583068847656249e-05,
+                            4.291534423828124e-05,
+                            2.145767211914062e-05,
+                            1.072883605957031e-05,
+                            5.364418029785155e-06,
+                            2.6822090148925777e-06,
+                            1.3411045074462889e-06,
+                            6.705522537231444e-07,
+                        ],
+                    },
+                    "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
+                },
+            },
         },
         {
             "created_at": "2016-10-13T17:23:26.890Z",
             "updated_at": "2016-10-13T17:23:26.890Z",
             "name": "eventkit-integration-test-wfs",
             "slug": "eventkit-integration-test-wfs",
-            "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&"
-            "VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/"
+            "services/structures/MapServer/WFSServer"
+            "?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature"
+            "&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
             "layer": "structures:USGS_TNM_Structures",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
             "level_from": 0,
             "level_to": 8,
-            "config": "",
         },
         {
             "created_at": "2016-10-13T17:23:26.890Z",
@@ -520,34 +649,54 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wcs"),
             "level_from": 10,
             "level_to": 10,
-            "config": 'service:\r\n  scale: "15"\r\n  coverages: "DEP3Elevation"\r\nparams:\r\n  TRANSPARENT: '
-            "true\r\n  FORMAT: geotiff\r\n  VERSION: '1.0.0'\r\n  CRS: 'EPSG:4326'\r\n  "
-            "REQUEST: 'GetCoverage'",
-        }
-        #     , {
-        #     "created_at": "2016-10-21T14:30:27.066Z",
-        #     "updated_at": "2016-10-21T14:30:27.066Z",
-        #     "name": "eventkit-integration-test-arc-fs",
-        #     "slug": "eventkit-integration-test-arc-fs",
-        #     "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer",
-        #     "layer": "2",
-        #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
-        #     "level_from": 0,
-        #     "level_to": 2,
-        #     "config": ""
-        # }
+            "config": {
+                "service": {"scale": "15", "coverages": "DEP3Elevation"},
+                "params": {
+                    "TRANSPARENT": True,
+                    "FORMAT": "geotiff",
+                    "VERSION": "1.0.0",
+                    "CRS": "EPSG:4326",
+                    "REQUEST": "GetCoverage",
+                },
+            },
+        },
+        {
+            "created_at": "2016-10-21T14:30:27.066Z",
+            "updated_at": "2016-10-21T14:30:27.066Z",
+            "name": "eventkit-integration-test-arc-fs",
+            "slug": "eventkit-integration-test-arc-fs",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/rest/services/transportation/MapServer/4",
+            "layer": "2",
+            "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-feature"),
+            "level_from": 0,
+            "level_to": 2,
+            "config": {},
+        },
     ]
 
 
+@transaction.atomic
 def load_providers():
     export_providers = get_providers_list()
-    providers = [DataProvider(**export_provider) for export_provider in export_providers]
-    DataProvider.objects.bulk_create(providers)
+    updated_providers = []
+    updated_fields = []
+    for provider_data in export_providers:
+        provider, created = DataProvider.objects.get_or_create(slug=provider_data["slug"], defaults=provider_data)
+        if not created:
+            for field, value in provider_data.items():
+                setattr(provider, field, value)
+            updated_providers.append(provider)
+            updated_fields.extend(list(provider_data.keys()))
+    if updated_providers:
+        # Bulk update faster and won't trigger post save things which we don't (?) care about.
+        DataProvider.objects.bulk_update(updated_providers, list(set(updated_fields)))
 
 
-def delete_providers():
+def hide_providers():
+    """Ensure that test providers are hidden."""
     export_providers = get_providers_list()
     for export_provider in export_providers:
         provider = DataProvider.objects.using("default").filter(slug=export_provider.get("slug")).first()
         if provider:
-            provider.delete(using="default")
+            provider.hidden = True
+            provider.display = False

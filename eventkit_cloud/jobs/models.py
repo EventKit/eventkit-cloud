@@ -431,23 +431,26 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     def metadata(self):
         from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url
 
-        if not self.config:
+        try:
+            url = self.config["sources"]["info"]["req"]["url"]
+            type = self.config["sources"]["info"]["type"]
+            if url and type:
+                return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
             return None
-        url = self.config.get("sources", {}).get("info", {}).get("req", {}).get("url")
-        type = self.config.get("sources", {}).get("info", {}).get("type")
-        if url:
-            return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
+        except (AttributeError, KeyError, TypeError):
+            return None
 
     @property
     def footprint_url(self):
         from eventkit_cloud.utils.mapproxy import get_mapproxy_footprint_url
 
-        if not self.config:
+        try:
+            url = self.config["sources"]["footprint"]["req"]["url"]
+            if url:
+                return get_mapproxy_footprint_url(self.slug)
             return None
-
-        url = self.config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
-        if url:
-            return get_mapproxy_footprint_url(self.slug)
+        except (AttributeError, KeyError, TypeError):
+            return None
 
     @property
     def layers(self) -> LayersDescription:
