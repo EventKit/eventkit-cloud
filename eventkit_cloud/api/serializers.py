@@ -5,8 +5,11 @@ See `DRF serializer documentation  <http://www.django-rest-framework.org/api-gui
 Used by the View classes api/views.py to serialize API responses as JSON or HTML.
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
+from datetime import datetime
 import json
 import logging
+import math
+from django.utils import timezone
 
 # -*- coding: utf-8 -*-
 import pickle
@@ -1038,16 +1041,22 @@ def basic_data_provider_serializer(
     if include_geometry:
         serialized_data_provider["the_geom"] = json.loads(data_provider.the_geom.geojson)
 
-    serialized_data_provider["download_count_rank"] = (
-        getattr(data_provider, "download_count_rank") if hasattr(data_provider, "download_count_rank") else None
+    serialized_data_provider["download_count"] = (
+        getattr(data_provider, "download_count") if hasattr(data_provider, "download_count") else None
     )
-    serialized_data_provider["download_date_rank"] = (
-        getattr(data_provider, "download_date_rank") if hasattr(data_provider, "download_date_rank") else None
-    )
+
+    serialized_data_provider["latest_download"] = get_download_week(data_provider)
+
     serialized_data_provider["favorite"] = (
         getattr(data_provider, "favorite") if hasattr(data_provider, "favorite") else False
     )
     return serialized_data_provider
+
+
+def get_download_week(data_provider: DataProvider) -> Optional[int]:
+    if hasattr(data_provider, "latest_download") and isinstance(data_provider.latest_download, datetime):
+        return math.floor((timezone.now() - data_provider.latest_download).days / 7)
+    return None
 
 
 def basic_data_provider_list_serializer(
@@ -1134,8 +1143,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
     use_bbox = serializers.SerializerMethodField(read_only=True)
     hidden = serializers.ReadOnlyField(default=False)
     data_type = serializers.ReadOnlyField(default=False)
-    download_count_rank = serializers.SerializerMethodField(read_only=True)
-    download_date_rank = serializers.SerializerMethodField(read_only=True)
+    download_count = serializers.SerializerMethodField(read_only=True)
+    latest_download = serializers.SerializerMethodField(read_only=True)
     favorite = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -1205,11 +1214,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_use_bbox(self, obj):
         return obj.get_use_bbox()
 
-    def get_download_count_rank(self, obj):
-        return obj.download_count_rank if hasattr(obj, "download_count_rank") else None
+    def get_download_count(self, obj):
+        return obj.download_count if hasattr(obj, "download_count") else None
 
-    def get_download_date_rank(self, obj):
-        return obj.download_date_rank if hasattr(obj, "download_date_rank") else None
+    def get_latest_download(self, obj):
+        return obj.latest_download if hasattr(obj, "latest_download") else None
 
     def get_favorite(self, obj):
         return obj.favorite if hasattr(obj, "favorite") else False

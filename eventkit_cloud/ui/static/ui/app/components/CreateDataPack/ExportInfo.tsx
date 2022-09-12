@@ -922,7 +922,7 @@ export function ExportInfo(props: Props) {
     };
 
     const sortMostRecent = (currentProviders) => {
-        return currentProviders.sort((a, b) => a.download_date - b.download_date);
+        return currentProviders.sort((a, b) => a.latest_download - b.latest_download);
     };
 
     const sortByFavorites = (currentProviders) => {

@@ -978,12 +978,6 @@ class DataProviderViewSet(EventkitViewSet):
             # This is used for user made data providers, not user permissions
             .filter(Q(user=self.request.user) | Q(user=None))
             .annotate(download_count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
-            # TODO: Add download date query in
-            .annotate(download_date=Subquery(latest_subquery), latest_download=Subquery(latest_subquery))
-            # .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
-            # .annotate(
-            #     download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
-            # )
             .annotate(
                 favorite=Exists(
                     UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
@@ -1095,8 +1089,6 @@ class DataProviderViewSet(EventkitViewSet):
         :param kwargs:
         :return: the serialized data providers
         """
-        import time
-        start = time.time()
         qu = self.get_queryset()
         queryset = self.filter_queryset(qu)
         search_geojson = self.request.data.get("geojson", None)
@@ -1130,7 +1122,6 @@ class DataProviderViewSet(EventkitViewSet):
             filtered_data.update(data)
             data = filtered_data
 
-        logger.info(f"Time: {time.time() - start}")
         return Response(data)
 
 
