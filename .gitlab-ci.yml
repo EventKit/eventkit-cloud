@@ -40,6 +40,7 @@ cache:
 
 .front_rules:
   before_script:
+    - shopt -s expand_aliases
     - alias front_diff="git diff --quiet --exit-code master...$(git branch --show-current) eventkit_cloud/ui/static/ui/**/* config/**/* package.json .gitlab-ci.yml"
 
 .front:
@@ -51,6 +52,7 @@ cache:
 
 .back_rules:
   before_script:
+    - shopt -s expand_aliases
     - alias back_diff="git diff --quiet --exit-code master...$(git branch --show-current)  conda/**/* config/* requirements.txt requirements-dev.txt eventkit_cloud/**/* environment.yml setup.py setup.cfg docker-compose.yml .gitlab-ci.yml"
 
 .back:
