@@ -76,99 +76,103 @@ eslint:
     - .front
     - .lint
   script:
+    - ls -al
+    - git --help
+    - git log
+    - git status
     - front_diff || npm run eslint
-
-black:
-  extends:
-    - .back
-    - .lint
-  script:
-    - back_diff || black --check eventkit_cloud
-
-isort:
-  extends:
-    - .back
-    - .lint
-  script:
-    - back_diff || isort eventkit_cloud
-
-flake8:
-  extends:
-    - .back
-    - .lint
-  script:
-    - back_diff || flake8 eventkit_cloud
-
-mypy:
-  extends:
-    - .back
-    - .lint
-  script:
-    - back_diff || mypy --no-incremental eventkit_cloud
-
-migrations:
-  extends:
-    - .back
-    - .lint
-  script:
-    - back_diff || python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
-
-.test:
-  stage: test
-  extends: .default
-
-unit-back:
-  extends:
-    - .back_rules
-    - .test
-  tags:
-    - dind
-  script:
-    - back_diff || python scripts/ci_utils.py
-    - back_diff || mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
-    - back_diff || docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
-
-unit-front:
-  extends:
-    - .front
-    - .test
-  script:
-    - front_diff || npm run coverage
-
-integration-tests:
-  when: always
-  extends: .test
-  needs: ["unit-front", "unit-back"]
-  tags:
-    - dind
-  variables:
-    DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-    BROKER_URL: amqp://guest:guest@rabbitmq:5672/
-    BROKER_API_URL: http://guest:guest@rabbitmq:15672/api/
-    CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
-    LOG_LEVEL: INFO
-    EXPORT_DOWNLOAD_ROOT: /var/lib/eventkit/exports_download
-    PYTHONWARNINGS: ignore
-  before_script:
-    - !reference [.back_rules, before_script]
-    - !reference [.front_rules, before_script]
-    - alias branch_diff="back_diff && front_diff"
-  script:
-    - branch_diff || python scripts/ci_utils.py
-    - branch_diff || mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download || echo $?
-    - branch_diff || docker-compose up -d && docker-compose stop celery webpack flower httpd && BIND_MOUNT_LOCATION=$PWD docker-compose run --rm -d --user=root --name=celery_worker celery || echo $?
-    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
-    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_all eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_cancel_osm_run'; EXIT_CODE=$?; exit $EXIT_CODE || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit $EXIT_CODE
-
-pass-tests:
-  when: on_success
-  stage: results
-  script:
-    - python scripts/github.py success "All tests pass."
-
-fail-tests:
-  when: on_failure
-  stage: results
-  script:
-    - python scripts/github.py failure "The pipeline failed."
+#
+#black:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - back_diff || black --check eventkit_cloud
+#
+#isort:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - back_diff || isort eventkit_cloud
+#
+#flake8:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - back_diff || flake8 eventkit_cloud
+#
+#mypy:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - back_diff || mypy --no-incremental eventkit_cloud
+#
+#migrations:
+#  extends:
+#    - .back
+#    - .lint
+#  script:
+#    - back_diff || python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
+#
+#.test:
+#  stage: test
+#  extends: .default
+#
+#unit-back:
+#  extends:
+#    - .back_rules
+#    - .test
+#  tags:
+#    - dind
+#  script:
+#    - back_diff || python scripts/ci_utils.py
+#    - back_diff || mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
+#    - back_diff || docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+#
+#unit-front:
+#  extends:
+#    - .front
+#    - .test
+#  script:
+#    - front_diff || npm run coverage
+#
+#integration-tests:
+#  when: always
+#  extends: .test
+#  needs: ["unit-front", "unit-back"]
+#  tags:
+#    - dind
+#  variables:
+#    DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+#    BROKER_URL: amqp://guest:guest@rabbitmq:5672/
+#    BROKER_API_URL: http://guest:guest@rabbitmq:15672/api/
+#    CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
+#    LOG_LEVEL: INFO
+#    EXPORT_DOWNLOAD_ROOT: /var/lib/eventkit/exports_download
+#    PYTHONWARNINGS: ignore
+#  before_script:
+#    - !reference [.back_rules, before_script]
+#    - !reference [.front_rules, before_script]
+#    - alias branch_diff="back_diff && front_diff"
+#  script:
+#    - branch_diff || python scripts/ci_utils.py
+#    - branch_diff || mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download || echo $?
+#    - branch_diff || docker-compose up -d && docker-compose stop celery webpack flower httpd && BIND_MOUNT_LOCATION=$PWD docker-compose run --rm -d --user=root --name=celery_worker celery || echo $?
+#    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
+#    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
+#    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_all eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_cancel_osm_run'; EXIT_CODE=$?; exit $EXIT_CODE || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit $EXIT_CODE
+#
+#pass-tests:
+#  when: on_success
+#  stage: results
+#  script:
+#    - python scripts/github.py success "All tests pass."
+#
+#fail-tests:
+#  when: on_failure
+#  stage: results
+#  script:
+#    - python scripts/github.py failure "The pipeline failed."
