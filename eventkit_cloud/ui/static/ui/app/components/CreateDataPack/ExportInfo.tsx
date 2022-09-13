@@ -1523,14 +1523,15 @@ export function ExportInfo(props: Props) {
                                 <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
                                     <CircularProgress disableShrink={true} size={50}/>
                                 </div> :
-                                <Virtuoso
+                                dataProviders.length > 0 ? <Virtuoso
                                     style={{width: '100%', height: 500}}
                                     id="ProviderList"
-                                    totalCount={getCurrentProviders().length}
+                                    totalCount={dataProviders.length}
                                     initialItemCount={10}
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                />}
+                                /> : <span style={{display: 'flex', justifyContent: 'center', width: '100%', height: 50, fontSize: '16px'}}>
+                                    No providers found. Check applied filters and server status.</span>}
 
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}

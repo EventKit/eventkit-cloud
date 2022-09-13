@@ -57,11 +57,11 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
 
     const source = getCancelSource(state);
     if (!auto && source) {
-        source.cancel('Request is no longer valid, cancelling.');
+        source.abort();
     }
 
-    const cancelSource = cancellable ? axios.CancelToken.source() : undefined;
-    const token = cancelSource ? cancelSource.token : undefined;
+    const cancelSource = cancellable ? new AbortController() : undefined;
+    const signal = cancelSource ? cancelSource.signal : undefined;
 
     const [requestType, successType, failureType] = types;
 
@@ -75,7 +75,7 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         params,
         data,
         headers: { 'X-CSRFToken': csrftoken, ...headers },
-        cancelToken: token,
+        signal: signal,
     }).then((response) => {
         const batched = batchSuccess(response, state);
         if (batched) {
@@ -87,10 +87,11 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
             dispatch({ ...payload, type: successType, ...onSuccess(response) });
         }
     }).catch(error => {
-        if (axios.isCancel(error)) {
-            console.warn(error.message);
-        } else {
+        if (axios.isAxiosError(error)) {
             dispatch({ ...payload, type: failureType, ...onError(error) });
+        } else {
+            console.warn(error.message);
+            //dispatch({ ...payload, type: failureType, ...onError(error) });
         }
     });
 };

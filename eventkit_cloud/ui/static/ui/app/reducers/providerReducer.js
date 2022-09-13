@@ -11,18 +11,19 @@ export function getProvidersReducer(state = initialStateProviders, action) {
             return {
                 fetching: true,
                 objects: [],
-                cancelToken: action.cancelSource,
+                cancelController: action.cancelSource,
             };
         case types.PROVIDERS_RECEIVED:
             return {
                 fetching: false,
                 objects: action.providers,
-                cancelToken: undefined,
+                cancelController: undefined,
             };
         case types.GETTING_PROVIDERS_ERROR:
             return {
                 ...state,
-                fetching: !!state.cancelToken,
+                fetching: false,
+                cancelController: undefined,
             };
         case types.PATCHED_PROVIDER_FAVORITE:
             return {

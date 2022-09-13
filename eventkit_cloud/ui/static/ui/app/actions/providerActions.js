@@ -30,7 +30,7 @@ export function getProviders(selectedArea, selectedTopics) {
             data: params,
             onSuccess: (response) => ({ providers: response.data }),
             cancellable: true,
-            getCancelSource: (state) => (state.providers.cancelToken),
+            getCancelSource: (state) => (state.providers.cancelController),
         };
     }
 
@@ -44,7 +44,7 @@ export function getProviders(selectedArea, selectedTopics) {
         method: 'GET',
         onSuccess: (response) => ({ providers: response.data }),
         cancellable: true,
-        getCancelSource: (state) => (state.providers.cancelToken),
+        getCancelSource: (state) => (state.providers.cancelController),
     };
 }
 
