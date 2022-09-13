@@ -680,11 +680,7 @@ export function ExportInfo(props: Props) {
         } else {
             // or remove the value from the unchecked checkbox from the array
             index = selectedProviders.map(x => x.name).indexOf(e.target.name);
-            for (const provider of providers) {
-                if (provider.name === e.target.name) {
-                    selectedProviders.splice(index, 1);
-                }
-            }
+            selectedProviders.splice(index, 1);
         }
         // update the state with the new array of options
         updateExportInfoCallback({
@@ -1531,7 +1527,7 @@ export function ExportInfo(props: Props) {
                                     itemContent={index => dataProviders[index]}
                                     className="qa-ExportInfo-List"
                                 /> : <span style={{display: 'flex', justifyContent: 'center', width: '100%', height: 50, fontSize: '16px'}}>
-                                    No providers found. Check applied filters and server status.</span>}
+                                    No providers found</span>}
 
                             <div className={classes.stickyRow}>
                                 <div className={classes.stickyRowItems}

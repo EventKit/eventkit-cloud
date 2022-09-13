@@ -35,7 +35,7 @@ describe('getProvidersReducer', () => {
                 fetching: true,
                 objects: ['one', 'two', 'three'],
             },
-            { type: types.GETTING_PROVIDERS_ERROR, providers: [] },
+            { type: types.GETTING_PROVIDERS_ERROR },
         )).toEqual({
             fetching: false, objects: ['one', 'two', 'three'],
         });
