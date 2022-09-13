@@ -87,11 +87,10 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
             dispatch({ ...payload, type: successType, ...onSuccess(response) });
         }
     }).catch(error => {
-        if (axios.isAxiosError(error)) {
-            dispatch({ ...payload, type: failureType, ...onError(error) });
-        } else {
+        if (axios.isCancel(error)) {
             console.warn(error.message);
-            //dispatch({ ...payload, type: failureType, ...onError(error) });
+        } else {
+            dispatch({ ...payload, type: failureType, ...onError(error) });
         }
     });
 };
