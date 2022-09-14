@@ -1091,8 +1091,7 @@ class DataProviderViewSet(EventkitViewSet):
         :param kwargs:
         :return: the serialized data providers
         """
-        qu = self.get_queryset()
-        queryset = self.filter_queryset(qu)
+        queryset = self.filter_queryset(self.get_queryset())
         search_geojson = self.request.data.get("geojson", None)
         if search_geojson is not None:
             geometry = (
