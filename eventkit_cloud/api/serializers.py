@@ -1053,7 +1053,7 @@ def basic_data_provider_serializer(
     return serialized_data_provider
 
 
-def get_download_week(data_provider: DataProvider) -> Optional[int]:
+def get_download_week(data_provider) -> Optional[int]:
     if hasattr(data_provider, "latest_download") and isinstance(data_provider.latest_download, datetime):
         return math.floor((timezone.now() - data_provider.latest_download).days / 7)
     return None
