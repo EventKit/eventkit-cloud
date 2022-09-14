@@ -1109,14 +1109,10 @@ class DataProviderViewSet(EventkitViewSet):
         search_topics: Optional[List[Topic]] = self.request.data.get("topics") or []
         if search_topics:
             queryset = queryset.filter(topics__slug__in=search_topics).distinct()
-
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
         providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
-
         data = serializer(providers, many=True, context={"request": request})
-
         filtered_data = filtered_serializer(filtered_providers, many=True)
-
         if isinstance(data, list):
             data += filtered_data
         else:

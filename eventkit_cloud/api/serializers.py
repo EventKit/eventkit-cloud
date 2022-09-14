@@ -1044,9 +1044,7 @@ def basic_data_provider_serializer(
     serialized_data_provider["download_count"] = (
         getattr(data_provider, "download_count") if hasattr(data_provider, "download_count") else None
     )
-
     serialized_data_provider["latest_download"] = get_download_week(data_provider)
-
     serialized_data_provider["favorite"] = (
         getattr(data_provider, "favorite") if hasattr(data_provider, "favorite") else False
     )
