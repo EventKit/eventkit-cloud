@@ -9,16 +9,17 @@ variables:
   AWS_ENDPOINT_URL: "http://minio:9000"
   AWS_SECRET_ACCESS_KEY: AWS_SECRET
   AWS_STORAGE_BUCKET_NAME: eventkit
-  BASE_URL: "http://host.docker.internal:6080"
+  BASE_URL: "http://127.0.0.1:6080"
   BRANCH: "master"
   CURL_CA_BUNDLE: "./conda/cacert.pem"
+  GIT_CHECKOUT: "true"
+  GIT_STRATEGY: clone
   MOUNT_POINT: $CI_PROJECT_DIR
   NEXUS_BASE_URL: $NEXUS_BASE_URL
   NEXUS_REPO: "EventKit_eventkit"
   REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   SECRET_KEY: "TESTING"
-  SITE_NAME: "host.docker.internal"
-  SITE_IP: "127.0.0.1"
+  SITE_NAME: "127.0.0.1"
   VERSION: "1.14.0"
 
 image:
@@ -26,10 +27,13 @@ image:
 
 .default:
   when: always
+  needs: []
 
 pending-tests:
   when: always
   stage: pending
+  variables:
+    GIT_STRATEGY: fetch
   script:
     - python scripts/github.py pending "Waiting for tests."
 
@@ -39,34 +43,26 @@ cache:
     - .npm/
     - node_modules/
 
+.front_rules:
+  before_script:
+    - shopt -s expand_aliases
+    - alias front_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH -- eventkit_cloud/ui/static/ui/**/* config/**/* package.json .gitlab-ci.yml"
+
 .front:
   image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-0"
   before_script:
-    - cp -rf config/ui/. ./
-    - npm ci --cache .npm --prefer-offline
-  only:
-    changes:
-      - eventkit_cloud/ui/static/ui/**/*
-      - config/**/*
-      - package.json
-      - .gitlab-ci.yml
+    - !reference [ .front_rules, before_script ]
+    - front_diff || cp -rf config/ui/. ./
+    - front_diff || npm ci --cache .npm --prefer-offline
 
 .back_rules:
-  only:
-    changes:
-      - conda/**/*
-      - config/*
-      - requirements.txt
-      - requirements-dev.txt
-      - eventkit_cloud/**/*
-      - environment.yml
-      - setup.py
-      - setup.cfg
-      - docker-compose.yml
-      - .gitlab-ci.yml
+  before_script:
+    - shopt -s expand_aliases
+    - alias back_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH -- conda/**/* config/* requirements.txt requirements-dev.txt eventkit_cloud/**/* environment.yml setup.py setup.cfg docker-compose.yml .gitlab-ci.yml"
 
 .back:
   extends: .back_rules
+  cache: []
   image:
     name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-1"
     entrypoint: [ "" ]
@@ -74,55 +70,53 @@ cache:
     CURL_CA_BUNDLE: "./conda/cacert.pem"
     REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   before_script:
-    - . activate conda_env
-    - pip install -e .
+    - !reference [.back_rules, before_script]
 
 .lint:
   stage: lint
   extends: .default
-
 
 eslint:
   extends:
     - .front
     - .lint
   script:
-    - npm run eslint
+    - front_diff || npm run eslint
 
 black:
   extends:
     - .back
     - .lint
   script:
-    - black --check eventkit_cloud
+    - back_diff || black --check eventkit_cloud
 
 isort:
   extends:
     - .back
     - .lint
   script:
-    - isort eventkit_cloud
+    - back_diff || isort eventkit_cloud
 
 flake8:
   extends:
     - .back
     - .lint
   script:
-    - flake8 eventkit_cloud
+    - back_diff || flake8 eventkit_cloud
 
 mypy:
   extends:
     - .back
     - .lint
   script:
-    - mypy --no-incremental eventkit_cloud
+    - back_diff || mypy --no-incremental eventkit_cloud
 
 migrations:
   extends:
     - .back
     - .lint
   script:
-    - python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
+    - back_diff || python manage.py makemigrations eventkit_cloud | grep -i "No changes detected"
 
 .test:
   stage: test
@@ -135,43 +129,55 @@ unit-back:
   tags:
     - dind
   script:
-    - python scripts/ci_utils.py
-    - mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
-    - echo "id $AWS_ACCESS_KEY_ID url $AWS_ENDPOINT_URL secret $AWS_SECRET_ACCESS_KEY bucket $AWS_STORAGE_BUCKET_NAME"
-    - docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
+    - back_diff || python scripts/ci_utils.py
+    - back_diff || mkdir -p exports_stage && chmod 777 exports_stage && chown -R 8800:880 . || echo $?
+    - back_diff || docker-compose run --rm -T -e COVERAGE=True -e COVERAGE_THRESHOLD=68 eventkit python manage.py test -v=2 --noinput eventkit_cloud
 
 unit-front:
   extends:
     - .front
     - .test
   script:
-    - npm run coverage
+    - front_diff || npm run coverage
 
-# TODO: Add back after debugging connection issues in pipeline.
-#integration-tests:
-#  when: always
-#  stage: test
-#  tags:
-#    - dind
-#  script:
-#    - python scripts/ci_utils.py
-#    - docker-compose up -d --scale celery=3 && docker-compose stop flower map mkdocs || echo $?
-#    - mkdir -p exports_stage && chmod 777 exports_stage exports_download && chown -R 8800:880 . || echo $?
-#    - docker-compose exec -T eventkit "echo 'UID ${UID}'" || echo $?
-#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
-#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-#    - docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests'
-
-
+integration-tests:
+  when: always
+  extends: .test
+  needs: ["unit-front", "unit-back"]
+  tags:
+    - dind
+  variables:
+    DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    BROKER_URL: amqp://guest:guest@rabbitmq:5672/
+    BROKER_API_URL: http://guest:guest@rabbitmq:15672/api/
+    CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
+    LOG_LEVEL: INFO
+    EXPORT_DOWNLOAD_ROOT: /var/lib/eventkit/exports_download
+    PYTHONWARNINGS: ignore
+  before_script:
+    - !reference [.back_rules, before_script]
+    - !reference [.front_rules, before_script]
+    - alias branch_diff="back_diff && front_diff"
+  script:
+    - branch_diff || python scripts/ci_utils.py
+    - branch_diff || mkdir -p exports_stage exports_download && chmod 777 exports_stage exports_download || echo $?
+    - branch_diff || docker-compose up -d && docker-compose stop celery webpack flower httpd && BIND_MOUNT_LOCATION=$PWD docker-compose run --rm -d --user=root --name=celery_worker celery || echo $?
+    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
+    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
+    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_all eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_cancel_osm_run'; EXIT_CODE=$?; exit $EXIT_CODE || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit $EXIT_CODE
 
 pass-tests:
   when: on_success
   stage: results
+  variables:
+    GIT_STRATEGY: fetch
   script:
     - python scripts/github.py success "All tests pass."
 
 fail-tests:
   when: on_failure
   stage: results
+  variables:
+    GIT_STRATEGY: fetch
   script:
     - python scripts/github.py failure "The pipeline failed."
