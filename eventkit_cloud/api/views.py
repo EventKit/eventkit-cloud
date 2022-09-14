@@ -16,8 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Exists, F, Func, OuterRef, Q, QuerySet, Subquery, Window
-from django.db.models.functions import DenseRank
+from django.db.models import Exists, Func, OuterRef, Q, QuerySet, Subquery
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
