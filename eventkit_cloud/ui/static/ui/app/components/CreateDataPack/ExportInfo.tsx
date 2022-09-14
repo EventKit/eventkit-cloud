@@ -920,10 +920,10 @@ export function ExportInfo(props: Props) {
     };
 
     const sortMostRecent = (currentProviders) => {
-        return currentProviders.sort(sortByDate(false));
+        return currentProviders.sort(sortByDateDesc(false));
     };
 
-    function sortByDate(descending) {
+    function sortByDateDesc(descending) {
         return function (a, b) {
             // equal items sort equally
             if (a.latest_download === b.latest_download) {
