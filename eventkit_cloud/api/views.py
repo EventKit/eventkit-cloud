@@ -1685,7 +1685,7 @@ class DataProviderTaskRecordViewSet(EventkitViewSet):
         if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({"success": False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(
+        cancel_export_provider_task(
             data_provider_task_uid=data_provider_task_record.uid,
             canceling_username=request.user.username,
         )
