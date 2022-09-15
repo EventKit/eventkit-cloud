@@ -29,6 +29,8 @@ export function getProviders(selectedArea, selectedTopics) {
             method: 'POST',
             data: params,
             onSuccess: (response) => ({ providers: response.data }),
+            cancellable: true,
+            getCancelSource: (state) => (state.providers.cancelController),
         };
     }
 
@@ -41,6 +43,8 @@ export function getProviders(selectedArea, selectedTopics) {
         url: '/api/providers',
         method: 'GET',
         onSuccess: (response) => ({ providers: response.data }),
+        cancellable: true,
+        getCancelSource: (state) => (state.providers.cancelController),
     };
 }
 
