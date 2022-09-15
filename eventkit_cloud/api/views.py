@@ -976,10 +976,7 @@ class DataProviderViewSet(EventkitViewSet):
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             # This is used for user made data providers, not user permissions
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(
-                download_count=Subquery(download_subquery), 
-                latest_download=Subquery(latest_subquery)
-            )
+            .annotate(download_count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .annotate(
                 favorite=Exists(
                     UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
