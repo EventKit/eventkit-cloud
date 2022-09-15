@@ -17,6 +17,8 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flexGrow: 1,
         position: 'relative',
         display: 'flex',
+        textAlign: 'center',
+        paddingLeft: '15%',
     },
     nonExpandedText: {
         fontSize: '13px',
@@ -28,6 +30,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     expandedText: {
         fontSize: '13px',
         flexGrow: 2,
+        textAlign: 'center',
     },
     expand: {
         display: 'flex',
