@@ -680,12 +680,8 @@ export function ExportInfo(props: Props) {
             }
         } else {
             // or remove the value from the unchecked checkbox from the array
-            index = selectedProviders.map((x) => x.name).indexOf(e.target.name);
-            for (const provider of providers) {
-                if (provider.name === e.target.name) {
-                    selectedProviders.splice(index, 1);
-                }
-            }
+            index = selectedProviders.map(x => x.name).indexOf(e.target.name);
+            selectedProviders.splice(index, 1);
         }
         // update the state with the new array of options
         updateExportInfoCallback({
@@ -1622,21 +1618,19 @@ export function ExportInfo(props: Props) {
                                     </Popover>
                                 </div>
                             </div>
-
-                            {fetchingProviders ? (
-                                <div style={{ display: "flex", justifyContent: "center", width: "100%", height: 500 }}>
-                                    <CircularProgress disableShrink={true} size={50} />
-                                </div>
-                            ) : (
-                                <Virtuoso
-                                    style={{ width: "100%", height: 500 }}
+                                {fetchingProviders ?
+                                <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
+                                    <CircularProgress disableShrink={true} size={50}/>
+                                </div> :
+                                dataProviders.length > 0 ? <Virtuoso
+                                    style={{width: '100%', height: 500}}
                                     id="ProviderList"
-                                    totalCount={getCurrentProviders().length}
+                                    totalCount={dataProviders.length}
                                     initialItemCount={10}
                                     itemContent={(index) => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                />
-                            )}
+                                /> : <span style={{display: 'flex', justifyContent: 'center', width: '100%', height: 50, fontSize: '16px'}}>
+                                    No providers found</span>}
 
                             <div className={classes.stickyRow}>
                                 <div
