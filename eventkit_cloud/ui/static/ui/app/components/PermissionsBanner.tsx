@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';
-import CssBaseline from '@material-ui/core/CssBaseline';
 import CloseIcon from '@material-ui/icons/Close';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import { createStyles, Theme, withStyles } from '@material-ui/core';
@@ -56,7 +55,6 @@ function PermissionsBanner(props: Props) {
 
     return (
         <>
-            <CssBaseline />
             <Paper elevation={0} className={classes.paper}>
                 <Grid container spacing={8} justify="space-between">
                     <Grid item xs={10}>
