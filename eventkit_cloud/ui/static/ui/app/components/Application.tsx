@@ -1,5 +1,6 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
+import {ToastContainer} from "react-toastify";
 import {connect} from 'react-redux';
 import axios from 'axios';
 import queryString from 'query-string';
@@ -32,6 +33,7 @@ import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
 import {RegionsProvider} from "./common/context/RegionContext";
+import 'react-toastify/dist/ReactToastify.css';
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -834,6 +836,17 @@ export class Application extends React.Component<Props, State> {
                             >
                                 <strong>You have been automatically logged out due to inactivity.</strong>
                             </BaseDialog>
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={10000}
+                                hideProgressBar={false}
+                                newestOnTop={false}
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                pauseOnHover
+                                limit={3}
+                            />
                         </div>
                     </MatomoHandler>
                 </RegionsProvider>
