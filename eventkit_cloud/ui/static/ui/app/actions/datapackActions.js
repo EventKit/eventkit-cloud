@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify';
 import Normalizer from '../utils/normalizers';
 import { getHeaderPageInfo } from '../utils/generic';
 
@@ -159,6 +160,9 @@ export function getRuns(args = {}) {
             });
             return actions;
         },
+        onError: () => {
+            toast.error('Failed to retrieve DataPack(s)');
+        }
     };
 }
 

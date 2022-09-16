@@ -1,4 +1,5 @@
-import {toast} from 'react-toastify';
+import { toast } from 'react-toastify';
+
 export const types = {
     GETTING_TOPICS: 'GETTING_TOPICS',
     TOPICS_RECEIVED: 'TOPICS_RECEIVED',
@@ -14,7 +15,7 @@ export function getTopics() {
         ],
         url: '/api/topics',
         method: 'GET',
-        onSuccess: response => ({ topics: response.data }),
-        onError: () => {toast.error('Topic(s) failed to load')}
+        onSuccess: (response) => ({ topics: response.data }),
+        onError: () => { toast.error('Topic(s) failed to load'); },
     };
 }

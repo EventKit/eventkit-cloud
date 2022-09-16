@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { useEffectOnMount } from '../../utils/hooks/hooks';
 import PermissionsBanner from '../PermissionsBanner';
-import {useState} from "react";
 
 export function CreatePagePermissionsBanner(props: {
     providers: Eventkit.Provider[],
@@ -8,7 +8,7 @@ export function CreatePagePermissionsBanner(props: {
     setBannerOpen: (val: boolean) => void;
 }) {
     function areProvidersHidden(): boolean {
-        return props.providers.some(provider => provider.hidden === true);
+        return props.providers.some((provider) => provider.hidden === true);
     }
 
     useEffectOnMount(() => {

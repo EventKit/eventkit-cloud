@@ -1,4 +1,5 @@
-import {toast} from 'react-toastify';
+import { toast } from 'react-toastify';
+
 export const types = {
     UPDATE_AOI_INFO: 'UPDATE_AOI_INFO',
     CLEAR_AOI_INFO: 'CLEAR_AOI_INFO',
@@ -64,9 +65,12 @@ export function submitJob(data) {
         method: 'POST',
         data,
         onSuccess: (response) => {
-            toast.success('Your Datapack has been created');
-            return { jobuid: response.data.uid }
+            toast.success('Your DataPack has been created');
+            return { jobuid: response.data.uid };
         },
+        onError: () => {
+            toast.error('Failed to create DataPack');
+        }
     };
 }
 

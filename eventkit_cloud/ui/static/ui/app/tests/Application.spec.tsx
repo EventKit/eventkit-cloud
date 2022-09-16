@@ -14,7 +14,6 @@ import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {Provider} from "react-redux";
 import {toast, ToastContainer} from 'react-toastify';
-import {createMuiTheme, MuiThemeProvider} from "@material-ui/core/styles";
 
 jest.mock('../components/Dialog/BaseDialog', () => 'basedialog');
 jest.mock('../components/auth/LoginErrorPage', () => 'loginerrorpage');
@@ -506,8 +505,6 @@ describe('Application component react testing library', () => {
     };
 
     it('should render with toast', async () => {
-        //TODO: Why doesn't this test work with rendering the application? Replacing div render with setup/application draw throws errors
-        // unrelated to toast rendering (theme errors).
         jest.useFakeTimers();
         const component = render(
             <div>
