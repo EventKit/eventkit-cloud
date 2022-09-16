@@ -83,16 +83,16 @@ describe('middleware', () => {
         });
 
         it('should cancel on-going request if source is returned and not auto', () => {
-            const cancel = sinon.stub();
+            const abort = sinon.stub();
             const action = {
                 types: ['one', 'two', 'three'],
                 requiresAuth: false,
                 shouldCallApi: () => true,
-                getCancelSource: () => ({ cancel }),
+                getCancelSource: () => ({ abort }),
                 auto: false,
             };
             middleware.simpleApiCall({dispatch, getState})(next)(action);
-            expect(action.getCancelSource().cancel.calledOnce).toBe(true);
+            expect(action.getCancelSource().abort.calledOnce).toBe(true);
         });
 
         it('should create a cancelSource and dispatch it with the first type', () => {
