@@ -221,6 +221,9 @@ export function deleteRun(uid) {
         url: `/api/runs/${uid}`,
         method: 'DELETE',
         onSuccess: () => ({ payload: { id: uid } }),
+        onError: () => {
+            toast.error('Failed to delete DataPack');
+        }
     };
 }
 

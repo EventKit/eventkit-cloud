@@ -120,6 +120,9 @@ export function rerunExport(jobuid) {
         url: `/api/jobs/${jobuid}/run`,
         method: 'POST',
         onSuccess: (response) => ({ exportReRun: { data: response.data } }),
+        onError: () => {
+            toast.error('Failed to rerun export');
+        }
     };
 }
 
