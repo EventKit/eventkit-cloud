@@ -33,7 +33,7 @@ export function getProviders(selectedArea, selectedTopics) {
             onSuccess: (response) => ({ providers: response.data }),
             cancellable: true,
             getCancelSource: (state) => (state.providers.cancelController),
-            onError: () => { toast.error('Data Provider(s) failed to load')}
+            onError: () => { toast.error('Data Provider(s) failed to load'); },
         };
     }
 
@@ -48,7 +48,7 @@ export function getProviders(selectedArea, selectedTopics) {
         onSuccess: (response) => ({ providers: response.data }),
         cancellable: true,
         getCancelSource: (state) => (state.providers.cancelController),
-        onError: () => { toast.error('Data Provider(s) failed to load')}
+        onError: () => { toast.error('Data Provider(s) failed to load'); },
     };
 }
 

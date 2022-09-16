@@ -70,7 +70,7 @@ export function submitJob(data) {
         },
         onError: () => {
             toast.error('Failed to create DataPack');
-        }
+        },
     };
 }
 

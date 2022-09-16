@@ -162,7 +162,7 @@ export function getRuns(args = {}) {
         },
         onError: () => {
             toast.error('Failed to retrieve DataPack(s)');
-        }
+        },
     };
 }
 
