@@ -122,7 +122,7 @@ export function rerunExport(jobuid) {
         onSuccess: (response) => ({ exportReRun: { data: response.data } }),
         onError: () => {
             toast.error('Failed to rerun export');
-        }
+        },
     };
 }
 

@@ -223,7 +223,7 @@ export function deleteRun(uid) {
         onSuccess: () => ({ payload: { id: uid } }),
         onError: () => {
             toast.error('Failed to delete DataPack');
-        }
+        },
     };
 }
 
