@@ -111,7 +111,7 @@ def get_default_projection(supported_projections: List[int], selected_projection
     for supported_projection in supported_projections:
         if supported_projection in selected_projections:
             return supported_projection
-    return 4326
+    return None
 
 
 def get_export_filepath(
@@ -582,16 +582,19 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
                 logger.error(f"Contents of directory: {os.listdir(os.path.dirname(staging_filepath))}")
                 continue
             # Exclude zip files created by zip_export_provider
-            if not (staging_filepath.endswith(".zip") and export_task.name == create_zip_task.name):
+            if not export_task.name == create_zip_task.name:
                 include_files[staging_filepath] = archive_filepath
 
         # add the license for this provider if there are other files already
         if include_files:
             try:
                 include_files.update(create_license_file(data_provider_task_record))
-                # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
-                if provider_type == "arcgis-feature":
-                    include_files.update(create_arcgis_layer_file(data_provider_task_record, metadata))
+                try:
+                    # TODO: organize this better, maybe a standard layer file in the TaskBuilder.
+                    if provider_type == "arcgis-feature":
+                        include_files.update(create_arcgis_layer_file(data_provider_task_record, metadata))
+                except Exception:
+                    logger.error("Failed to create arcgis layer.", exc_info=True)
             except FileNotFoundError:
                 # This fails if run at beginning of run.
                 pass
@@ -610,11 +613,18 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
     )
 
     metadata["data_sources"][data_provider_task_record.provider.slug]["layer_file"] = layer_filepath_archive
+    doc = None
     try:
         style_file = data_provider_task_record.provider.styles.get(style_type=StyleType.ARCGIS.value)
         style_info = json.loads(style_file.file.read())
         doc = update_style_file_path(style_info, os.path.basename(file_info["file_path"]))
-    except StyleFile.DoesNotExist:
+    except (StyleFile.DoesNotExist, FileNotFoundError):
+        logger.info("No style file for %s", data_provider_task_record.provider.name)
+    except (TypeError, json.decoder.JSONDecodeError):
+        logger.info(
+            "Could not properly read or decode style file %s",
+        )
+    if not doc:
         service_capabilities = data_provider_task_record.provider.get_service_client().get_capabilities()
         arcgis_layer = ArcGISLayer(
             data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
@@ -1193,12 +1203,13 @@ def find_in_zip(
     stage_dir: str,
     extension: str = None,
     archive_extension: str = "zip",
-    matched_files: list = list(),
-    extract: bool = False,
+    matched_files: Optional[list] = None,
+    extract: bool = False
 ):
     """
     Function finds files within archives and returns their vsi path.
     """
+    matched_files = matched_files or []
     with ZipFile(zip_filepath) as zip_file:
         files_in_zip = zip_file.namelist()
         extension = (extension or "").lower()
@@ -1209,23 +1220,26 @@ def find_in_zip(
                     output_dest = Path(stage_dir).joinpath(file_path.name)
                     zip_file.extract(member=filepath, path=stage_dir)
                     os.rename(Path(stage_dir).joinpath(file_path), output_dest)
-                    return str(output_dest)
+                    matched_files += [str(output_dest)]
                 else:
-                    return f"/vsizip/{zip_filepath}/{filepath}"
+                    matched_files += [f"/vsizip/{zip_filepath}/{filepath}"]
             elif not extension and file_path.suffix:
                 file = f"/vsizip/{zip_filepath}/{filepath}"
                 meta = get_meta(file)
-                driver = meta["driver"] or None
-                if driver:
-                    return file
+                srs = meta["srs"] or None
+                if srs:
+                    matched_files += [file]
 
             if archive_extension in file_path.suffix:
                 nested = Path(f"{stage_dir}/{filepath}")
                 nested.parent.mkdir(parents=True, exist_ok=True)
                 with open(nested, "wb") as f:
                     f.write(zip_file.read(filepath))
+                matched_files += [
+                    find_in_zip(str(nested.absolute()), stage_dir, extension=extension, matched_files=matched_files)
+                ]
 
-                return find_in_zip(str(nested.absolute()), stage_dir, extension=extension, matched_files=matched_files)
+        return matched_files
 
 
 def extract_metadata_files(

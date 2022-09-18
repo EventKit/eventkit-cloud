@@ -6,13 +6,14 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Any, Dict, Tuple, cast
+from typing import Any, Dict, Tuple, TypedDict, cast
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
+from gdal_utils import convert, convert_bbox
 from webtest import TestApp
 
 import mapproxy
@@ -55,6 +56,32 @@ client_logger = logging.getLogger("mapproxy.source.request")
 client_logger.setLevel(settings.LOG_LEVEL if log_settings.get("requests", False) else logging.ERROR)
 
 mapproxy_config_keys_index = "mapproxy-config-cache-keys"
+
+DEFAULT_PROJECTION = 4326
+
+SeedLevel = TypedDict("SeedLevel", {"from": int, "to": int})
+
+
+class _Seed(TypedDict):
+    caches: list[str]
+    grids: list[str]
+    levels: SeedLevel
+
+
+class Seed(_Seed, total=False):
+    coverages: list[str]
+
+
+class SeedCoverage(TypedDict, total=False):
+    bbox: list[float]
+    datasource: str  # Filepath
+    where: str  # SQL String
+    srs: str  # EPSG
+
+
+class SeedConfiguration(TypedDict):
+    seeds: dict[str, Seed]
+    coverages: dict[str, SeedCoverage]
 
 
 def get_mapproxy_config_template(slug, user=None):
@@ -159,11 +186,11 @@ class MapproxyGeopackage(object):
         self.level_from = level_from
         self.level_to = level_to
         self.layer = layer
-        self.config = config
+        self.config = copy.deepcopy(config)
         self.service_type = service_type
         self.task_uid = task_uid
         self.selection = selection
-        self.projection = projection
+        self.projection = projection if projection else DEFAULT_PROJECTION  # This could be improved through code.
         self.input_gpkg = input_gpkg
 
     def build_config(self):
@@ -183,10 +210,6 @@ class MapproxyGeopackage(object):
                 "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
                 "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
             }
-        elif self.projection:
-            conf_dict["grids"].update(
-                {str(self.projection): {"srs": f"EPSG:{self.projection}", "tile_size": [256, 256], "origin": "nw"}}
-            )
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
         conf_dict["caches"] = conf_dict.get("caches", {})
@@ -200,14 +223,25 @@ class MapproxyGeopackage(object):
                 table_name=self.layer,
             )
 
-        if self.projection:
+        if self.projection != DEFAULT_PROJECTION:
             conf_dict["caches"]["repro_cache"] = copy.deepcopy(conf_dict["caches"]["default"])
-            conf_dict["caches"]["repro_cache"]["cache"]["filename"] = self.input_gpkg
-            conf_dict["caches"]["repro_cache"]["sources"] = []
-            conf_dict["caches"]["default"]["meta_size"] = [4, 4]
-            conf_dict["caches"]["default"]["bulk_meta_tiles"] = True
+
+            if self.input_gpkg:
+                conf_dict["caches"]["repro_cache"]["sources"] = []
+                conf_dict["caches"]["repro_cache"]["cache"]["filename"] = self.input_gpkg
+            else:
+                conf_dict["caches"]["repro_cache"].pop("cache", None)
             conf_dict["caches"]["default"] = get_cache_template(
-                ["repro_cache"], [str(self.projection)], self.gpkgfile, table_name="default"
+                ["repro_cache"], [str(self.projection)], self.gpkgfile, table_name=self.layer
+            )
+            conf_dict["grids"].update(
+                {
+                    str(self.projection): {
+                        "srs": f"EPSG:{self.projection}",
+                        "tile_size": [256, 256],
+                        "origin": "nw",
+                    }
+                }
             )
 
         # Need something listed as a service to pass the mapproxy validation.
@@ -294,7 +328,13 @@ class MapproxyGeopackage(object):
             )
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
-            set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
+            set_gpkg_contents_bounds(
+                self.gpkgfile,
+                self.layer,
+                convert_bbox(self.bbox, to_projection=self.projection or DEFAULT_PROJECTION),
+            )
+            return self.gpkgfile
+
         except CancelException:
             raise
         except Exception as e:
@@ -303,7 +343,6 @@ class MapproxyGeopackage(object):
             raise
         finally:
             connections.close_all()
-        return self.gpkgfile
 
 
 def get_progress_store(gpkg):
@@ -332,30 +371,41 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     }
 
 
-def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None, projection=None):
-    out_projection = 4326
-    if projection:
-        out_projection = projection
-    seed_template: Dict[str, Any] = {
-        "coverages": {"geom": {"srs": "EPSG:4326"}},
+def get_seed_coverages(coverage_file=None, bbox=None, projection=None) -> dict[str, SeedCoverage]:
+    projection = projection or DEFAULT_PROJECTION
+    seed_coverage: dict[str, SeedCoverage] = {"geom": {"srs": f"EPSG:{projection}"}}
+    if coverage_file:
+        coverage_filename = f"{os.path.splitext(coverage_file)[0]}-aoi.gpkg"
+        coverage_file = convert(
+            input_files=[coverage_file], output_file=coverage_filename, driver="gpkg", dst_srs=projection
+        )
+        seed_coverage["geom"]["datasource"] = str(coverage_file)
+    elif bbox:
+        seed_coverage["geom"]["bbox"] = convert_bbox(bbox, to_projection=projection)
+    else:
+        logger.error("No coverage file or bbox set for coverages.")
+        return {}
+    return seed_coverage
+
+
+def get_seed_template(
+    bbox=None, level_from=None, level_to=None, coverage_file=None, projection=None
+) -> SeedConfiguration:
+    grid_projection = projection if projection and projection != DEFAULT_PROJECTION else "default"
+    seed_template: SeedConfiguration = {
         "seeds": {
             "seed": {
-                "coverages": ["geom"],
                 "refresh_before": {"minutes": 0},
                 "levels": {"to": level_to or 10, "from": level_from or 0},
                 "caches": ["default"],
+                "grids": [str(grid_projection)],
             }
         },
     }
-
-    if projection:
-        seed_template["seeds"]["seed"]["grids"] = [str(out_projection)]
-    if coverage_file:
-        seed_template["coverages"]["geom"]["datasource"] = str(coverage_file)
-    else:
-        seed_template["coverages"]["geom"]["srs"] = f"EPSG:{out_projection}"
-        seed_template["coverages"]["geom"]["bbox"] = bbox
-
+    coverages = get_seed_coverages(coverage_file=coverage_file, bbox=bbox, projection=projection)
+    if coverages:
+        seed_template.update({"coverages": coverages})
+        seed_template["seeds"]["seed"]["coverages"] = [next(iter(coverages))]
     return seed_template
 
 
@@ -564,7 +614,9 @@ def get_chunked_bbox(bbox, size: tuple = None, level: int = None):
     resolution = get_resolution_for_extent(bbox, size)
     # Make a subgrid of 4326 that spans the extent of the provided bbox
     # min res specifies the starting zoom level
-    mapproxy_grid = tile_grid(srs=4326, bbox=bbox, bbox_srs=4326, origin="ul", min_res=resolution)
+    mapproxy_grid = tile_grid(
+        srs=DEFAULT_PROJECTION, bbox=bbox, bbox_srs=DEFAULT_PROJECTION, origin="ul", min_res=resolution
+    )
     # bbox is the bounding box of all tiles affected at the given level, unused here
     # size is the x, y dimensions of the grid
     # tiles at level is a generator that returns the tiles in order

@@ -383,18 +383,16 @@ class TestJob(TestCase):
             "projections": [4326, 3857],
             "visibility": "PRIVATE",
             "provider_tasks": [
-                # {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
+                {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "osm-generic",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                # {"provider": "osm", "formats": ["gpkg", "shp"]},
-                # {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
+                {"provider": "osm", "formats": ["gpkg", "shp"]},
+                {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]},
                 # Commented out because the service is down.
-                # {"provider": "eventkit-integration-test-wfs",
-                #  "formats": ["shp", "gpkg", "kml"]},
-                {"provider": "eventkit-integration-test-wcs", "formats": ["hfa", "gtiff"]},
-                # {"provider": "eventkit-integration-test-arc-fs",
-                #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
+                # {"provider": "eventkit-integration-test-wfs", "formats": ["shp", "gpkg", "kml"]},
+                {"provider": "eventkit-integration-test-wcs", "formats": ["gtiff", "hfa"]},
+                {"provider": "eventkit-integration-test-arc-fs", "formats": ["shp", "gpkg", "kml", "sqlite"]},
             ],
         }
         # This is to test creating an initial job.
@@ -469,6 +467,7 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wms"),
             "level_from": 10,
             "level_to": 10,
+            "data_type": "raster",
             "max_selection": "2000.000",
             "config": {
                 "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
@@ -527,6 +526,7 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
             "level_from": 10,
             "level_to": 10,
+            "data_type": "raster",
             "config": {
                 "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
                 "sources": {
@@ -580,6 +580,7 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-raster"),
             "level_from": 10,
             "level_to": 10,
+            "data_type": "raster",
             "config": {
                 "layers": [{"name": "default", "title": "default", "sources": ["default"]}],
                 "sources": {
@@ -638,6 +639,7 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
             "level_from": 0,
             "level_to": 8,
+            "data_type": "vector",
         },
         {
             "created_at": "2016-10-13T17:23:26.890Z",
@@ -649,6 +651,7 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wcs"),
             "level_from": 10,
             "level_to": 10,
+            "data_type": "elevation",
             "config": {
                 "service": {"scale": "15", "coverages": "DEP3Elevation"},
                 "params": {
@@ -665,11 +668,12 @@ def get_providers_list():
             "updated_at": "2016-10-21T14:30:27.066Z",
             "name": "eventkit-integration-test-arc-fs",
             "slug": "eventkit-integration-test-arc-fs",
-            "url": "https://cartowfs.nationalmap.gov/arcgis/rest/services/transportation/MapServer/4",
-            "layer": "2",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/rest/services/transportation/MapServer/3",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="arcgis-feature"),
             "level_from": 0,
-            "level_to": 2,
+            "level_to": 10,
+            "layer": None,
+            "data_type": "vector",
             "config": {},
         },
     ]

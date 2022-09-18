@@ -139,6 +139,13 @@ class YAMLWidget(forms.widgets.Textarea):
 
 
 class ConfigField(forms.JSONField):
+    empty_values = [None, "", [], ()]
+
+    def formfield(self, **kwargs):
+        result = super().formfield(**kwargs)
+        result.empty_values = self.empty_values
+        return result
+
     def to_python(self, value: Optional[Any]) -> Optional[Any]:
         value = yaml.safe_load(value)
         return super().to_python(value)

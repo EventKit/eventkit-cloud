@@ -1,4 +1,4 @@
 name: eventkit-cloud
 dependencies:
-  - eventkit-cloud=1.14.0=py310h9580275_1
+  - eventkit-cloud=1.14.0=py310h9580275_2
   - memcached=1.6.9

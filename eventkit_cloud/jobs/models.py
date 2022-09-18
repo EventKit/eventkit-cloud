@@ -265,6 +265,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     )
     config = models.JSONField(
         default=dict,
+        blank=True,
         verbose_name="Configuration",
         help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
                               with a Sources key of imagery and a Service Layer name of imagery; the validator also
