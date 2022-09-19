@@ -343,8 +343,8 @@ describe('ExportInfo component', () => {
         expect(component.queryByText('Sort By:')).toBeNull();
         expect(component.queryByText('Alphabetical A-Z')).toBeNull();
         expect(component.queryByText('Alphabetical Z-A')).toBeNull();
-        expect(component.queryByText('Most Downloaded')).toBeNull();
-        expect(component.queryByText('Recently Downloaded')).toBeNull();
+        expect(component.queryByTestId('most-downloaded')).toBeNull();
+        expect(component.queryByTestId('most-recent')).toBeNull();
         expect(component.queryByText('Clear All')).toBeNull();
         expect(component.queryByText('Apply')).toBeNull();
         expect(component.queryByText('Cancel')).toBeNull();
@@ -362,8 +362,8 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Sort By:')).toBeInTheDocument();
         expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
         expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
-        expect(component.getByText('Most Downloaded')).toBeInTheDocument();
-        expect(component.getByText('Recently Downloaded')).toBeInTheDocument();
+        expect(component.getByTestId('most-downloaded')).toBeInTheDocument();
+        expect(component.getByTestId('most-recent')).toBeInTheDocument();
         expect(component.queryByText('Clear All')).toBeInTheDocument();
         expect(component.queryByText('Apply')).toBeInTheDocument();
         expect(component.queryByText('Cancel')).toBeInTheDocument();

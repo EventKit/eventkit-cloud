@@ -508,12 +508,12 @@ export function ExportInfo(props: Props) {
             isChecked: false
         },
         {
-            name: "Most Downloaded",
+            name: `Most Downloaded (${appContext.DATA_PROVIDER_WINDOW} days)`,
             slug: "most-downloaded",
             isChecked: false
         },
         {
-            name: "Recently Downloaded",
+            name: `Recently Downloaded (${appContext.DATA_PROVIDER_WINDOW} days)`,
             slug: "most-recent",
             isChecked: false
         }

@@ -158,8 +158,9 @@ interface State {
             SERVE_ESTIMATES?: boolean;
             DATAPACKS_DEFAULT_SHARED?: boolean;
             MATOMO?: any;
-            AUTO_LOGOUT_SECONDS?: string;
-            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: string;
+            AUTO_LOGOUT_SECONDS?: number;
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: number;
+            DATA_PROVIDER_WINDOW?: number;
         }
     };
     autoLogoutWarningText: string;
@@ -338,8 +339,9 @@ export class Application extends React.Component<Props, State> {
             DATAPACK_PAGE_SIZE: PropTypes.string,
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
-            AUTO_LOGOUT_SECONDS: PropTypes.string,
-            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.string,
+            AUTO_LOGOUT_SECONDS: PropTypes.number,
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.number,
+            DATA_PROVIDER_WINDOW: PropTypes.number,
         }),
     };
 
