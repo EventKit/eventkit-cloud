@@ -1,12 +1,14 @@
-import {createStore} from 'redux'
-import {Provider} from 'react-redux'
+import {Provider} from 'react-redux';
 
 import {fireEvent, render, waitFor} from "@testing-library/react";
 
-import '@testing-library/jest-dom/extend-expect'
+import '@testing-library/jest-dom/extend-expect';
 import sinon from "sinon";
 import theme from "../../styles/eventkit_theme";
-import rootReducer from "../../reducers/rootReducer";
+import axios from "axios";
+import {ToastContainer} from "react-toastify";
+import newTestStore from "../../store/newTestStore";
+import MockAdapter from 'axios-mock-adapter';
 
 
 jest.doMock("../../components/common/CustomTableRow", () => {
@@ -29,9 +31,6 @@ jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
 
-jest.doMock('../../actions/providerActions.js', () => ({
-    getProviders: jest.fn().mockReturnValue({ type: 'getProviders' })
-}));
 
 const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
 
@@ -161,9 +160,21 @@ const providers = {
     fetching: false,
 };
 
+const user = {
+    data: 'admin',
+        meta: {
+        autoLogoutAt: null,
+            autoLogoutWarningAt: null,
+    },
+    status: {
+        patched: false,
+            patching: false,
+            error: null,
+            isLoading: false,
+    },
+};
 
 describe('ExportInfo component', () => {
-
     const getProps = () => (
         {
             geojson: {
@@ -207,6 +218,7 @@ describe('ExportInfo component', () => {
             providers,
             projections,
             formats,
+            user,
             nextEnabled: true,
             walkthroughClicked: false,
             onWalkthroughReset: sinon.spy(),
@@ -248,6 +260,7 @@ describe('ExportInfo component', () => {
                 },
                 projections: [],
             },
+            user,
             providers,
             projections,
             formats,
@@ -257,10 +270,10 @@ describe('ExportInfo component', () => {
 
     const renderWithRedux = (
         component,
-        {initialState, store = createStore(rootReducer,initialState)}: any = {}
+        {initialState, store = newTestStore(initialState)}: any = {}
     ) => {
         return {
-            ...render(<Provider store={store}>{component}</Provider>),
+            ...render(<Provider store={store}><ToastContainer/>{component}</Provider>),
             store,
         }
     };
@@ -270,8 +283,29 @@ describe('ExportInfo component', () => {
         return renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
     };
 
+
+    let mockAxios;
+    beforeAll(() => {
+        mockAxios = new MockAdapter(axios);
+    });
+    beforeEach(() => {
+        mockAxios.onGet('/api/providers').reply(200, providerList);
+        mockAxios.onPost('/api/providers/filter').reply(200, providerList);
+    });
+    afterEach(() => {
+        mockAxios.reset();
+    });
+
     it('should render without error', () => {
         renderComponent();
+    });
+
+    it('should render and display toast when providers fail', async () => {
+        mockAxios.reset();
+        mockAxios.onGet('/api/providers').reply(500,null);
+        const component = renderComponent();
+        jest.runOnlyPendingTimers();
+        expect(await component.findByText("Data Provider(s) failed to load")).toBeInTheDocument();
     });
 
     it('should render a form', () => {
@@ -292,9 +326,9 @@ describe('ExportInfo component', () => {
         expect(component.getByText('Sort / Filter')).toBeInTheDocument();
     });
 
-    it('should have a list of providers sorted A-Z by default', () => {
+    it('should have a list of providers sorted A-Z by default', async () => {
         const component = renderComponent();
-        const providers = component.getAllByTestId("DataProvider");
+        const providers = await component.findAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
@@ -360,47 +394,50 @@ describe('ExportInfo component', () => {
         expect(projections.length).toBe(2);
     });
 
-    it('should have a list of providers sorted Z-A after filter selected', () => {
+    it('should have a list of providers sorted Z-A after filter selected', async () => {
         const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
         const radioButton = component.getByTestId('alphabetical-z-a');
         fireEvent.click(radioButton);
-        const providers = component.getAllByTestId('DataProvider');
+        const providers = await component.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('USGS');
     });
 
-    it('should have a list of providers sorted most downloaded', () => {
+    it('should have a list of providers sorted most downloaded', async () => {
         const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
         const radioButton = component.getByTestId('most-downloaded');
         fireEvent.click(radioButton);
-        const providers = component.getAllByTestId('DataProvider');
+
+        const providers = await component.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('Ports');
     });
 
-    it('should have a list of providers sorted recently downloaded', () => {
+    it('should have a list of providers sorted recently downloaded', async () => {
         const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
         const radioButton = component.getByTestId('most-recent');
         fireEvent.click(radioButton);
-        const providers = component.getAllByTestId('DataProvider');
+
+        const providers = await component.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('Ports');
     });
 
-    it('should show only the providers that match the name filter', () => {
+    it('should show only the providers that match the name filter', async () => {
         const component = renderComponent();
 
         const sortFilter = component.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
         const textField = component.getByTestId('filter-text-field') as HTMLInputElement;
         fireEvent.change(textField, {target: {value: 'Open'}})
-        const providers = component.getAllByTestId('DataProvider');
+
+        const providers = await component.findAllByTestId("DataProvider");
         expect(providers).toHaveLength(1);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
@@ -451,7 +488,8 @@ describe('ExportInfo component', () => {
     it('should close the filter section and clear filters when you click cancel', async () => {
         const component = renderComponent();
 
-        let providers = component.queryAllByTestId('DataProvider');
+
+        let providers = await component.findAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
 
         const sortFilter = component.getByText('Sort / Filter');
@@ -462,14 +500,14 @@ describe('ExportInfo component', () => {
         fireEvent.click(checkBox);
         expect(checkBox).toBeChecked();
 
-        providers = component.queryAllByTestId('DataProvider');
+        providers = await component.findAllByTestId('DataProvider');
         expect(providers.length).toBe(1);
 
         const cancelFilterButton = component.queryByText('Cancel');
         fireEvent.click(cancelFilterButton);
 
         expect(component.queryByText('Filter By:')).toBeNull();
-        providers = component.getAllByTestId('DataProvider');
+        providers = await component.findAllByTestId('DataProvider');
         expect(providers.length).toBe(3);
     });
 });
