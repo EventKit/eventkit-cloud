@@ -177,6 +177,8 @@ declare namespace Eventkit {
         data_type: string;
         the_geom: Geom;
         favorite: boolean;
+        latest_download: number;
+        download_count: number;
     }
 
     interface Format {
