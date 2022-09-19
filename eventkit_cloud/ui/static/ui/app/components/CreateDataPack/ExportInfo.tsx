@@ -680,7 +680,7 @@ export function ExportInfo(props: Props) {
             }
         } else {
             // or remove the value from the unchecked checkbox from the array
-            index = selectedProviders.map(x => x.name).indexOf(e.target.name);
+            index = selectedProviders.map((x) => x.name).indexOf(e.target.name);
             selectedProviders.splice(index, 1);
         }
         // update the state with the new array of options
@@ -903,24 +903,26 @@ export function ExportInfo(props: Props) {
         return sortedProviders;
     };
 
-    const sortProvidersAtoZ = (currentProviders) => {
+    const sortProvidersAtoZ = (currentProviders: Eventkit.Provider[]) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name));
     };
 
-    const sortProvidersZtoA = (currentProviders) => {
+    const sortProvidersZtoA = (currentProviders: Eventkit.Provider[]) => {
         return currentProviders.sort((a, b) => a.name.localeCompare(b.name)).reverse();
     };
 
-    const sortMostDownloaded = (currentProviders) => {
+    const sortMostDownloaded = (currentProviders: Eventkit.Provider[]) => {
         return currentProviders.sort((a, b) => b.download_count - a.download_count);
     };
 
-    const sortMostRecent = (currentProviders) => {
-        return currentProviders.sort(sortByDateDesc(false));
+    const sortMostRecent = (currentProviders: Eventkit.Provider[]) => {
+        return currentProviders.sort(sortByDate());
     };
 
-    function sortByDateDesc(descending) {
-        return function (a, b) {
+    /** This function sorts DataProviders by date ascending,
+     * where date is in weeks from most recent to oldest */
+    function sortByDate() {
+        return function (a: Eventkit.Provider, b: Eventkit.Provider) {
             // equal items sort equally
             if (a.latest_download === b.latest_download) {
                 return 0;
@@ -934,13 +936,8 @@ export function ExportInfo(props: Props) {
                 return -1;
             }
 
-            if (descending) {
-                // highest sorts first
-                return a.latest_download < b.latest_download ? 1 : -1;
-            } else {
-                // lowest sorts first
-                return a.latest_download < b.latest_download ? -1 : 1;
-            }
+            // Most recent date sorts first
+            return a.latest_download < b.latest_download ? -1 : 1;
         };
     }
 
@@ -1618,19 +1615,32 @@ export function ExportInfo(props: Props) {
                                     </Popover>
                                 </div>
                             </div>
-                                {fetchingProviders ?
-                                <div style={{display: 'flex', justifyContent: 'center', width: '100%', height: 500}}>
-                                    <CircularProgress disableShrink={true} size={50}/>
-                                </div> :
-                                dataProviders.length > 0 ? <Virtuoso
-                                    style={{width: '100%', height: 500}}
+                            {fetchingProviders ? (
+                                <div style={{ display: "flex", justifyContent: "center", width: "100%", height: 500 }}>
+                                    <CircularProgress disableShrink={true} size={50} />
+                                </div>
+                            ) : dataProviders.length > 0 ? (
+                                <Virtuoso
+                                    style={{ width: "100%", height: 500 }}
                                     id="ProviderList"
                                     totalCount={dataProviders.length}
                                     initialItemCount={10}
                                     itemContent={(index) => dataProviders[index]}
                                     className="qa-ExportInfo-List"
-                                /> : <span style={{display: 'flex', justifyContent: 'center', width: '100%', height: 50, fontSize: '16px'}}>
-                                    No providers found</span>}
+                                />
+                            ) : (
+                                <span
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        width: "100%",
+                                        height: 50,
+                                        fontSize: "16px"
+                                    }}
+                                >
+                                    No providers found
+                                </span>
+                            )}
 
                             <div className={classes.stickyRow}>
                                 <div
