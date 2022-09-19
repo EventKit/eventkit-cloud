@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify';
+
 export const types = {
     GETTING_PROVIDERS: 'GETTING_PROVIDERS',
     PROVIDERS_RECEIVED: 'PROVIDERS_RECEIVED',
@@ -31,6 +33,7 @@ export function getProviders(selectedArea, selectedTopics) {
             onSuccess: (response) => ({ providers: response.data }),
             cancellable: true,
             getCancelSource: (state) => (state.providers.cancelController),
+            onError: () => { toast.error('Data Provider(s) failed to load'); },
         };
     }
 
@@ -45,6 +48,7 @@ export function getProviders(selectedArea, selectedTopics) {
         onSuccess: (response) => ({ providers: response.data }),
         cancellable: true,
         getCancelSource: (state) => (state.providers.cancelController),
+        onError: () => { toast.error('Data Provider(s) failed to load'); },
     };
 }
 
@@ -87,5 +91,6 @@ export function updateProviderFavorite(slug, favorite) {
         data: { favorite },
         method: 'PATCH',
         onSuccess: () => ({ slug, favorite }),
+        onError: () => (toast.error('Failed to set provider as favorite')),
     };
 }
