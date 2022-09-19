@@ -294,7 +294,7 @@ services:
       - SSL_VERIFICATION
       - SECRET_KEY
   webpack:
-    image: eventkit/eventkit-webpack:1.14.0-0
+    image: eventkit/eventkit-webpack:1.14.0-1
     build:
       context: .
       dockerfile: config/Dockerfile_webpack

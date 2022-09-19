@@ -1,5 +1,6 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
+import {ToastContainer} from "react-toastify";
 import {connect} from 'react-redux';
 import axios from 'axios';
 import queryString from 'query-string';
@@ -32,6 +33,7 @@ import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
 import {RegionsProvider} from "./common/context/RegionContext";
+import 'react-toastify/dist/ReactToastify.css';
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -156,8 +158,9 @@ interface State {
             SERVE_ESTIMATES?: boolean;
             DATAPACKS_DEFAULT_SHARED?: boolean;
             MATOMO?: any;
-            AUTO_LOGOUT_SECONDS?: string;
-            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: string;
+            AUTO_LOGOUT_SECONDS?: number;
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT?: number;
+            DATA_PROVIDER_WINDOW?: number;
         }
     };
     autoLogoutWarningText: string;
@@ -336,8 +339,9 @@ export class Application extends React.Component<Props, State> {
             DATAPACK_PAGE_SIZE: PropTypes.string,
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
-            AUTO_LOGOUT_SECONDS: PropTypes.string,
-            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.string,
+            AUTO_LOGOUT_SECONDS: PropTypes.number,
+            AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT: PropTypes.number,
+            DATA_PROVIDER_WINDOW: PropTypes.number,
         }),
     };
 
@@ -834,6 +838,17 @@ export class Application extends React.Component<Props, State> {
                             >
                                 <strong>You have been automatically logged out due to inactivity.</strong>
                             </BaseDialog>
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={10000}
+                                hideProgressBar={false}
+                                newestOnTop={false}
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                pauseOnHover
+                                limit={3}
+                            />
                         </div>
                     </MatomoHandler>
                 </RegionsProvider>
