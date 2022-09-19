@@ -66,6 +66,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginRight: '15px',
         flex: '0 0 auto',
         alignItems: "start",
+        bottom: "4px",
         color: theme.eventkit.colors.primary,
         '&$checked': {
             color: theme.eventkit.colors.success,

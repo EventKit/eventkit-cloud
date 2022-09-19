@@ -1550,7 +1550,7 @@ export function ExportInfo(props: Props) {
                                         key={projection.srid}
                                         style={{
                                             display: 'flex',
-                                            padding: '16px 10px',
+                                            padding: '16px 16px',
                                             backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white
                                         }}
                                     >
@@ -1565,7 +1565,7 @@ export function ExportInfo(props: Props) {
                                                 data-testid={'projection-checkbox-' + ix}
                                             />}
                                             label={<Typography
-                                                style={{fontSize: '15px'}}>EPSG:{projection.srid} - {projection.name}</Typography>}
+                                                style={{fontSize: '15px', marginLeft: '10px'}}>EPSG:{projection.srid} - {projection.name}</Typography>}
                                         />
                                         {projectionHasErrors(projection.srid) &&
                                         <AlertWarning
