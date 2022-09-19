@@ -65,6 +65,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     checkbox: {
         marginRight: '15px',
         flex: '0 0 auto',
+        alignItems: "start",
         color: theme.eventkit.colors.primary,
         '&$checked': {
             color: theme.eventkit.colors.success,
@@ -585,7 +586,10 @@ export function DataProvider(props: Props) {
                     <ListItemText
                         disableTypography
                         classes={{root: classes.listItemText}}
-                        primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
+                        primary={<div>
+                            <Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>
+                            <Typography style={{fontSize: "0.8em", textTransform: "capitalize"}}>{provider.data_type}</Typography>
+                        </div>}
                         secondary={secondary}
                     />
                     <span className={classes.starContainer}>
