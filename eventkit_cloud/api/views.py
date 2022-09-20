@@ -16,8 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry  # type: ignore
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Exists, F, Func, OuterRef, Q, QuerySet, Subquery, Window
-from django.db.models.functions import DenseRank
+from django.db.models import Exists, Func, OuterRef, Q, QuerySet, Subquery
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -977,11 +976,7 @@ class DataProviderViewSet(EventkitViewSet):
             .prefetch_related("export_provider_type__supported_formats", "usersizerule_set")
             # This is used for user made data providers, not user permissions
             .filter(Q(user=self.request.user) | Q(user=None))
-            .annotate(count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
-            .annotate(download_count_rank=Window(expression=DenseRank(), order_by=F("count").desc(nulls_last=True)))
-            .annotate(
-                download_date_rank=Window(expression=DenseRank(), order_by=F("latest_download").desc(nulls_last=True))
-            )
+            .annotate(download_count=Subquery(download_subquery), latest_download=Subquery(latest_subquery))
             .annotate(
                 favorite=Exists(
                     UserFavoriteProduct.objects.filter(provider=OuterRef("pk")).filter(user=self.request.user)
@@ -1094,7 +1089,6 @@ class DataProviderViewSet(EventkitViewSet):
         :return: the serialized data providers
         """
         queryset = self.filter_queryset(self.get_queryset())
-
         search_geojson = self.request.data.get("geojson", None)
         if search_geojson is not None:
             geometry = (
@@ -1112,7 +1106,6 @@ class DataProviderViewSet(EventkitViewSet):
         search_topics: Optional[List[Topic]] = self.request.data.get("topics") or []
         if search_topics:
             queryset = queryset.filter(topics__slug__in=search_topics).distinct()
-
         serializer, filtered_serializer = self.get_readonly_serializer_classes()
         providers, filtered_providers = attribute_class_filter(queryset, self.request.user)
         data = serializer(providers, many=True, context={"request": request})
@@ -1122,6 +1115,7 @@ class DataProviderViewSet(EventkitViewSet):
         else:
             filtered_data.update(data)
             data = filtered_data
+
         return Response(data)
 
 

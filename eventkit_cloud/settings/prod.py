@@ -297,6 +297,9 @@ AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECO
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
+# Used to as the time window for DataProvider ranking.
+DATA_PROVIDER_WINDOW: int = int(os.getenv("DATA_PROVIDER_WINDOW", 90))
+
 UI_CONFIG = {
     "VERSION": VERSION,
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -324,6 +327,7 @@ UI_CONFIG = {
     },
     "AUTO_LOGOUT_SECONDS": AUTO_LOGOUT_SECONDS,
     "AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT": AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT,
+    "DATA_PROVIDER_WINDOW": DATA_PROVIDER_WINDOW,
 }
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
@@ -408,5 +412,3 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 26214
 ENABLE_ADMIN_LOGIN: bool = is_true(os.getenv("ENABLE_ADMIN_LOGIN", False))
 ENABLE_ADMIN: bool = is_true(os.getenv("ENABLE_ADMIN", False))
 ADMIN_ROOT: str = os.getenv("ADMIN_ROOT", "admin")
-# Used to as the time window for DataProvider ranking.
-DATA_PROVIDER_WINDOW: int = int(os.getenv("DATA_PROVIDER_WINDOW", 90))
