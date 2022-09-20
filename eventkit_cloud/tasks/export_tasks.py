@@ -429,19 +429,21 @@ def osm_data_collection_pipeline(
     )
 
     task_process = TaskProcess()
-    convert(
-        boundary=selection,
-        input_files=[in_dataset],
-        output_file=gpkg_filepath,
-        layers=["land_polygons"],
-        driver="gpkg",
-        is_raster=False,
-        access_mode="append",
-        projection=projection,
-        layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
-        executor=task_process.start_process,
-    )
-
+    try:
+        convert(
+            boundary=selection,
+            input_files=[in_dataset],
+            output_file=gpkg_filepath,
+            layers=["land_polygons"],
+            driver="gpkg",
+            is_raster=False,
+            access_mode="append",
+            projection=projection,
+            layer_creation_options=["GEOMETRY_NAME=geom"],  # Needed for current styles (see note below).
+            executor=task_process.start_process,
+        )
+    except Exception:
+        logger.error("Could not load land data.")
     # TODO:  The arcgis templates as of version 1.9.0 rely on both OGC_FID and FID field existing.
     #  Just add the fid field if missing for now.
     with sqlite3.connect(gpkg_filepath) as conn:
