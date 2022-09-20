@@ -63,9 +63,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
-        marginRight: '15px',
+        marginRight: '3px',
         flex: '0 0 auto',
         alignItems: "start",
+        bottom: "4px",
         color: theme.eventkit.colors.primary,
         '&$checked': {
             color: theme.eventkit.colors.success,
@@ -109,7 +110,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         color: theme.eventkit.colors.success,
     },
     starContainer: {
-        flex: '55 1 auto',
+        marginLeft: '5px',
+        marginTop: '-4px',
     }
 });
 
@@ -587,23 +589,26 @@ export function DataProvider(props: Props) {
                         disableTypography
                         classes={{root: classes.listItemText}}
                         primary={<div>
+                            <div style={{display: 'inline-flex'}}>
                             <Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>
+                                <span className={classes.starContainer}>
+                        {provider.favorite ? <Star
+                            data-testid="Favorite"
+                            className={classes.selectedStar}
+                            onClick={() => handleProviderFavorite(false)}
+                        /> : <StarBorder
+                            data-testid="NotFavorite"
+                            className={classes.star}
+                            onClick={() => handleProviderFavorite(true)}
+                        />}
+                        </span>
+                            </div>
                             <Typography style={{fontSize: "0.8em", textTransform: "capitalize"}}>{provider.data_type}</Typography>
                         </div>}
                         secondary={secondary}
                     />
-                    <span className={classes.starContainer}>
-                        {provider.favorite ? <Star
-                        data-testid="Favorite"
-                        className={classes.selectedStar}
-                        onClick={() => handleProviderFavorite(false)}
-                    /> : <StarBorder
-                                data-testid="NotFavorite"
-                                className={classes.star}
-                                onClick={() => handleProviderFavorite(true)}
-                            />}
 
-                    </span>
+
                     <ProviderStatusCheck
                         id="ProviderStatus"
                         baseStyle={{marginRight: '40px'}}

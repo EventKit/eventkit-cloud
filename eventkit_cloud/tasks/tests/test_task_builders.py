@@ -49,17 +49,17 @@ class TestTaskBuilder(TestCase):
     def test_build_osm_task(self):
         export_format = ExportFormat.objects.get(slug="gpkg")
         run = self.build_tasks(DataProvider.objects.get(slug="osm"), [export_format])
-        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name} - EPSG:4326")
+        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name}")
 
     def test_build_wms_task(self):
         export_format = ExportFormat.objects.get(slug="gpkg")
         run = self.build_tasks(DataProvider.objects.get(slug="wms"), [export_format])
-        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name} - EPSG:4326")
+        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name}")
 
     def test_build_wcs_task(self):
         export_format = ExportFormat.objects.get(slug="gtiff")
         run = self.build_tasks(DataProvider.objects.get(slug="wcs"), [export_format])
-        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name} - EPSG:4326")
+        self.assertEqual(run.data_provider_task_records.first().tasks.first().name, f"{export_format.name}")
 
     @patch("eventkit_cloud.tasks.task_builders.ExportTaskRecord")
     def test_create_export_task_record(self, mock_export_task):

@@ -190,8 +190,8 @@ class TaskChainBuilder(object):
                     # This task was already added as the initial format conversion.
                     if projection == default_projection:
                         continue
-
-                    task_name = f"{export_task.name} - EPSG:{projection}"
+                    if projection:
+                        task_name = f"{export_task.name} - EPSG:{projection}"
                     projection_task = create_export_task_record(
                         task_name=task_name,
                         export_provider_task=data_provider_task_record,

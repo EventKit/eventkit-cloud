@@ -401,9 +401,11 @@ class TestHelpers(TestCase):
             ]
         )
 
-    def test_find_in_zip(self):
+    @patch("eventkit_cloud.tasks.helpers.get_meta")
+    def test_find_in_zip(self, mock_get_meta):
+        mock_get_meta.return_value = {"srs": 4326}
         zip_filepath = os.path.join(os.path.dirname(__file__), "files/test_zip_1.zip")
-        found_file = find_in_zip(
+        found_files = find_in_zip(
             zip_filepath=zip_filepath,
             stage_dir="example/dir",
             extension="json",
@@ -411,18 +413,18 @@ class TestHelpers(TestCase):
             matched_files=[],
             extract=False,
         )
-        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/test_geojson.json")
+        self.assertEqual(found_files, [f"/vsizip/{zip_filepath}/test_geojson.json"])
 
     def test_find_in_zip_no_extension(self):
         zip_filepath = os.path.join(os.path.dirname(__file__), "files/test_zip_1.zip")
-        found_file = find_in_zip(
+        found_files = find_in_zip(
             zip_filepath=zip_filepath, stage_dir="example/dir", archive_extension="zip", matched_files=[], extract=False
         )
-        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/test_csv.csv")
+        self.assertEqual(found_files, [f"/vsizip/{zip_filepath}/test_geojson.json"])
 
     def test_find_in_zip_no_extension_nested_folder(self):
         zip_filepath = os.path.join(os.path.dirname(__file__), "files/test_zip_2.zip")
-        found_file = find_in_zip(
+        found_files = find_in_zip(
             zip_filepath=zip_filepath, stage_dir="example/dir", archive_extension="zip", matched_files=[], extract=False
         )
-        self.assertEqual(found_file, f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json")
+        self.assertEqual(found_files, [f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json"])

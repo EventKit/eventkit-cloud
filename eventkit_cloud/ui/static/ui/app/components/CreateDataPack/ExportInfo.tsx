@@ -1661,7 +1661,7 @@ export function ExportInfo(props: Props) {
                                         key={projection.srid}
                                         style={{
                                             display: "flex",
-                                            padding: "16px 10px",
+                                            padding: "16px 16px",
                                             backgroundColor: ix % 2 === 0 ? colors.secondary : colors.white
                                         }}
                                     >
@@ -1672,7 +1672,7 @@ export function ExportInfo(props: Props) {
                                                     classes={{ root: classes.checkbox, checked: classes.checked }}
                                                     name={`${projection.srid}`}
                                                     checked={exportInfo.projections.indexOf(projection.srid) !== -1}
-                                                    style={{ width: "24px", height: "24px" }}
+                                                    style={{ width: "24px", height: "24px", marginRight: "10px" }}
                                                     onChange={onSelectProjection}
                                                     data-testid={"projection-checkbox-" + ix}
                                                 />
