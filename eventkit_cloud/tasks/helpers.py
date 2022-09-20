@@ -623,6 +623,7 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
             doc = arcgis_layer.get_cim_layer_document()
         except Exception:
             logger.info(service_capabilities)
+            raise
 
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
@@ -1010,7 +1011,7 @@ def download_arcgis_feature_data(
         else:
             logger.info("Skipping request no features.")
             # Need to create and return a response template, so that the tables appear and don't cause "missing"
-            # sources in the client software. 
+            # sources in the client software.
             json_response = {
                 "displayFieldName": service_description.get("displayField") or "NAME",
                 "fields": service_description.get("fields") or [],
