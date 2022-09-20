@@ -1204,7 +1204,7 @@ def find_in_zip(
     extension: str = None,
     archive_extension: str = "zip",
     matched_files: Optional[list] = None,
-    extract: bool = False
+    extract: bool = False,
 ):
     """
     Function finds files within archives and returns their vsi path.

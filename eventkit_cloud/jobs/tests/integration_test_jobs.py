@@ -694,6 +694,10 @@ def load_providers():
     if updated_providers:
         # Bulk update faster and won't trigger post save things which we don't (?) care about.
         DataProvider.objects.bulk_update(updated_providers, list(set(updated_fields)))
+    if settings.OVERPASS_API_URL:
+        provider = DataProvider.objects.get(slug="osm")
+        provider.url = settings.OVERPASS_API_URL
+        provider.save()
 
 
 def hide_providers():

@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from typing import Any, Optional
 
 import yaml
 from django import forms
@@ -12,6 +11,7 @@ from django.urls import re_path
 from django.utils.html import format_html
 from django_celery_beat.models import CrontabSchedule, IntervalSchedule
 
+from eventkit_cloud.jobs.fields import ConfigField
 from eventkit_cloud.jobs.forms import RegionalPolicyForm, RegionForm
 from eventkit_cloud.jobs.models import (
     DatamodelPreset,
@@ -136,19 +136,6 @@ class YAMLWidget(forms.widgets.Textarea):
         except Exception as e:
             logger.warning("Error while formatting JSON: %s", e)
             return super(YAMLWidget, self).format_value(value)
-
-
-class ConfigField(forms.JSONField):
-    empty_values = [None, "", [], ()]
-
-    def formfield(self, **kwargs):
-        result = super().formfield(**kwargs)
-        result.empty_values = self.empty_values
-        return result
-
-    def to_python(self, value: Optional[Any]) -> Optional[Any]:
-        value = yaml.safe_load(value)
-        return super().to_python(value)
 
 
 class DataProviderForm(forms.ModelForm):

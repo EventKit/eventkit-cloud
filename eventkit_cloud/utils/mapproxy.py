@@ -6,7 +6,7 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Any, Dict, Tuple, TypedDict, cast
+from typing import Any, Dict, Tuple, TypedDict, cast, Union
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -66,6 +66,7 @@ class _Seed(TypedDict):
     caches: list[str]
     grids: list[str]
     levels: SeedLevel
+    refresh_before: dict[str, Union[str, int]]
 
 
 class Seed(_Seed, total=False):
@@ -384,7 +385,6 @@ def get_seed_coverages(coverage_file=None, bbox=None, projection=None) -> dict[s
         seed_coverage["geom"]["bbox"] = convert_bbox(bbox, to_projection=projection)
     else:
         logger.error("No coverage file or bbox set for coverages.")
-        return {}
     return seed_coverage
 
 
@@ -392,6 +392,8 @@ def get_seed_template(
     bbox=None, level_from=None, level_to=None, coverage_file=None, projection=None
 ) -> SeedConfiguration:
     grid_projection = projection if projection and projection != DEFAULT_PROJECTION else "default"
+    coverages = get_seed_coverages(coverage_file=coverage_file, bbox=bbox, projection=projection)
+
     seed_template: SeedConfiguration = {
         "seeds": {
             "seed": {
@@ -399,13 +401,11 @@ def get_seed_template(
                 "levels": {"to": level_to or 10, "from": level_from or 0},
                 "caches": ["default"],
                 "grids": [str(grid_projection)],
-            }
+                "coverages": [next(iter(coverages))],
+            },
         },
+        "coverages": coverages,
     }
-    coverages = get_seed_coverages(coverage_file=coverage_file, bbox=bbox, projection=projection)
-    if coverages:
-        seed_template.update({"coverages": coverages})
-        seed_template["seeds"]["seed"]["coverages"] = [next(iter(coverages))]
     return seed_template
 
 

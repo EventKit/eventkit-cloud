@@ -33,6 +33,7 @@ from eventkit_cloud.core.models import (
     UIDMixin,
 )
 from eventkit_cloud.jobs.enumerations import GeospatialDataType, StyleType
+from eventkit_cloud.jobs.fields import ConfigJSONField
 from eventkit_cloud.utils.services import get_client
 from eventkit_cloud.utils.services.check_result import CheckResult, get_status_result
 from eventkit_cloud.utils.services.types import LayersDescription
@@ -263,7 +264,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         help_text="This determines the highest zoom level the tile export will seed to.",
     )
-    config = models.JSONField(
+    config = ConfigJSONField(
         default=dict,
         blank=True,
         verbose_name="Configuration",
@@ -384,7 +385,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
         return response
 
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+    def save(self, *args, **kwargs):
         # Something is closing the database connection which is raising an error.
         # Using a separate process allows the connection to be closed in separate process while leaving it open.
         proc = multiprocessing.dummy.Process(target=self.update_geom)
@@ -400,7 +401,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if self.export_provider_type and "ogcapi-process" in self.export_provider_type.type_name:
             self.update_export_formats()
 
-        super(DataProvider, self).save(force_insert, force_update, *args, **kwargs)
+        super(DataProvider, self).save(*args, **kwargs)
 
     def update_export_formats(self):
         # TODO: Refactor utils/ogc_apiprocess into services.

@@ -185,7 +185,7 @@ class TestExportTasks(ExportTaskBase):
             boundary=None,
             projection=4326,
             executor=self.task_process().start_process,
-            skip_failures=True
+            skip_failures=True,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -1667,7 +1667,6 @@ class TestExportTasks(ExportTaskBase):
             expected_output_path,
         )
 
-
     @patch("eventkit_cloud.tasks.export_tasks.get_tile_table_names")
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")
@@ -1676,7 +1675,14 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.mapproxy.MapproxyGeopackage")
     def test_reprojection_task(
-        self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os, mock_parse_result, mock_get_tile_table_names
+        self,
+        mock_mapproxy,
+        mock_gdal_convert,
+        mock_get_metadata,
+        mock_get_export_filepath,
+        mock_os,
+        mock_parse_result,
+        mock_get_tile_table_names,
     ):
         job_name = self.job.name.lower()
         in_projection = "4326"
