@@ -185,6 +185,7 @@ class TestExportTasks(ExportTaskBase):
             boundary=None,
             projection=4326,
             executor=self.task_process().start_process,
+            skip_failures=True,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -637,6 +638,7 @@ class TestExportTasks(ExportTaskBase):
             translate_params=translate_params,
             executor=self.task_process().start_process,
             projection=4326,
+            is_raster=True,
         )
 
         mock_convert.reset_mock()
@@ -652,6 +654,7 @@ class TestExportTasks(ExportTaskBase):
             translate_params=translate_params,
             executor=self.task_process().start_process,
             projection=4326,
+            is_raster=True,
         )
 
         mock_convert.reset_mock()
@@ -1664,6 +1667,7 @@ class TestExportTasks(ExportTaskBase):
             expected_output_path,
         )
 
+    @patch("eventkit_cloud.tasks.export_tasks.get_tile_table_names")
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
     @patch("eventkit_cloud.tasks.export_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
@@ -1671,7 +1675,14 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.mapproxy.MapproxyGeopackage")
     def test_reprojection_task(
-        self, mock_mapproxy, mock_gdal_convert, mock_get_metadata, mock_get_export_filepath, mock_os, mock_parse_result
+        self,
+        mock_mapproxy,
+        mock_gdal_convert,
+        mock_get_metadata,
+        mock_get_export_filepath,
+        mock_os,
+        mock_parse_result,
+        mock_get_tile_table_names,
     ):
         job_name = self.job.name.lower()
         in_projection = "4326"
@@ -1737,6 +1748,8 @@ class TestExportTasks(ExportTaskBase):
         )
 
         # test reprojecting raster geopackages
+        expected_layer = "imagery"
+        mock_get_tile_table_names.return_value = [expected_layer]
         driver = "gpkg"
         level_from = 0
         level_to = 12
@@ -1769,6 +1782,7 @@ class TestExportTasks(ExportTaskBase):
             selection=selection,
             projection=out_projection,
             input_gpkg=expected_input_path,
+            layer=expected_layer,
         )
 
         mock_mapproxy().convert.assert_called_once()
@@ -1897,11 +1911,11 @@ class TestExportTasks(ExportTaskBase):
         expected_result = {
             "driver": "gpkg",
             "file_extension": ".gpkg",
-            "ogcapi_process": expected_output_path,
+            "ogcapi_process": expected_outzip_path,
             "source": expected_output_path,
             "gpkg": expected_output_path,
             "selection": example_geojson,
-            "result": expected_output_path,
+            "result": expected_outzip_path,
         }
 
         self.assertEqual(result, expected_result)
@@ -1911,7 +1925,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=example_source_data,
             output_file=expected_output_path,
             projection=projection,
-            boundary=bbox,
+            boundary=example_geojson,
             executor=self.task_process().start_process,
         )
 

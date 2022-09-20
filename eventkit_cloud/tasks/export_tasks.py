@@ -76,6 +76,7 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.util_tasks import enforce_run_limit, kill_worker
 from eventkit_cloud.utils import auth_requests, geopackage, mapproxy, overpass, pbf, wcs
 from eventkit_cloud.utils.generic import retry
+from eventkit_cloud.utils.geopackage import get_tile_table_names
 from eventkit_cloud.utils.helpers import make_dirs
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
@@ -565,7 +566,6 @@ def shp_export_task(
     export_task_record = get_export_task_record(task_uid)
     shp_out_dataset = get_export_filepath(stage_dir, export_task_record, projection, "shp")
     selection = parse_result(result, "selection")
-
     task_process = TaskProcess(task_uid=task_uid)
     shp = convert(
         driver="ESRI Shapefile",
@@ -573,6 +573,7 @@ def shp_export_task(
         output_file=shp_out_dataset,
         boundary=selection,
         projection=projection,
+        skip_failures=True,  # Layer creations seems to fail, but still get created.
         executor=task_process.start_process,
     )
 
@@ -746,7 +747,7 @@ def ogcapi_process_export_task(
         selection=selection,
         download_path=download_path,
     )
-    out = None
+
     if not export_format_slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
         source_data = find_in_zip(
@@ -762,7 +763,7 @@ def ogcapi_process_export_task(
                 input_files=source_data,
                 output_file=output_file,
                 projection=projection,
-                boundary=bbox,
+                boundary=selection,
                 executor=task_process.start_process,
             )
         else:
@@ -770,11 +771,11 @@ def ogcapi_process_export_task(
 
         result["driver"] = driver
         result["file_extension"] = ogc_config.get("output_file_ext")
-        result["ogcapi_process"] = out
-        result["source"] = out
+        result["ogcapi_process"] = download_path
+        result["source"] = out  # Note 'source' is the root dataset (not native) used for the rest of the pipeline
         result[driver] = out
 
-    result["result"] = out if out else download_path
+    result["result"] = download_path
     return result
 
 
@@ -1027,6 +1028,7 @@ def geotiff_export_task(
             translate_params=translate_params,
             executor=task_process.start_process,
             projection=projection,
+            is_raster=True,
         )
 
     result["file_extension"] = "tif"
@@ -1114,6 +1116,7 @@ def reprojection_task(
     job_name=None,
     projection=None,
     config=None,
+    layer=None,
     **kwargs,
 ):
     """
@@ -1161,16 +1164,14 @@ def reprojection_task(
 
             level_from = metadata["data_sources"][provider_slug].get("level_from")
             level_to = metadata["data_sources"][provider_slug].get("level_to")
-
-            job_geom = dptr.run.job.the_geom
-            job_geom.transform(projection)
-            bbox = job_geom.extent
+            layer = get_tile_table_names(in_dataset)[0]
             mp = mapproxy.MapproxyGeopackage(
                 gpkgfile=out_dataset,
                 service_url=out_dataset,
                 name=job_name,
                 config=config,
-                bbox=bbox,
+                bbox=dptr.run.job.extents,
+                layer=layer,
                 level_from=level_from,
                 level_to=level_to,
                 task_uid=task_uid,
@@ -1225,6 +1226,7 @@ def wfs_export_task(
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data: LayersDescription = export_task_record.export_provider_task.provider.layers
     layers = {}
+    out = None
     for layer_name, layer in vector_layer_data.items():
         path = get_export_filepath(stage_dir, export_task_record, f"{layer_name}-{projection}", "gpkg")
         url = get_wfs_query_url(name, layer["url"], layer_name, projection)
@@ -1255,7 +1257,8 @@ def wfs_export_task(
             access_mode="append",
             executor=task_process.start_process,
         )
-
+    if not out:
+        raise Exception("WFS export produced no files.")
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
@@ -1387,7 +1390,7 @@ def arcgis_feature_service_export_task(
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     layers: LayersDescription = {}
     vector_layer_data = data_provider.layers
-    out = None
+    out = gpkg
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
         path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")

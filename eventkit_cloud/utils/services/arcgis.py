@@ -77,6 +77,8 @@ class ArcGIS(GisClient):
                 for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
                 if "Feature" in layer["type"]
             }
+        if cap_doc:
+            return {slugify(cap_doc["name"]): {"name": str(cap_doc["name"]), "url": str(cap_doc["url"])}}
         return {self.layer: {"name": str(self.layer), "url": self.service_url}}
 
 
