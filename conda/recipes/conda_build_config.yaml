@@ -111,7 +111,7 @@ freexl:
 gdal:
 - 3.4.2
 gdalutils:
-- 1.0.2
+- 1.0.3
 gdbm:
 - '1.18'
 geos:
@@ -227,7 +227,7 @@ libntlm:
 libopenblas:
 - 0.3.21
 libpng:
-- 1.6.37
+- 1.6.38
 libpq:
 - '14.2'
 librttopo:
@@ -301,7 +301,7 @@ postgresql:
 proj:
 - 9.0.0
 prompt_toolkit:
-- 3.0.30
+- 3.0.31
 psycopg2:
 - 2.9.3
 pthread_stubs:

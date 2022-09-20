@@ -371,13 +371,15 @@ class Geopackage(object):
         """
         Remove points/lines/multipolygons tables
         """
-        cur.execute("DROP TABLE points")
-        cur.execute("DROP TABLE lines")
-        cur.execute("DROP TABLE multipolygons")
+        for table_name in ("points", "lines", "multipolygons"):
+            cur.execute(f"DROP TABLE {table_name}")
+            cur.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{table_name}';")
+            cur.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{table_name}';")
+            cur.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{table_name}';")
+        conn.commit()
 
         cur.execute("VACUUM;")
 
-        conn.commit()
         conn.close()
 
         if self.per_theme:

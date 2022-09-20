@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Any, Dict, cast
 
+from gdal_utils import reproject
+
 from eventkit_cloud.core.helpers import get_or_update_session
 
 logger = logging.getLogger(__name__)
@@ -399,15 +401,3 @@ def parse_size_unit(unit):
         return 1e12
 
     raise ValueError("{} is an unknown unit".format(unit))
-
-
-def reproject(geom, from_srs, to_srs):
-    from osgeo import osr
-
-    source = osr.SpatialReference()
-    source.ImportFromEPSG(from_srs)
-    target = osr.SpatialReference()
-    target.ImportFromEPSG(to_srs)
-    transform = osr.CoordinateTransformation(source, target)
-    geom.Transform(transform)
-    return geom

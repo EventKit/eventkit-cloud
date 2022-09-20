@@ -6,7 +6,6 @@ import time
 
 import django
 
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()
 
@@ -35,6 +34,10 @@ def get_user_downloads():
     return UserDownload.objects.filter(downloadable__in=get_fptrs())
 
 
+def get_data_provider_statuses(data_providers: QuerySet[DataProvider]):
+    return DataProviderStatus.objects.filter(related_provider__in=data_providers)
+
+
 def get_data_providers():
     return DataProvider.objects.prefetch_related("export_provider_type__supported_formats").filter(
         slug__contains=PREFIX)
@@ -54,6 +57,10 @@ def get_dptrs():
 
 def get_etrs():
     return ExportTaskRecord.objects.filter(export_provider_task__run__job__name__contains=PREFIX)
+
+
+def get_etes(export_task_records: QuerySet[ExportTaskRecord]):
+    return ExportTaskException.objects.filter(task__in=export_task_records)
 
 
 def get_runs():
@@ -81,6 +88,8 @@ def cleanup():
     downloads = get_user_downloads()
     downloads._raw_delete(downloads.db)
     etrs = get_etrs()
+    ete = get_etes(etrs)
+    ete._raw_delete(ete.db)
     etrs._raw_delete(etrs.db)
     fptrs = get_fptrs()
     fptrs._raw_delete(fptrs.db)
@@ -93,14 +102,14 @@ def cleanup():
     user_activity._raw_delete(user_activity.db)
     jobs._raw_delete(jobs.db)
     topics = get_topics()
-    # topics._raw_delete(topics.db)
     topics.delete()
     providers = get_data_providers()
+    statuses = get_data_provider_statuses(providers)
+    statuses._raw_delete(statuses.db)
     providers._raw_delete(providers.db)
     groups = Group.objects.filter(name__contains=PREFIX)
     groups._raw_delete(groups.db)
     attribute_classes = get_attribute_classes()
-    # attribute_classes._raw_delete(attribute_classes.db)
     attribute_classes.delete()
     users = get_users()
     oauths = get_oauths(users)
@@ -123,7 +132,7 @@ def create_users(count):
 
         users = OAuth.objects.bulk_create([
             OAuth(user=user, identification=f"{PREFIX}{count_value}",
-                  commonname=f"{PREFIX}{count_value}", user_info={"group": f"{count%2}"})
+                  commonname=f"{PREFIX}{count_value}", user_info={"group": f"{count % 2}"})
             for count_value, user in enumerate(users)
         ], batch_size=1000)
 
@@ -188,7 +197,9 @@ def create_runs(count):
     fptr_count = count * max_provider_per_run * export_format_count
 
     results = list(batch_create(FileProducingTaskResult,
-                                (FileProducingTaskResult(filename=f"{PREFIX}-test.gpkg", directory=PREFIX, size=random.randint(10, 1000000) / 1000) for _ in range(fptr_count))))
+                                (FileProducingTaskResult(filename=f"{PREFIX}-test.gpkg", directory=PREFIX,
+                                                         size=random.randint(10, 1000000) / 1000) for _ in
+                                 range(fptr_count))))
 
     run_state = ["COMPLETED", "COMPLETED", "COMPLETED", "COMPLETED", "INCOMPLETE"]
     geojson_data = get_geojson_data(geojson_filepath=GEOJSON_FILEPATH)
@@ -233,8 +244,9 @@ def create_data_providers(count):
         logger.info(f"Creating {count} DataProviders.")
         created_data_providers = []
         for provider in batch_create(DataProvider,
-                                      (DataProvider(name=f"Product {i}", slug=f"{PREFIX}{i}", data_type=random.choice(data_types),
-                                                    export_provider_type_id=1, display=True) for i in range(count))):
+                                     (DataProvider(name=f"Product {i}", slug=f"{PREFIX}{i}",
+                                                   data_type=random.choice(data_types),
+                                                   export_provider_type_id=1, display=True) for i in range(count))):
             created_data_providers += [provider]
         logger.info(f"Returning {created_data_providers} DataProviders.")
         return created_data_providers
@@ -253,8 +265,11 @@ def create_downloads():
     try:
         logger.info(f"Creating downloads associated with {len(fptr_ids)} task results.")
         for downloads in batch_create(UserDownload, (UserDownload(user_id=user_id, downloadable_id=fptr_id,
-                                                                  downloaded_at=get_random_time("2000-01-01", "2022-07-22")) for fptr_id
-                                                     in fptr_ids for user_id in random.sample(user_ids, random.randint(0, user_count)))):
+                                                                  downloaded_at=get_random_time("2000-01-01",
+                                                                                                "2022-07-22")) for
+                                                     fptr_id
+                                                     in fptr_ids for user_id in
+                                                     random.sample(user_ids, random.randint(0, user_count)))):
             pass
 
     except Exception as e:
@@ -266,7 +281,9 @@ def create_attribute_classes(count: int):
     try:
         logger.info(f"Creating {count} AttributeClass")
         for count_value in range(count):
-            attrib = AttributeClass.objects.create(name=f"AttributeClass-{count_value}", slug=f"{PREFIX}-AttributeClass-{count_value}", complex=[f"{count_value%2}", "==", "group"])
+            attrib = AttributeClass.objects.create(name=f"AttributeClass-{count_value}",
+                                                   slug=f"{PREFIX}-AttributeClass-{count_value}",
+                                                   complex=[f"{count_value % 2}", "==", "group"])
             # attrib.save()
             logger.info(f"Updating users with attribute classes {attrib}")
             update_all_users_with_attribute_class(attrib)
@@ -287,7 +304,7 @@ def divide_chunks(items: list, chunk_size: int):
 def create_topics(providers: list, count: int):
     logger.info(f"Setting topics with {providers}")
     for index, provider_chunk in enumerate(divide_chunks(providers, int(len(providers) / count))):
-        topic = Topic.objects.create(name=f"Topic-{index}", slug=f"{PREFIX}-Topic-{index}", 
+        topic = Topic.objects.create(name=f"Topic-{index}", slug=f"{PREFIX}-Topic-{index}",
                                      topic_description=f"example description for {index}")
         logger.info(f"Setting {topic} with {provider_chunk}")
         topic.providers.set(provider_chunk)

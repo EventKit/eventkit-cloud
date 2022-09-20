@@ -122,14 +122,14 @@ class TestGeopackage(TransactionTestCase):
                     "grids": ["default"],
                 }
             }
-            json_config["services"] = ["demo"]
+            json_config["services"] = {"demo": None}
 
             patch_https.assert_called_once_with(cert_info=None)
             load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
             remove_zoom_levels.assert_called_once_with(gpkgfile)
             mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, "imagery", bbox)
             seed_template.assert_called_once_with(
-                bbox=bbox, coverage_file=None, level_from=0, level_to=10, projection=None
+                bbox=bbox, coverage_file=None, level_from=0, level_to=10, projection=4326
             )
             self.task_process.side_effect = Exception()
             with self.assertRaises(Exception):

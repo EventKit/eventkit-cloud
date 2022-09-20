@@ -5,15 +5,14 @@ See `DRF serializer documentation  <http://www.django-rest-framework.org/api-gui
 Used by the View classes api/views.py to serialize API responses as JSON or HTML.
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
-from datetime import datetime
 import json
 import logging
 import math
-from django.utils import timezone
 
 # -*- coding: utf-8 -*-
 import pickle
 from collections import OrderedDict
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 from audit_logging.models import AuditEvent
@@ -22,6 +21,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db.models import QuerySet
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from notifications.models import Notification
 from rest_framework import serializers
