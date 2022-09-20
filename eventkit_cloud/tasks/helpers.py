@@ -619,7 +619,10 @@ def create_arcgis_layer_file(data_provider_task_record: DataProviderTaskRecord, 
         arcgis_layer = ArcGISLayer(
             data_provider_task_record.provider.slug, service_capabilities, os.path.basename(file_info["file_path"])
         )
-        doc = arcgis_layer.get_cim_layer_document()
+        try:
+            doc = arcgis_layer.get_cim_layer_document()
+        except Exception:
+            logger.info(service_capabilities)
 
     with open(layer_filepath_stage, "w") as layer_file:
         layer_file.write(json.dumps(doc))
@@ -999,11 +1002,25 @@ def download_arcgis_feature_data(
     service_description = service_description or dict()
     pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
     result_record_count = service_description.get("maxRecordCount", 1000)
-    json_response = None
     try:
         total_expected_features = session.get(f"{input_url}&returnCountOnly=true").json()["count"]
-        logger.info("Downloading %s features", total_expected_features)
-        if pagination:
+        if total_expected_features and int(total_expected_features):
+            logger.info("Downloading %s features", total_expected_features)
+            json_response = None
+        else:
+            logger.info("Skipping request no features.")
+            # Need to create and return a response template, so that the tables appear and don't cause "missing"
+            # sources in the client software. 
+            json_response = {
+                "displayFieldName": service_description.get("displayField") or "NAME",
+                "fields": service_description.get("fields") or [],
+                "fieldAliases": {field.get("alias"): field.get("name") for field in
+                                 service_description.get("fields") or {}},
+                "spatialReference": {"wkid": (service_description.get("sourceSpatialReference") or {}).get("wkid")},
+                "geometryType": service_description.get("geometryType"),
+                "features": [],
+            }
+        if pagination and total_expected_features:
             result_offset = 0
             exceeded_transfer_limit: bool = True
             while exceeded_transfer_limit:
@@ -1034,7 +1051,6 @@ def download_arcgis_feature_data(
             logger.info(json_response)
         logger.error(f"Feature data download error: {e}")
         raise e
-
     return out_file
 
 
@@ -1075,7 +1091,7 @@ def download_chunks(
         outfile = os.path.join(stage_dir, f"chunk{_index}.json")
 
         download_function = download_arcgis_feature_data if feature_data else download_data
-        download_function(
+        outfile = download_function(
             task_uid,
             url,
             outfile,
@@ -1085,7 +1101,8 @@ def download_chunks(
             *args,
             **kwargs,
         )
-        chunks.append(outfile)
+        if outfile:
+            chunks.append(outfile)
     return chunks
 
 

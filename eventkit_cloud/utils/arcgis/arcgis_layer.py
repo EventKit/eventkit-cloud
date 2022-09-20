@@ -381,9 +381,9 @@ class ArcGISLayer:
             "type": "CIMSimpleRenderer",
             "patch": "Default",
             "symbol": self.get_cim_symbol_reference(service_renderer["symbol"]),
-            "label": service_renderer["label"],
-            "description": service_renderer["description"],
         }
+        renderer.update({"label": service_renderer["label"]} if service_renderer.get("label") else {})
+        renderer.update({"description": service_renderer["description"]} if service_renderer.get("description") else {})
         return renderer
 
     def get_unique_value_renderer(
