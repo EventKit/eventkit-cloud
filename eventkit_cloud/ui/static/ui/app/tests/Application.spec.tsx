@@ -13,6 +13,7 @@ import theme from "../styles/eventkit_theme";
 import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {Provider} from "react-redux";
+import {toast, ToastContainer} from 'react-toastify';
 
 jest.mock('../components/Dialog/BaseDialog', () => 'basedialog');
 jest.mock('../components/auth/LoginErrorPage', () => 'loginerrorpage');
@@ -91,6 +92,7 @@ describe('Application component', () => {
         expect(wrapper.find(NotificationsDropdown)).toHaveLength(0);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
+        expect(wrapper.find(ToastContainer)).toHaveLength(1);
     });
 
     it('should render children with context', () => {
@@ -501,6 +503,19 @@ describe('Application component react testing library', () => {
             </Provider>
         );
     };
+
+    it('should render with toast', async () => {
+        jest.useFakeTimers();
+        const component = render(
+            <div>
+                <ToastContainer />
+            </div>
+        );
+        toast.success('alert text');
+        jest.runAllTimers();
+        expect(await component.findByText("alert text")).toBeInTheDocument();
+        jest.useRealTimers();
+    });
 
     it('getChildContext should return config', () => {
         setup();
