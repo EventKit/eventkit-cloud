@@ -7,6 +7,7 @@ import zipfile
 from enum import Enum
 from functools import wraps
 from typing import Type
+from urllib.parse import urlparse
 
 import dj_database_url
 import requests
@@ -166,6 +167,21 @@ def handle_auth(func):
     return wrapper
 
 
+def verify_login_callback(login_url, session):
+    def verify_login(response, *args, **kwargs):
+        parsed_login_url = urlparse(login_url)
+        parsed_response_url = urlparse(response.url)
+        if response.status_code == 401 or (
+            parsed_login_url.netloc.split(":")[0] == parsed_response_url.netloc.split(":")[0]
+            and response.status_code != 302
+        ):
+            response = session.get(login_url)
+            response.raise_for_status()
+            return session.get(response.request.url, stream=True)
+
+    return verify_login
+
+
 @handle_auth
 def get_or_update_session(*args, **session_info):
     """
@@ -216,7 +232,7 @@ def get_or_update_session(*args, **session_info):
     session.verify = ssl_verify
 
     if login_url:
-        session.get(login_url)
+        session.hooks["response"].append(verify_login_callback(login_url, session))
 
     return session
 

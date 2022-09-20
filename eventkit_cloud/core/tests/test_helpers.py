@@ -7,7 +7,13 @@ from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase, override_settings
 
-from eventkit_cloud.core.helpers import get_cached_model, get_id, get_model_by_params, get_or_update_session
+from eventkit_cloud.core.helpers import (
+    get_cached_model,
+    get_id,
+    get_model_by_params,
+    get_or_update_session,
+    verify_login_callback,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +65,14 @@ class TestCoreHelpers(TestCase):
         self.assertEqual(len(session.adapters), 2)
         self.assertTrue(expected_headers.items() <= dict(session.headers).items())
         self.assertEqual(session.verify, 10)
+
+    def test_verify_login(self):
+        expected_response = Mock()
+        mock_session = Mock(get=Mock(return_value=expected_response))
+        login_url = "http://auth.test/url"
+        response_url = "http://auth.test/resource"
+        original_url = "http://data.test/"
+        mock_response = Mock(url=response_url)
+        mock_response.request.url = original_url
+        verify_login = verify_login_callback(login_url, mock_session)
+        self.assertEqual(expected_response, verify_login(mock_response))
