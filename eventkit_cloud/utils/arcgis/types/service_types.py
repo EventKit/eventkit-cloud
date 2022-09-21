@@ -411,7 +411,7 @@ class SimpleRenderer(TypedDict, total=False):
     type: Literal["simple"]
     authoringInfo: dict
     description: str
-    label: str
+    label: Optional[str]
     rotationExpression: str
     rotationType: RotationType
     symbol: Symbol

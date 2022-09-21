@@ -65,7 +65,7 @@ export function submitJob(data) {
         method: 'POST',
         data,
         onSuccess: (response) => {
-            toast.success('Your DataPack has been created');
+            toast.success('Your DataPack request has been submitted.');
             return { jobuid: response.data.uid };
         },
         onError: () => {

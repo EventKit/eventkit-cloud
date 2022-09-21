@@ -1,5 +1,4 @@
 import copy
-import inspect
 import itertools
 import logging
 import time
@@ -30,7 +29,7 @@ def retry(f):
         while attempts:
             try:
                 return_value = f(*args, **kwds)
-                if not return_value:
+                if return_value is None:
                     logger.error("The function {0} failed to return any values.".format(getattr(f, "__name__")))
                     raise Exception("The process failed to return any data, please contact an administrator.")
                 return return_value
@@ -61,20 +60,32 @@ def retry(f):
 DEFAULT_TIMEOUT = 60 * 60 * 24  # one day
 
 
+def serialize_arguments(obj, arg):
+    is_builtin = type(arg).__module__ == "builtins"
+    if hasattr(arg, "__name__"):
+        serialized_arg = arg.__name__
+    elif is_builtin:
+        serialized_arg = str(slugify(arg))
+    else:
+        serialized_arg = arg.__class__.__name__
+    return getattr(obj, serialized_arg) if hasattr(obj, serialized_arg) else serialized_arg
+
+
 def cacheable(timeout: int = DEFAULT_TIMEOUT, key_fields=[]):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # handle if first arg is self.
-            arg = type(args[0]).__name__ if inspect.isclass(args[0]) else str(slugify(args[0]))
-            arg_string = ".".join([str(slugify(arg)) for arg in args[:1]])
+            arg_string = ".".join([serialize_arguments(None, arg) for arg in args])
             keys = (
                 copy.deepcopy(kwargs)
                 if not key_fields
-                else {key_field: kwargs.get(key_field) for key_field in key_fields}
+                else {
+                    key_field: kwargs.get(key_field) if key_field in kwargs else serialize_arguments(args[0], key_field)
+                    for key_field in key_fields
+                }
             )
             kwarg_string = ".".join([str(slugify(kwarg)) for kwarg in itertools.chain.from_iterable(keys.items())])
-            cache_key = f"{func.__name__}.{arg}.{arg_string}.{kwarg_string}"[:249]
+            cache_key = f"{func.__name__}.{arg_string}.{kwarg_string}"[:249]
             logger.debug("Getting or setting the cache_key %s", cache_key)
             return_value = cache.get_or_set(cache_key, lambda: func(*args, **kwargs), timeout=timeout)
             return return_value
