@@ -1,55 +1,50 @@
-import { shallow } from 'enzyme';
-import { About } from '../../components/About/About';
-import { about } from '../../about.config';
-import PageHeader from '../../components/common/PageHeader';
-import InfoParagraph from '../../components/About/InfoParagraph';
-import ThreeStepInfo from '../../components/About/ThreeStepInfo';
-import InfoGrid from '../../components/About/InfoGrid';
-import CustomScrollbar from '../../components/common/CustomScrollbar';
+import About from '../../components/About/About';
+import { render, screen } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect"
+import {AppConfigProvider} from "../../components/ApplicationContext";
+import * as React from "react";
+import ekTheme from '../../styles/eventkit_theme';
+import {createMuiTheme, MuiThemeProvider} from "@material-ui/core/styles";
+
+const theme = createMuiTheme(ekTheme);
 
 describe('About component', () => {
-    function getWrapper(config) {
-        return shallow(<About {...(global as any).eventkit_test_props} />, {
-            context: { config }
-        });
+    const renderComponent = (configContext) => {
+        return {
+            ...render(
+                <AppConfigProvider value={configContext}>
+                    <MuiThemeProvider theme={theme}>
+                        <About/>
+                    </MuiThemeProvider>
+                </AppConfigProvider>)
+        }
     }
 
-    it('should render all the basic elements', () => {
-        const mapping = { InfoParagraph: 0, ThreeStepInfo: 0, InfoGrid: 0 };
-        about.forEach((item) => { mapping[item.type] += 1; });
-        const wrapper = getWrapper({});
-        expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(InfoParagraph)).toHaveLength(mapping.InfoParagraph);
-        expect(wrapper.find(ThreeStepInfo)).toHaveLength(mapping.ThreeStepInfo);
-        expect(wrapper.find(InfoGrid)).toHaveLength(mapping.InfoGrid);
+    it('should render all the basic elements', async () => {
+        renderComponent({});
+        expect(await screen.findByText('About EventKit'));
+        expect(await screen.findByText('Overview'));
+        expect(await screen.findByText('What is a DataPack?'));
     });
 
     it('should not show the version tag if no version in context', () => {
-        const wrapper = getWrapper({VERSION: ''});
-        expect(wrapper.find(PageHeader).text()).toEqual('');
+        renderComponent({VERSION: ''});
+        expect(screen.getByTestId('pageHeader').textContent).toBe('');
     });
 
     it('should not show the contact link if no contact url in context', () => {
-        const wrapper = getWrapper({});
-        expect(wrapper.find('.qa-About-contact')).toHaveLength(0);
+        renderComponent({});
+        expect(screen.queryByTestId('aboutContact')).toBe(null);
     });
 
     it('should render the version tag', () => {
-        const wrapper = getWrapper({ VERSION: '1.3.0'});
-        expect(wrapper.find(PageHeader).text()).toEqual('1.3.0');
+        renderComponent({ VERSION: '1.3.0'});
+        expect(screen.getByTestId('pageHeader').textContent).toBe('1.3.0');
     });
 
-    it('should show the contact link', () => {
-        const wrapper = getWrapper({ CONTACT_URL: 'something' });
-        expect(wrapper.find('.qa-About-contact')).toHaveLength(1);
+    it('should show the contact link', async () => {
+        renderComponent({ CONTACT_URL: 'something' });
+        expect(screen.getByText('Contact Us').closest('a')).toHaveAttribute('href', 'something');
     });
 
-    it('should render null if no pageInfo', () => {
-        const wrapper = getWrapper({});
-        wrapper.setState({ pageInfo: null });
-        wrapper.instance().forceUpdate();
-        wrapper.update();
-        expect(wrapper.type()).toBe(null);
-    });
 });
