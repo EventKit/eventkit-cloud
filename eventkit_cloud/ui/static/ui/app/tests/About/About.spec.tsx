@@ -42,7 +42,7 @@ describe('About component', () => {
         expect(screen.getByTestId('pageHeader').textContent).toBe('1.3.0');
     });
 
-    it('should show the contact link', async () => {
+    it('should show the contact link',() => {
         renderComponent({ CONTACT_URL: 'something' });
         expect(screen.getByText('Contact Us').closest('a')).toHaveAttribute('href', 'something');
     });
