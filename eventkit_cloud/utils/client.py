@@ -291,7 +291,7 @@ class EventKitClient(object):
                     export_tasks = provider_task.get("tasks")
                     if not export_tasks:
                         logger.error("No export tasks were found for provider: %s", provider_task.get("name"))
-                        raise Exception(f"Run failed to complete successfully.")
+                        raise Exception("Run failed to complete successfully.")
                     for task in export_tasks:
                         if task["status"] == "FAILED":
                             for error in task.get("errors", []):
