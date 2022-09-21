@@ -1025,8 +1025,9 @@ def download_arcgis_feature_data(
             json_response = {
                 "displayFieldName": service_description.get("displayField") or "NAME",
                 "fields": service_description.get("fields") or [],
-                "fieldAliases": {field.get("alias"): field.get("name") for field in
-                                 service_description.get("fields") or {}},
+                "fieldAliases": {
+                    field.get("alias"): field.get("name") for field in service_description.get("fields") or {}
+                },
                 "spatialReference": {"wkid": (service_description.get("sourceSpatialReference") or {}).get("wkid")},
                 "geometryType": service_description.get("geometryType"),
                 "features": [],
