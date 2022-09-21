@@ -271,35 +271,44 @@ class EventKitClient(object):
         response_json = None
         first_check = datetime.now()
         errors = []
-        while not finished:
-            sleep(1)
-            run_url = self.runs_url.rstrip("/"), run_uid
-            logger.debug(run_url)
-            response = self.session.get(
-                "{}/{}".format(self.runs_url.rstrip("/"), run_uid), headers={"X-CSRFToken": self.csrftoken}
-            )
-            if not response.ok:
-                logger.info(response.content.decode())
-                raise Exception("Unable to get status of run {}".format(run_uid))
-            response_json = response.json()
-            status = response_json[0].get("status")
-            if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
-                finished = True
-            last_check = datetime.now()
-            for provider_task in response_json[0]["provider_tasks"]:
-                for task in provider_task["tasks"]:
-                    if task["status"] == "FAILED":
-                        for error in task.get("errors", []):
-                            for type, message in error.items():
-                                errors.append(f"{type}: {message}")
-            if last_check - first_check > timedelta(seconds=run_timeout):
-                raise Exception(f"Run timeout ({run_timeout}s) exceeded")
-        if errors:
-            error_string = "\n".join(errors)
-            if not ignore_errors:
-                raise Exception(f"The run failed with errors: {error_string}")
-        assert response_json is not None
-        return response_json[0]
+        try:
+            while not finished:
+                sleep(1)
+                run_url = self.runs_url.rstrip("/"), run_uid
+                logger.debug(run_url)
+                response = self.session.get(
+                    "{}/{}".format(self.runs_url.rstrip("/"), run_uid), headers={"X-CSRFToken": self.csrftoken}
+                )
+                if not response.ok:
+                    logger.info(response.content.decode())
+                    raise Exception("Unable to get status of run {}".format(run_uid))
+                response_json = response.json()
+                status = response_json[0].get("status")
+                if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
+                    finished = True
+                last_check = datetime.now()
+                for provider_task in response_json[0]["provider_tasks"]:
+                    export_tasks = provider_task.get("tasks")
+                    if not export_tasks:
+                        logger.error("No export tasks were found for provider: %s", provider_task.get("name"))
+                        raise Exception(f"Run failed to complete successfully.")
+                    for task in export_tasks:
+                        if task["status"] == "FAILED":
+                            for error in task.get("errors", []):
+                                for error_type, message in error.items():
+                                    errors.append(f"{error_type}: {message}")
+                if last_check - first_check > timedelta(seconds=run_timeout):
+                    logger.error("The timeout was exceeded last run status was:")
+                    raise Exception(f"Run timeout ({run_timeout}s) exceeded")
+            if errors:
+                error_string = "\n".join(errors)
+                if not ignore_errors:
+                    raise Exception(f"The run failed with errors: {error_string}")
+            assert response_json is not None
+            return response_json[0]
+        except Exception:
+            logger.info(response_json)
+            raise
 
     def wait_for_task_pickup(self, job_uid, timeout=DEFAULT_TIMEOUT):
         picked_up = False
