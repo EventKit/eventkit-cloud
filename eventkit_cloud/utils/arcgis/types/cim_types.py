@@ -782,8 +782,8 @@ class _CIMSimpleRenderer(CIMVisualVariableRenderer):
 
 
 class CIMSimpleRenderer(_CIMSimpleRenderer, total=False):
-    description: str
-    label: str
+    description: Optional[str]
+    label: Optional[str]
     alternateSymbols: list[CIMSymbolReference]
 
 

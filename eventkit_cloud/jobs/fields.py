@@ -1,8 +1,8 @@
-from typing import Optional, Any
+from typing import Any, Optional
 
 import yaml
-from django.contrib.gis.db import models
 from django import forms
+from django.contrib.gis.db import models
 
 
 class ConfigField(forms.JSONField):

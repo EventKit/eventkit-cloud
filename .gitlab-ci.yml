@@ -147,12 +147,13 @@ integration-tests:
   tags:
     - dind
   variables:
-    DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     BROKER_URL: amqp://guest:guest@rabbitmq:5672/
     BROKER_API_URL: http://guest:guest@rabbitmq:15672/api/
     CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
-    LOG_LEVEL: INFO
+    DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    DEBUG: "false"
     EXPORT_DOWNLOAD_ROOT: /var/lib/eventkit/exports_download
+    LOG_LEVEL: INFO
     PYTHONWARNINGS: ignore
   before_script:
     - !reference [.back_rules, before_script]

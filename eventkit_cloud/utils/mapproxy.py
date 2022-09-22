@@ -6,7 +6,7 @@ import sqlite3
 import time
 from multiprocessing import Process
 from multiprocessing.dummy import DummyProcess
-from typing import Any, Dict, Tuple, TypedDict, cast, Union
+from typing import Any, Dict, Tuple, TypedDict, Union, cast
 
 from django.conf import settings
 from django.contrib.auth.models import User
