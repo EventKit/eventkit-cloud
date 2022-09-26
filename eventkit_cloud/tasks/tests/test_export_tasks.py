@@ -6,7 +6,7 @@ import os
 import pickle
 import sys
 import uuid
-from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch, call
+from unittest.mock import ANY, MagicMock, Mock, PropertyMock, call, patch
 
 import celery
 from billiard.einfo import ExceptionInfo
