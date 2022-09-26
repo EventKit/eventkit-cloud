@@ -90,7 +90,7 @@ class Pcf(ScaleClient):
     def get_entity_guid(self, name: str, url: str, data: dict) -> tuple[str, str]:
         response = self.session.get(
             url,
-            json=data,
+            params=data,
             headers={
                 "Authorization": f"bearer {self.token}",
                 "Content-Type": "application/json",
