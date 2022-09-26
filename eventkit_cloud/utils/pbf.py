@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 from string import Template
+from typing import Optional
 
 from eventkit_cloud.tasks.task_process import TaskProcess
 
@@ -17,22 +18,25 @@ class OSMToPBF(object):
     Convert OSM to PBF.
     """
 
-    def __init__(self, osm=None, pbffile=None, debug=False, task_uid=None):
+    def __init__(
+        self, osm_files: Optional[list[str]] = None, pbffile: str = None, debug: bool = False, task_uid: str = None
+    ):
         """
         Initialize the OSMToPBF utility.
 
         Args:
-            osm: the raw osm file to convert
+            osm_files: the raw osm file to convert
             pbffile: the location of the pbf output file
         """
-        self.osm = osm
-        if not os.path.exists(self.osm):
+
+        if not osm_files or any(not os.path.exists(osm) for osm in osm_files):
             raise IOError("Cannot find raw OSM data for this task.")
         self.pbffile = pbffile
         if not self.pbffile:
             # create pbf path from osm path.
-            root = self.osm.split(".")[0]
+            root = osm_files[0].split(".")[0]
             self.pbffile = root + ".pbf"
+        self.osm: str = " ".join(osm_files)
         self.debug = debug
         self.cmd = Template("osmconvert $osm --out-pbf >$pbf")
         self.task_uid = task_uid
@@ -80,5 +84,5 @@ if __name__ == "__main__":
     debug = False
     if config.get("debug"):
         debug = True
-    o2p = OSMToPBF(osm=osm, pbffile=pbf, debug=debug)
+    o2p = OSMToPBF(osm_files=[osm], pbffile=pbf, debug=debug)
     o2p.convert()

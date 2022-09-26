@@ -9,6 +9,7 @@ import socket
 import sqlite3
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor, wait, Future
 from pathlib import Path
 from typing import List, Type, Union, cast
 from urllib.parse import urlencode
@@ -22,7 +23,7 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -38,7 +39,7 @@ from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, clean_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
-from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks.exceptions import AreaLimitExceededError, CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     add_export_run_files_to_zip,
     check_cached_task_failures,
@@ -60,6 +61,7 @@ from eventkit_cloud.tasks.helpers import (
     get_style_files,
     pickle_exception,
     progressive_kill,
+    split_bbox,
     update_progress,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -370,25 +372,57 @@ def osm_data_collection_pipeline(
     else:
         # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
         # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
+        pool = ThreadPoolExecutor(max_workers=config.get("concurrency") or 4)
+        tile_id = 0  # An arbitrary number to separate file names
+        bboxes = [bbox]
+        futures: list[Future] = []
+        results = []
+        while bboxes or futures:
+            try:
+                if bboxes:
+                    tiled_bbox: list[float] = bboxes.pop()
+                    # TODO: convert to meters
+                    polygon = Polygon.from_bbox(tiled_bbox)
+                    polygon.srid = 4326
+                    polygon.transform(ct=3857)
+                    if (polygon.area / 1_000_000) > settings.OSM_MAX_REQUEST_SIZE:  # Compare sq_km
+                        raise AreaLimitExceededError(bbox=tiled_bbox)
+                    tile_id += 1
 
-        # --- Overpass Query
-        op = overpass.Overpass(
-            bbox=bbox,
-            stage_dir=stage_dir,
-            slug=slug,
-            url=url,
-            job_name=job_name,
-            task_uid=export_task_record_uid,
-            raw_data_filename="{}_query.osm".format(job_name),
-            config=config,
-        )
+                    @retry
+                    def get_osm_file(*kw):  # noqa
+                        op = overpass.Overpass(
+                            bbox=tiled_bbox,
+                            stage_dir=stage_dir,
+                            slug=slug,
+                            url=url,
+                            job_name=job_name,
+                            task_uid=export_task_record_uid,
+                            raw_data_filename=f"{job_name}_{tile_id}_query.osm",
+                            config=config,
+                        )
 
-        osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
+                        return op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
+
+                    futures.append(
+                        pool.submit(
+                            get_osm_file,
+                            max_repeat=config.get("max_repeat"),
+                            allowed_exceptions=[AreaLimitExceededError],
+                        )
+                    )
+                else:
+                    wait(futures)
+                    results += [os.path.join(stage_dir, future.result()) for future in futures]
+                    futures = []
+            except AreaLimitExceededError as ale:
+                if ale.bbox:
+                    bboxes.extend(split_bbox(ale.bbox))
 
         # --- Convert Overpass result to PBF
-        osm_filename = os.path.join(stage_dir, osm_data_filename)
-        pbf_filename = os.path.join(stage_dir, "{}_query.pbf".format(job_name))
-        pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
+        logger.info("Converting osm files to PBF.")
+        pbf_filename = os.path.join(stage_dir, f"{job_name}_query.pbf")
+        pbf_filepath = pbf.OSMToPBF(osm_files=results, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
 
     # --- Generate thematic gpkg from PBF
     export_task_record = get_export_task_record(export_task_record_uid)
