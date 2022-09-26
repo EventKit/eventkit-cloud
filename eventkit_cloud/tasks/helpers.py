@@ -1261,9 +1261,7 @@ def find_in_zip(
         return matched_files
 
 
-def extract_metadata_files(
-    zip_filepath: str, destination: str, extensions: list = None
-):
+def extract_metadata_files(zip_filepath: str, destination: str, extensions: list = None):
     """
     Function extract metadata files from archives.
     The function will look for any files that match the extensions that were provided,
