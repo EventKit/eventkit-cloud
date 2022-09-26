@@ -98,7 +98,10 @@ EMAIL_HOST_PASSWORD='email-password'
 
 To use your own instance of an Overpass API add:
 
-- `OVERPASS_API_URL='my-overpass-site.com/api/interpreter'`
+`OVERPASS_API_URL='my-overpass-site.com/api/interpreter'`
+
+Max size of overpass request in sqkm.
+`OSM_MAX_REQUEST_SIZE=40000`
 
 If an Overpass API endpoint requires a client certificate, you can provide it as an environment variable in PEM format:
 
