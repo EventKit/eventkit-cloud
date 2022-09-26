@@ -9,7 +9,7 @@ import socket
 import sqlite3
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor, wait, Future
+from concurrent.futures import Future, ThreadPoolExecutor, wait
 from pathlib import Path
 from typing import List, Type, Union, cast
 from urllib.parse import urlencode
