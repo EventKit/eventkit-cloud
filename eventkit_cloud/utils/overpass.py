@@ -9,6 +9,7 @@ from django.conf import settings
 from requests import exceptions
 
 from eventkit_cloud.core.helpers import get_or_update_session
+from eventkit_cloud.tasks.exceptions import AreaLimitExceededError, TooManyRequestsError
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,6 @@ class Overpass(object):
 
         self.url = url
         if not self.url:
-            logger.error("Use of settings.OVERPASS_API_URL is deprecated and will be removed in 1.13")
             self.url = settings.OVERPASS_API_URL
 
         self.slug = slug
@@ -106,7 +106,7 @@ class Overpass(object):
         if user_details is None:
             user_details = {"username": "unknown-run_query"}
 
-        req = None
+        response = None
         query = self.get_query()
         logger.debug(query)
         logger.debug(f"Query started at: {datetime.now()}")
@@ -119,20 +119,22 @@ class Overpass(object):
                 eta=eta,
                 msg="Querying provider data",
             )
-            # conf: dict = yaml.safe_load(self.config) or dict()
             conf = self.config or dict()
             session = get_or_update_session(slug=self.slug, **conf)
-            req = session.post(self.url, data=query, stream=True)
-            if not req.ok:
+            response = session.post(self.url, data=query, stream=True)
+            if not response.ok and response.status_code != 429:
                 # Workaround for https://bugs.python.org/issue27777
                 query = {"data": query}
-                req = session.post(self.url, data=query, stream=True)
-            req.raise_for_status()
+                response = session.post(self.url, data=query, stream=True)
+            if response.status_code == 429:
+                raise TooManyRequestsError(service_name="Overpass API")
+            response.raise_for_status()
+            logger.info("Downloading OSM data for bbox %s to %s", self.bbox, self.raw_osm)
             try:
-                total_size = int(req.headers.get("content-length"))
+                total_size = int(response.headers.get("content-length"))
             except (ValueError, TypeError):
-                if req.content:
-                    total_size = len(req.content)
+                if response.content:
+                    total_size = len(response.content)
                 else:
                     raise Exception("Overpass Query failed to return any data")
 
@@ -154,7 +156,7 @@ class Overpass(object):
             written_size = 0
             last_update = 0
             with logging_open(self.raw_osm, "wb", user_details=user_details) as fd:
-                for chunk in req.iter_content(CHUNK):
+                for chunk in response.iter_content(CHUNK):
                     fd.write(chunk)
                     written_size += CHUNK
 
@@ -191,11 +193,16 @@ class Overpass(object):
             logger.error("Overpass query threw: {0}".format(e))
             raise exceptions.RequestException(e)
         finally:
-            if req:
-                req.close()
+            if response:
+                response.close()
 
         logger.debug(f"Query finished at {datetime.now()}")
         logger.debug(f"Wrote overpass query results to: {self.raw_osm}")
+        if os.path.isfile(self.raw_osm):
+            with open(self.raw_osm, "r") as osm_file:
+                for line in osm_file.readline():
+                    if "Query run out of memory" in line:
+                        raise AreaLimitExceededError(bbox)
         return self.raw_osm
 
 

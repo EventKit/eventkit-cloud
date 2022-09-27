@@ -28,6 +28,7 @@ from eventkit_cloud.tasks.helpers import (
     get_osm_last_update,
     get_style_files,
     progressive_kill,
+    split_bbox,
     update_progress,
 )
 
@@ -428,3 +429,24 @@ class TestHelpers(TestCase):
             zip_filepath=zip_filepath, stage_dir="example/dir", archive_extension="zip", matched_files=[], extract=False
         )
         self.assertEqual(found_files, [f"/vsizip/{zip_filepath}/inner/inner_inner/inner_inner_inner/test_geojson.json"])
+
+    def test_split_bbox(self):
+        bbox = [-1, -1, 1, 1]
+        expected_result = [[-1, -1, 0, 0], [-1, 0, 0, 1], [0, 0, 1, 1], [0, -1, 1, 0]]
+        self.assertCountEqual(expected_result, split_bbox(bbox))
+
+        bbox = [-2, -2, 0, 0]
+        expected_result = [[-2, -2, -1.0, -1.0], [-2, -1.0, -1.0, 0], [-1.0, -1.0, 0, 0], [-1.0, -2, 0, -1.0]]
+        self.assertCountEqual(expected_result, split_bbox(bbox))
+
+        bbox = [0, -2, 2, 0]
+        expected_result = [[0, -2, 1.0, -1.0], [0, -1.0, 1.0, 0], [1.0, -1.0, 2, 0], [1.0, -2, 2, -1.0]]
+        self.assertCountEqual(expected_result, split_bbox(bbox))
+
+        bbox = [0, 0, 2, 2]
+        expected_result = [[0, 0, 1.0, 1.0], [0, 1.0, 1.0, 2], [1.0, 1.0, 2, 2], [1.0, 0, 2, 1.0]]
+        self.assertCountEqual(expected_result, split_bbox(bbox))
+
+        bbox = [-2, 0, 0, 2]
+        expected_result = [[-2, 0, -1.0, 1.0], [-2, 1.0, -1.0, 2], [-1.0, 1.0, 0, 2], [-1.0, 0, 0, 1.0]]
+        self.assertCountEqual(expected_result, split_bbox(bbox))

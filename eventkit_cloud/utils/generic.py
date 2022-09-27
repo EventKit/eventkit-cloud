@@ -23,8 +23,8 @@ TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 6 would be abou
 def retry(f):
     @wraps(f)
     def wrapper(*args, **kwds):
-
-        attempts = MAX_DB_CONNECTION_RETRIES
+        allowed_exceptions = kwds.pop("allowed_exceptions", None)  # TODO use a library that handles this stuff better.
+        attempts = kwds.pop("max_repeat", None) or MAX_DB_CONNECTION_RETRIES
         exc = None
         while attempts:
             try:
@@ -34,6 +34,8 @@ def retry(f):
                     raise Exception("The process failed to return any data, please contact an administrator.")
                 return return_value
             except Exception as e:
+                if allowed_exceptions and e in allowed_exceptions:
+                    raise e
                 logger.error("The function {0} threw an error.".format(getattr(f, "__name__")))
                 logger.error(str(e))
                 exc = e
