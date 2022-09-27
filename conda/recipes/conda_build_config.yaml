@@ -33,13 +33,13 @@ bzip2:
 c_ares:
 - 1.18.1
 ca_certificates:
-- 2022.6.15
+- 2022.9.24
 cairo:
 - 1.16.0
 celery:
 - 5.2.6
 certifi:
-- 2022.6.15
+- 2022.9.24
 cffi:
 - 1.15.1
 cfitsio:
@@ -63,7 +63,7 @@ cyrus_sasl:
 dj_database_url:
 - 0.5.0
 django:
-- 4.0.4
+- '4.1'
 django_audit_logging:
 - 0.3.1
 django_auth_ldap:
@@ -89,7 +89,7 @@ djangorestframework_gis:
 eventkit_cloud:
 - 1.14.0
 expat:
-- 2.4.8
+- 2.4.9
 font_ttf_dejavu_sans_mono:
 - '2.37'
 font_ttf_inconsolata:
@@ -179,7 +179,7 @@ libcurl:
 libdap4:
 - 3.20.6
 libdeflate:
-- '1.13'
+- '1.14'
 libdrm_cos7_x86_64:
 - 2.4.97
 libedit:
@@ -199,7 +199,7 @@ libgfortran5:
 libgfortran_ng:
 - 12.1.0
 libglib:
-- 2.72.1
+- 2.74.0
 libglvnd_cos7_x86_64:
 - 1.0.1
 libglvnd_glx_cos7_x86_64:
@@ -207,7 +207,7 @@ libglvnd_glx_cos7_x86_64:
 libgomp:
 - 12.1.0
 libiconv:
-- '1.16'
+- '1.17'
 libidn2:
 - 2.3.3
 libkml:
@@ -234,6 +234,8 @@ librttopo:
 - 1.1.0
 libspatialite:
 - 5.0.1
+libsqlite:
+- 3.39.3
 libssh2:
 - 1.10.0
 libstdcxx_ng:
@@ -286,8 +288,10 @@ osmctools:
 - 0.9.0
 pcre:
 - '8.45'
+pcre2:
+- '10.37'
 pillow:
-- 9.1.0
+- 9.1.1
 pip:
 - 22.0.4
 pixman:
@@ -313,7 +317,7 @@ pyasn1_modules:
 pycparser:
 - '2.20'
 pyjwt:
-- 2.3.0
+- 2.4.0
 pymemcache:
 - 3.5.2
 pyopenssl:
@@ -327,7 +331,7 @@ pyrsistent:
 pysocks:
 - 1.7.1
 python:
-- 3.10.5
+- 3.10.6
 python_abi:
 - '3.10'
 python_crontab:
@@ -355,7 +359,7 @@ ruby:
 s3transfer:
 - 0.5.2
 setuptools:
-- 63.2.0
+- 65.4.0
 shapely:
 - 1.8.0
 six:
@@ -365,7 +369,7 @@ snappy:
 soupsieve:
 - 2.3.2.post1
 sqlite:
-- 3.39.1
+- 3.39.3
 sqlparse:
 - 0.4.2
 swapper:
@@ -379,7 +383,7 @@ tk:
 typing_extensions:
 - 4.3.0
 tzcode:
-- 2022c
+- 2022d
 tzdata:
 - 2020d
 uritemplate:
@@ -427,7 +431,7 @@ xorg_xextproto:
 xorg_xproto:
 - 7.0.31
 xz:
-- 5.2.5
+- 5.2.6
 yaml:
 - 0.2.5
 zipp:

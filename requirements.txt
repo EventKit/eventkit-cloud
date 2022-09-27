@@ -1,9 +1,9 @@
 boto3==1.21.46
 celery==5.2.6
-Django==4.0.4
+Django==4.1
 dj-database-url==0.5.0
 git+https://github.com/eventkit/django-audit-logging.git@v0.3.1#egg=django-audit-logging  # conda: django-audit-logging
-git+https://github.com/EventKit/gdalutils.git@1.0.3#egg=gdalutils  # conda: gdalutils
+git+https://github.com/EventKit/gdalutils.git@1.0.4#egg=gdalutils  # conda: gdalutils
 django-auth-ldap==4.0.0
 django-celery-beat==2.2.1
 django-extensions==3.1.5
@@ -19,9 +19,9 @@ gunicorn==20.1.0
 jsonschema==4.4.0
 MapProxy==1.13.2
 numpy==1.22.3
-Pillow==9.1.0
+Pillow==9.1.1
 psycopg2==2.9.3
-PyJWT==2.3.0
+PyJWT==2.4.0
 pymemcache==3.5.2
 pyparsing==3.0.8
 pyproj==3.3.1
