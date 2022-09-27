@@ -108,6 +108,8 @@ mypy:
   extends:
     - .back
     - .lint
+  before_script:
+    - pip install -e .  # Helps to resolve issues with django-stubs and typing
   script:
     - back_diff || mypy --no-incremental eventkit_cloud
 

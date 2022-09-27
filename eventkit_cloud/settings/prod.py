@@ -72,7 +72,9 @@ EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", EXPORT_STAGING_ROOT)
 MEDIA_ROOT = os.path.abspath(EXPORT_MEDIA_ROOT)
 
 # url to overpass api endpoint
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
+OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
+OSM_MAX_REQUEST_SIZE = os.getenv("OSM_MAX_REQUEST_SIZE", 40000)
+
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
 GEOCODING_API_TYPE = os.getenv("GEOCODING_API_TYPE", "GEONAMES")
 REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)

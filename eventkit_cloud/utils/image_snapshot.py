@@ -5,12 +5,12 @@ from typing import Union
 from urllib.parse import urlparse
 
 from django.conf import settings
+from mapproxy.grid import tile_grid
 from PIL import Image
 from requests import Response
 from webtest.response import TestResponse
 
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app, get_resolution_for_extent
-from mapproxy.grid import tile_grid
 
 logger = logging.getLogger(__name__)
 

@@ -1261,15 +1261,13 @@ def find_in_zip(
         return matched_files
 
 
-def extract_metadata_files(
-    zip_filepath: str, destination: str, extensions: list = [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]
-):
+def extract_metadata_files(zip_filepath: str, destination: str, extensions: list = None):
     """
     Function extract metadata files from archives.
     The function will look for any files that match the extensions that were provided,
     and will extract those files into a metadata directory.
     """
-
+    metadata_extensions = extensions or [".md", ".txt", ".doc", ".docx", ".csv", ".xls", ".xlsx"]
     zip_file = ZipFile(zip_filepath)
     files_in_zip = zip_file.namelist()
 
@@ -1279,7 +1277,7 @@ def extract_metadata_files(
     for filepath in files_in_zip:
         file_path = Path(filepath)
 
-        if file_path.suffix in extensions:
+        if file_path.suffix in metadata_extensions:
             zip_file.extract(filepath, path=metadata_dir)
 
     return str(metadata_dir)
@@ -1462,3 +1460,14 @@ def get_file_paths(directory):
             for f in filenames:
                 paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
     return paths
+
+
+def split_bbox(bbox: list[float]) -> list[list[float]]:
+    bboxes: list[list[float]] = []
+    mid_x = ((bbox[2] - bbox[0]) / 2) + bbox[0]
+    mid_y = ((bbox[3] - bbox[1]) / 2) + bbox[1]
+    bboxes.append([bbox[0], bbox[1], mid_x, mid_y])
+    bboxes.append([bbox[0], mid_y, mid_x, bbox[3]])
+    bboxes.append([mid_x, mid_y, bbox[2], bbox[3]])
+    bboxes.append([mid_x, bbox[1], bbox[2], mid_y])
+    return bboxes

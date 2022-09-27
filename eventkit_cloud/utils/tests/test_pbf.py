@@ -24,7 +24,7 @@ class TestOSMToPBF(TransactionTestCase):
         convert_cmd = "osmconvert {0} --out-pbf >{1}".format(osm, pbffile)
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
-        o2p = OSMToPBF(osm=osm, pbffile=pbffile, task_uid=self.task_uid)
+        o2p = OSMToPBF(osm_files=[osm], pbffile=pbffile, task_uid=self.task_uid)
         out = o2p.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(osm)
