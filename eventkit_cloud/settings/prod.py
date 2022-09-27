@@ -72,7 +72,9 @@ EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", EXPORT_STAGING_ROOT)
 MEDIA_ROOT = os.path.abspath(EXPORT_MEDIA_ROOT)
 
 # url to overpass api endpoint
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")  # Deprecated
+OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
+OSM_MAX_REQUEST_SIZE = os.getenv("OSM_MAX_REQUEST_SIZE", 40000)
+
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
 GEOCODING_API_TYPE = os.getenv("GEOCODING_API_TYPE", "GEONAMES")
 REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
@@ -405,7 +407,7 @@ REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIME
 OSM_MAX_TMPFILE_SIZE = os.getenv("OSM_MAX_TMPFILE_SIZE", "100")
 OSM_USE_CUSTOM_INDEXING = os.getenv("OSM_USE_CUSTOM_INDEXING", "NO")
 
-DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.14.0-2")
+DOCKER_IMAGE_NAME = os.getenv("DOCKER_IMAGE_NAME", "eventkit/eventkit-base:1.14.0-3")
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", 2621440))
 

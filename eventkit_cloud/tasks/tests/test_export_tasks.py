@@ -6,7 +6,7 @@ import os
 import pickle
 import sys
 import uuid
-from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import ANY, MagicMock, Mock, PropertyMock, call, patch
 
 import celery
 from billiard.einfo import ExceptionInfo
@@ -575,7 +575,54 @@ class TestExportTasks(ExportTaskBase):
             config=example_config,
         )
         mock_connect.assert_called_once()
-        mock_overpass.Overpass.assert_called_once()
+        mock_overpass.Overpass.assert_has_calls(
+            [
+                call(
+                    bbox=[0.0, -1, 1, 0.0],
+                    stage_dir="/stage",
+                    slug=None,
+                    url=None,
+                    job_name="no_job_name_specified",
+                    task_uid="1234",
+                    raw_data_filename="no_job_name_specified_1_query.osm",
+                    config={"overpass_query": "some_query; out;"},
+                ),
+                call().run_query(user_details=None, subtask_percentage=65, eta=None),
+                call(
+                    bbox=[-1, 0.0, 0.0, 1],
+                    stage_dir="/stage",
+                    slug=None,
+                    url=None,
+                    job_name="no_job_name_specified",
+                    task_uid="1234",
+                    raw_data_filename="no_job_name_specified_2_query.osm",
+                    config={"overpass_query": "some_query; out;"},
+                ),
+                call().run_query(user_details=None, subtask_percentage=65, eta=None),
+                call(
+                    bbox=[-1, -1, 0.0, 0.0],
+                    stage_dir="/stage",
+                    slug=None,
+                    url=None,
+                    job_name="no_job_name_specified",
+                    task_uid="1234",
+                    raw_data_filename="no_job_name_specified_3_query.osm",
+                    config={"overpass_query": "some_query; out;"},
+                ),
+                call().run_query(user_details=None, subtask_percentage=65, eta=None),
+                call(
+                    bbox=[-1, -1, 0.0, 0.0],
+                    stage_dir="/stage",
+                    slug=None,
+                    url=None,
+                    job_name="no_job_name_specified",
+                    task_uid="1234",
+                    raw_data_filename="no_job_name_specified_4_query.osm",
+                    config={"overpass_query": "some_query; out;"},
+                ),
+                call().run_query(user_details=None, subtask_percentage=65, eta=None),
+            ]
+        )
         mock_pbf.OSMToPBF.assert_called_once()
         mock_feature_selection.example.assert_called_once()
         mock_cancel_provider_task.assert_not_called()

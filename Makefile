@@ -51,6 +51,10 @@ ifeq ($(detected_OS),Linux)
 	sudo chmod -R g+rw .
 endif
 
+bf: initial black-format initial
+
+if: initial isort-format initial
+
 # Only run this command if you want to completely rebuild your conda dependencies.
 conda-install:
 	cd conda && docker-compose build --no-cache

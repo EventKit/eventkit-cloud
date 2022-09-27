@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.14.0-2
+    image: eventkit/eventkit-base:1.14.0-3
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -103,7 +103,7 @@ services:
     extra_hosts:
       - "${SITE_NAME}:host-gateway"
   map:
-    image: eventkit/eventkit-base:1.14.0-2
+    image: eventkit/eventkit-base:1.14.0-3
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -146,13 +146,13 @@ services:
     extra_hosts:
       - "${SITE_NAME}:host-gateway"
   memcached:
-    image: eventkit/eventkit-base:1.14.0-2
+    image: eventkit/eventkit-base:1.14.0-3
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate conda_env && memcached -m 2048 -I 25m"
   celery:
-    image: eventkit/eventkit-base:1.14.0-2
+    image: eventkit/eventkit-base:1.14.0-3
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
@@ -262,7 +262,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.14.0-2
+    image: eventkit/eventkit-base:1.14.0-3
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -295,7 +295,7 @@ services:
       - SSL_VERIFICATION
       - SECRET_KEY
   webpack:
-    image: eventkit/eventkit-webpack:1.14.0-1
+    image: eventkit/eventkit-webpack:1.14.0-3
     build:
       context: .
       dockerfile: config/Dockerfile_webpack
