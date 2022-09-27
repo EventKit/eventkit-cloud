@@ -7,6 +7,8 @@ import os
 import subprocess
 from string import Template
 
+from django.conf import settings
+
 from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ class OSMToPBF(object):
             root = self.osm.split(".")[0]
             self.pbffile = root + ".pbf"
         self.debug = debug
-        self.cmd = Template("osmconvert $osm --out-pbf >$pbf")
+        self.cmd = Template("osmconvert $osm --hash-memory=$hash_memory -o=$pbf")
         self.task_uid = task_uid
         try:
             os.remove(self.pbffile)
@@ -45,13 +47,13 @@ class OSMToPBF(object):
         """
         Convert the raw osm to pbf.
         """
-        convert_cmd = self.cmd.safe_substitute({"osm": self.osm, "pbf": self.pbffile})
+        convert_cmd = self.cmd.safe_substitute(
+            {"osm": self.osm, "hash_memory": settings.OSM_MAX_TMPFILE_SIZE, "pbf": self.pbffile}
+        )
         if self.debug:
             print("Running: %s" % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
-        task_process.start_process(
-            convert_cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        task_process.start_process(convert_cmd, shell=True, executable="/bin/bash", stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error("{0}".format(task_process.stderr))
             logger.error("osmconvert failed with return code: {0}".format(task_process.exitcode))
