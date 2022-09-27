@@ -20,7 +20,7 @@ variables:
   REQUESTS_CA_BUNDLE: "./conda/cacert.pem"
   SECRET_KEY: "TESTING"
   SITE_NAME: "127.0.0.1"
-  VERSION: "1.14.0"
+  VERSION: "1.14.1"
 
 image:
   name: $DOCKER_IMAGE
