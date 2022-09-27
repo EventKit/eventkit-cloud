@@ -48,7 +48,7 @@ export class PageHeader extends Component<Props, {}> {
                 <div style={styles.title} className="qa-PageHeader-title">
                     {this.props.title}
                 </div>
-                <div style={styles.content} className="qa-PageHeader-content">
+                <div style={styles.content} className="qa-PageHeader-content" data-testid={'pageHeader'}>
                     {this.props.children}
                 </div>
             </div>
