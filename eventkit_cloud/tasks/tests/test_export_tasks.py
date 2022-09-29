@@ -540,7 +540,6 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.cancel_export_provider_task.run")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
-    @patch("eventkit_cloud.tasks.export_tasks.os")
     @patch("eventkit_cloud.tasks.export_tasks.update_progress")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("eventkit_cloud.tasks.export_tasks.FeatureSelection")
@@ -553,7 +552,6 @@ class TestExportTasks(ExportTaskBase):
         mock_feature_selection,
         mock_geopackage,
         mock_update_progress,
-        mock_os,
         mock_get_export_task_record,
         mock_get_export_filepath,
         mock_cancel_provider_task,
@@ -568,6 +566,11 @@ class TestExportTasks(ExportTaskBase):
         example_overpass_query = "some_query; out;"
         example_config = {"overpass_query": example_overpass_query}
         self.task_process.return_value = Mock(exitcode=0)
+        expected_overpass_files = [
+            os.path.join(self.stage_dir, f"no_job_name_specified_{num}_query.osm") for num in range(1, 5)
+        ]
+        mock_overpass.Overpass().run_query.side_effect = expected_overpass_files
+        mock_overpass.Overpass.reset_mock()
         osm_data_collection_pipeline(
             example_export_task_record_uid,
             self.stage_dir,
@@ -575,6 +578,7 @@ class TestExportTasks(ExportTaskBase):
             config=example_config,
         )
         mock_connect.assert_called_once()
+
         mock_overpass.Overpass.assert_has_calls(
             [
                 call(
@@ -583,8 +587,19 @@ class TestExportTasks(ExportTaskBase):
                     slug=None,
                     url=None,
                     job_name="no_job_name_specified",
-                    task_uid="1234",
-                    raw_data_filename="no_job_name_specified_1_query.osm",
+                    task_uid=example_export_task_record_uid,
+                    raw_data_filename=os.path.basename(expected_overpass_files[0]),
+                    config={"overpass_query": "some_query; out;"},
+                ),
+                call().run_query(user_details=None, subtask_percentage=65, eta=None),
+                call(
+                    bbox=[0.0, 0.0, 1, 1],
+                    stage_dir="/stage",
+                    slug=None,
+                    url=None,
+                    job_name="no_job_name_specified",
+                    task_uid=example_export_task_record_uid,
+                    raw_data_filename=os.path.basename(expected_overpass_files[1]),
                     config={"overpass_query": "some_query; out;"},
                 ),
                 call().run_query(user_details=None, subtask_percentage=65, eta=None),
@@ -594,8 +609,8 @@ class TestExportTasks(ExportTaskBase):
                     slug=None,
                     url=None,
                     job_name="no_job_name_specified",
-                    task_uid="1234",
-                    raw_data_filename="no_job_name_specified_2_query.osm",
+                    task_uid=example_export_task_record_uid,
+                    raw_data_filename=os.path.basename(expected_overpass_files[2]),
                     config={"overpass_query": "some_query; out;"},
                 ),
                 call().run_query(user_details=None, subtask_percentage=65, eta=None),
@@ -605,29 +620,23 @@ class TestExportTasks(ExportTaskBase):
                     slug=None,
                     url=None,
                     job_name="no_job_name_specified",
-                    task_uid="1234",
-                    raw_data_filename="no_job_name_specified_3_query.osm",
-                    config={"overpass_query": "some_query; out;"},
-                ),
-                call().run_query(user_details=None, subtask_percentage=65, eta=None),
-                call(
-                    bbox=[-1, -1, 0.0, 0.0],
-                    stage_dir="/stage",
-                    slug=None,
-                    url=None,
-                    job_name="no_job_name_specified",
-                    task_uid="1234",
-                    raw_data_filename="no_job_name_specified_4_query.osm",
+                    task_uid=example_export_task_record_uid,
+                    raw_data_filename=os.path.basename(expected_overpass_files[3]),
                     config={"overpass_query": "some_query; out;"},
                 ),
                 call().run_query(user_details=None, subtask_percentage=65, eta=None),
             ]
         )
-        mock_pbf.OSMToPBF.assert_called_once()
+        mock_pbf.OSMToPBF.assert_called_once_with(
+            osm_files=expected_overpass_files,
+            pbffile=os.path.join(self.stage_dir, "no_job_name_specified_query.pbf"),
+            task_uid=example_export_task_record_uid,
+        )
         mock_feature_selection.example.assert_called_once()
         mock_cancel_provider_task.assert_not_called()
 
         # Test canceling the provider task on an empty geopackage.
+        mock_overpass.Overpass().run_query.side_effect = expected_overpass_files
         mock_geopackage.Geopackage().run.return_value = None
         osm_data_collection_pipeline(
             example_export_task_record_uid,

@@ -390,15 +390,15 @@ def osm_data_collection_pipeline(
                     tile_id += 1
 
                     @retry
-                    def get_osm_file(*kw):  # noqa
+                    def get_osm_file(bbox, filename, **kw):  # noqa
                         op = overpass.Overpass(
-                            bbox=tiled_bbox,
+                            bbox=bbox,
                             stage_dir=stage_dir,
                             slug=slug,
                             url=url,
                             job_name=job_name,
                             task_uid=export_task_record_uid,
-                            raw_data_filename=f"{job_name}_{tile_id}_query.osm",
+                            raw_data_filename=filename,
                             config=config,
                         )
 
@@ -407,6 +407,8 @@ def osm_data_collection_pipeline(
                     futures.append(
                         pool.submit(
                             get_osm_file,
+                            tiled_bbox,
+                            f"{job_name}_{tile_id}_query.osm",
                             max_repeat=config.get("max_repeat"),
                             allowed_exceptions=[AreaLimitExceededError],
                         )

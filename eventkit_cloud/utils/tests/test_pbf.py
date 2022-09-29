@@ -29,8 +29,9 @@ class TestOSMToPBF(TransactionTestCase):
         out = o2p.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(osm)
-        self.task_process().start_process.assert_called_once_with(convert_cmd, shell=True, executable="/bin/bash",
-                                                                  stderr=-1)
+        self.task_process().start_process.assert_called_once_with(
+            convert_cmd, shell=True, executable="/bin/bash", stderr=-1
+        )
         self.assertEqual(out, pbffile)
 
         self.task_process.return_value = Mock(exitcode=1)
