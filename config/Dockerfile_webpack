@@ -19,9 +19,11 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit:eventkit ./package.json ./package-lock.json /var/lib/eventkit/
+# COPY --chown=eventkit:eventkit ./package.json ./package-lock.json /var/lib/eventkit/
+COPY --chown=eventkit:eventkit ./package.json /var/lib/eventkit/
 
-RUN npm install --quiet
+RUN npm install --quiet \
+    && npm i --package-lock-only
 
 ENV PATH="/home/eventkit/.gem/ruby/2.3.0/bin:$PATH"
 
