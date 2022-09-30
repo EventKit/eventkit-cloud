@@ -535,6 +535,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(example_input_file, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.os.remove")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     @patch("eventkit_cloud.tasks.export_tasks.sqlite3.connect")
     @patch("eventkit_cloud.tasks.export_tasks.cancel_export_provider_task.run")
@@ -557,6 +558,7 @@ class TestExportTasks(ExportTaskBase):
         mock_cancel_provider_task,
         mock_connect,
         mock_convert,
+        mock_remove,
     ):
         example_export_task_record_uid = "1234"
         example_bbox = [-1, -1, 1, 1]
@@ -569,8 +571,14 @@ class TestExportTasks(ExportTaskBase):
         expected_overpass_files = [
             os.path.join(self.stage_dir, f"no_job_name_specified_{num}_query.osm") for num in range(1, 5)
         ]
+        expected_o5m_files = [
+            f"{os.path.splitext(expected_overpass_file)[0]}.o5m" for expected_overpass_file in expected_overpass_files
+        ]
         mock_overpass.Overpass().run_query.side_effect = expected_overpass_files
         mock_overpass.Overpass.reset_mock()
+        convert_side_effects = expected_o5m_files + [os.path.join(self.stage_dir, "no_job_name_specified_query.pbf")]
+        mock_pbf.OSMToPBF().convert.side_effect = convert_side_effects
+        mock_pbf.OSMToPBF.reset_mock()
         osm_data_collection_pipeline(
             example_export_task_record_uid,
             self.stage_dir,
@@ -578,7 +586,9 @@ class TestExportTasks(ExportTaskBase):
             config=example_config,
         )
         mock_connect.assert_called_once()
-
+        mock_remove.assert_has_calls(
+            [call(expected_overpass_file) for expected_overpass_file in expected_overpass_files], any_order=True
+        )
         mock_overpass.Overpass.assert_has_calls(
             [
                 call(
@@ -627,9 +637,9 @@ class TestExportTasks(ExportTaskBase):
                 call().run_query(user_details=None, subtask_percentage=65, eta=None),
             ]
         )
-        mock_pbf.OSMToPBF.assert_called_once_with(
-            osm_files=expected_overpass_files,
-            pbffile=os.path.join(self.stage_dir, "no_job_name_specified_query.pbf"),
+        mock_pbf.OSMToPBF.assert_called_with(
+            osm_files=expected_o5m_files,
+            outfile=os.path.join(self.stage_dir, "no_job_name_specified_query.pbf"),
             task_uid=example_export_task_record_uid,
         )
         mock_feature_selection.example.assert_called_once()
@@ -638,6 +648,8 @@ class TestExportTasks(ExportTaskBase):
         # Test canceling the provider task on an empty geopackage.
         mock_overpass.Overpass().run_query.side_effect = expected_overpass_files
         mock_geopackage.Geopackage().run.return_value = None
+        mock_pbf.OSMToPBF().convert.side_effect = convert_side_effects
+        mock_pbf.OSMToPBF.reset_mock()
         osm_data_collection_pipeline(
             example_export_task_record_uid,
             self.stage_dir,

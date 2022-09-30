@@ -21,29 +21,29 @@ class OSMToPBF(object):
     """
 
     def __init__(
-        self, osm_files: Optional[list[str]] = None, pbffile: str = None, debug: bool = False, task_uid: str = None
+        self, osm_files: Optional[list[str]] = None, outfile: str = None, debug: bool = False, task_uid: str = None
     ):
         """
         Initialize the OSMToPBF utility.
 
         Args:
             osm_files: the raw osm file to convert
-            pbffile: the location of the pbf output file
+            outfile: the location of the pbf output file
         """
 
         if not osm_files or any(not os.path.exists(osm) for osm in osm_files):
             raise IOError("Cannot find raw OSM data for this task.")
-        self.pbffile = pbffile
-        if not self.pbffile:
+        self.outfile = outfile
+        if not self.outfile:
             # create pbf path from osm path.
             root = osm_files[0].split(".")[0]
-            self.pbffile = root + ".pbf"
+            self.outfile = root + ".pbf"
         self.osm: str = " ".join(osm_files)
         self.debug = debug
         self.cmd = Template("osmconvert $osm --hash-memory=$hash_memory -o=$pbf")
         self.task_uid = task_uid
         try:
-            os.remove(self.pbffile)
+            os.remove(self.outfile)
         except Exception:
             pass
 
@@ -52,7 +52,7 @@ class OSMToPBF(object):
         Convert the raw osm to pbf.
         """
         convert_cmd = self.cmd.safe_substitute(
-            {"osm": self.osm, "hash_memory": settings.OSM_MAX_TMPFILE_SIZE, "pbf": self.pbffile}
+            {"osm": self.osm, "hash_memory": settings.OSM_MAX_TMPFILE_SIZE, "pbf": self.outfile}
         )
         if self.debug:
             print("Running: %s" % convert_cmd)
@@ -66,7 +66,7 @@ class OSMToPBF(object):
 
         if self.debug:
             print("Osmconvert returned: %s" % task_process.exitcode)
-        return self.pbffile
+        return self.outfile
 
 
 if __name__ == "__main__":
@@ -86,5 +86,5 @@ if __name__ == "__main__":
     debug = False
     if config.get("debug"):
         debug = True
-    o2p = OSMToPBF(osm_files=[osm], pbffile=pbf, debug=debug)
+    o2p = OSMToPBF(osm_files=[osm], outfile=pbf, debug=debug)
     o2p.convert()

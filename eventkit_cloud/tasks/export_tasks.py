@@ -9,7 +9,7 @@ import socket
 import sqlite3
 import time
 import traceback
-from concurrent.futures import Future, ThreadPoolExecutor, wait
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Type, Union, cast
 from urllib.parse import urlencode
@@ -376,59 +376,71 @@ def osm_data_collection_pipeline(
         tile_id = 0  # An arbitrary number to separate file names
         bboxes = [bbox]
         futures: list[Future] = []
-        results = []
-        while bboxes or futures:
-            try:
-                if bboxes:
-                    tiled_bbox: list[float] = bboxes.pop()
-                    # TODO: convert to meters
-                    polygon = Polygon.from_bbox(tiled_bbox)
-                    polygon.srid = 4326
-                    polygon.transform(ct=3857)
-                    if (polygon.area / 1_000_000) > settings.OSM_MAX_REQUEST_SIZE:  # Compare sq_km
-                        raise AreaLimitExceededError(bbox=tiled_bbox)
-                    tile_id += 1
+        o5m_results = []
 
-                    @retry
-                    def get_osm_file(bbox, filename, **kw):  # noqa
-                        op = overpass.Overpass(
-                            bbox=bbox,
-                            stage_dir=stage_dir,
-                            slug=slug,
-                            url=url,
-                            job_name=job_name,
+        @retry
+        def get_osm_file(bbox, filename, **kw):  # noqa
+            op = overpass.Overpass(
+                bbox=bbox,
+                stage_dir=stage_dir,
+                slug=slug,
+                url=url,
+                job_name=job_name,
+                task_uid=export_task_record_uid,
+                raw_data_filename=filename,
+                config=config,
+            )
+            return op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
+
+        while bboxes:
+            tiled_bbox: list[float] = bboxes.pop()
+            polygon = Polygon.from_bbox(tiled_bbox)
+            polygon.srid = 4326
+            polygon.transform(ct=3857)
+            if (polygon.area / 1_000_000) > settings.OSM_MAX_REQUEST_SIZE:  # Compare sq_km
+                bboxes.extend(split_bbox(tiled_bbox))
+                continue
+            tile_id += 1
+
+            futures.append(
+                pool.submit(
+                    get_osm_file,
+                    tiled_bbox,
+                    f"{job_name}_{tile_id}_query.osm",
+                    max_repeat=config.get("max_repeat"),
+                    allowed_exceptions=[AreaLimitExceededError],
+                )
+            )
+            if bboxes:
+                continue
+            for future in as_completed(futures):
+                try:
+                    osm_file = os.path.join(stage_dir, future.result())
+                    # Convert the files to o5m files, since the .osm will take up too much space.
+                    o5m_results.append(
+                        pbf.OSMToPBF(
+                            osm_files=[osm_file],
+                            outfile=f"{os.path.splitext(osm_file)[0]}.o5m",
                             task_uid=export_task_record_uid,
-                            raw_data_filename=filename,
-                            config=config,
-                        )
-
-                        return op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
-
-                    futures.append(
-                        pool.submit(
-                            get_osm_file,
-                            tiled_bbox,
-                            f"{job_name}_{tile_id}_query.osm",
-                            max_repeat=config.get("max_repeat"),
-                            allowed_exceptions=[AreaLimitExceededError],
-                        )
+                        ).convert()
                     )
-                else:
-                    wait(futures)
-                    results += [os.path.join(stage_dir, future.result()) for future in futures]
-                    futures = []
-            except AreaLimitExceededError as ale:
-                if ale.bbox:
-                    logger.info("Area limit was exceeded, requesting smaller areas for %s", ale.bbox)
-                    bboxes.extend(split_bbox(ale.bbox))
-                else:
-                    logger.error("An overpass limit was exceeded without a BBOX being returned. ")
-                    raise
+                    os.remove(osm_file)
+                except AreaLimitExceededError as ale:
+                    if ale.bbox:
+                        logger.info("Area limit was exceeded, requesting smaller areas for %s", ale.bbox)
+                        bboxes.extend(split_bbox(ale.bbox))
+                    else:
+                        logger.error("An overpass limit was exceeded without a BBOX being returned. ")
+                        raise
+                    # Break out to let the rest of the bboxes work get queued.
+                    break
 
         # --- Convert Overpass result to PBF
         logger.info("Converting osm files to PBF.")
         pbf_filename = os.path.join(stage_dir, f"{job_name}_query.pbf")
-        pbf_filepath = pbf.OSMToPBF(osm_files=results, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
+        pbf_filepath = pbf.OSMToPBF(
+            osm_files=o5m_results, outfile=pbf_filename, task_uid=export_task_record_uid
+        ).convert()
 
     # --- Generate thematic gpkg from PBF
     export_task_record = get_export_task_record(export_task_record_uid)
