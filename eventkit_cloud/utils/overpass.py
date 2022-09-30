@@ -202,7 +202,7 @@ class Overpass(object):
             with open(self.raw_osm, "r") as osm_file:
                 for line in osm_file.readline():
                     if "Query run out of memory" in line:
-                        raise AreaLimitExceededError(bbox)
+                        raise AreaLimitExceededError(bbox=bbox)
         return self.raw_osm
 
 

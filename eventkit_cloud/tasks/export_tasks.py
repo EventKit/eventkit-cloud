@@ -419,7 +419,11 @@ def osm_data_collection_pipeline(
                     futures = []
             except AreaLimitExceededError as ale:
                 if ale.bbox:
+                    logger.info("Area limit was exceeded, requesting smaller areas for %s", ale.bbox)
                     bboxes.extend(split_bbox(ale.bbox))
+                else:
+                    logger.error("An overpass limit was exceeded without a BBOX being returned. ")
+                    raise
 
         # --- Convert Overpass result to PBF
         logger.info("Converting osm files to PBF.")
