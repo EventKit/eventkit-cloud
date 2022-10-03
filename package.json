@@ -127,17 +127,12 @@
                 "log-symbols": {
                     "is-unicode-supported": "$is-unicode-supported"
                 }
-            },
-            "ora": {
-                "is-unicode-supported": "$is-unicode-supported"
             }
         },
         "log-symbols": {
             "is-unicode-supported": "$is-unicode-supported"
         },
-        "ora": {
-            "is-unicode-supported": "$is-unicode-supported"
-        }
+        "ora":"6.0.0"
     },
     "jest": {
         "testEnvironment": "jsdom",
