@@ -1,13 +1,9 @@
-import {Provider} from 'react-redux';
-
-import {fireEvent, render, waitFor} from "@testing-library/react";
+import {screen, fireEvent, waitFor} from "@testing-library/react";
 
 import '@testing-library/jest-dom/extend-expect';
 import sinon from "sinon";
-import theme from "../../styles/eventkit_theme";
 import axios from "axios";
-import {ToastContainer} from "react-toastify";
-import newTestStore from "../../store/newTestStore";
+import * as TestUtils from '../test-utils';
 import MockAdapter from 'axios-mock-adapter';
 
 
@@ -31,8 +27,7 @@ jest.doMock("../../components/CreateDataPack/RequestDataSource", () => {
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
 
-
-const {ExportInfo} = require('../../components/CreateDataPack/ExportInfo');
+import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 
 const formats = [
     {
@@ -168,13 +163,13 @@ const user = {
     },
     status: {
         patched: false,
-            patching: false,
-            error: null,
-            isLoading: false,
+        patching: false,
+        error: null,
+        isLoading: false,
     },
 };
 
-describe('ExportInfo component', () => {
+describe('ExportInfo screen', () => {
     const getProps = () => (
         {
             geojson: {
@@ -230,13 +225,13 @@ describe('ExportInfo component', () => {
             checkProvider: sinon.spy(),
             ...(global as any).eventkit_test_props,
             classes: {},
-            theme: theme,
             topics: [],
         }
     );
 
-    const getInitialState = () => (
+    const getInitialState = (defaultState) => (
         {
+            ...defaultState,
             aoiInfo: {
                 geojson: {},
             },
@@ -268,22 +263,6 @@ describe('ExportInfo component', () => {
         }
     );
 
-    const renderWithRedux = (
-        component,
-        {initialState, store = newTestStore(initialState)}: any = {}
-    ) => {
-        return {
-            ...render(<Provider store={store}><ToastContainer/>{component}</Provider>),
-            store,
-        }
-    };
-
-    const renderComponent = () => {
-        const props = getProps();
-        return renderWithRedux(<ExportInfo {...props} />, {initialState: getInitialState()});
-    };
-
-
     let mockAxios;
     beforeAll(() => {
         mockAxios = new MockAdapter(axios);
@@ -297,156 +276,212 @@ describe('ExportInfo component', () => {
     });
 
     it('should render without error', () => {
-        renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
     });
 
     it('should render and display toast when providers fail', async () => {
         mockAxios.reset();
         mockAxios.onGet('/api/providers').reply(500,null);
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
         jest.runOnlyPendingTimers();
-        expect(await component.findByText("Data Provider(s) failed to load")).toBeInTheDocument();
+        expect(await screen.findByText("Data Provider(s) failed to load")).toBeInTheDocument();
     });
 
     it('should render a form', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        expect(component.getByText('Enter General Information')).toBeInTheDocument();
-        expect(component.getByText('Select Data Products')).toBeInTheDocument();
-        expect(component.getByText('Request New Data Product')).toBeInTheDocument();
-        expect(component.getByText('Select Projection')).toBeInTheDocument();
-        expect(component.getByText('Share this DataPack')).toBeInTheDocument();
-        expect(component.getByText('Area of Interest (AOI)')).toBeInTheDocument();
-        expect(component.getByText('Selected Area of Interest')).toBeInTheDocument();
+        expect(screen.getByText('Enter General Information')).toBeInTheDocument();
+        expect(screen.getByText('Select Data Products')).toBeInTheDocument();
+        expect(screen.getByText('Request New Data Product')).toBeInTheDocument();
+        expect(screen.getByText('Select Projection')).toBeInTheDocument();
+        expect(screen.getByText('Share this DataPack')).toBeInTheDocument();
+        expect(screen.getByText('Area of Interest (AOI)')).toBeInTheDocument();
+        expect(screen.getByText('Selected Area of Interest')).toBeInTheDocument();
     });
 
     it('should have a sort / filter button', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        expect(component.getByText('Sort / Filter')).toBeInTheDocument();
+        expect(screen.getByText('Sort / Filter')).toBeInTheDocument();
     });
 
     it('should have a list of providers sorted A-Z by default', async () => {
-        const component = renderComponent();
-        const providers = await component.findAllByTestId("DataProvider");
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
+        const providers = await screen.findAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
     it('should have filtering options hidden by default', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        expect(component.queryByText('Filter By:')).toBeNull();
-        expect(component.queryByText('Raster')).toBeNull();
-        expect(component.queryByText('Vector')).toBeNull();
-        expect(component.queryByText('Elevation')).toBeNull();
-        expect(component.queryByText('Sort By:')).toBeNull();
-        expect(component.queryByText('Alphabetical A-Z')).toBeNull();
-        expect(component.queryByText('Alphabetical Z-A')).toBeNull();
-        expect(component.queryByTestId('most-downloaded')).toBeNull();
-        expect(component.queryByTestId('most-recent')).toBeNull();
-        expect(component.queryByText('Clear All')).toBeNull();
-        expect(component.queryByText('Apply')).toBeNull();
-        expect(component.queryByText('Cancel')).toBeNull();
+        expect(screen.queryByText('Filter By:')).toBeNull();
+        expect(screen.queryByText('Raster')).toBeNull();
+        expect(screen.queryByText('Vector')).toBeNull();
+        expect(screen.queryByText('Elevation')).toBeNull();
+        expect(screen.queryByText('Sort By:')).toBeNull();
+        expect(screen.queryByText('Alphabetical A-Z')).toBeNull();
+        expect(screen.queryByText('Alphabetical Z-A')).toBeNull();
+        expect(screen.queryByTestId('most-downloaded')).toBeNull();
+        expect(screen.queryByTestId('most-recent')).toBeNull();
+        expect(screen.queryByText('Clear All')).toBeNull();
+        expect(screen.queryByText('Apply')).toBeNull();
+        expect(screen.queryByText('Cancel')).toBeNull();
     });
 
     it('should provide filtering options when sort / filter is clicked', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.getByText('Filter By:')).toBeInTheDocument();
-        expect(component.getByText('Raster')).toBeInTheDocument();
-        expect(component.getByText('Vector')).toBeInTheDocument();
-        expect(component.getByText('Elevation')).toBeInTheDocument();
-        expect(component.getByText('Sort By:')).toBeInTheDocument();
-        expect(component.getByText('Alphabetical A-Z')).toBeInTheDocument();
-        expect(component.getByText('Alphabetical Z-A')).toBeInTheDocument();
-        expect(component.getByTestId('most-downloaded')).toBeInTheDocument();
-        expect(component.getByTestId('most-recent')).toBeInTheDocument();
-        expect(component.queryByText('Clear All')).toBeInTheDocument();
-        expect(component.queryByText('Apply')).toBeInTheDocument();
-        expect(component.queryByText('Cancel')).toBeInTheDocument();
+        expect(screen.getByText('Filter By:')).toBeInTheDocument();
+        expect(screen.getByText('Raster')).toBeInTheDocument();
+        expect(screen.getByText('Vector')).toBeInTheDocument();
+        expect(screen.getByText('Elevation')).toBeInTheDocument();
+        expect(screen.getByText('Sort By:')).toBeInTheDocument();
+        expect(screen.getByText('Alphabetical A-Z')).toBeInTheDocument();
+        expect(screen.getByText('Alphabetical Z-A')).toBeInTheDocument();
+        expect(screen.getByTestId('most-downloaded')).toBeInTheDocument();
+        expect(screen.getByTestId('most-recent')).toBeInTheDocument();
+        expect(screen.queryByText('Clear All')).toBeInTheDocument();
+        expect(screen.queryByText('Apply')).toBeInTheDocument();
+        expect(screen.queryByText('Cancel')).toBeInTheDocument();
     });
 
     it('should show and hide type filter content when clicked', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const typeFilterComponent = component.getByText('Type(s)');
+        const typeFilterComponent = screen.getByText('Type(s)');
         expect(typeFilterComponent).toBeInTheDocument();
 
         fireEvent.click(typeFilterComponent);
-        expect(component.getByText('Vector')).toBeVisible();
+        expect(screen.getByText('Vector')).toBeVisible();
 
         fireEvent.click(typeFilterComponent);
         await waitFor(() => {
-            expect(component.queryByText('Vector')).not.toBeVisible()
+            expect(screen.queryByText('Vector')).not.toBeVisible()
         })
 
     });
 
     it('should have a list of projections', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const projections = component.getAllByText(/EPSG/);
+        const projections = screen.getAllByText(/EPSG/);
         expect(projections.length).toBe(2);
     });
 
     it('should have a list of providers sorted Z-A after filter selected', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const radioButton = component.getByTestId('alphabetical-z-a');
+        const radioButton = screen.getByTestId('alphabetical-z-a');
         fireEvent.click(radioButton);
-        const providers = await component.findAllByTestId("DataProvider");
+        const providers = await screen.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('USGS');
     });
 
     it('should have a list of providers sorted most downloaded', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const radioButton = component.getByTestId('most-downloaded');
+        const radioButton = screen.getByTestId('most-downloaded');
         fireEvent.click(radioButton);
 
-        const providers = await component.findAllByTestId("DataProvider");
+        const providers = await screen.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('Ports');
     });
 
     it('should have a list of providers sorted recently downloaded', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const radioButton = component.getByTestId('most-recent');
+        const radioButton = screen.getByTestId('most-recent');
         fireEvent.click(radioButton);
 
-        const providers = await component.findAllByTestId("DataProvider");
+        const providers = await screen.findAllByTestId("DataProvider");
         expect(providers[0]).toHaveTextContent('Ports');
     });
 
     it('should show only the providers that match the name filter', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const textField = component.getByTestId('filter-text-field') as HTMLInputElement;
+        const textField = screen.getByTestId('filter-text-field') as HTMLInputElement;
         fireEvent.change(textField, {target: {value: 'Open'}})
 
-        const providers = await component.findAllByTestId("DataProvider");
+        const providers = await screen.findAllByTestId("DataProvider");
         expect(providers).toHaveLength(1);
         expect(providers[0]).toHaveTextContent('OpenStreetMap Data (Generic)');
     });
 
 
     it('should display the correct checked value of a projection checkbox', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const projectionCheckbox = component.getByRole('checkbox', {name: /EPSG:3857/});
+        const projectionCheckbox = screen.getByRole('checkbox', {name: /EPSG:3857/});
         fireEvent.click(projectionCheckbox);
         expect(projectionCheckbox).toBeChecked();
         fireEvent.click(projectionCheckbox);
@@ -454,60 +489,72 @@ describe('ExportInfo component', () => {
     });
 
     it('should remove a filter when the user clicks the x on the filter chip', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        const component = TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        const rasterFilter = component.getByText('Raster');
+        const rasterFilter = screen.getByText('Raster');
 
         // Select the raster filter and close the dialog so that the filter chips show up.
         fireEvent.click(rasterFilter);
         fireEvent.click(sortFilter);
 
-        expect(component.queryByText("Raster")).toBeInTheDocument();
+        expect(screen.queryByText("Raster")).toBeInTheDocument();
 
         const rasterFilterChip = component.container.querySelector('.MuiChip-deleteIcon');
         fireEvent.click(rasterFilterChip);
 
-        expect(component.queryByText("Raster")).toBeNull();
+        expect(screen.queryByText("Raster")).toBeNull();
     });
 
     it('should close the filter section when you click apply', () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By:')).toBeInTheDocument();
+        expect(screen.queryByText('Filter By:')).toBeInTheDocument();
 
-        const applyFilterButton = component.queryByText('Apply');
+        const applyFilterButton = screen.queryByText('Apply');
         fireEvent.click(applyFilterButton);
 
-        expect(component.queryByText('Filter By:')).toBeNull();
+        expect(screen.queryByText('Filter By:')).toBeNull();
     });
 
     it('should close the filter section and clear filters when you click cancel', async () => {
-        const component = renderComponent();
+        const defaultState = TestUtils.getDefaultTestState();
+        const initialState = getInitialState(defaultState);
+        TestUtils.renderComponent(<ExportInfo {...getProps()} />, {
+            initialState
+        });
 
 
-        let providers = await component.findAllByTestId("DataProvider");
+        let providers = await screen.findAllByTestId("DataProvider");
         expect(providers.length).toBe(3);
 
-        const sortFilter = component.getByText('Sort / Filter');
+        const sortFilter = screen.getByText('Sort / Filter');
         fireEvent.click(sortFilter);
-        expect(component.queryByText('Filter By:')).toBeInTheDocument();
+        expect(screen.queryByText('Filter By:')).toBeInTheDocument();
 
-        const checkBox = component.getByLabelText('Raster');
+        const checkBox = screen.getByLabelText('Raster');
         fireEvent.click(checkBox);
         expect(checkBox).toBeChecked();
 
-        providers = await component.findAllByTestId('DataProvider');
+        providers = await screen.findAllByTestId('DataProvider');
         expect(providers.length).toBe(1);
 
-        const cancelFilterButton = component.queryByText('Cancel');
+        const cancelFilterButton = screen.queryByText('Cancel');
         fireEvent.click(cancelFilterButton);
 
-        expect(component.queryByText('Filter By:')).toBeNull();
-        providers = await component.findAllByTestId('DataProvider');
+        expect(screen.queryByText('Filter By:')).toBeNull();
+        providers = await screen.findAllByTestId('DataProvider');
         expect(providers.length).toBe(3);
     });
 });

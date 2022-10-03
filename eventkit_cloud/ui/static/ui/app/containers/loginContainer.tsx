@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import axios from 'axios';
@@ -11,12 +11,12 @@ export const Form = (props) => {
     const [password, setPassword] = useState('');
     const [buttonDisabled, setButtonDisabled] = useState(true);
     const [oauthName, setOauthName] = useState('');
-    const error = useSelector((state) => state.user.status.error)
+    const error = useSelector((state: any) => state.user.status.error)
     const dispatch = useDispatch();
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        dispatch(login({username, password}, (props.location ? props.location.search : '')));
+        dispatch(login({ username, password }));
     };
 
     const handleOAuth = (event) => {
@@ -42,7 +42,7 @@ export const Form = (props) => {
         if (!error) {
             return '';
         }
-        const { statusCode, authType } = { ...error };
+        const { statusCode, authType } = error;
         if (statusCode === 401) {
             if (authType === 'auth') {
                 return 'Username or Password incorrect.';
@@ -100,8 +100,8 @@ export const Form = (props) => {
         },
     };
 
-    let loginForm = '';
-    let oauthButton = '';
+    let loginForm = null;
+    let oauthButton = null;
     if (loginFormEnabled) {
         loginForm = (
             <form onSubmit={handleSubmit} onChange={onChange} style={styles.form}>
@@ -112,7 +112,7 @@ export const Form = (props) => {
                     placeholder="Username"
                     style={styles.input}
                     type="text"
-                    maxLength="150"
+                    maxLength={150}
                 />
                 <input
                     id="password"
@@ -121,7 +121,7 @@ export const Form = (props) => {
                     onChange={onChange}
                     style={styles.input}
                     type="password"
-                    maxLength="256"
+                    maxLength={256}
                 />
                 <Button
                     style={{ margin: '30px auto', width: '150px' }}
