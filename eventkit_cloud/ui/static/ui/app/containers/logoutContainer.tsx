@@ -19,7 +19,7 @@ export const Logout = () => {
         root: {
             justifyContent: 'space-around',
             display: 'flex',
-            flexWrap: 'wrap',
+            flexWrap: 'wrap' as 'wrap',
             height: 'calc(100vh - 95px)',
         },
     };
