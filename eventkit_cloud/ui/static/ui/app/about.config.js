@@ -14,7 +14,7 @@ export const about = [
             user-provided extent. The results are downloadable and ready-to-use datasets called DataPacks.
             For EventKit v1.1, the maximum allowable size for an Area of Interest (AOI) is set to the approximate size of a large city,
             with scalability improvements coming soon.
-            Reach out to us if you need to processs a larger area.`,
+            Reach out to us if you need to process a larger area.`,
     },
     {
         type: 'InfoParagraph',
@@ -86,7 +86,7 @@ export const about = [
                 body: 'Allows you to share DataPacks with individuals or groups (e.g., you create a group for your team).',
             },
             {
-                title: 'Data Availablity Check',
+                title: 'Data Availability Check',
                 body: `EventKit is at the mercy of its external data products.
                     This check pings the external service to let you know if it is available.`,
             },
