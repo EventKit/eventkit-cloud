@@ -311,7 +311,6 @@ services:
       - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
       - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
       - ./.git:/var/lib/eventkit/.git
-      - ./package-lock.json:/var/lib/eventkit/package-lock.json:rw
     user: eventkit
     ports:
       - "8080:8080"
