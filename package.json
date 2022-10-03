@@ -106,28 +106,10 @@
         "webpack-dev-server": "4.9.0"
     },
     "overrides": {
-        "webpack-dev-server": {
-            "sockjs": {
-                "faye-websocket": "^0.11.4"
-            },
-            "@types/express": {
-                "@types/serve-static": {
-                    "@types/mime": "^3.0.1"
-                }
-            }
-        },
-        "lodash": "$lodash",
-        "nightwatch": {
-            "mocha": {
-                "log-symbols": {
-                    "is-unicode-supported": "^1.3.0"
-                }
-            }
-        },
-        "log-symbols": {
-            "is-unicode-supported": "^1.3.0"
-        },
-        "ora": "^6.0.0"
+        "faye-websocket": "^0.11.4",
+        "@types/mime": "^3.0.1",
+        "is-unicode-supported": "^1.3.0",
+        "lodash": "$lodash"
     },
     "jest": {
         "testEnvironment": "jsdom",
