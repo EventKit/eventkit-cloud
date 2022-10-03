@@ -10,7 +10,7 @@ import {useAppContext} from "../ApplicationContext";
 const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 
 const About = () => {
-    const {VERSION, CONTACT_URL } = useAppContext();
+    const { VERSION, CONTACT_URL } = useAppContext();
 
     const styles = {
         body: {
