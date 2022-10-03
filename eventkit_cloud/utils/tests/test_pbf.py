@@ -3,6 +3,7 @@ import logging
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
+from django.conf import settings
 from django.test import TransactionTestCase
 
 from eventkit_cloud.utils.pbf import OSMToPBF
@@ -21,15 +22,15 @@ class TestOSMToPBF(TransactionTestCase):
     def test_convert(self, exists):
         osm = "/path/to/sample.osm"
         pbffile = "/path/to/sample.pbf"
-        convert_cmd = "osmconvert {0} --out-pbf >{1}".format(osm, pbffile)
+        convert_cmd = f"osmconvert {osm} --hash-memory={settings.OSM_MAX_TMPFILE_SIZE} -o={pbffile}"
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
-        o2p = OSMToPBF(osm_files=[osm], pbffile=pbffile, task_uid=self.task_uid)
+        o2p = OSMToPBF(osm_files=[osm], outfile=pbffile, task_uid=self.task_uid)
         out = o2p.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(osm)
         self.task_process().start_process.assert_called_once_with(
-            convert_cmd, executable="/bin/bash", shell=True, stderr=-1, stdout=-1
+            convert_cmd, shell=True, executable="/bin/bash", stderr=-1
         )
         self.assertEqual(out, pbffile)
 
