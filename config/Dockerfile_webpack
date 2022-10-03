@@ -19,8 +19,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-# COPY --chown=eventkit:eventkit ./package.json ./package-lock.json /var/lib/eventkit/
-COPY --chown=eventkit:eventkit ./package.json /var/lib/eventkit/
+COPY --chown=eventkit:eventkit ./package.json ./package-lock.json /var/lib/eventkit/
 
 RUN npm install --quiet
 
