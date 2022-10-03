@@ -1,7 +1,7 @@
-import { simpleApiCall } from "../store/middlewares";
+import { simpleApiCall } from "../../store/middlewares";
 import thunk from "redux-thunk";
 import { applyMiddleware, compose, createStore } from "redux";
-import rootReducer from '../reducers/rootReducer';
+import rootReducer from '../../reducers/rootReducer';
 import { reduxBatch } from "@manaflair/redux-batch";
 
 let middleware = [simpleApiCall, thunk];
