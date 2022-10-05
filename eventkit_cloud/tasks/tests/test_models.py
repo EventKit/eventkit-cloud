@@ -180,6 +180,40 @@ class TestExportRun(TestCase):
             run.download_data()
         mock_download_run_directory.assert_called_once_with(parent_run, run)
 
+    def test_check_times(self):
+        # Create run
+        run = ExportRun.objects.create(job=Job.objects.first(), user=User.objects.first())
+
+        # Check that create time is set; and that start and finish times are not
+        created_time = run.created_at
+        self.assertIsNotNone(created_time)
+        self.assertIsNone(run.started_at)
+        self.assertIsNone(run.finished_at)
+
+        # Set run state to running and save it
+        run.status = TaskState.RUNNING.value
+        run.save()
+
+        # Grab start time for comparison later
+        started_time = run.started_at
+
+        # Ensure that times match as expected
+        self.assertEqual(created_time, run.created_at)
+        self.assertIsNotNone(run.started_at)
+
+        # Then set to complete and save
+        run.status = TaskState.COMPLETED.value
+        run.save()
+
+        # Ensure finished time is set
+        self.assertIsNotNone(run.finished_at)
+        # Ensure that created times haven't changed
+        self.assertEqual(created_time, run.created_at)
+        # Verify that start time has not changed
+        self.assertEqual(started_time, run.started_at)
+        # Ensure that duration matches
+        self.assertEqual(run.duration, str(run.finished_at - run.started_at))
+
 
 class TestRunZipFile(TestCase):
     fixtures = ("osm_provider.json",)
