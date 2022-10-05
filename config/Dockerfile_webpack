@@ -1,4 +1,4 @@
-FROM node:16.15.0-slim
+FROM node:16.17.1-slim
 
 RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && \
     mkdir -p /var/lib/eventkit/ && chown eventkit:eventkit /var/lib/eventkit
@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     g++ \
     python && \
-    apt-get clean
+    apt-get clean \
+    && npm install -g npm@8.19.2
 
 USER eventkit
 

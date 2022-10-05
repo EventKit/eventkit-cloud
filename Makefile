@@ -140,3 +140,6 @@ run-migrations:
 # docker-compose run --rm eventkit bash
 # then inside the image
 # python manage.py test <full package path to test file>
+npm:
+	docker-compose build webpack
+	docker-compose run --rm webpack bash
