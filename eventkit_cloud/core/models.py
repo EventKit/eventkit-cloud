@@ -83,9 +83,11 @@ class TimeTrackingModelMixin(models.Model):
 
         if hasattr(self, "status"):
             if self.status and TaskState[self.status] == TaskState.RUNNING:
-                self.started_at = timezone.now()
+                if not self.started_at:
+                    self.started_at = timezone.now()
             if self.status and TaskState[self.status] in TaskState.get_finished_states():
-                self.finished_at = timezone.now()
+                if not self.finished_at:
+                    self.finished_at = timezone.now()
         super(TimeTrackingModelMixin, self).save(*args, **kwargs)
 
     class Meta:
