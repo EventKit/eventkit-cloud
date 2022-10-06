@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import * as React from 'react';
 import VectorLayer from 'ol/layer/Vector';
 import { useOlMapContainer } from '../context/OpenLayersContext';
+import VectorSource from "ol/source/Vector";
+import Geometry from "ol/geom/Geometry";
 
 interface Props {
     geojson: any;
@@ -34,7 +36,7 @@ function OlFeatureLayer(props: React.PropsWithChildren<Props>) {
 }
 
 export interface ReceivesVectorLayer {
-    vectorLayer?: VectorLayer;
+    vectorLayer?: VectorLayer<VectorSource<Geometry>>;
 }
 
 export default OlFeatureLayer;

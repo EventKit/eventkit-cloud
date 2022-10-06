@@ -9,6 +9,7 @@ import RegularShape from 'ol/style/RegularShape';
 import Draw, { createBox } from 'ol/interaction/Draw';
 import Point from 'ol/geom/Point';
 import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import GeometryType from 'ol/geom/Geometry'
 
 import isEqual from 'lodash/isEqual';
 import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
@@ -19,6 +20,8 @@ import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import OverlayOp from 'jsts/org/locationtech/jts/operation/overlay/OverlayOp';
 import { colors } from '../styles/eventkit_theme';
+import MultiPolygon from "ol/geom/MultiPolygon";
+import LinearRing from "ol/geom/LinearRing";
 const icon = require('../../images/ic_room_black_24px.svg');
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -468,20 +471,20 @@ export function isBox(feature) {
     // duplicate messes with the comparison if coordinates are in a different order
     // there is probably a better way to compare arrays with different order of sub arrays,
     // but this is what ive got for now
-    featCoords = [
+    const featCompCoords = [
         String(featCoords[0][0]),
         String(featCoords[0][1]),
         String(featCoords[0][2]),
         String(featCoords[0][3]),
     ].sort();
-    extentCoords = [
+    const extentCompCoords = [
         String(extentCoords[0][0]),
         String(extentCoords[0][1]),
         String(extentCoords[0][2]),
         String(extentCoords[0][3]),
     ].sort();
 
-    return isEqual(featCoords, extentCoords);
+    return isEqual(featCompCoords, extentCompCoords);
 }
 
 // check if the pixel in question lies over a feature vertex, if it does, return the vertex coords
@@ -532,7 +535,11 @@ export function allHaveArea(featureCollection) {
 
     for (let i = 0; i < features.length; i += 1) {
         try {
-            const area = features[i].getGeometry().getArea();
+            const geom = features[i].getGeometry();
+            let area = 0;
+            if (geom instanceof Polygon || geom instanceof MultiPolygon || geom instanceof LinearRing) {
+                area = geom.getArea();
+            }
             if (!area) {
                 return false;
             }

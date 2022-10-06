@@ -15,6 +15,8 @@ import Tile from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
 import { unByKey } from "ol/Observable";
 import Interaction from "ol/interaction/Interaction";
+import Geometry from "ol/geom/Geometry";
+import TileSource from "ol/source/Tile";
 
 const DEFAULT_EPSG_CODE = 4326;
 
@@ -28,7 +30,7 @@ export class MapContainer {
     private readonly tileGrid: TileGrid;
     getTileGrid = () => { return this.tileGrid; };
 
-    layerCount = () => this.olMap.getLayers().length;
+    layerCount = () => this.olMap.getLayers().getLength();
 
     private readonly clickEvents: { [key: string]: () => void; } = {};
 
@@ -91,7 +93,7 @@ export class MapContainer {
         return layer;
     }
 
-    addFeatureLayer(geojson: any, zIndex?: number, epsgCode?: number) : VectorLayer {
+    addFeatureLayer(geojson: any, zIndex?: number, epsgCode?: number) : VectorLayer<VectorSource<Geometry>> {
         if (!epsgCode) {
             // if epsgCode is not passed, default to 4326
             epsgCode = this.mapEpsgCode;
@@ -108,10 +110,10 @@ export class MapContainer {
         const layer = new VectorLayer({
             source,
         });
-        return this.addLayer(layer, zIndex) as VectorLayer;
+        return this.addLayer(layer, zIndex) as VectorLayer<VectorSource<Geometry>>;
     }
 
-    addRasterTileLayer(tiledUrl: string, attributions?: string, zIndex?: number) : Tile {
+    addRasterTileLayer(tiledUrl: string, attributions?: string, zIndex?: number) : Tile<TileSource> {
         const layer = new Tile({
             source: new XYZ({
                 projection: this.getEpsg(),
@@ -121,7 +123,7 @@ export class MapContainer {
                 tileGrid: this.tileGrid,
             }),
         });
-        return this.addLayer(layer, zIndex) as Tile;
+        return this.addLayer(layer, zIndex) as Tile<TileSource>;
     }
 
     removeLayer(layer: Layer) : void {
@@ -129,14 +131,14 @@ export class MapContainer {
         this.olMap.removeLayer(layer);
     }
 
-    getInteraction(interactionType: Interaction) : Interaction {
+    getInteraction(interactionType: any) : Interaction {
         // Returns a specific Interaction from the map by type, may return undefined if not added to the collection.
         return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
 
     addListener(eventTypeKey: string, callback: (...args: any) => void) : void {
         // Wrapper of Map.on that returns a key that can be used with Observable.unByKey to remove an event
-        return this.olMap.on(eventTypeKey, callback);
+        return this.getMap().addEventListener(eventTypeKey, callback);
     }
 
     removeListener(listenerKey) : void {

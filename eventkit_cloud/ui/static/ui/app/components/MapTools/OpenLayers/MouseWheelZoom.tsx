@@ -18,7 +18,7 @@ function OlMouseWheelZoom(props: Props) {
     const mapContainer = olMapContext.mapContainer;
 
     useEffect(() => {
-        mapContainer.getInteraction(MouseWheelZoom).setActive(props.enabled);
+        mapContainer.getInteraction(MouseWheelZoom as any).setActive(props.enabled);
     }, [props.enabled]);
 
     return null;

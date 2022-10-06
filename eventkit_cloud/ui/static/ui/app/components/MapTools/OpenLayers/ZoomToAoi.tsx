@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useOlMapContainer } from '../context/OpenLayersContext';
 import { ReceivesVectorLayer } from './OlFeatureLayer';
-import has = Reflect.has;
 
 interface Props extends ReceivesVectorLayer {
     zoomLevel?: number; // If specified, zoom to this level after fitting extent.
@@ -20,7 +19,7 @@ function ZoomToAoi(props: Props) {
             return;
         }
         const olMap = mapContainer.getMap();
-        olMap.getView().fit(vectorLayer.getSource().getExtent(), olMap.getSize());
+        olMap.getView().fit(vectorLayer.getSource().getExtent(), { size: olMap.getSize() });
         if (!!zoomLevel || zoomLevel === 0) {
             olMap.getView().setZoom(zoomLevel);
             setHasRunOnce(true);

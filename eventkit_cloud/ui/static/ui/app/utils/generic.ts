@@ -2,6 +2,8 @@ import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/GeoJSON';
 import Polygon from 'ol/geom/Polygon';
+import MultiPolygon from "ol/geom/MultiPolygon";
+import LinearRing from "ol/geom/LinearRing";
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
@@ -108,7 +110,12 @@ export function getSqKm(geojson, useExtent = false) {
                 let [minx, miny, maxx, maxy] = geo.getExtent();
                 geo = extentToPoly(minx, miny, maxx, maxy);
             }
-            area += geo.transform('EPSG:4326', 'EPSG:3857').getArea() / 1000000;
+            geo = geo.transform('EPSG:4326', 'EPSG:3857');
+            if (geo instanceof Polygon || geo instanceof MultiPolygon || geo instanceof LinearRing) {
+                area += geo.getArea() / 1000000;
+            } else {
+                area += 0;
+            }
         } catch (e) {
             area += 0;
         }
