@@ -1,22 +1,23 @@
 import Map from "ol/Map";
 import TileGrid from "ol/tilegrid/TileGrid";
 import View from "ol/View";
-import {defaults} from "ol/interaction";
+import { defaults } from "ol/interaction";
 import ScaleLine from "ol/control/ScaleLine";
 import ol3mapCss from "../styles/ol3map.css";
 import Attribution from "ol/control/Attribution";
 import Zoom from "ol/control/Zoom";
-import {getResolutions} from "./mapUtils";
+import { getResolutions } from "./mapUtils";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import VectorLayer from "ol/layer/Vector";
 import Layer from "ol/layer/Layer";
 import Tile from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
-import { unByKey } from "ol/Observable";
+import { EventTypes, unByKey } from "ol/Observable";
 import Interaction from "ol/interaction/Interaction";
 import Geometry from "ol/geom/Geometry";
 import TileSource from "ol/source/Tile";
+import { EventsKey } from "ol/events";
 
 const DEFAULT_EPSG_CODE = 4326;
 
@@ -136,9 +137,9 @@ export class MapContainer {
         return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
 
-    addListener(eventTypeKey: string, callback: (...args: any) => void) : void {
+    addListener(eventTypeKey: EventTypes, callback: (...args: any) => void) : EventsKey {
         // Wrapper of Map.on that returns a key that can be used with Observable.unByKey to remove an event
-        return this.getMap().addEventListener(eventTypeKey, callback);
+        return this.olMap.on(eventTypeKey, callback);
     }
 
     removeListener(listenerKey) : void {

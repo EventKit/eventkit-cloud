@@ -316,7 +316,9 @@ describe('MapView component', () => {
         const addRunStub = sinon.stub(MapView.prototype, 'addRunFeatures').returns(true);
         const getViewSpy = sinon.spy(Map.prototype, 'getView');
         const fitSpy = sinon.spy(View.prototype, 'fit');
-        const onSpy = sinon.spy(Map.prototype, 'on');
+        // "on" function has a new signature that doesn't play nicely with sinon spy.
+        // Under the hood it calls onInternal which has this test behave the same way as before
+        const onSpy = sinon.spy(Map.prototype, 'onInternal');
         const generateSpy = sinon.spy(utils, 'generateDrawLayer');
         initOverlay.reset();
         setup();
@@ -845,10 +847,10 @@ describe('MapView component', () => {
 
     it('onMapClick should check for features, if multiple it should display in map popup', () => {
         // create a mock function to replace map.forEachFeatureAtPixel
-        const feature1 = new Feature(new Polygon([[-1, -1, 1, 1]]));
+        const feature1 = new Feature(new Polygon([[[-1, -1, 1, 1]]]));
         feature1.setId('1');
         feature1.setProperties({ name: 'number 1', uid: '1' });
-        const feature2 = new Feature(new Polygon([[0, 0, 1, 1]]));
+        const feature2 = new Feature(new Polygon([[[0, 0, 1, 1]]]));
         feature2.setId('2');
         feature2.setProperties({ name: 'number 2', uid: '2' });
         const forEachMock = (pixel, func) => {
@@ -879,8 +881,8 @@ describe('MapView component', () => {
         const handleClickSpy = sinon.spy(instance, 'handleClick');
         const { forEachFeatureAtPixel } = Map.prototype;
         // create a mock function to replace map.forEachFeatureAtPixel
-        const forEachMock = (pixel, func) => {
-            const feature1 = new Feature(new Polygon([[-1, -1, 1, 1]]));
+        const forEachMock: any = (pixel, func) => {
+            const feature1 = new Feature(new Polygon([[[-1, -1, 1, 1]]]));
             feature1.setId('1');
             feature1.setProperties({ name: 'number 1', uid: '1' });
             [feature1].forEach((feature) => {
