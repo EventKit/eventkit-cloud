@@ -137,9 +137,9 @@ export class MapContainer {
         return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
 
-    addListener(eventTypeKey: EventTypes, callback: (...args: any) => void) : EventsKey {
+    addListener(eventTypeKey: string, callback: (...args: any) => void) : EventsKey {
         // Wrapper of Map.on that returns a key that can be used with Observable.unByKey to remove an event
-        return this.olMap.on(eventTypeKey, callback);
+        return this.olMap.on(eventTypeKey as EventTypes, callback);
     }
 
     removeListener(listenerKey) : void {
