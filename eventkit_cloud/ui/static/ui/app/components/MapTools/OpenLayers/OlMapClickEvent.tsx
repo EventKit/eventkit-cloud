@@ -38,7 +38,10 @@ function OlMapClickEvent(props: React.PropsWithChildren<Props>) {
 
         // Calculate the actual number of pixels each tile is taking up.
         const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];
-        const tileSize = grid.getTileSize(zoom);
+        let tileSize = grid.getTileSize(zoom);
+        if (Array.isArray(tileSize)) {
+            tileSize = tileSize[0];
+        }
         const ratio = tileSize / pixelWidth;
 
         const tilePixel = [Math.floor((event.pixel[0] - upperLeftPixel[0]) * ratio),

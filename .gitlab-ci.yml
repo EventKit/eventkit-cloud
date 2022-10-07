@@ -49,7 +49,7 @@ cache:
     - alias front_diff="git diff --quiet --exit-code remotes/origin/$CI_DEFAULT_BRANCH -- eventkit_cloud/ui/static/ui/**/* config/**/* package.json .gitlab-ci.yml"
 
 .front:
-  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-4"
+  image: "${CI_REGISTRY_PATH}eventkit/eventkit-webpack:${VERSION}-5"
   before_script:
     - !reference [ .front_rules, before_script ]
     - front_diff || cp -rf config/ui/. ./
