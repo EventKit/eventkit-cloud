@@ -46,15 +46,21 @@ describe('test generic utils', () => {
     });
 
     it('getSqKm should reading geojson and calculate total area', () => {
-        const geojson = {type: 'FeatureCollection', features: []};
-        const feature = new Feature(new Polygon([[[-1, -1, 1, 1]]]));
-        const getArea = () => 5000000;
-        const transform = (from: string, to: string) => ({getArea});
-        feature.getGeometry = () => ({transform}) as unknown as Polygon;
-        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns([feature]);
-        const area = utils.getSqKm(geojson);
-        expect(area).toEqual(5);
-        readStub.restore();
+        const geojson = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[-81.7, 30.3], [-81.6, 30.3], [-81.6, 30.4], [-81.7, 30.4], [-81.7, 30.3]]]
+                    }
+                }
+            ],
+            "type": "FeatureCollection"
+        }
+
+        const area = Math.round(utils.getSqKm(geojson));
+        expect(area).toEqual(144);
     });
 
     it('getSqKmString should call getSqKm and return a formated string', () => {
