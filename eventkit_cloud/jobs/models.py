@@ -1159,3 +1159,21 @@ def clean_config(config: dict) -> dict:
         conf.pop(service_key, None)
 
     return conf
+
+
+class ProxyFormat(TimeStampedModelMixin):
+    """
+    Model for mapping proxy providers to exports with unique slug values
+    """
+
+    id = models.AutoField(primary_key=True, editable=False)
+    export_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
+    slug = LowerCaseCharField(max_length=20, unique=True, default="")
+    export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=True, on_delete=models.CASCADE)
+
+    class Meta:  # pragma: no cover
+        managed = True
+        db_table = "proxy_formats"
+
+    def __str__(self):
+        return "{0}".format(self.name)
