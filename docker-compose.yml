@@ -219,8 +219,8 @@ services:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASS=eventkit_exports
       - POSTGRES_DBNAME=eventkit_exports
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
       - "./config/postgis.conf:/settings/extra.conf"
