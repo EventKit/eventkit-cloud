@@ -1078,6 +1078,7 @@ def basic_data_provider_list_serializer(
     format_fields = ["uid", "name", "slug", "description"]
 
     proxy_formats: Dict[str, List[str]] = {}
+    # TODO: Alter to not use options
     for export_format in ExportFormat.objects.exclude(options={}).values("options", *format_fields):
         options = export_format.pop("options")
         for provider_slug in options.get("providers", []):
@@ -1175,6 +1176,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         fields = ["uid", "name", "slug", "description"]
+        # TODO: Alter to not use options
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
             options__providers__contains=obj.slug
         ).values(*fields)

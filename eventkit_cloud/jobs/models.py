@@ -410,20 +410,24 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         client: OGCAPIProcess = cast(OGCAPIProcess, self.get_service_client())
         process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
+        # TODO: Alter to not use options
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
                 # Use the value from process format which might be case sensitive,
                 # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
+                # export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
-            else:
-                providers = export_format.options.get("providers")
-                if providers:
-                    providers = list(set(providers + [self.slug]))
-                    export_format.options["providers"] = providers
-                else:
-                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+            ProxyFormat.objects.get_or_create(
+                export_format=export_format, slug=process_format.get("slug"), data_provider=self
+            )
+            # else:
+            #     providers = export_format.options.get("providers")
+            #     if providers:
+            #         providers = list(set(providers + [self.slug]))
+            #         export_format.options["providers"] = providers
+            #     else:
+            #         export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
             export_format.save()
 
     def __str__(self):
@@ -1161,19 +1165,23 @@ def clean_config(config: dict) -> dict:
     return conf
 
 
+class ProxyFormatManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("export_format")
+
+
 class ProxyFormat(TimeStampedModelMixin):
     """
     Model for mapping proxy providers to exports with unique slug values
     """
 
-    id = models.AutoField(primary_key=True, editable=False)
-    export_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
+    data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
     slug = LowerCaseCharField(max_length=20, unique=True, default="")
     export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=True, on_delete=models.CASCADE)
+    objects = ProxyFormatManager()
 
-    class Meta:  # pragma: no cover
-        managed = True
-        db_table = "proxy_formats"
+    class Meta:
+        unique_together = ("data_provider", "export_format")
 
     def __str__(self):
-        return "{0}".format(self.name)
+        return str(self.export_format.name)

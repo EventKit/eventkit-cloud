@@ -869,6 +869,7 @@ def ogc_result_task(
             return result
         else:
             # Workaround for case-sensitivity in upsteam sources.
+            # TODO: Alter to not use options
             export_format = ExportFormat.objects.get(slug=export_format_slug)
             export_format_slug = export_format.options.get("value") or export_format_slug
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")

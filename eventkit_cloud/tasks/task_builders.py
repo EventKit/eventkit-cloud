@@ -125,6 +125,7 @@ class TaskChainBuilder(object):
 
         export_tasks = {}  # {export_format : (etr_uid, export_task)}
         for export_format in formats:
+            # TODO: Alter to not use options
             logger.info(f"Setting up task for format: {export_format.name} with {export_format.options}")
             if is_supported_proxy_format(export_format, data_provider):
                 export_task = create_format_task("ogcapi-process")
@@ -293,10 +294,12 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
 
 
 def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataProvider):
+    # TODO: Alter to not use options
     return export_format.options.get("proxy") and (data_provider.slug in export_format.options.get("providers", []))
 
 
 def get_proxy_formats(data_provider: DataProvider):
+    # TODO: Alter to not use options
     return ExportFormat.objects.filter(options__providers__contains=data_provider.slug)
 
 
