@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Checkbox from '@material-ui/core/Checkbox';
-import { LicenseInfo, Props } from '../../components/AccountPage/LicenseInfo';
+import { LicenseInfo, Props, allTrue } from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
 import UserLicense from '../../components/AccountPage/UserLicense';
 
@@ -106,7 +106,7 @@ describe('LicenseInfo component', () => {
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.tes2 = false;
         wrapper.setProps(nextProps);
-        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(false);
+        expect(allTrue(nextProps.acceptedLicenses)).toBe(false);
     });
 
     it('allTrue should return true', () => {
@@ -114,6 +114,6 @@ describe('LicenseInfo component', () => {
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.test2 = true;
         wrapper.setProps(nextProps);
-        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(true);
+        expect(allTrue(nextProps.acceptedLicenses)).toBe(true);
     });
 });

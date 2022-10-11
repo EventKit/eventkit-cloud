@@ -22,7 +22,7 @@ export const Account = (props: Props) => {
     const user = useSelector((state: any) => state.user);
     const licenses = useSelector((state: any) => state.licenses);
     const drawer = useSelector((state: any) => state.drawer);
-    const [acceptedLicenses, setAcceptedLicenses] = useState(user.data.accepted_licenses || {});
+    const [acceptedLicenses, setAcceptedLicenses] = useState(user.data?.accepted_licenses || {});
     const [showSavedMessage, setShowSavedMessage] = useState(false);
     const [steps, setSteps] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
@@ -46,16 +46,16 @@ export const Account = (props: Props) => {
     };
 
     const handleAll = (event, checked) => {
-        const alicenses = { ...acceptedLicenses };
-        Object.keys(alicenses).forEach((license) => {
+        const aLicenses = { ...acceptedLicenses };
+        Object.keys(aLicenses).forEach((license) => {
             // if the command is to uncheck, make sure not to uncheck already agreed licenses
             if (!checked && user.data.accepted_licenses[license]) {
                 // do nothing;
             } else {
-                alicenses[license] = checked;
+                aLicenses[license] = checked;
             }
         });
-        setAcceptedLicenses({ ...alicenses });
+        setAcceptedLicenses({ ...aLicenses });
     };
 
     const handleSubmit = () => {
@@ -230,7 +230,7 @@ export const Account = (props: Props) => {
                             null
                         }
                         {Object.keys(user.data.user).length > 0 ?
-                            <div style={{ marginBottom: '34px' }} className="qa-Account-userInfo">
+                            <div style={{ marginBottom: '34px' }} data-testid={"userInfo"} className="qa-Account-userInfo">
                                 <UserInfo user={user.data.user} updateLink="" />
                             </div>
                             :

@@ -16,10 +16,11 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
+export const allTrue = (acceptedLicenses) => {
+    return Object.keys(acceptedLicenses).every(l => acceptedLicenses[l]);
+};
+
 export const LicenseInfo = (props: Props) => {
-    const allTrue = (acceptedLicenses) => {
-        return Object.keys(acceptedLicenses).every(l => acceptedLicenses[l]);
-    };
 
     const { colors } = props.theme.eventkit;
 
@@ -56,6 +57,7 @@ export const LicenseInfo = (props: Props) => {
                     disabled={allAgreedSaved}
                     checked={allAgreedUnsaved}
                     onChange={props.onAllCheck}
+                    data-testid={"allCheckbox"}
                 />
                 <span className="qa-LicenseInfo-All">ALL</span>
             </div>

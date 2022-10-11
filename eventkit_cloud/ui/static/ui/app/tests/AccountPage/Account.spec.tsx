@@ -1,194 +1,120 @@
-import * as enzyme from 'enzyme';
-import * as sinon from 'sinon';
-import Help from '@material-ui/icons/Help';
-import PageHeader from '../../components/common/PageHeader';
-import UserInfo from '../../components/AccountPage/UserInfo';
-import LicenseInfo from '../../components/AccountPage/LicenseInfo';
-import SaveButton from '../../components/AccountPage/SaveButton';
-import CustomScrollbar from '../../components/common/CustomScrollbar';
-import { Account, Props } from '../../components/AccountPage/Account';
+import Account from '../../components/AccountPage/Account';
+import { screen, fireEvent, within } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect";
+import * as TestUtils from '../test-utils';
+import {getDefaultTestState} from "../test-utils";
+import createTestStore from "../test-utils/createTestStore";
 
 describe('Account Component', () => {
-    const getProps = (): Props => ({
-        ...(global as any).eventkit_test_props,
-        user: {
-            data: {
-                user: {
-                    username: 'admin',
-                    email: 'admin@admin.com',
-                    date_joined: '2016-06-15T14:25:19Z',
-                    last_login: '2016-06-15T14:25:19Z',
+    const getInitialState = (defaultState) => {
+        return {
+            ...defaultState,
+            user: {
+                data: {
+                    user: {
+                        username: 'admin',
+                        email: 'admin@admin.com',
+                        date_joined: '2016-06-15T14:25:19Z',
+                        last_login: '2016-06-15T14:25:19Z',
+                    },
+                    accepted_licenses: {
+                        test1: false,
+                        test2: false,
+                    },
                 },
-                accepted_licenses: {
-                    test1: false,
-                    test2: false,
+                status: {
+                    isLoading: false,
+                    patched: false,
+                    patching: false,
+                    error: null,
                 },
             },
-            status: {
-                isLoading: false,
-                patched: false,
-                patching: false,
+            licenses: {
                 error: null,
+                fetched: false,
+                fetching: false,
+                licenses: [
+                    { slug: 'test1', name: 'testname1', text: 'testtext1' },
+                    { slug: 'test2', name: 'testname2', text: 'textext2' },
+                ],
             },
-        },
-        licenses: {
-            error: null,
-            fetched: false,
-            fetching: false,
-            licenses: [
-                { slug: 'test1', name: 'testname1', text: 'testtext1' },
-                { slug: 'test2', name: 'testname2', text: 'textext2' },
-            ],
-        },
-        getLicenses: sinon.spy(),
-        patchUser: sinon.spy(),
-        classes: { root: {} },
-    });
-
-    let wrapper;
-    let props;
-    let instance;
-    const setup = (customProps = {}) => {
-        props = { ...getProps(), ...customProps };
-        wrapper = enzyme.shallow(<Account {...props} />);
-        instance = wrapper.instance() as Account;
-    };
-
-    beforeEach(setup);
-
-    it('should call joyrideAddSteps when mounted', () => {
-        const joyrideSpy = sinon.spy(Account.prototype, 'joyrideAddSteps');
-        const mountSpy = sinon.spy(Account.prototype, 'componentDidMount');
-        setup();
-        expect(mountSpy.calledOnce).toBe(true);
-        expect(joyrideSpy.calledOnce).toBe(true);
-        joyrideSpy.restore();
-    });
-
-    it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [{
-            title: 'Welcome to the Account Settings Page',
-            text: ' example text',
-            selector: '.qa-PageHeader',
-            position: 'top',
-            style: {},
-            isFixed: true,
-        }];
-        const stateSpy = sinon.stub(instance, 'setState');
-        instance.joyrideAddSteps(steps);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ steps }));
-        stateSpy.restore();
-    });
-
-    it('handleJoyride should set state', () => {
-        const stateSpy = sinon.stub(instance, 'setState');
-        instance.handleJoyride();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ isRunning: false }));
-        stateSpy.restore();
-    });
-
-    it('callback function should stop tour if close is clicked', () => {
-        const callbackData = {
-            action: 'close',
-            index: 2,
-            step: {
-                position: 'bottom',
-                selector: '.qa-Application-MenuItem-create',
-                style: {},
-                text: 'Or to create your own DataPack.',
-                title: 'Navigate Application',
-            },
-            type: 'step:before',
-        };
-        instance.joyride = { reset: sinon.spy() };
-        const stateSpy = sinon.spy(instance, 'setState');
-        instance.callback(callbackData);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ isRunning: false }));
-        stateSpy.restore();
-    });
+        }
+    }
 
     it('should render an header with save button, and body with license info and user info', () => {
-        expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(SaveButton)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(LicenseInfo)).toHaveLength(1);
-        expect(wrapper.find(UserInfo)).toHaveLength(1);
-        expect(wrapper.find(Help)).toHaveLength(1);
+        const testState = getInitialState(getDefaultTestState());
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+        });
+        expect(screen.getByText('Account'));
+        expect(screen.getByText('Save Changes'));
+        expect(screen.getByText('testtext1'));
+        expect(screen.getByText('admin'));
     });
 
-    it('should not render license info or or user info', () => {
-        const p = getProps();
-        p.user.data.user = {} as any;
-        p.licenses.licenses = [];
-        setup(p);
-        wrapper.update();
-        expect(wrapper.find(LicenseInfo)).toHaveLength(0);
-        expect(wrapper.find(UserInfo)).toHaveLength(0);
-    });
-
-    it('should setState and call getLicenses when mounting', () => {
-        const mountSpy = sinon.spy(Account.prototype, 'componentWillMount');
-        const stateSpy = sinon.spy(Account.prototype, 'setState');
-        setup();
-        expect(mountSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ acceptedLicenses: props.user.data.accepted_licenses })).toBe(true);
-        expect(props.getLicenses.calledOnce).toBe(true);
-        mountSpy.restore();
-        stateSpy.restore();
-    });
-
-    it('should update state and setTimeout when user has been patched', () => {
-        jest.useFakeTimers();
-        const stateSpy = sinon.spy(instance, 'setState');
-        jest.spyOn(global, 'setTimeout');
-        expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
-        const nextProps = getProps();
-        nextProps.user.status.patched = true;
-        wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(true);
-        expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(false);
-        jest.runAllTimers();
-        expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(true);
-        expect((setTimeout as any).mock.calls.length).toBe(1);
-        expect((setTimeout as any).mock.calls[0][1]).toBe(3000);
-        stateSpy.restore();
+    it('should not render license info or or user info',() => {
+        const testState = getInitialState(getDefaultTestState());
+        testState.user.data.user = {};
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+        });
+        expect(screen.queryByTestId('userInfo')).toBeNull();
     });
 
     it('handleCheck should marked the license as checked/unchecked and update state', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
-        instance.handleCheck('test1', true);
-        expect(stateSpy.calledWith({ acceptedLicenses: { ...props.user.data.accepted_licenses, test1: true } }));
-        stateSpy.restore();
+        const testState = getInitialState(getDefaultTestState());
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+        });
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        fireEvent.click(test1Checkbox);
+        expect(test1Checkbox).toBeChecked();
     });
 
-    it('handleAll should check all as checked/unchecked and update the state', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
-        instance.handleAll({}, true);
-        expect(stateSpy.calledWith({ acceptedLicenses: { test1: true, test2: true } }));
-        stateSpy.restore();
+    it('handleAll should check all as checked/unchecked', () => {
+        const testState = getInitialState(getDefaultTestState());
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+        });
+
+        const allCheckbox = within(screen.getByTestId('allCheckbox')).getByRole('checkbox');
+        fireEvent.click(allCheckbox);
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test1Checkbox).toBeChecked();
+        expect(test2Checkbox).toBeChecked();
     });
 
     it('handleAll should not uncheck already agreed licenses', () => {
-        const p = getProps();
-        p.user.data.accepted_licenses.test1 = true;
-        setup(p);
-        const stateSpy = sinon.spy(instance, 'setState');
-        expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: false });
-        wrapper.setState({ acceptedLicenses: { test1: true, test2: true } });
-        expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: true });
-        instance.handleAll({}, false);
-        expect(stateSpy.calledWith({ test1: true, test2: false }));
-        stateSpy.restore();
+        const testState = getInitialState(getDefaultTestState());
+        testState.user.data.accepted_licenses = {
+            test1: true,
+            test2: false,
+        };
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+        });
+
+        const allCheckbox = within(screen.getByTestId('allCheckbox')).getByRole('checkbox');
+        fireEvent.click(allCheckbox);
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        expect(test1Checkbox).toBeChecked();
     });
 
     it('handleSubmit should call patchUser', () => {
-        expect(props.patchUser.notCalled).toBe(true);
-        instance.handleSubmit();
-        expect(props.patchUser.calledWith(wrapper.state().acceptedLicenses, props.user.data.user.username)).toBe(true);
+        const testState = getInitialState(getDefaultTestState());
+        TestUtils.renderComponent(<Account />, {
+            initialState: testState,
+            store: createTestStore(testState)
+        });
+
+        const allCheckbox = within(screen.getByTestId('allCheckbox')).getByRole('checkbox');
+        fireEvent.click(allCheckbox);
+
+        const saveButton = screen.getByText('Save Changes');
+        fireEvent.click(saveButton);
     });
 });

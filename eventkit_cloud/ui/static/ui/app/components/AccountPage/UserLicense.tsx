@@ -76,6 +76,7 @@ export const UserLicense = (props: Props) => {
                             checked={props.checked}
                             onChange={(e, v) => { props.onCheck(props.license.slug, v); }}
                             disabled={props.disabled}
+                            data-testid={`${props.license.name}-checkbox`}
                         />
                         <span className="qa-UserLicense-agreement" style={{ lineHeight: '24px' }}>
                                 {'I agree to the '}<strong>{props.license.name}</strong>
