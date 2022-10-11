@@ -1,8 +1,8 @@
-import { mount } from 'enzyme';
 import * as sinon from 'sinon';
-import NavigationCheck from '@material-ui/icons/Check';
-import Button from '@material-ui/core/Button';
 import SaveButton from '../../components/AccountPage/SaveButton';
+import { screen, fireEvent } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect";
+import * as TestUtils from '../test-utils';
 
 describe('SaveButton component', () => {
     const getProps = () => ({
@@ -12,59 +12,51 @@ describe('SaveButton component', () => {
         handleSubmit: sinon.spy(),
     });
 
-    const getMountedWrapper = props => mount(<SaveButton {...props} />);
-
     it('should render a disabled save button', () => {
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(Button)).toHaveLength(1);
-        expect(wrapper.find(Button).props().disabled).toBe(true);
-        expect(wrapper.find(Button).text()).toEqual('Save Changes');
+        TestUtils.renderComponent(<SaveButton {...props}/>);
+
+        const button = screen.getByText('Save Changes').closest('button');
+        expect(button).toBeDisabled();
     });
 
     it('should render a not disabled save button', () => {
         const props = getProps();
         props.saveDisabled = false;
-        const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(Button)).toHaveLength(1);
-        expect(wrapper.find(Button).props().disabled).toBe(false);
+        TestUtils.renderComponent(<SaveButton {...props}/>);
+
+        const button = screen.getByText('Save Changes').closest('button');
+        expect(button).not.toBeDisabled();
     });
 
     it('should render the "saved" button', () => {
         const props = getProps();
         props.saved = true;
-        const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(Button)).toHaveLength(1);
-        expect(wrapper.find(NavigationCheck)).toHaveLength(1);
-        expect(wrapper.find(Button).text()).toEqual('Saved');
-    });
+        TestUtils.renderComponent(<SaveButton {...props}/>);
 
-    it('should switch to the "saved" button when props are updated', () => {
-        const props = getProps();
-        const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(Button).text()).toEqual('Save Changes');
-        const nextProps = getProps();
-        nextProps.saved = true;
-        wrapper.setProps(nextProps);
-        expect(wrapper.find(Button).text()).toEqual('Saved');
+        expect(screen.getByText('Saved'));
     });
 
     it('should call handleSubmit', () => {
         const props = getProps();
         props.saveDisabled = false;
         props.handleSubmit = sinon.spy();
-        const wrapper = getMountedWrapper(props);
+        TestUtils.renderComponent(<SaveButton {...props}/>);
+
+        const button = screen.getByText('Save Changes').closest('button');
         expect(props.handleSubmit.notCalled).toBe(true);
-        wrapper.find(Button).find('button').simulate('click');
+        fireEvent.click(button);
         expect(props.handleSubmit.calledOnce).toBe(true);
     });
 
     it('should not call handleSubmit when disabled', () => {
         const props = getProps();
         props.handleSubmit = sinon.spy();
-        const wrapper = getMountedWrapper(props);
+        TestUtils.renderComponent(<SaveButton {...props}/>);
+
+        const button = screen.getByText('Save Changes').closest('button');
         expect(props.handleSubmit.notCalled).toBe(true);
-        wrapper.find(Button).find('button').simulate('click');
+        fireEvent.click(button);
         expect(props.handleSubmit.notCalled).toBe(true);
     });
 });

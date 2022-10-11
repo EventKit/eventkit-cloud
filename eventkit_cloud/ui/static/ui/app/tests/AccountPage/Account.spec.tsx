@@ -2,7 +2,7 @@ import Account from '../../components/AccountPage/Account';
 import { screen, fireEvent, within } from '@testing-library/react';
 import "@testing-library/jest-dom/extend-expect";
 import * as TestUtils from '../test-utils';
-import {getDefaultTestState} from "../test-utils";
+import { getDefaultTestState } from "../test-utils";
 import createTestStore from "../test-utils/createTestStore";
 
 describe('Account Component', () => {

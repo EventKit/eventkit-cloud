@@ -14,6 +14,7 @@ export const renderComponent = (component: any, {
     initialState = getDefaultTestState(),
     store = createTestStore(initialState),
     appContextConfig = {} as ApplicationContext,
+    includeToastContainer = true,
 } = {}) => {
     return {
         ...render(
@@ -21,7 +22,7 @@ export const renderComponent = (component: any, {
                 <AppConfigProvider value={appContextConfig}>
                     <MuiThemeProvider theme={theme}>
                         {component}
-                        <ToastContainer />
+                        {includeToastContainer && <ToastContainer />}
                     </MuiThemeProvider>
                 </AppConfigProvider>
             </Provider>
