@@ -24,6 +24,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     License,
     Projection,
+    ProxyFormat,
     Region,
     RegionalJustification,
     RegionalPolicy,
@@ -34,16 +35,6 @@ from eventkit_cloud.jobs.models import (
 )
 
 logger = logging.getLogger(__name__)
-
-admin.site.register(ExportFormat)
-admin.site.register(Projection)
-admin.site.register(DataProviderType)
-admin.site.register(DatamodelPreset)
-admin.site.register(License)
-admin.site.register(DataProviderTask)
-admin.site.register(Topic)
-admin.site.register(StyleFile)
-admin.site.register(UserFavoriteProduct)
 
 
 class JobAdmin(OSMGeoAdmin):
@@ -126,6 +117,15 @@ class ExportConfigAdmin(admin.ModelAdmin):
 
     search_fields = ["uid", "name", "user__username"]
     list_display = ["uid", "name", "user", "config_type", "published", "created_at"]
+
+
+class ProxyFormatAdmin(admin.ModelAdmin):
+    """
+    Admin model for editing export configurations in the admin interface.
+    """
+
+    search_fields = ["data_provider__slug", "slug", "export_format__name"]
+    list_display = ["data_provider", "slug", "export_format"]
 
 
 class YAMLWidget(forms.widgets.Textarea):
@@ -370,10 +370,19 @@ class RegionalJustificationAdmin(admin.ModelAdmin):
         return False
 
 
-# register the new admin models
+admin.site.register(ExportFormat)
+admin.site.register(Projection)
+admin.site.register(DataProviderType)
+admin.site.register(DatamodelPreset)
+admin.site.register(License)
+admin.site.register(DataProviderTask)
+admin.site.register(Topic)
+admin.site.register(StyleFile)
+admin.site.register(UserFavoriteProduct)
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
+admin.site.register(ProxyFormat, ProxyFormatAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
 admin.site.register(Region, RegionAdmin)
