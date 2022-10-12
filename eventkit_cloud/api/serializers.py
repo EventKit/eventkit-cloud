@@ -1077,21 +1077,16 @@ def basic_data_provider_list_serializer(
         raise Exception("Trying to serialize more than one providers without many=True.")
 
     format_fields = ["uid", "name", "slug", "description"]
+
     proxy_formats: Dict[str, List[str]] = {}
     for proxy_format in ProxyFormat.objects.all():
-        export_format: ExportFormat = proxy_format.export_format
-        export_format_str = json.dumps(
-            {
-                "uid": f"{export_format.uid}",
-                "name": f"{export_format.name}",
-                "slug": f"{export_format.slug}",
-                "description": f"{export_format.description}",
-            }
-        )
-        if proxy_formats.get(proxy_format.data_provider.slug):
-            proxy_formats[proxy_format.data_provider.slug] += [export_format_str]
-        else:
-            proxy_formats[proxy_format.data_provider.slug] = [export_format_str]
+        provider_slug = proxy_format.data_provider.slug
+        for export_format in ExportFormat.objects.filter(proxyformat=proxy_format).values("options", *format_fields):
+            export_format.pop("options")
+            if proxy_formats.get(provider_slug):
+                proxy_formats[provider_slug] += [export_format]
+            else:
+                proxy_formats[provider_slug] = [export_format]
 
     serialized_providers = [
         basic_data_provider_serializer(
