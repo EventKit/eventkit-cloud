@@ -1177,9 +1177,9 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         fields = ["uid", "name", "slug", "description"]
-        proxy_format: ProxyFormat = ProxyFormat.objects.get(slug__contains=obj.slug)
+        proxy_format: ProxyFormat = ProxyFormat.objects.get(data_provider=obj)
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
-            id=proxy_format.export_format.id
+            proxyformat=proxy_format
         ).values(*fields)
         return export_formats.distinct()
 
