@@ -36,7 +36,7 @@ from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
-from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, clean_config
+from eventkit_cloud.jobs.models import DataProvider, ExportFormat, MapImageSnapshot, ProxyFormat, clean_config
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.exceptions import AreaLimitExceededError, CancelException, DeleteException
@@ -869,9 +869,8 @@ def ogc_result_task(
             return result
         else:
             # Workaround for case-sensitivity in upsteam sources.
-            # TODO: Alter to not use options
-            export_format = ExportFormat.objects.get(slug=export_format_slug)
-            export_format_slug = export_format.options.get("value") or export_format_slug
+            proxy: ProxyFormat = ProxyFormat.objects.get(slug=export_format_slug)
+            export_format_slug = proxy.slug or export_format_slug
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
 
     download_path = get_ogcapi_data(

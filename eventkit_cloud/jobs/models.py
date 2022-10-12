@@ -410,24 +410,15 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         client: OGCAPIProcess = cast(OGCAPIProcess, self.get_service_client())
         process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
-        # TODO: Alter to not use options
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
                 # Use the value from process format which might be case sensitive,
                 # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                # export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             ProxyFormat.objects.get_or_create(
                 export_format=export_format, slug=process_format.get("slug"), data_provider=self
             )
-            # else:
-            #     providers = export_format.options.get("providers")
-            #     if providers:
-            #         providers = list(set(providers + [self.slug]))
-            #         export_format.options["providers"] = providers
-            #     else:
-            #         export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
             export_format.save()
 
     def __str__(self):
@@ -1176,7 +1167,7 @@ class ProxyFormat(TimeStampedModelMixin):
     """
 
     data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
-    slug = LowerCaseCharField(max_length=20, unique=True, default="")
+    slug = LowerCaseCharField(max_length=20, default="")
     export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=True, on_delete=models.CASCADE)
     objects = ProxyFormatManager()
 

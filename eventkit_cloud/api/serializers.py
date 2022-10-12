@@ -44,6 +44,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     License,
     Projection,
+    ProxyFormat,
     Region,
     RegionalJustification,
     RegionalPolicy,
@@ -1076,16 +1077,21 @@ def basic_data_provider_list_serializer(
         raise Exception("Trying to serialize more than one providers without many=True.")
 
     format_fields = ["uid", "name", "slug", "description"]
-
     proxy_formats: Dict[str, List[str]] = {}
-    # TODO: Alter to not use options
-    for export_format in ExportFormat.objects.exclude(options={}).values("options", *format_fields):
-        options = export_format.pop("options")
-        for provider_slug in options.get("providers", []):
-            if proxy_formats.get(provider_slug):
-                proxy_formats[provider_slug] += [export_format]
-            else:
-                proxy_formats[provider_slug] = [export_format]
+    for proxy_format in ProxyFormat.objects.all():
+        export_format: ExportFormat = proxy_format.export_format
+        export_format_str = json.dumps(
+            {
+                "uid": f"{export_format.uid}",
+                "name": f"{export_format.name}",
+                "slug": f"{export_format.slug}",
+                "description": f"{export_format.description}",
+            }
+        )
+        if proxy_formats.get(proxy_format.data_provider.slug):
+            proxy_formats[proxy_format.data_provider.slug] += [export_format_str]
+        else:
+            proxy_formats[proxy_format.data_provider.slug] = [export_format_str]
 
     serialized_providers = [
         basic_data_provider_serializer(
@@ -1176,9 +1182,9 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         fields = ["uid", "name", "slug", "description"]
-        # TODO: Alter to not use options
+        proxy_format: ProxyFormat = ProxyFormat.objects.get(slug__contains=obj.slug)
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
-            options__providers__contains=obj.slug
+            id=proxy_format.export_format.id
         ).values(*fields)
         return export_formats.distinct()
 
