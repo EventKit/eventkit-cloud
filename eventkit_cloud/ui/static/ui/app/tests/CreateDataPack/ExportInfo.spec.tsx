@@ -503,12 +503,13 @@ describe('ExportInfo screen', () => {
         fireEvent.click(rasterFilter);
         fireEvent.click(sortFilter);
 
-        expect(screen.queryByText("Raster")).toBeInTheDocument();
+        // Capitalization of (Type) is done via text-transform css, and doesn't appear applied in tests
+        expect(screen.queryByText("type: Raster")).toBeInTheDocument();
 
         const rasterFilterChip = component.container.querySelector('.MuiChip-deleteIcon');
         fireEvent.click(rasterFilterChip);
 
-        expect(screen.queryByText("Raster")).toBeNull();
+        expect(screen.queryByText("type: Raster")).toBeNull();
     });
 
     it('should close the filter section when you click apply', () => {
