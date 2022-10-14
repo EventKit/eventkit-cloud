@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -21,9 +21,11 @@ from eventkit_cloud.jobs.models import (
     Job,
     JobPermission,
     JobPermissionLevel,
+    ProxyFormat,
     Region,
     StyleFile,
 )
+from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 
 logger = logging.getLogger(__name__)
 
@@ -490,6 +492,34 @@ class TestDataProvider(TestCase):
         prov_type.use_bbox = True
         self.data_provider.export_provider_type = prov_type
         self.assertEqual(self.data_provider.get_use_bbox(), True)
+
+    def test_update_export_formats(self):
+        self.data_provider.type = GeospatialDataType.VECTOR.value
+        prov_type: DataProviderType
+        prov_type, prov_created = DataProviderType.objects.get_or_create(type_name="ogcapi-process")
+        export_format, ef_created = ExportFormat.get_or_create(
+            **{"name": "test", "slug": "test", "description": "test"}
+        )
+        prov_type.supported_formats.set([export_format])
+        self.data_provider.export_provider_type = prov_type
+
+        mock_client = MagicMock()
+        mock_client.get_process_formats.return_value = [
+            {
+                "id": "export-eventkit-bundle",
+                "inputs": {"products": {"file_format": "gpkg"}},
+                "outputs": {"output_name": {"format": {"mediaType": "application/zip"}}},
+                "area": {"name": "geojson", "type": "geojson"},
+                "output_file_ext": ".gpkg",
+                "download_credentials": {"cred_var": "user:pass"},
+                "slug": "testing",
+            }
+        ]
+        self.data_provider.get_service_client = lambda: mock_client
+        self.data_provider.update_export_formats()
+        proxy = ProxyFormat.objects.get(data_provider=self.data_provider)
+        self.assertIsNotNone(proxy)
+        print(f"{proxy}")
 
 
 class TestStyleFile(TestCase):
