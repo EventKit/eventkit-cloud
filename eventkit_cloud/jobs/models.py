@@ -414,7 +414,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
                 # Use the value from process format which might be case sensitive,
-                # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
+                # TODO: will likely run into issues if two remote services use same spelling and are case sensitive.
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             # TODO: Need to rework or create else as not every process_format has a slug
             ProxyFormat.objects.get_or_create(
