@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {useEffect, useRef, useState} from 'react';
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import { useEffect, useRef, useState } from 'react';
+import { createStyles, Theme, withStyles, withTheme } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -13,18 +13,18 @@ import Star from "@material-ui/icons/Star";
 import StarBorder from "@material-ui/icons/StarBorder";
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
-import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import { arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels } from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
-import {connect, useDispatch} from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
 import debounce from 'lodash/debounce';
 import FormatSelector from "./FormatSelector";
-import {Compatibility} from '../../utils/enums';
+import { Compatibility } from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import {IncompatibilityInfo} from "./ExportInfo";
-import {MapLayer} from "./CreateExport";
+import { IncompatibilityInfo } from "./ExportInfo";
+import { MapLayer } from "./CreateExport";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
 import ProviderPreviewMap from "../MapTools/ProviderPreviewMap";
@@ -32,13 +32,13 @@ import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/Icon";
-import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
-import {useAppContext} from "../ApplicationContext";
-import {useJobValidationContext} from "./context/JobValidation";
-import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
-import {renderIf} from "../../utils/renderIf";
+import { DepsHashers, useEffectOnMount, useWindowSize } from "../../utils/hooks/hooks";
+import { useAppContext } from "../ApplicationContext";
+import { useJobValidationContext } from "./context/JobValidation";
+import { RegionJustification } from "../StatusDownloadPage/RegionJustification";
+import { renderIf } from "../../utils/renderIf";
 import ZoomOutAtZoomLevel from "../MapTools/OpenLayers/ZoomOutAtZoomLevel";
-import {updateProviderFavorite} from '../../actions/providerActions'
+import { updateProviderFavorite } from '../../actions/providerActions'
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -173,6 +173,7 @@ export function DataProvider(props: Props) {
     const debouncerRef = useRef(null);
     const estimateDebouncer = (...args) => debouncerRef.current(...args);
     const dispatch = useDispatch();
+    const size = useWindowSize();
 
     const setProviderFavorite = (slug, favorite) => {
         dispatch(updateProviderFavorite(slug, favorite));
@@ -538,6 +539,18 @@ export function DataProvider(props: Props) {
         setDisplayJustification(true);
     }
 
+    function getLastDownloadContent() {
+        if (provider.latest_download == null) {
+            return `No downloads`;
+        }
+
+        if (provider.latest_download == 0) {
+            return 'Less than a week ago';
+        }
+
+        return `${provider.latest_download} week(s) ago`;
+    }
+
     const backgroundColor = (props.alt) ? colors.secondary : colors.white;
 
     function getRef() {
@@ -608,10 +621,19 @@ export function DataProvider(props: Props) {
                         secondary={secondary}
                     />
 
-
+                    <div
+                        style={{ display: "flex", justifyContent: "flex-end", position: "relative", columnGap: '80px', alignItems: 'center' }}
+                    >
+                        {size.width > 900 && <div>
+                        {(!!provider.download_count) ? <span style={{ fontSize: "0.9em" }}>{provider.download_count}</span> :
+                        <span style={{ fontSize: "0.9em" }}>0</span>}
+                    </div>}
+                        {size.width > 900 && <div style={{ width: '150px', display: 'flex', justifyContent: 'center' }}>
+                        <span style={{fontSize: "0.9em"}}>{getLastDownloadContent()}</span>
+                    </div>}
                     <ProviderStatusCheck
                         id="ProviderStatus"
-                        baseStyle={{marginRight: '40px'}}
+                        baseStyle={{marginRight: '30px'}}
                         availability={providerInfo.availability}
                         overArea={overArea}
                         overSize={overSize}
@@ -622,6 +644,7 @@ export function DataProvider(props: Props) {
                         providerInfo={providerInfo}
                         geojson={props.geojson}
                     />
+                    </div>
                     <span className="qa-expandTarget">
                     {isOpen ?
                         <ExpandLess
