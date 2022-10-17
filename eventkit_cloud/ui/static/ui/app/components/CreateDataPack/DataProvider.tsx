@@ -622,9 +622,9 @@ export function DataProvider(props: Props) {
                     />
 
                     <div
-                        style={{ display: "flex", justifyContent: "flex-end", position: "relative", columnGap: '80px', alignItems: 'center' }}
+                        style={{ display: "flex", justifyContent: "flex-end", position: "relative", columnGap: '70px', alignItems: 'center' }}
                     >
-                        {size.width > 900 && <div>
+                        {size.width > 900 && <div style={{ width: '60px', justifyContent: 'center', display: 'flex'}}>
                         {(!!provider.download_count) ? <span style={{ fontSize: "0.9em" }}>{provider.download_count}</span> :
                         <span style={{ fontSize: "0.9em" }}>0</span>}
                     </div>}
