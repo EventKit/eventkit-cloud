@@ -294,7 +294,7 @@ def create_export_task_record(task_name=None, export_provider_task=None, worker=
 
 
 def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataProvider):
-    return ProxyFormat.objects.get(export_format=export_format, data_provider=data_provider)
+    return ProxyFormat.objects.filter(export_format=export_format, data_provider=data_provider).first()
 
 
 def get_proxy_formats(data_provider: DataProvider):

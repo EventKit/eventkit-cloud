@@ -506,176 +506,21 @@ class TestDataProvider(TestCase):
         mock_client = MagicMock()
         # TODO: This json is the INPUT to this method, not the output; rework needed
         mock_client.get_process_formats.return_value = [
-            {
-                "id": "export-eventkit-bundle",
-                "title": "Export Eventkit Bundle",
-                "version": 0,
-                "jobControlOptions": [],
-                "outputTransmission": ["reference"],
-                "inputs": {
-                    "product": {
-                        "description": "The short name of the product type to export.",
-                        "schema": {
-                            "type": "object",
-                            "oneOf": [
-                                {
-                                    "properties": {
-                                        "file_format": {
-                                            "enum": ["shp", "gpx", "gpkg", "kml", "sqlite"],
-                                            "oneOf": [
-                                                {
-                                                    "title": "ESRI Shapefile Format",
-                                                    "const": "shp",
-                                                    "description": "Esri Shapefile (OSM Schema)",
-                                                },
-                                                {
-                                                    "title": "GPX Format",
-                                                    "const": "gpx",
-                                                    "description": "GPS Exchange Format",
-                                                },
-                                                {"title": "Geopackage", "const": "gpkg", "description": "GeoPackage"},
-                                                {
-                                                    "title": "KML Format",
-                                                    "const": "kml",
-                                                    "description": "Google Earth KMZ",
-                                                },
-                                                {
-                                                    "title": "SQLITE Format",
-                                                    "const": "sqlite",
-                                                    "description": "SQlite SQL",
-                                                },
-                                            ],
-                                        },
-                                        "id": {"type": "string", "const": "sample"},
-                                    },
-                                    "title": "OpenStreetMap Data (Themes)",
-                                    "required": ["id", "file_format"],
-                                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\r\nData is grouped into separate tables (e.g. water, roads...).",
-                                    "id": 2,
-                                    "uid": "6f5771ce-587d-4c77-a4cd-aaf01a305dee",
-                                    "name": "OpenStreetMap Data (Themes)",
-                                    "slug": "osm",
-                                    "label": "null",
-                                    "preview_url": "",
-                                    "service_copyright": "",
-                                    "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\r\nData is grouped into separate tables (e.g. water, roads...).",
-                                    "type": "object",
-                                    "thumbnail_url": "",
-                                    "license": "null",
-                                    "metadata": "null",
-                                    "model_url": "http://host.docker.internal/api/providers/osm",
-                                    "footprint_url": "null",
-                                    "max_data_size": "null",
-                                    "max_selection": 250.0,
-                                    "use_bbox": True,
-                                    "hidden": False,
-                                    "data_type": "vector",
-                                    "created_at": "2017-08-01T15:53:09.206000Z",
-                                    "updated_at": "2017-08-01T15:53:09.206000Z",
-                                    "layer": "",
-                                    "level_from": 0,
-                                    "level_to": 10,
-                                    "zip": True,
-                                    "display": True,
-                                    "export_provider_type": 2,
-                                    "attribute_class": "null",
-                                    "download_count": 0,
-                                    "latest_download": "null",
-                                    "favorite": False,
-                                }
-                            ],
-                        },
-                        "minOccurs": 1,
-                        "maxOccurs": 1,
-                        "keywords": [],
-                        "metadata": [],
-                    },
-                    "geometry": {
-                        "description": "The short name of the product type to export.",
-                        "keywords": ["geometry", "bbox", "wkt", "geojson"],
-                        "metadata": [],
-                        "schema": {
-                            "type": "object",
-                            "minOccurs": 1,
-                            "maxOccurs": 1,
-                            "required": ["input", "format"],
-                            "oneOf": [
-                                {
-                                    "title": "Bounding Box",
-                                    "description": "A well known text geometry representation of the area to export.",
-                                    "properties": {
-                                        "input": {"type": "array", "oneOf": [{"minItems": 4, "maxItems": 4}]},
-                                        "format": {"type": "string", "enum": ["bbox"], "const": "bbox"},
-                                    },
-                                },
-                                {
-                                    "title": "Well-Known Text",
-                                    "description": "A well known text geometry representation of the area to export",
-                                    "properties": {
-                                        "format": {"type": "string", "enum": ["wkt"], "const": "wkt"},
-                                        "input": {"type": "string"},
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                },
-                "outputs": {
-                    "archive_format": {
-                        "title": "Output Archive",
-                        "description": "The desired output archive format (i.e. zipfile)",
-                        "keywords": [],
-                        "metadata": [],
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "transmissionMode": {"enum": ["reference"], "const": "reference"},
-                                "output": {
-                                    "oneOf": [
-                                        {
-                                            "const": "zip",
-                                            "title": "ZIP file",
-                                            "contentMediaType": "application/zip",
-                                            "type": "string",
-                                        }
-                                    ],
-                                    "enum": ["zip"],
-                                },
-                            },
-                        },
-                    }
-                },
-                "links": [
-                    {
-                        "href": "http://localhost:8000/v1/processes/export-eventkit-bundle/",
-                        "rel": "process-desc",
-                        "type": "application/json",
-                        "title": "The endpoint to create a new bundle.",
-                        "hreflang": "en",
-                    },
-                    {
-                        "href": "http://localhost:8000/v1/processes/",
-                        "rel": "processes",
-                        "type": "application/json",
-                        "title": "The endpoint to create a new bundle.",
-                        "hreflang": "en",
-                    },
-                    {
-                        "href": "http://localhost:8000/v1/jobs/",
-                        "rel": "execute",
-                        "type": "application/json",
-                        "title": "The endpoint to create a new bundle.",
-                        "hreflang": "en",
-                    },
-                ],
-            }
+            {"name": "ESRI Shapefile Format", "slug": "shp", "description": "Esri Shapefile (OSM Schema)"},
+            {"name": "GPX Format", "slug": "gpx", "description": "GPS Exchange Format"},
+            {"name": "Geopackage", "slug": "gpkg", "description": "GeoPackage"},
+            {"name": "KML Format", "slug": "kml", "description": "Google Earth KMZ"},
+            {"name": "SQLITE Format", "slug": "sqlite", "description": "SQlite SQL"},
+            {"name": "test", "slug": "test", "description": "test"},  # This is the one we are looking for in this test
         ]
         self.data_provider.get_service_client = lambda: mock_client
         self.data_provider.update_export_formats()
 
-        proxy: ProxyFormat = ProxyFormat.objects.get(data_provider=self.data_provider)
+        proxy: ProxyFormat = ProxyFormat.objects.get(export_format=export_format, data_provider=self.data_provider)
         self.assertIsNotNone(proxy)
-        print(f"Name: {proxy}, Slug: {proxy.slug}, Export: {proxy.export_format}, Provider: {proxy.data_provider}")
+        self.assertEqual(proxy.slug, export_format.slug)
+        self.assertEqual(proxy.export_format, export_format)
+        self.assertEqual(proxy.data_provider, self.data_provider)
 
 
 class TestStyleFile(TestCase):
