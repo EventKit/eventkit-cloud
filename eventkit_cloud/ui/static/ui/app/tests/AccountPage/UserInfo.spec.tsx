@@ -1,6 +1,7 @@
-import { shallow } from 'enzyme';
 import { UserInfo } from '../../components/AccountPage/UserInfo';
-import UserInfoTableRow from '../../components/AccountPage/UserInfoTableRow';
+import { screen } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect";
+import * as TestUtils from '../test-utils';
 
 describe('UserInfo component', () => {
     const getProps = () => ({
@@ -18,22 +19,15 @@ describe('UserInfo component', () => {
 
     it('should display a section title, update link, and table with user data', () => {
         const props = getProps();
-        const wrapper = shallow(<UserInfo {...props} />);
-        expect(wrapper.find('h4')).toHaveLength(1);
-        expect(wrapper.find('h4').text()).toEqual('Personal Information');
-        expect(wrapper.find('div').at(1).text()).toEqual('To update your personal details, please visit here');
-        expect(wrapper.find('a')).toHaveLength(1);
-        expect(wrapper.find('a').props().href).toEqual(props.updateLink);
-        expect(wrapper.find('table')).toHaveLength(1);
-        expect(wrapper.find('tbody')).toHaveLength(1);
-        expect(wrapper.find(UserInfoTableRow)).toHaveLength(6);
+        TestUtils.renderComponent(<UserInfo {...props} />)
+        expect(screen.getByText('Personal Information'));
+        expect(screen.getByText('here')).toHaveAttribute('href', 'http://www.google.com');
     });
 
     it('should not display the update link', () => {
         const props = getProps();
         props.updateLink = '';
-        const wrapper = shallow(<UserInfo {...props} />);
-        expect(wrapper.find('.qa-UserInfo-personalDetails')).toHaveLength(0);
-        expect(wrapper.find('a')).toHaveLength(0);
+        TestUtils.renderComponent(<UserInfo {...props} />)
+        expect(screen.queryByText('here')).toBeNull();
     });
 });

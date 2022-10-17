@@ -1,9 +1,8 @@
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
-import Checkbox from '@material-ui/core/Checkbox';
-import { LicenseInfo, Props } from '../../components/AccountPage/LicenseInfo';
-import Warning from '../../components/AccountPage/Warning';
-import UserLicense from '../../components/AccountPage/UserLicense';
+import { LicenseInfo, Props, allTrue } from '../../components/AccountPage/LicenseInfo';
+import { screen, within } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect";
+import * as TestUtils from '../test-utils';
 
 describe('LicenseInfo component', () => {
     const getProps = (): Props => (
@@ -22,98 +21,88 @@ describe('LicenseInfo component', () => {
         }
     );
 
-    let props;
-    let wrapper;
-    const setup = (customProps = {}) => {
-        props = { ...getProps(), ...customProps };
-        wrapper = shallow(<LicenseInfo {...props} />);
-    };
-
-    beforeEach(setup);
-
     it('should render a title, subtitle, all checkboxes, two UserLicenses, and the agreement warning', () => {
-        expect(wrapper.find('h4')).toHaveLength(1);
-        expect(wrapper.find('h4').text()).toEqual('Licenses and Terms of Use');
-        expect(wrapper.find('div').at(1).text())
-            .toEqual('Usage of this product and all assets requires agreement to the following legalities:');
-        expect(wrapper.find(Warning)).toHaveLength(1);
-        expect(wrapper.find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(false);
-        expect(wrapper.find('.qa-LicenseInfo-All').text()).toEqual('ALL');
-        expect(wrapper.find(UserLicense)).toHaveLength(2);
+        const props = { ...getProps() };
+        TestUtils.renderComponent(<LicenseInfo {...props}/>)
+        expect(screen.getByText('Licenses and Terms of Use'));
+        expect(screen.getByText('Usage of this product and all assets requires agreement to the following legalities:'));
+        expect(screen.getByText('ALL'));
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test2Checkbox).not.toBeChecked();
+        expect(test1Checkbox).not.toBeChecked();
     });
 
     it('one of the UserLicenses should be checked and disabled', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.user.data.accepted_licenses.test1 = true;
         nextProps.acceptedLicenses.test1 = true;
-        wrapper.setProps(nextProps);
-        const userOne = wrapper.find(UserLicense).at(0).shallow();
-        const userTwo = wrapper.find(UserLicense).at(1).shallow();
-        expect(userOne.props().checked).toBe(true);
-        expect(userOne.props().disabled).toBe(true);
-        expect(userTwo.props().checked).toBe(false);
-        expect(userTwo.props().disabled).toBe(false);
+        TestUtils.renderComponent(<LicenseInfo {...nextProps}/>)
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test2Checkbox).not.toBeChecked();
+        expect(test2Checkbox).not.toBeDisabled();
+        expect(test1Checkbox).toBeChecked();
+        expect(test1Checkbox).toBeDisabled();
     });
 
     it('one of the UserLicenses should be checked but not disabled', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.acceptedLicenses.test1 = true;
-        wrapper.setProps(nextProps);
-        const userOne = wrapper.find(UserLicense).at(0).shallow();
-        const userTwo = wrapper.find(UserLicense).at(1).shallow();
-        expect(userOne.props().checked).toBe(true);
-        expect(userOne.props().disabled).toBe(false);
-        expect(userTwo.props().checked).toBe(false);
-        expect(userTwo.props().disabled).toBe(false);
+        TestUtils.renderComponent(<LicenseInfo {...nextProps}/>)
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test2Checkbox).not.toBeChecked();
+        expect(test2Checkbox).not.toBeDisabled();
+        expect(test1Checkbox).toBeChecked();
+        expect(test1Checkbox).not.toBeDisabled();
     });
 
     it('should have all checkboxes checked but not disabled', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.test2 = true;
-        wrapper.setProps(nextProps);
-        const userOne = wrapper.find(UserLicense).at(0).shallow();
-        const userTwo = wrapper.find(UserLicense).at(1).shallow();
-        expect(wrapper.find(Checkbox).props().checked).toBe(true);
-        expect(wrapper.find(Checkbox).props().disabled).toBe(false);
-        expect(userOne.props().checked).toBe(true);
-        expect(userOne.props().disabled).toBe(false);
-        expect(userTwo.props().checked).toBe(true);
-        expect(userTwo.props().disabled).toBe(false);
+        TestUtils.renderComponent(<LicenseInfo {...nextProps}/>)
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test2Checkbox).toBeChecked();
+        expect(test2Checkbox).not.toBeDisabled();
+        expect(test1Checkbox).toBeChecked();
+        expect(test1Checkbox).not.toBeDisabled();
     });
 
     it('should have all checkboxes checked and disabled and not show the usage warning', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.test2 = true;
         nextProps.user.data.accepted_licenses.test1 = true;
         nextProps.user.data.accepted_licenses.test2 = true;
-        wrapper.setProps(nextProps);
-        const userOne = wrapper.find(UserLicense).at(0).shallow();
-        const userTwo = wrapper.find(UserLicense).at(1).shallow();
-        expect(wrapper.find(Warning)).toHaveLength(0);
-        expect(wrapper.find(Checkbox).at(0).props().checked).toBe(true);
-        expect(wrapper.find(Checkbox).at(0).props().disabled).toBe(true);
-        expect(userOne.props().checked).toBe(true);
-        expect(userOne.props().disabled).toBe(true);
-        expect(userTwo.props().checked).toBe(true);
-        expect(userTwo.props().disabled).toBe(true);
+        TestUtils.renderComponent(<LicenseInfo {...nextProps}/>)
+
+        const test1Checkbox = within(screen.getByTestId('testname1-checkbox')).getByRole('checkbox');
+        const test2Checkbox = within(screen.getByTestId('testname2-checkbox')).getByRole('checkbox');
+        expect(test2Checkbox).toBeChecked();
+        expect(test2Checkbox).toBeDisabled();
+        expect(test1Checkbox).toBeChecked();
+        expect(test1Checkbox).toBeDisabled();
+        expect(screen.queryByText('You must agree to all license agreements and/or terms of use!')).toBeNull();
     });
 
     it('allTrue should return false', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.tes2 = false;
-        wrapper.setProps(nextProps);
-        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(false);
+        expect(allTrue(nextProps.acceptedLicenses)).toBe(false);
     });
 
     it('allTrue should return true', () => {
-        const nextProps = getProps();
+        const nextProps = { ...getProps() };
         nextProps.acceptedLicenses.test1 = true;
         nextProps.acceptedLicenses.test2 = true;
-        wrapper.setProps(nextProps);
-        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(true);
+        expect(allTrue(nextProps.acceptedLicenses)).toBe(true);
     });
 });
