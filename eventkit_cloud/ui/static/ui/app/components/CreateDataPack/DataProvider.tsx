@@ -544,7 +544,7 @@ export function DataProvider(props: Props) {
             return `No downloads`;
         }
 
-        if (provider.latest_download == 0) {
+        if (provider.latest_download === 0) {
             return 'Less than a week ago';
         }
 
