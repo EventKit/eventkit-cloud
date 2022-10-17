@@ -298,7 +298,7 @@ def is_supported_proxy_format(export_format: ExportFormat, data_provider: DataPr
 
 
 def get_proxy_formats(data_provider: DataProvider):
-    return ExportFormat.objects.filter(proxy_format__provider=data_provider)
+    return ExportFormat.objects.filter(proxyformat__provider=data_provider)
 
 
 def error_handler(task_id=None):
