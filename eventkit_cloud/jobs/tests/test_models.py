@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -25,7 +25,6 @@ from eventkit_cloud.jobs.models import (
     Region,
     StyleFile,
 )
-from eventkit_cloud.utils.services.ogcapi_process import OGCAPIProcess
 
 logger = logging.getLogger(__name__)
 
