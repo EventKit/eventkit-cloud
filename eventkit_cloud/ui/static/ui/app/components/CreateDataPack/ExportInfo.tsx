@@ -1076,6 +1076,15 @@ export function ExportInfo(props: Props) {
         }
     };
 
+    const onSortFilterChipDeleted = () => {
+        const uncheckOpts = [...sortOptions];
+        uncheckOpts.map((item) => {
+            item.isChecked = false;
+        });
+        setSortOptions(uncheckOpts);
+        setProviderSortOption({ slug: "", name: ""});
+    }
+
     const onSortRadioChanged = (sort) => {
         let newSortOptions = [...sortOptions];
         const index = newSortOptions.findIndex( (v) => v.slug === sort);
@@ -1289,15 +1298,35 @@ export function ExportInfo(props: Props) {
                                             () => (
                                                 <Chip
                                                     className={classes.filterChip}
+                                                    label={`Filter By: Favorites`}
+                                                    onDelete={() => setIsFilteringByFavorites(false)}
+                                                />
+                                            ),
+                                            !!isFilteringByFavorites
+                                        )}
+                                        {renderIf(
+                                            () => (
+                                                <Chip
+                                                    className={classes.filterChip}
+                                                    label={`Filter By: Selected Area`}
+                                                    onDelete={() => setIsFilteringByProviderGeometry(false)}
+                                                />
+                                            ),
+                                            !!isFilteringByProviderGeometry
+                                        )}
+                                        {renderIf(
+                                            () => (
+                                                <Chip
+                                                    className={classes.filterChip}
                                                     label={`Sort: ${providerSortOption.name}`}
-                                                    onDelete={() => setProviderSortOption({ slug: "", name: ""})}
+                                                    onDelete={onSortFilterChipDeleted}
                                                 />
                                             ),
                                             !!providerSortOption.slug
                                         )}
                                     </div>
                                 ),
-                                (providerFilterList.length || providerSearch || selectedTopics.length || providerSortOption.slug) && !showProviderFilter
+                                (providerFilterList.length || providerSearch || selectedTopics.length || providerSortOption.slug || isFilteringByProviderGeometry || isFilteringByFavorites) && !showProviderFilter
                             )}
                             {renderIf(
                                 () => (
