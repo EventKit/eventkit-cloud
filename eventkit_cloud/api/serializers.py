@@ -1081,7 +1081,7 @@ def basic_data_provider_list_serializer(
     proxy_formats: Dict[str, List[str]] = {}
     for proxy_format in ProxyFormat.objects.all():
         provider_slug = proxy_format.data_provider.slug
-        for export_format in ExportFormat.objects.filter(proxyformat=proxy_format).values("options", *format_fields):
+        for export_format in ExportFormat.objects.filter(proxyformat=proxy_format).values(*format_fields):
             if proxy_formats.get(provider_slug):
                 proxy_formats[provider_slug] += [export_format]
             else:
