@@ -414,15 +414,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
-            try:
-                ProxyFormat.objects.get_or_create(
-                    export_format=export_format, identifier=process_format.get("slug"), data_provider=self
-                )
-            # If there is no process_format.slug, use the export_format.slug instead
-            except ProxyFormat.DoesNotExist:
-                ProxyFormat.objects.get_or_create(
-                    export_format=export_format, identifier=export_format.get("slug"), data_provider=self
-                )
+            identifier = process_format.get("slug") or export_format.get("slug")
+            ProxyFormat.objects.get_or_create(export_format=export_format, identifier=identifier, data_provider=self)
             export_format.save()
 
     def __str__(self):
