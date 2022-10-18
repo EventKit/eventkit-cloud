@@ -870,9 +870,9 @@ def ogc_result_task(
         else:
             # Workaround for case-sensitivity in upsteam sources.
             proxy: ProxyFormat = ProxyFormat.objects.filter(
-                slug__contains=export_format_slug, data_provider=data_provider
+                identifier__contains=export_format_slug, data_provider=data_provider
             )
-            export_format_slug = proxy.slug or export_format_slug
+            export_format_slug = proxy.identifier or export_format_slug
     download_path = get_export_filepath(stage_dir, export_task_record, projection, "zip")
 
     download_path = get_ogcapi_data(

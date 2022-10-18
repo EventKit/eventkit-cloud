@@ -418,12 +418,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             try:
                 ProxyFormat.objects.get_or_create(
-                    export_format=export_format, slug=process_format.get("slug"), data_provider=self
+                    export_format=export_format, identifier=process_format.get("slug"), data_provider=self
                 )
             # This error can be thrown if it does not find the object or if all the elements are not provided
             except ProxyFormat.DoesNotExist:
                 ProxyFormat.objects.get_or_create(
-                    export_format=export_format, slug=export_format.get("slug"), data_provider=self
+                    export_format=export_format, identifier=export_format.get("slug"), data_provider=self
                 )
             export_format.save()
 
@@ -1173,7 +1173,7 @@ class ProxyFormat(TimeStampedModelMixin):
     """
 
     data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
-    slug = LowerCaseCharField(max_length=20, default="")
+    identifier = LowerCaseCharField(max_length=20, default="")
     export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=True, on_delete=models.CASCADE)
     objects = ProxyFormatManager()
 

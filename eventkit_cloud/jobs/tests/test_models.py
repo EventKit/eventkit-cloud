@@ -503,7 +503,6 @@ class TestDataProvider(TestCase):
         self.data_provider.export_provider_type = prov_type
 
         mock_client = MagicMock()
-        # TODO: This json is the INPUT to this method, not the output; rework needed
         mock_client.get_process_formats.return_value = [
             {"name": "ESRI Shapefile Format", "slug": "shp", "description": "Esri Shapefile (OSM Schema)"},
             {"name": "GPX Format", "slug": "gpx", "description": "GPS Exchange Format"},
@@ -517,7 +516,7 @@ class TestDataProvider(TestCase):
 
         proxy: ProxyFormat = ProxyFormat.objects.get(export_format=export_format, data_provider=self.data_provider)
         self.assertIsNotNone(proxy)
-        self.assertEqual(proxy.slug, export_format.slug)
+        self.assertEqual(proxy.identifier, export_format.slug)
         self.assertEqual(proxy.export_format, export_format)
         self.assertEqual(proxy.data_provider, self.data_provider)
 

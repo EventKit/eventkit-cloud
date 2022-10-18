@@ -124,8 +124,8 @@ class ProxyFormatAdmin(admin.ModelAdmin):
     Admin model for editing export configurations in the admin interface.
     """
 
-    search_fields = ["data_provider__slug", "slug", "export_format__name"]
-    list_display = ["data_provider", "slug", "export_format"]
+    search_fields = ["data_provider__slug", "identifier", "export_format__name"]
+    list_display = ["data_provider", "identifier", "export_format"]
 
 
 class YAMLWidget(forms.widgets.Textarea):
