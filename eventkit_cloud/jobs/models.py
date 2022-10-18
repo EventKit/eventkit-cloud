@@ -413,14 +413,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         for process_format in process_formats:
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
-                # Use the value from process format which might be case sensitive,
-                # TODO: will likely run into issues if two remote services use same spelling and are case sensitive.
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
             try:
                 ProxyFormat.objects.get_or_create(
                     export_format=export_format, identifier=process_format.get("slug"), data_provider=self
                 )
-            # This error can be thrown if it does not find the object or if all the elements are not provided
+            # If there is no process_format.slug, use the export_format.slug instead
             except ProxyFormat.DoesNotExist:
                 ProxyFormat.objects.get_or_create(
                     export_format=export_format, identifier=export_format.get("slug"), data_provider=self
