@@ -22,7 +22,7 @@ import CustomTextField from "../common/CustomTextField";
 import CustomTableRow from "../common/CustomTableRow";
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from "@material-ui/icons/Warning";
-import { useDebouncedState } from "../../utils/hooks/hooks";
+import { useDebouncedState, useWindowSize } from "../../utils/hooks/hooks";
 import RequestDataSource from "./RequestDataSource";
 import {
     Chip,
@@ -77,7 +77,7 @@ const jss = (theme: Eventkit.Theme & Theme) =>
             marginTop: "30px",
             marginBottom: "30px",
             width: "100%",
-            maxWidth: "700px"
+            maxWidth: "900px"
         },
         sortFilterContainer: {
             alignItems: "stretch",
@@ -386,6 +386,8 @@ export function ExportInfo(props: Props) {
     } as IncompatibilityInfo);
     const [providerDrawerIsOpen, setProviderDrawerIsOpen] = useState(false);
     const [displayDummy, setDisplayDummy] = useState(false);
+
+    const size = useWindowSize();
 
     useEffect(() => {
         updateSelectedFormats();
@@ -1629,14 +1631,16 @@ export function ExportInfo(props: Props) {
                         </div>
                         <div className={classes.sectionBottom}>
                             <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
-                                <div className="qa-ExportInfo-ListHeaderItem" style={{ flex: "1 1 auto" }}>
-                                    DATA PRODUCTS
+                                <div className="qa-ExportInfo-ListHeaderItem" style={{ flex: "1 1 auto", fontWeight: "bold" }}>
+                                    Data Products
                                 </div>
                                 <div
                                     className="qa-ExportInfo-ListHeaderItem"
-                                    style={{ display: "flex", justifyContent: "flex-end", position: "relative" }}
+                                    style={{ display: "flex", justifyContent: "flex-end", position: "relative", columnGap: '40px' }}
                                 >
-                                    <span>AVAILABILITY</span>
+                                    {size.width > 900 && <span style={{display: "flex", fontWeight: "bold"}}>Download count</span>}
+                                    {size.width > 900 && <span style={{display: "flex", fontWeight: "bold"}}>Last Downloaded</span>}
+                                    <span style={{display: "flex", fontWeight: "bold"}}>Availability</span>
                                     <NavigationRefresh
                                         className={classes.refreshIcon}
                                         onMouseEnter={handlePopoverOpen}
