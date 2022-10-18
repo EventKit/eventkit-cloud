@@ -4,8 +4,16 @@ import * as actions from '../../actions/usersActions';
 
 describe('usersActions', () => {
     describe('getUsers action', () => {
-        it('should return the correct types', () => {
+        it('should return the correct types for fetching users', () => {
             expect(actions.getUsers().types).toEqual([
+                actions.types.FETCHING_USERS,
+                actions.types.FETCHED_USERS,
+                actions.types.FETCH_USERS_ERROR,
+            ]);
+        });
+
+        it('should return the correct types for getting users permissions', () => {
+            expect(actions.getPermissionUsers('test').types).toEqual([
                 actions.types.FETCHING_USERS,
                 actions.types.FETCHED_USERS,
                 actions.types.FETCH_USERS_ERROR,

@@ -244,7 +244,8 @@ const jss = (theme: Eventkit.Theme & Theme) =>
             fontSize: "14px",
             border: "1px solid rgba(0, 0, 0, 0.5)",
             backgroundColor: theme.eventkit.colors.white,
-            marginRight: "3px"
+            marginRight: "3px",
+            textTransform: "capitalize",
         },
         filterLabelDropdownChip: {
             backgroundColor: "#F9F9F9",
@@ -372,7 +373,7 @@ export function ExportInfo(props: Props) {
     const [showTypeFilter, setShowTypeFilter] = useState(false);
     const [showTopicFilter, setShowTopicFilter] = useState(false);
     const [providerFilterList, setProviderFilterList] = useState([]);
-    const [providerSortOption, setProviderSortOption] = useState("");
+    const [providerSortOption, setProviderSortOption] = useState({ slug: "", name: ""});
     const [selectedTopics, setSelectedTopicsList] = useState([]);
     const [refreshPopover, setRefreshPopover] = useState(null);
     const [projectionCompatibilityOpen, setProjectionCompatibilityOpen] = useState(false);
@@ -719,6 +720,15 @@ export function ExportInfo(props: Props) {
         });
     };
 
+    const removeSelectedTopic = (topic) => {
+        const newSelectedTopics = [...selectedTopics] || [];
+        const index = newSelectedTopics.indexOf(topic);
+        if (index >= 0) {
+            newSelectedTopics.splice(index, 1);
+        }
+        setSelectedTopicsList(newSelectedTopics);
+    };
+
     const onSelectTopic = (event) => {
         const newSelectedTopics = [...selectedTopics] || [];
         let index;
@@ -879,7 +889,7 @@ export function ExportInfo(props: Props) {
 
     const sortProviders = (currentProviders) => {
         let sortedProviders: Eventkit.Provider[];
-        switch (providerSortOption) {
+        switch (providerSortOption.slug) {
             case "alphabetical-a-z":
                 sortedProviders = sortProvidersAtoZ(currentProviders);
                 break;
@@ -1066,14 +1076,24 @@ export function ExportInfo(props: Props) {
         }
     };
 
+    const onSortFilterChipDeleted = () => {
+        const uncheckOpts = [...sortOptions];
+        uncheckOpts.map((item) => {
+            item.isChecked = false;
+        });
+        setSortOptions(uncheckOpts);
+        setProviderSortOption({ slug: "", name: ""});
+    }
+
     const onSortRadioChanged = (sort) => {
         let newSortOptions = [...sortOptions];
+        const index = newSortOptions.findIndex( (v) => v.slug === sort);
         newSortOptions.map((item) => {
-            item.isChecked = item.slug == sort;
+            item.isChecked = item.slug === sort;
         });
         setSortOptions(newSortOptions);
 
-        setProviderSortOption(sort);
+        setProviderSortOption(newSortOptions[index]);
     };
 
     const addProviderFilter = (filter) => {
@@ -1109,7 +1129,7 @@ export function ExportInfo(props: Props) {
 
     const clearAllFilterSort = () => {
         setProviderFilterList([]);
-        setProviderSortOption("");
+        setProviderSortOption({ slug: "", name: ""});
         setProviderSearch("");
         setSelectedTopicsList([]);
         setIsFilteringByProviderGeometry(true);
@@ -1250,10 +1270,17 @@ export function ExportInfo(props: Props) {
                             {renderIf(
                                 () => (
                                     <div className={classes.filterLabelDropdownChip}>
+                                        {selectedTopics.map((topic) => (
+                                            <Chip
+                                                className={classes.filterChip}
+                                                label={`Topic: ${topic}`}
+                                                onDelete={() => removeSelectedTopic(topic)}
+                                            />
+                                        ))}
                                         {providerFilterList.map((filter) => (
                                             <Chip
                                                 className={classes.filterChip}
-                                                label={filter.name}
+                                                label={`${filter.filterType}: ${filter.name}`}
                                                 onDelete={() => removeProviderFilter(filter)}
                                             />
                                         ))}
@@ -1267,9 +1294,39 @@ export function ExportInfo(props: Props) {
                                             ),
                                             !!providerSearch
                                         )}
+                                        {renderIf(
+                                            () => (
+                                                <Chip
+                                                    className={classes.filterChip}
+                                                    label={`Filter By: Favorites`}
+                                                    onDelete={() => setIsFilteringByFavorites(false)}
+                                                />
+                                            ),
+                                            !!isFilteringByFavorites
+                                        )}
+                                        {renderIf(
+                                            () => (
+                                                <Chip
+                                                    className={classes.filterChip}
+                                                    label={`Filter By: Selected Area`}
+                                                    onDelete={() => setIsFilteringByProviderGeometry(false)}
+                                                />
+                                            ),
+                                            !!isFilteringByProviderGeometry
+                                        )}
+                                        {renderIf(
+                                            () => (
+                                                <Chip
+                                                    className={classes.filterChip}
+                                                    label={`Sort: ${providerSortOption.name}`}
+                                                    onDelete={onSortFilterChipDeleted}
+                                                />
+                                            ),
+                                            !!providerSortOption.slug
+                                        )}
                                     </div>
                                 ),
-                                (providerFilterList.length || providerSearch) && !showProviderFilter
+                                (providerFilterList.length || providerSearch || selectedTopics.length || providerSortOption.slug || isFilteringByProviderGeometry || isFilteringByFavorites) && !showProviderFilter
                             )}
                             {renderIf(
                                 () => (
