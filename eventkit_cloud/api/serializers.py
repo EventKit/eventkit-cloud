@@ -1082,7 +1082,6 @@ def basic_data_provider_list_serializer(
     for proxy_format in ProxyFormat.objects.all():
         provider_slug = proxy_format.data_provider.slug
         for export_format in ExportFormat.objects.filter(proxyformat=proxy_format).values("options", *format_fields):
-            export_format.pop("options")
             if proxy_formats.get(provider_slug):
                 proxy_formats[provider_slug] += [export_format]
             else:
@@ -1177,7 +1176,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         fields = ["uid", "name", "slug", "description"]
-        proxy_format: ProxyFormat = ProxyFormat.objects.filter(data_provider=obj).first()
+        proxy_format = ProxyFormat.objects.filter(data_provider=obj).distinct()
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
             proxyformat=proxy_format
         ).values(*fields)
