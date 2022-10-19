@@ -492,12 +492,13 @@ class TestDataProvider(TestCase):
         self.data_provider.export_provider_type = prov_type
         self.assertEqual(self.data_provider.get_use_bbox(), True)
 
-    def test_update_export_formats_for_proxy(self):
+    def setup_proxy_models(self, data_provider_name: str, export_format_slug: str):
         self.data_provider.type = GeospatialDataType.VECTOR.value
         prov_type: DataProviderType
-        prov_type, prov_created = DataProviderType.objects.get_or_create(type_name="ogcapi-process")
+        export_format: ExportFormat
+        prov_type, prov_created = DataProviderType.objects.get_or_create(type_name=data_provider_name)
         export_format, ef_created = ExportFormat.get_or_create(
-            **{"name": "test", "slug": "test", "description": "test"}
+            **{"name": "test", "slug": export_format_slug, "description": "test"}
         )
         prov_type.supported_formats.set([export_format])
         self.data_provider.export_provider_type = prov_type
@@ -509,16 +510,45 @@ class TestDataProvider(TestCase):
             {"name": "Geopackage", "slug": "gpkg", "description": "GeoPackage"},
             {"name": "KML Format", "slug": "kml", "description": "Google Earth KMZ"},
             {"name": "SQLITE Format", "slug": "sqlite", "description": "SQlite SQL"},
-            {"name": "test", "slug": "test", "description": "test"},  # This is the one we are looking for in this test
+            {
+                "name": "test",
+                "slug": export_format_slug,
+                "description": "test",
+            },  # This is the one we are looking for
         ]
         self.data_provider.get_service_client = lambda: mock_client
         self.data_provider.update_export_formats()
 
         proxy: ProxyFormat = ProxyFormat.objects.get(export_format=export_format, data_provider=self.data_provider)
+        return prov_type, export_format, proxy
+
+    def test_proxy_format_creation(self):
+        prov_type, export_format, proxy = self.setup_proxy_models("ogcapi-process", "test")
+        self.assertIsNotNone(prov_type)
+        self.assertIsNotNone(export_format)
         self.assertIsNotNone(proxy)
+
         self.assertEqual(proxy.identifier, export_format.slug)
         self.assertEqual(proxy.export_format, export_format)
         self.assertEqual(proxy.data_provider, self.data_provider)
+
+    def test_modifying_existing_proxy_format(self):
+        # Create first objects
+        prov_type, export_format, proxy = self.setup_proxy_models("ogcapi-process", "test")
+        # Now modify the slug values to verify changes can be made
+        prov_type_modified, export_format_modified, proxy_modified = self.setup_proxy_models(
+            "ogcapi-process", "Testing"
+        )
+        # Check that the provider is the same
+        self.assertEqual(prov_type, prov_type_modified)
+        # Check that both the export and proxy have changed
+        self.assertNotEqual(export_format, export_format_modified)
+        self.assertNotEqual(proxy, proxy_modified)
+
+        self.assertIsNotNone(proxy_modified)
+        self.assertEqual(proxy_modified.identifier, export_format_modified.slug)
+        self.assertEqual(proxy_modified.export_format, export_format_modified)
+        self.assertEqual(proxy_modified.data_provider, self.data_provider)
 
 
 class TestStyleFile(TestCase):

@@ -411,11 +411,17 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
+            export_format: ExportFormat
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
-            identifier = process_format.get("slug") or export_format.get("slug")
-            ProxyFormat.objects.get_or_create(export_format=export_format, identifier=identifier, data_provider=self)
+            identifier: str = process_format.get("slug") or export_format.slug
+            proxy_format, created = ProxyFormat.objects.get_or_create(
+                export_format=export_format, data_provider=self, defaults={"identifier": identifier}
+            )
+            if not created:
+                proxy_format.identifier = identifier
+                proxy_format.save()
             export_format.save()
 
     def __str__(self):
