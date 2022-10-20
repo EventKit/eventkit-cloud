@@ -253,7 +253,7 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
                     fetching: true,
                     fetched: false,
                     error: null,
-                    cancelSource: action.cancelSource,
+                    //cancelSource: action.cancelSource,
                 };
             case typeMap.FETCHED:
                 return {

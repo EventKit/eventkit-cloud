@@ -1,4 +1,3 @@
-import { applyMiddleware, createStore, compose } from 'redux';
 import { configureStore } from '@reduxjs/toolkit'
 import { reduxBatch } from '@manaflair/redux-batch';
 import { createLogger } from 'redux-logger';
@@ -31,11 +30,5 @@ export const store = configureStore({
     enhancers: (defaultEnhancers) => [reduxBatch, ...defaultEnhancers, reduxBatch]
 });
 
-export default () => (
-    createStore(
-        rootReducer,
-        compose(reduxBatch, applyMiddleware(...middleware), reduxBatch),
-    )
-);
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
