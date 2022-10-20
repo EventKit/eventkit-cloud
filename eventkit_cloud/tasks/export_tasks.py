@@ -869,7 +869,7 @@ def ogc_result_task(
             return result
         else:
             # Workaround for case-sensitivity in upsteam sources.
-            proxy: ProxyFormat = ProxyFormat.objects.filter(
+            proxy: ProxyFormat = ProxyFormat.objects.get(
                 identifier__contains=export_format_slug, data_provider=data_provider
             )
             export_format_slug = proxy.identifier or export_format_slug
