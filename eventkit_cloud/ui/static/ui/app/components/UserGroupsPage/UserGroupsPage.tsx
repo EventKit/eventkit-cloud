@@ -34,7 +34,7 @@ import {
     createGroup,
     updateGroup,
 } from '../../actions/groupActions';
-import {getUsers} from '../../actions/usersActions';
+import {getUsers} from '../../slices/usersSlice';
 import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';

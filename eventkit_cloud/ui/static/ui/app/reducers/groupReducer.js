@@ -30,7 +30,7 @@ export function userGroupsReducer(state = initialState, action) {
                 fetched: false,
                 data: [],
                 error: null,
-                cancelSource: action.cancelSource,
+                //cancelSource: action.cancelSource,
             };
         case types.FETCHED_GROUPS:
             return {

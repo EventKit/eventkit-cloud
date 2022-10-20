@@ -7,20 +7,17 @@ describe('userGroupsReducer', () => {
     });
 
     it('FETCHING_GROUPS should return fetching true and a cancelSource', () => {
-        const cancelSource = { source: 'fake cancel source' };
         expect(userGroupsReducer(
             {
                 ...state,
             },
             {
                 type: types.FETCHING_GROUPS,
-                cancelSource,
             },
         )).toEqual({
             ...state,
             fetched: false,
             fetching: true,
-            cancelSource,
         });
     });
 

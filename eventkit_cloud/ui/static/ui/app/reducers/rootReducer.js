@@ -2,7 +2,7 @@ import { combineReducers } from 'redux';
 import { connectRouter } from 'connected-react-router';
 import { types } from '../actions/uiActions';
 import { userReducer } from './userReducer';
-import { usersReducer } from './usersReducer';
+import { usersSlice } from '../slices/usersSlice';
 import {
     exportAoiInfoReducer,
     exportInfoReducer,
@@ -50,7 +50,7 @@ const reducer = combineReducers({
     updatePermission: updatePermissionReducer,
     formats: getFormatsReducer,
     groups: userGroupsReducer,
-    users: usersReducer,
+    users: usersSlice.reducer,
     notifications: notificationsReducer,
     exports: runsReducer,
     providerTasks: providerTasksReducer,
