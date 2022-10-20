@@ -24,7 +24,6 @@ class Response(wsgi.Response):
         additional_headers = json.loads(os.getenv("HTTP_HEADERS", "{}"))
         for header, value in additional_headers.items():
             headers.append(build_header(header, value.replace('"', "'")))
-        headers.append(build_header("Strict-Transport-Security", "max-age=31536000"))
         return [header for header in headers if not header.startswith("Server:")]
 
 
