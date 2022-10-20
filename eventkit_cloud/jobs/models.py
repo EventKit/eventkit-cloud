@@ -1169,9 +1169,9 @@ class ProxyFormat(TimeStampedModelMixin):
     Model for mapping proxy providers to exports with unique slug values
     """
 
-    data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=True, on_delete=models.CASCADE)
-    identifier = LowerCaseCharField(max_length=20, default="")
-    export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=True, on_delete=models.CASCADE)
+    data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=False, on_delete=models.CASCADE)
+    identifier = models.CharField(max_length=40, null=False)
+    export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=False, on_delete=models.CASCADE)
     objects = ProxyFormatManager()
 
     class Meta:
