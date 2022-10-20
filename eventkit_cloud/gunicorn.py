@@ -1,3 +1,4 @@
+import json
 import os
 
 from gunicorn.http import wsgi
@@ -20,6 +21,10 @@ class Response(wsgi.Response):
         content_security_policy = os.getenv("CONTENT_SECURITY_POLICY", "").replace('"', "'")
         if content_security_policy:
             headers.append(build_header("Content-Security-Policy", content_security_policy))
+        additional_headers = json.loads(os.getenv("HTTP_HEADERS", "{}"))
+        for header, value in additional_headers.items():
+            headers.append(build_header(header, value.replace('"', "'")))
+        headers.append(build_header("Strict-Transport-Security", "max-age=31536000"))
         return [header for header in headers if not header.startswith("Server:")]
 
 
