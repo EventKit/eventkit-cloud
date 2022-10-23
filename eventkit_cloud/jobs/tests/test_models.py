@@ -546,7 +546,6 @@ class TestDataProvider(TestCase):
         self.assertNotEqual(proxy, proxy_modified)
 
         self.assertIsNotNone(proxy_modified)
-        self.assertEqual(proxy_modified.identifier, export_format_modified.slug)
         self.assertEqual(proxy_modified.export_format, export_format_modified)
         self.assertEqual(proxy_modified.data_provider, self.data_provider)
 
