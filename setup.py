@@ -9,7 +9,7 @@ def read(*rnames):
 
 setup(
     name="eventkit",
-    version="1.14.0",
+    version="1.15.0",
     author="Joseph Svrcek",
     author_email="joseph.svrcek@rgi-corp.com",
     description="Eventkit Cloud",
