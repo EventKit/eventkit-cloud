@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y libgl1-mesa-glx
 
 ENV PATH="$HOME/miniconda3:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh -o miniconda.sh && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p $HOME/miniconda3 && \
     rm miniconda.sh && \
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
@@ -19,7 +19,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py39_4.9.2-Linux-x86_
     conda config --add channels local && \
     echo "y" | conda install python=3.10 && \
     conda init bash && \
-    echo "y" | conda install "conda-build=3.21.9"
+    echo "y" | conda install "conda-build=3.22.0"
 
 COPY ./ /root/
 

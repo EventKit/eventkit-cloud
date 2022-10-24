@@ -1,5 +1,5 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.14.0" %}
+{% set version = "1.15.0" %}
 
 {% set run_requirements = load_file_regex(
     load_file="conda-requirements.txt",

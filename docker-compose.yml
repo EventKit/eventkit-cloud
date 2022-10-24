@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.14.0-4
+    image: eventkit/eventkit-base:1.15.0-1
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -100,10 +100,11 @@ services:
       - ENABLE_ADMIN_LOGIN
       - ADMIN_ROOT
       - JOB_MAX_EXTENT=1000000
+      - GRID_TOKEN
     extra_hosts:
       - "${SITE_NAME}:host-gateway"
   map:
-    image: eventkit/eventkit-base:1.14.0-4
+    image: eventkit/eventkit-base:1.15.0-1
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -146,13 +147,13 @@ services:
     extra_hosts:
       - "${SITE_NAME}:host-gateway"
   memcached:
-    image: eventkit/eventkit-base:1.14.0-4
+    image: eventkit/eventkit-base:1.15.0-1
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate conda_env && memcached -m 2048 -I 25m"
   celery:
-    image: eventkit/eventkit-base:1.14.0-4
+    image: eventkit/eventkit-base:1.15.0-1
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
@@ -210,6 +211,7 @@ services:
       - OAUTH_LOGOUT_URL
       - ROCKETCHAT_NOTIFICATIONS
       - JOB_MAX_EXTENT=1000000
+      - GRID_TOKEN
     extra_hosts:
       - "${SITE_NAME}:host-gateway"
     command: bash ./scripts/run-celery-beat.sh
@@ -262,7 +264,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.14.0-4
+    image: eventkit/eventkit-base:1.15.0-1
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -295,7 +297,7 @@ services:
       - SSL_VERIFICATION
       - SECRET_KEY
   webpack:
-    image: eventkit/eventkit-webpack:1.14.0-6
+    image: eventkit/eventkit-webpack:1.15.0-1
     build:
       context: .
       dockerfile: config/Dockerfile_webpack
