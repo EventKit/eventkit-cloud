@@ -411,19 +411,17 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         process_formats = client.get_process_formats()
         logger.info(f"Process_formats: {process_formats}")
         for process_format in process_formats:
+            export_format: ExportFormat
             export_format, created = ExportFormat.get_or_create(**process_format)
             if created:
-                # Use the value from process format which might be case sensitive,
-                # TODO: will likley run into issues if two remote services use same spelling and are case sensitive.
-                export_format.options = {"value": process_format.get("slug"), "providers": [self.slug], "proxy": True}
                 export_format.supported_projections.add(Projection.objects.get(srid=4326))
-            else:
-                providers = export_format.options.get("providers")
-                if providers:
-                    providers = list(set(providers + [self.slug]))
-                    export_format.options["providers"] = providers
-                else:
-                    export_format.options = {"value": export_format.slug, "providers": [self.slug], "proxy": True}
+            identifier: str = process_format.get("slug") or export_format.slug
+            proxy_format, created = ProxyFormat.objects.get_or_create(
+                export_format=export_format, data_provider=self, defaults={"identifier": identifier}
+            )
+            if not created:
+                proxy_format.identifier = identifier
+                proxy_format.save()
             export_format.save()
 
     def __str__(self):
@@ -1159,3 +1157,25 @@ def clean_config(config: dict) -> dict:
         conf.pop(service_key, None)
 
     return conf
+
+
+class ProxyFormatManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("export_format")
+
+
+class ProxyFormat(TimeStampedModelMixin):
+    """
+    Model for mapping proxy providers to exports with unique slug values
+    """
+
+    data_provider = models.ForeignKey(DataProvider, verbose_name="Data Provider", null=False, on_delete=models.CASCADE)
+    identifier = models.CharField(max_length=40, null=False)
+    export_format = models.ForeignKey(ExportFormat, verbose_name="Export Format", null=False, on_delete=models.CASCADE)
+    objects = ProxyFormatManager()
+
+    class Meta:
+        unique_together = ("data_provider", "export_format")
+
+    def __str__(self):
+        return str(self.export_format.name)
