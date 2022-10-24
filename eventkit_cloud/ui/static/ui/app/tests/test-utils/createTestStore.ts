@@ -1,12 +1,17 @@
-import { simpleApiCall } from "../../store/middlewares";
-import thunk from "redux-thunk";
-import { applyMiddleware, compose, createStore } from "redux";
+import {simpleApiCall} from "../../store/middlewares";
 import rootReducer from '../../reducers/rootReducer';
-import { reduxBatch } from "@manaflair/redux-batch";
+import {reduxBatch} from "@manaflair/redux-batch";
+import {configureStore} from "@reduxjs/toolkit";
 
-let middleware = [simpleApiCall, thunk];
-const createTestStore = (initialState) => {
-    return createStore(rootReducer, initialState, compose(reduxBatch, applyMiddleware(...middleware), reduxBatch))
-}
+let middleware = [simpleApiCall];
+export const createTestStore = (initialState) => configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) => {
+        //TODO: Once action cancellation is updated to work with redux-toolkit add back in serializableCheck
+        return getDefaultMiddleware({serializableCheck: false, immutableCheck: false}).prepend(middleware);
+    },
+    enhancers: (defaultEnhancers) => [reduxBatch, ...defaultEnhancers, reduxBatch],
+    preloadedState: initialState,
+});
 
 export default createTestStore;

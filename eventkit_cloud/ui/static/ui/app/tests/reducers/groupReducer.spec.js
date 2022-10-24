@@ -14,13 +14,13 @@ describe('userGroupsReducer', () => {
             },
             {
                 type: types.FETCHING_GROUPS,
-                cancelSource
+                cancelSource,
             },
         )).toEqual({
             ...state,
             fetched: false,
             fetching: true,
-            cancelSource
+            cancelSource,
         });
     });
 

@@ -8,7 +8,7 @@ import { initialState as uiState } from '../../reducers/uiReducer';
 import { initialStateProviders, initialStateProviderTasks } from '../../reducers/providerReducer';
 import { initialState as licenseState } from '../../reducers/licenseReducer';
 import { initialState as formatState } from '../../reducers/formatReducer';
-import { initialState as usersState } from '../../reducers/usersReducer';
+import { initialState as usersState } from '../../slices/usersSlice'
 import { initialState as groupState } from '../../reducers/groupReducer';
 import { initialState as notificationState } from '../../reducers/notificationsReducer';
 import { initialState as projectionState } from '../../reducers/projectionReducer';

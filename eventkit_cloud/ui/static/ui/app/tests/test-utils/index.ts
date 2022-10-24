@@ -1,3 +1,3 @@
 export * from './renderWithAppShell';
-export * from './createTestStore';
+export { createTestStore } from './createTestStore';
 export * from './defaultTestState';
