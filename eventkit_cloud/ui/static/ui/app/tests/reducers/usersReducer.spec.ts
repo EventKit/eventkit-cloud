@@ -15,11 +15,15 @@ describe('usersReducer', () => {
             },
             {
                 type: getUsers.pending,
+                meta: {
+                    requestId: 'test',
+                },
             },
         )).toEqual({
             ...usersState,
             fetched: false,
             fetching: true,
+            currentRequestId: 'test',
         });
     });
 
@@ -30,6 +34,7 @@ describe('usersReducer', () => {
                 ...usersState,
                 fetching: true,
                 total: 0,
+                currentRequestId: 'test',
             },
             {
                 type: getUsers.fulfilled,
@@ -39,6 +44,9 @@ describe('usersReducer', () => {
                     total: 3,
                     nextPage: false,
                     range: '1/1',
+                },
+                meta: {
+                    requestId: 'test',
                 },
             },
         )).toEqual({

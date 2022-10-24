@@ -8,9 +8,9 @@ interface UsersState {
     total: number,
     range: string,
     nextPage: boolean,
-    cancelSource: null,
     fetching: boolean,
     fetched: boolean,
+    currentRequestId: string,
 }
 
 export const initialState = {
@@ -21,7 +21,7 @@ export const initialState = {
     total: 0,
     range: '',
     nextPage: false,
-    cancelSource: null,
+    currentRequestId: undefined,
 } as UsersState;
 
 export const getUsers = createAsyncThunk(
@@ -78,8 +78,14 @@ export const usersSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        // Add reducers for additional action types here, and handle loading state as needed
         builder.addCase(getUsers.fulfilled, (state, action) => {
+            // Only handle changes from request if it is coming from current request id
+            if (state.currentRequestId !== action.meta.requestId) {
+                return {
+                    ...state,
+                };
+            }
+
             return {
                 ...state,
                 fetching: false,
@@ -88,7 +94,7 @@ export const usersSlice = createSlice({
                 total: action.payload.total,
                 range: action.payload.range,
                 nextPage: action.payload.nextPage,
-                cancelSource: null,
+                currentRequestId: undefined,
             };
         }).addCase(getUsers.pending, (state, action) => {
             return {
@@ -96,6 +102,7 @@ export const usersSlice = createSlice({
                 error: null,
                 fetching: true,
                 fetched: false,
+                currentRequestId: action.meta.requestId,
             };
         }).addCase(getUsers.rejected, (state, action) => {
             return {
@@ -106,9 +113,14 @@ export const usersSlice = createSlice({
                 total: 0,
                 range: '',
                 nextPage: false,
-                cancelSource: null,
+                currentRequestId: undefined,
             };
         }).addCase(getPermissionUsers.fulfilled, (state, action) => {
+            if (state.currentRequestId !== action.meta.requestId) {
+                return {
+                    ...state,
+                };
+            }
             return {
                 ...state,
                 fetching: false,
@@ -117,7 +129,7 @@ export const usersSlice = createSlice({
                 total: action.payload.total,
                 range: action.payload.range,
                 nextPage: action.payload.nextPage,
-                cancelSource: null,
+                currentRequestId: undefined,
             };
         }).addCase(getPermissionUsers.pending, (state, action) => {
             return {
@@ -125,6 +137,7 @@ export const usersSlice = createSlice({
                 error: null,
                 fetching: true,
                 fetched: false,
+                currentRequestId: action.meta.requestId,
             };
         }).addCase(getPermissionUsers.rejected, (state, action) => {
             return {
@@ -135,7 +148,7 @@ export const usersSlice = createSlice({
                 total: 0,
                 range: '',
                 nextPage: false,
-                cancelSource: null,
+                currentRequestId: undefined,
             };
         });
     },
