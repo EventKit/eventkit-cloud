@@ -20,7 +20,7 @@ export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => {
         //TODO: Once action cancellation is updated to work with redux-toolkit add back in serializableCheck
-        let newMiddleware = getDefaultMiddleware({ serializableCheck: false }).prepend(middleware);
+        let newMiddleware = getDefaultMiddleware({ serializableCheck: false, immutableCheck: false }).prepend(middleware);
         if (process.env.NODE_ENV !== 'production') {
             const logger = createLogger();
             newMiddleware.concat(logger);

@@ -10,7 +10,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
-import {getPermissionUsers} from '../../actions/usersActions';
+import { getPermissionUsers } from '../../slices/usersSlice';
 
 export interface Props {
     public: boolean;
@@ -463,8 +463,12 @@ const mapStateToProps = state => (
 const mapDispatchToProps = dispatch => (
     {
         getPermissionUsers: (jobUid, params, append) => (
-            dispatch(getPermissionUsers(jobUid, params, append))
-        ),
+            dispatch(getPermissionUsers({
+                ...params,
+                jobUid,
+                append,
+            }))
+        )
     }
 );
 

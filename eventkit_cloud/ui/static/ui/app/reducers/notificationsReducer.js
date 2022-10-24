@@ -44,7 +44,7 @@ export function notificationsReducer(state = initialState, action) {
                     fetching: true,
                     fetched: false,
                     error: null,
-                    //cancelSource: action.cancelSource,
+                    cancelSource: action.cancelSource,
                 },
             };
         case types.RECEIVED_NOTIFICATIONS: {
