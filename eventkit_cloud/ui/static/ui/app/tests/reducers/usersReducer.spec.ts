@@ -4,7 +4,7 @@ const usersReducer = usersSlice.reducer;
 
 describe('usersReducer', () => {
     it('should return initial state', () => {
-        expect(usersReducer(undefined, {})).toEqual(usersState);
+        expect(usersReducer(undefined, { type: null } )).toEqual(usersState);
     });
 
     it('FETCHING_USERS should return fetching true and fetched false', () => {
