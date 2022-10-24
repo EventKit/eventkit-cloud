@@ -44,6 +44,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     License,
     Projection,
+    ProxyFormat,
     Region,
     RegionalJustification,
     RegionalPolicy,
@@ -1078,9 +1079,9 @@ def basic_data_provider_list_serializer(
     format_fields = ["uid", "name", "slug", "description"]
 
     proxy_formats: Dict[str, List[str]] = {}
-    for export_format in ExportFormat.objects.exclude(options={}).values("options", *format_fields):
-        options = export_format.pop("options")
-        for provider_slug in options.get("providers", []):
+    for proxy_format in ProxyFormat.objects.all():
+        provider_slug = proxy_format.data_provider.slug
+        for export_format in ExportFormat.objects.filter(proxyformat=proxy_format).values(*format_fields):
             if proxy_formats.get(provider_slug):
                 proxy_formats[provider_slug] += [export_format]
             else:
@@ -1175,8 +1176,9 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     def get_supported_formats(self, obj):
         fields = ["uid", "name", "slug", "description"]
+        proxy_format = ProxyFormat.objects.filter(data_provider=obj)
         export_formats = obj.export_provider_type.supported_formats.all().values(*fields) | ExportFormat.objects.filter(
-            options__providers__contains=obj.slug
+            proxyformat__in=proxy_format
         ).values(*fields)
         return export_formats.distinct()
 
