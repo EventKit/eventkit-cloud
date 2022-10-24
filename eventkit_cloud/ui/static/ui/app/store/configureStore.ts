@@ -10,12 +10,6 @@ const routingMiddleware = routerMiddleware(history);
 
 let middleware = [simpleApiCall, crashReporter, routingMiddleware];
 
-
-if (process.env.NODE_ENV !== 'production') {
-    const logger = createLogger();
-    middleware = [...middleware, logger];
-}
-
 export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => {
