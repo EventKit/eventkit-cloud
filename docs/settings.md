@@ -374,7 +374,7 @@ if `SSL_VERIFICATION` does not point to certificate, then `REQUESTS_CA_BUNDLE` s
 
 The version number will be display on the Login page and the About page.
 
-- `VERSION='1.14.0'`
+- `VERSION='1.15.0'`
 
 #### Contact Url
 

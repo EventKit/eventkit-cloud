@@ -87,7 +87,7 @@ djangorestframework:
 djangorestframework_gis:
 - '0.18'
 eventkit_cloud:
-- 1.14.0
+- 1.15.0
 expat:
 - 2.4.9
 font_ttf_dejavu_sans_mono:
