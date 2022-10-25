@@ -1,9 +1,10 @@
-import { initialState as usersState, usersReducer } from '../../reducers/usersReducer';
-import { types } from '../../actions/usersActions';
+import { getUsers, usersSlice, initialState as usersState } from '../../slices/usersSlice';
+
+const usersReducer = usersSlice.reducer;
 
 describe('usersReducer', () => {
     it('should return initial state', () => {
-        expect(usersReducer(undefined, {})).toEqual(usersState);
+        expect(usersReducer(undefined, { type: null } )).toEqual(usersState);
     });
 
     it('FETCHING_USERS should return fetching true and fetched false', () => {
@@ -13,14 +14,16 @@ describe('usersReducer', () => {
                 fetched: true,
             },
             {
-                type: types.FETCHING_USERS,
-                cancelSource: 'fake source',
+                type: getUsers.pending,
+                meta: {
+                    requestId: 'test',
+                },
             },
         )).toEqual({
             ...usersState,
             fetched: false,
             fetching: true,
-            cancelSource: 'fake source',
+            currentRequestId: 'test',
         });
     });
 
@@ -31,13 +34,20 @@ describe('usersReducer', () => {
                 ...usersState,
                 fetching: true,
                 total: 0,
+                currentRequestId: 'test',
             },
             {
-                type: types.FETCHED_USERS,
-                users,
-                total: 3,
-                nextPage: false,
-                range: '1/1',
+                type: getUsers.fulfilled,
+                payload: {
+                    append: false,
+                    users,
+                    total: 3,
+                    nextPage: false,
+                    range: '1/1',
+                },
+                meta: {
+                    requestId: 'test',
+                },
             },
         )).toEqual({
             ...usersState,
@@ -51,21 +61,21 @@ describe('usersReducer', () => {
     });
 
     it('FETCH_USERS_ERROR should return the error', () => {
-        const error = 'oh no, its an error';
+        const error = { message: 'oh no, its an error' };
         expect(usersReducer(
             {
                 ...usersState,
                 fetching: true,
             },
             {
-                type: types.FETCH_USERS_ERROR,
+                type: getUsers.rejected,
                 error,
             },
         )).toEqual({
             ...usersState,
             fetched: false,
             fetching: false,
-            error,
+            error: error.message,
         });
     });
 });

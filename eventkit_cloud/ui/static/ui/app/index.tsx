@@ -6,7 +6,7 @@ import Loadable from 'react-loadable';
 import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import history from './utils/history';
-import configureStore from './store/configureStore';
+import { store } from './store/configureStore';
 import ekTheme from './styles/eventkit_theme';
 import PageLoading from './components/common/PageLoading';
 
@@ -32,8 +32,6 @@ const Loading = (args) => {
 
     return null;
 };
-
-const store = configureStore();
 
 const loadableDefaults = {
     loading: Loading,
