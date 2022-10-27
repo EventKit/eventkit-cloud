@@ -64,7 +64,7 @@ cache:
   extends: .back_rules
   cache: []
   image:
-    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-1"
+    name: "${CI_REGISTRY_PATH}eventkit/eventkit-base:${VERSION}-2"
     entrypoint: [ "" ]
   variables:
     CURL_CA_BUNDLE: "./conda/cacert.pem"

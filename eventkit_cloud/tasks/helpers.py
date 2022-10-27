@@ -859,7 +859,6 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
 def merge_chunks(
     output_file,
     layer_name,
-    projection,
     task_uid: str,
     bbox: list,
     stage_dir: str,
@@ -869,6 +868,7 @@ def merge_chunks(
     level=15,
     distinct_field=None,
     session=None,
+    dst_srs: int = 4326,
     *args,
     **kwargs,
 ):
@@ -886,7 +886,7 @@ def merge_chunks(
             output_file=output_file,
             boundary=bbox,
             layer_name=layer_name,
-            projection=projection,
+            dst_srs=dst_srs,
             access_mode="append",
             distinct_field=distinct_field,
             executor=task_process.start_process,
@@ -907,7 +907,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
     merge_chunks(
         output_file=layer.get("path"),
         layer_name=layer.get("layer_name"),
-        projection=layer.get("projection"),
+        src_srs=layer.get("src_srs"),
         task_uid=layer.get("task_uid"),
         bbox=layer.get("bbox"),
         stage_dir=base_path,

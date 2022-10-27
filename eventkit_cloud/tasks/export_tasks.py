@@ -30,7 +30,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
-from gdal_utils import convert
+from gdal_utils import convert, convert_bbox
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
@@ -1426,7 +1426,7 @@ def arcgis_feature_service_export_task(
     stage_dir=None,
     bbox=None,
     service_url=None,
-    projection=4326,
+    projection=None,
     **kwargs,
 ):
     """
@@ -1448,14 +1448,16 @@ def arcgis_feature_service_export_task(
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
         path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
+        src_srs = layer.get("src_srs") or 4326
+        src_bbox = convert_bbox(bbox, to_projection=src_srs)
         url = get_arcgis_query_url(layer.get("url"))
         layers[layer_name] = {
             "task_uid": task_uid,
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
-            "bbox": bbox,
-            "projection": 4326,
+            "bbox": src_bbox,
+            "src_srs": src_srs,
             "layer_name": layer_name,
             "level": layer.get("level", 15),
             "distinct_field": layer.get("distinct_field", "OBJECTID"),

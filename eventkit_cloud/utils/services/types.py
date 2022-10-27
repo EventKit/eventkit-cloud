@@ -7,7 +7,8 @@ class LayerConfiguration(TypedDict, total=False):
     base_path: str
     bbox: List[int]
     layer_name: str
-    projection: int
+    src_srs: int
+    dst_src: int
     distinct_field: str
 
 
@@ -17,8 +18,8 @@ class LayerDescription(TypedDict, total=False):
     level: int
 
 
-class Layer(LayerConfiguration, LayerDescription):
-    pass
+class Layer(LayerConfiguration, LayerDescription, total=False):
+    extent: dict[str, dict]
 
 
 layer_name = str

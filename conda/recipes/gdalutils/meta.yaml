@@ -1,8 +1,8 @@
 {% set name = "gdalutils" %}
-{% set version = "1.0.4" %}
+{% set version = "1.0.5" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "f5118a9c317336821454bb2f2ae57323a70a998239cdae1be6dd563360ebff3a" %}
+{% set hash_value = "c72e9eab308c44dfea4a47a21b3c3dda8d4ba7ed8e57b82da645189fd3ba9970" %}
 
 package:
   name: '{{ name|lower }}'

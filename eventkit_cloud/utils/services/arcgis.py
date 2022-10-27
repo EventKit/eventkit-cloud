@@ -8,7 +8,7 @@ from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.tasks.helpers import get_zoom_level_from_scale
 from eventkit_cloud.utils.generic import cacheable
 from eventkit_cloud.utils.services.base import GisClient
-from eventkit_cloud.utils.services.types import LayersDescription
+from eventkit_cloud.utils.services.types import Layer, LayersDescription
 
 logger = getLogger(__name__)
 
@@ -67,19 +67,27 @@ class ArcGIS(GisClient):
     def get_layers(self) -> LayersDescription:
         cap_doc = self.get_capabilities(layer_id=self.layer)
 
-        if cap_doc and self.layer:
-            return {self.layer: {"name": str(self.layer), "url": str(cap_doc["url"])}}
-        if cap_doc.get("layers") or cap_doc.get("subLayers"):
+        if not cap_doc:
+            return {self.layer: {"name": str(self.layer), "url": self.service_url}}
+        layers: dict[str, Layer]
+        if self.layer:
+            layers = {self.layer: {"name": str(self.layer), "url": str(cap_doc["url"])}}
+        elif cap_doc.get("layers") or cap_doc.get("subLayers"):
             # TODO: This logic is specific for feature layers,
-            #  this will need to change or be subclassed to separate raster/feature services.
-            return {
+            # this will need to change or be subclassed to separate raster/feature services.
+            layers = {
                 slugify(layer["name"]): layer
                 for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
                 if "Feature" in layer["type"]
             }
-        if cap_doc:
-            return {slugify(cap_doc["name"]): {"name": str(cap_doc["name"]), "url": str(cap_doc["url"])}}
-        return {self.layer: {"name": str(self.layer), "url": self.service_url}}
+        else:
+            layers = {slugify(cap_doc["name"]): {"name": str(cap_doc["name"]), "url": str(cap_doc["url"])}}
+        for layer_name, layer in layers.items():
+            if "extent" in layer and isinstance(layer, dict):
+                spatial_reference = layer["extent"].get("spatialReference") or {}
+                projection = spatial_reference.get("latestWkid") or spatial_reference.get("wkid")
+                layer["src_srs"] = projection
+        return layers
 
 
 class _ArcGISSpatialReference(TypedDict):
