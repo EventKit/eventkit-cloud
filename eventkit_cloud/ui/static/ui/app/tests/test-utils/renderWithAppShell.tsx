@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import createTestStore from "./createTestStore";
 import { getDefaultTestState } from "./defaultTestState";
 import { ToastContainer } from "react-toastify";
+import { MemoryRouter } from "react-router";
 
 const theme = createMuiTheme(ekTheme);
 
@@ -20,10 +21,12 @@ export const renderComponent = (component: any, {
         ...render(
             <Provider store={store}>
                 <AppConfigProvider value={appContextConfig}>
+                    <MemoryRouter>
                     <MuiThemeProvider theme={theme}>
                         {component}
                         {includeToastContainer && <ToastContainer />}
                     </MuiThemeProvider>
+                    </MemoryRouter>
                 </AppConfigProvider>
             </Provider>
         )
