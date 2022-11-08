@@ -64,9 +64,12 @@ export interface State {
 export const DashboardSection = (props: Props) => {
     let maxPages: number = 3;
     const [pageIndex, setPageIndex] = useState(0);
+    const rows = props.rows ?? 1;
+    const rowMajor = props.rowMajor ?? true;
+    const gridPadding = props.gridPadding ?? 2;
 
     const getPages = () => {
-        const itemsPerPage = props.columns * props.rows;
+        const itemsPerPage = props.columns * rows;
         // Group children into pages, each of length maxPages.
         const children = React.Children.toArray(props.children);
         const pages = [];
@@ -90,7 +93,7 @@ export const DashboardSection = (props: Props) => {
 
     const spacing = md ? 10 : 2;
     const scrollbarWidth = 6;
-    const halfGridPadding = props.gridPadding / 2;
+    const halfGridPadding = gridPadding / 2;
     const styles = {
         root: {
             marginBottom: '35px',
@@ -148,7 +151,7 @@ export const DashboardSection = (props: Props) => {
             >
                 {childrenPages.map((childrenPage, pageIndex) => {
                     let content;
-                    if (props.rowMajor) {
+                    if (rowMajor) {
                         content = childrenPage.map((child, index) => (
                             <div
                                 key={`DashboardSection-${props.name}-Page${pageIndex}-Item${index}`}
@@ -165,7 +168,7 @@ export const DashboardSection = (props: Props) => {
 
                         childrenPage.forEach((child) => {
                             column.push(child);
-                            if (column.length >= props.rows) {
+                            if (column.length >= rows) {
                                 // Filled the column. Onto the next one.
                                 childrenColumns.push(column);
                                 column = [];
@@ -182,7 +185,7 @@ export const DashboardSection = (props: Props) => {
                                 key={`DashboardSection-${props.name}-Page${pageIndex}-Column${columnIndex}`}
                                 className="qa-DashboardSection-Page-Column"
                                 cellHeight={props.cellHeight || 'auto'}
-                                spacing={props.gridPadding}
+                                spacing={gridPadding}
                                 cols={1}
                             >
                                 {childrenColumn.map((child, index) => (
@@ -203,7 +206,7 @@ export const DashboardSection = (props: Props) => {
                             className="qa-DashboardSection-Page"
                             cellHeight={props.cellHeight || 'auto'}
                             style={styles.gridList}
-                            spacing={props.gridPadding}
+                            spacing={gridPadding}
                             cols={props.columns}
                         >
                             {content}
