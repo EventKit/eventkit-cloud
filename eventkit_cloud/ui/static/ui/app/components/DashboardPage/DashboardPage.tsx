@@ -1,7 +1,8 @@
-import {useEffect, useRef, useState} from 'react';
+import * as React from "react";
+import { useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import debounce from 'lodash/debounce';
-import { withTheme } from '@material-ui/core/styles';
+import { Theme, withTheme } from '@material-ui/core/styles';
 import { Link } from 'react-router-dom';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -21,7 +22,7 @@ import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { joyride } from '../../joyride.config';
 import history from '../../utils/history';
 import EventkitJoyride from "../common/JoyrideWrapper";
-import * as React from "react";
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export const CUSTOM_BREAKPOINTS = {
     xl: 1920,
@@ -50,7 +51,7 @@ interface Props {
     getNotifications: (options?: object) => void;
     updatePermission: Eventkit.Store.UpdatePermissions;
     updateDataCartPermissions: () => void;
-    theme: Eventkit.Theme;
+    theme: Eventkit.Theme & Theme;
     userData: any;
 }
 
@@ -149,6 +150,9 @@ export const DashboardPage = (props: Props) => {
     };
 
     const refresh = ({isAuto = false} = {}) => {
+        props.getNotifications({
+            pageSize: getNotificationsColumns({getMax: true}) * getNotificationsRows() * 3,
+        });
         refreshMyDataPacks({isAuto});
         refreshFeatured({isAuto});
         refreshRecentlyViewed({isAuto});
@@ -234,9 +238,7 @@ export const DashboardPage = (props: Props) => {
     useEffect(() => {
         // Anything in here is fired on component mount.
         props.getProviders();
-        props.getNotifications({
-            pageSize: getNotificationsColumns({getMax: true}) * getNotificationsRows() * 3,
-        });
+
         refresh();
         autoRefreshIntervalId = window.setInterval(autoRefresh, autoRefreshInterval);
         const dashSteps = joyride.DashboardPage;
@@ -347,8 +349,8 @@ export const DashboardPage = (props: Props) => {
                 {iconElementRight}
             </PageHeader>
             <div className='dashboard' style={styles.dashboard}>
-                {isLoading() ?
-                    <PageLoading background="transparent"/>
+                {loadingPage ?
+                    <PageLoading background={"transparent"}/>
                     : null
                 }
                 <CustomScrollbar
@@ -383,8 +385,7 @@ export const DashboardPage = (props: Props) => {
                     {loadingPage ?
                         null
                         :
-                        <div style={styles.content}>
-                            {/* Notifications */}
+                        <div id={"dashboardContent"} style={styles.content}>
                             <DashboardSection
                                 className="qa-DashboardSection-Notifications"
                                 title="Notifications"
@@ -402,17 +403,18 @@ export const DashboardPage = (props: Props) => {
                                     </Paper>
                                 }
                                 rowMajor={false}
+                                width={width as Breakpoint}
                             >
                                 {props.notificationsData.notificationsSorted.map(notification => (
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
                                         history={props.history}
+                                        width={width as Breakpoint}
                                     />
                                 ))}
                             </DashboardSection>
 
-                            {/* Recently Viewed */}
                             <DashboardSection
                                 className="qa-DashboardSection-RecentlyViewed"
                                 title="Recently Viewed"
@@ -434,10 +436,12 @@ export const DashboardPage = (props: Props) => {
                                         </Link>
                                     </Paper>
                                 }
+                                width={width as Breakpoint}
                             >
                                 {props.viewedIds.map((id, index) => {
                                     return (
                                         <DataPackGridItem
+                                            data-testid={"viewed"}
                                             className="qa-DashboardSection-RecentlyViewedGrid-Item"
                                             runId={id}
                                             userData={props.userData}
@@ -453,7 +457,6 @@ export const DashboardPage = (props: Props) => {
                                 })}
                             </DashboardSection>
 
-                            {/* Featured */}
                             {props.featuredIds.length === 0 ?
                                 null
                                 :
@@ -465,9 +468,11 @@ export const DashboardPage = (props: Props) => {
                                     gridPadding={getGridPadding()}
                                     cellHeight={width !== 'xs' ? 335 : 435}
                                     onViewAll={handleFeaturedViewAll}
+                                    width={width as Breakpoint}
                                 >
                                     {props.featuredIds.map((id, index) => (
                                         <DataPackFeaturedItem
+                                            data-testid={"featured"}
                                             className="qa-DashboardSection-FeaturedGrid-WideItem"
                                             runId={id}
                                             key={`FeaturedDataPack-${id}`}
@@ -479,7 +484,6 @@ export const DashboardPage = (props: Props) => {
                                 </DashboardSection>
                             }
 
-                            {/* My DataPacks */}
                             <DashboardSection
                                 className="qa-DashboardSection-MyDataPacks"
                                 title="My DataPacks"
@@ -502,9 +506,11 @@ export const DashboardPage = (props: Props) => {
                                         </Link>
                                     </Paper>
                                 }
+                                width={width as Breakpoint}
                             >
                                 {props.ownIds.map((id, index) => (
                                     <DataPackGridItem
+                                        data-testid={"pack"}
                                         className="qa-DashboardSection-MyDataPacksGrid-Item"
                                         runId={id}
                                         userData={props.userData}
@@ -555,4 +561,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
