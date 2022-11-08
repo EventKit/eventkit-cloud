@@ -3,7 +3,7 @@ import { Component, useEffect, useState } from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
 import Map from 'ol/Map';
@@ -1018,11 +1018,11 @@ export class MapView extends Component<Props, State> {
             <div style={{height: 'calc(100vh - 236px)'}}>
                 <ScrollBarRefWrap style={styles.list} setScrollbar={this.props.setScrollbar}>
                     <div style={styles.root}>
-                        <GridList
+                        <ImageList
                             className="qa-MapView-GridList"
-                            cellHeight="auto"
+                            rowHeight="auto"
                             cols={1}
-                            spacing={0}
+                            gap={0}
                             style={{width: '100%'}}
                         >
                             {this.props.runIds.map(id => (
@@ -1037,7 +1037,7 @@ export class MapView extends Component<Props, State> {
                                     providers={this.props.providers}
                                 />
                             ))}
-                        </GridList>
+                        </ImageList>
                     </div>
                     {load}
                 </ScrollBarRefWrap>

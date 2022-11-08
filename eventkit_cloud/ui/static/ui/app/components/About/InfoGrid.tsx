@@ -1,5 +1,5 @@
-import GridList from '@material-ui/core/GridList';
-import GridTile from '@material-ui/core/GridListTile';
+import ImageList from '@material-ui/core/ImageList';
+import ImageListItem from '@material-ui/core/ImageListItem';
 
 export interface Props {
     title: any;
@@ -26,17 +26,17 @@ export const InfoGrid = (props: Props) => {
     return (
         <div>
             <h3 style={styles.title}><strong>{props.title}</strong></h3>
-            <GridList cellHeight="auto" spacing={12}>
+            <ImageList cellHeight="auto" spacing={12}>
                 {props.items.map(item => (
-                    <GridTile
+                    <ImageListItem
                         key={item.title}
                         style={styles.item}
                     >
                         <strong>{item.title}:&nbsp;</strong>
                         <span>{item.body}</span>
-                    </GridTile>
+                    </ImageListItem>
                 ))}
-            </GridList>
+            </ImageList>
         </div>
     );
 };

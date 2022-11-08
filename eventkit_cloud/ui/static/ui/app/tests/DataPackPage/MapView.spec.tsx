@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
@@ -241,7 +241,7 @@ describe('MapView component', () => {
     it('should render all the basic components', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(ScrollBarRefWrap)).toHaveLength(1);
-        expect(wrapper.find(GridList)).toHaveLength(1);
+        expect(wrapper.find(ImageList)).toHaveLength(1);
         expect(wrapper.find(LoadButtons)).toHaveLength(1);
         expect(wrapper.find(DataPackListItem)).toHaveLength(props.runs.length);
         expect(wrapper.find('#map')).toHaveLength(1);

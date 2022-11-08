@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
@@ -181,11 +181,11 @@ export const DashboardSection = (props: Props) => {
                         }
 
                         content = childrenColumns.map((childrenColumn, columnIndex) => (
-                            <GridList
+                            <ImageList
                                 key={`DashboardSection-${props.name}-Page${pageIndex}-Column${columnIndex}`}
                                 className="qa-DashboardSection-Page-Column"
-                                cellHeight={props.cellHeight || 'auto'}
-                                spacing={gridPadding}
+                                rowHeight={props.cellHeight || 'auto'}
+                                gap={gridPadding}
                                 cols={1}
                             >
                                 {childrenColumn.map((child, index) => (
@@ -196,21 +196,21 @@ export const DashboardSection = (props: Props) => {
                                         {child}
                                     </div>
                                 ))}
-                            </GridList>
+                            </ImageList>
                         ));
                     }
 
                     return (
-                        <GridList
+                        <ImageList
                             key={`DashboardSection-${props.name}-Page${pageIndex}`}
                             className="qa-DashboardSection-Page"
-                            cellHeight={props.cellHeight || 'auto'}
+                            rowHeight={props.cellHeight || 'auto'}
                             style={styles.gridList}
-                            spacing={gridPadding}
+                            gap={gridPadding}
                             cols={props.columns}
                         >
                             {content}
-                        </GridList>
+                        </ImageList>
                     );
                 })}
             </SwipeableViews>
