@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { isWidthUp } from '@material-ui/core/withWidth';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
@@ -10,6 +10,7 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMessage from './NotificationMessage';
 import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
+import * as React from "react";
 
 export class NotificationGridItem extends Component {
     constructor(props) {
@@ -69,7 +70,8 @@ export class NotificationGridItem extends Component {
         };
 
         return (
-            <div className="qa-NotificationGridItem" style={this.props.style}>
+            <div className="qa-NotificationGridItem" style={this.props.style}
+                 data-testid={"notification"}>
                 <Paper style={styles.root}>
                     <NotificationIcon notification={this.props.notification} />
                     <NotificationMessage
@@ -128,4 +130,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationGridItem)));
+export default withTheme(connect(null, mapDispatchToProps)(NotificationGridItem));

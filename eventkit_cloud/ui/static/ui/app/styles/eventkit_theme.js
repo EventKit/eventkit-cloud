@@ -147,7 +147,7 @@ export const theme = {
                 },
                 color: colors.grey,
             },
-            selected: {
+            '&$selected': {
                 color: colors.primary,
                 backgroundColor: colors.selected_primary,
             },

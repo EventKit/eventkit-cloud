@@ -1,3 +1,4 @@
+import * as React from "react";
 import { connect } from 'react-redux';
 import { withTheme, Theme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
 import { Link } from 'react-router-dom';
@@ -6,11 +7,9 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import moment from 'moment';
 import { makeFullRunSelector } from '../../selectors/runSelector';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import { MapView } from "../common/MapView";
 import { MapLayer } from "../CreateDataPack/CreateExport";
 import { useAppContext } from "../ApplicationContext";
-import * as React from "react";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     card: {
@@ -130,7 +129,6 @@ interface OwnProps {
     index: number;
     height?: string;
     theme: Eventkit.Theme & Theme;
-    width: Breakpoint;
 }
 
 interface StateProps {
@@ -159,7 +157,6 @@ export const DataPackFeaturedItem = (props: Props) => {
     const { classes } = props;
     const selectedBasemap = { mapUrl: BASEMAP_URL } as MapLayer;
 
-    console.log(`Props: ${props.run}`);
     return (
         <Card
             className={classes.card}

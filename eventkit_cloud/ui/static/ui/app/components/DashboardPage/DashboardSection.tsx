@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { isWidthUp } from '@material-ui/core/withWidth';
 import ImageList from '@material-ui/core/ImageList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -284,4 +284,4 @@ export const DashboardSection = (props: Props) => {
     );
 };
 
-export default withWidth()(withTheme(withStyles(jss)(DashboardSection)));
+export default withTheme(withStyles(jss)(DashboardSection));
