@@ -10,7 +10,6 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMessage from './NotificationMessage';
 import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
-import * as React from "react";
 
 export class NotificationGridItem extends Component {
     constructor(props) {
@@ -70,8 +69,11 @@ export class NotificationGridItem extends Component {
         };
 
         return (
-            <div className="qa-NotificationGridItem" style={this.props.style}
-                 data-testid={"notification"}>
+            <div
+                className="qa-NotificationGridItem"
+                style={this.props.style}
+                data-testid="notification"
+            >
                 <Paper style={styles.root}>
                     <NotificationIcon notification={this.props.notification} />
                     <NotificationMessage

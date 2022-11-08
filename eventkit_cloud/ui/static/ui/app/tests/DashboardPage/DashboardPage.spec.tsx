@@ -338,16 +338,12 @@ describe('DashboardPage component', () => {
         afterEach(() => {
             jest.useRealTimers();
         });
-        it('renders Notifications section', async () => {
-            await waitFor(() => {
-                expect(screen.queryByText("Notifications")).not.toBeNull();
-            });
+        it('renders Notifications section', () => {
+            expect(screen.getByText("Notifications"));
         });
 
-        it('renders Recently Viewed section', async () => {
-            await waitFor(() => {
-                expect(screen.queryByText("Recently Viewed")).not.toBeNull();
-            });
+        it('renders Recently Viewed section',  () => {
+            expect(screen.getByText("Recently Viewed"));
         });
 
         it('renders Featured section', () => {
