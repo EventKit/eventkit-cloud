@@ -34,7 +34,7 @@ from gdal_utils import convert, convert_bbox
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
-from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.feature_selection.feature_selection import FeatureSelection, slugify
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, MapImageSnapshot, ProxyFormat, clean_config
 from eventkit_cloud.tasks import set_cache_value
@@ -1447,18 +1447,20 @@ def arcgis_feature_service_export_task(
     out = gpkg
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
-        path = get_export_filepath(stage_dir, export_task_record, f"{layer.get('name')}-{projection}", "gpkg")
+        layer_slug = slugify(layer_name)
+        path = get_export_filepath(stage_dir, export_task_record, f"{layer_slug}-{projection}", "gpkg")
         src_srs = layer.get("src_srs") or 4326
         src_bbox = convert_bbox(bbox, to_projection=src_srs)
         url = get_arcgis_query_url(layer.get("url"))
-        layers[layer_name] = {
+
+        layers[layer_slug] = {
             "task_uid": task_uid,
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
             "bbox": src_bbox,
             "src_srs": src_srs,
-            "layer_name": layer_name,
+            "layer_name": layer_slug,
             "level": layer.get("level", 15),
             "distinct_field": layer.get("distinct_field", "OBJECTID"),
         }
