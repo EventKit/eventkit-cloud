@@ -253,7 +253,7 @@ class ExportTask(EventKitBaseTask):
 
     def update_task_state(self, result=None):
         """
-        Update the task state and celery task uid.
+        Update the task state.
         Can use the celery uid for diagnostics.
         """
         result = result or {}
@@ -525,8 +525,7 @@ def osm_data_collection_task(
     **kwargs,
 ):
     """
-    Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
-    bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
+    Collects data from OSM & produces a thematic gpkg as a subtask of the task.
     """
     logger.debug("enter run for {0}".format(self.task.export_provider_task.name))
     debug_os = None
@@ -568,10 +567,10 @@ def osm_data_collection_task(
 
 def add_metadata(job, provider, retval):
     """
-    Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
+    Accepts a job, provider, and return value from a task and applies metadata to the relevant file.
 
     :param job:
-    :param provider_slug:
+    :param provider:
     :param retval:
     :return:
     """
@@ -707,8 +706,8 @@ def pbf_export_task(
     **kwargs,
 ):
     """
-    Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
-    exposed and passed through.
+    Function defining PBF export function, this format is already generated in the OSM step.
+    It just needs to be exposed and passed through.
     """
     result = result or {}
     logger.error("GETTING PBF FILE...")
@@ -734,8 +733,8 @@ def ogcapi_process_export_task(
     **kwargs,
 ):
     """
-    Function defining OGC API Processes export.  This is called to create a dataset and then convert it to an eventkit
-    supported dataset.
+    Function defining OGC API Processes export.
+    This is called to create a dataset and then convert it to an eventkit supported dataset.
     """
 
     result = result or {}
@@ -759,12 +758,9 @@ def ogcapi_process_export_task(
 
     # TODO: The download path might not be a zip, use the mediatype to determine the file format.
     download_path = get_ogcapi_data(
-        config=config,
         task_uid=self.uid,
         stage_dir=self.stage_dir,
         bbox=self.job.extents,
-        service_url=self.task.export_provider_task.provider.url,
-        session_token=session_token,
         export_format_slug=self.task.export_provider_task.provider.slug,
         selection=selection,
         download_path=download_path,
@@ -805,13 +801,14 @@ def ogcapi_process_export_task(
 def ogc_result_task(
     self,
     result,
+    export_format_slug=None,
     projection=None,
     session_token=None,
     **kwargs,
 ):
     """
-    A helper method to get additional download formats from an ogcapi endpoint that aren't being converted into other
-    eventkit supported formats.
+    A helper method to get additional download formats from
+    an ogcapi endpoint that aren't being converted into other eventkit supported formats.
     """
 
     result = result or {}
@@ -840,12 +837,9 @@ def ogc_result_task(
     download_path = get_export_filepath(self.stage_dir, self.task, projection, "zip")
 
     download_path = get_ogcapi_data(
-        config=data_provider.config,
         task_uid=self.uid,
         stage_dir=self.stage_dir,
         bbox=self.job.extents,
-        service_url=self.task.export_provider_task.provider.url,
-        session_token=session_token,
         export_format_slug=export_format_slug,
         selection=selection,
         download_path=download_path,
@@ -1740,12 +1734,12 @@ def create_zip_task(
 
 
 @app.task(name="Finalize Export Provider Task", base=EventKitBaseTask, acks_late=True)
-def finalize_export_provider_task(result=None, data_provider_task_uid=None, status=None, *args, **kwargs):
+def finalize_export_provider_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     """
     Finalizes provider task.
 
     Cleans up staging directory.
-    Updates export provider status.
+    Updates task state.
     """
 
     # if the status was a success, we can assume all the ExportTasks succeeded. if not, we need to parse ExportTasks to
