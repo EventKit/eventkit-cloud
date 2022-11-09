@@ -111,12 +111,12 @@ class ExportTask(EventKitBaseTask):
             self.task = (
                 ExportTaskRecord.objects.select_related("export_provider_task__run__job")
                 .select_related("export_provider_task__provider")
-                .get(uid=self.celery_uid)
+                .get(uid=self.uid)
             )
 
             self.task.hide_download = self.hide_download
 
-            check_cached_task_failures(self.task.name, self.celery_uid)
+            check_cached_task_failures(self.task.name, self.uid)
 
             self.task.worker = socket.gethostname()
             self.task.save()
@@ -176,7 +176,7 @@ class ExportTask(EventKitBaseTask):
 
             # update the task
             if TaskState.CANCELED.value in [self.task.status, self.task.export_provider_task.status]:
-                logging.info("Task reported on success but was previously canceled ", format(self.celery_uid))
+                logging.info("Task reported on success but was previously canceled ", format(self.uid))
                 username = None
                 if self.task.cancel_user:
                     username = self.task.cancel_user.username
@@ -201,7 +201,7 @@ class ExportTask(EventKitBaseTask):
             return {"status": TaskState.CANCELED.value}
         except Exception as e:
             tb = traceback.format_exc()
-            logger.error("Exception in the handler for {}:\n{}".format(self.name, tb))
+            logger.error("Exception in the handler for {}:\n{}".format(self.task.export_provider_task.name, tb))
             from billiard.einfo import ExceptionInfo
 
             einfo = ExceptionInfo()
@@ -221,9 +221,7 @@ class ExportTask(EventKitBaseTask):
         # TODO: If there is a failure before the task was created this will fail to run.
         status = TaskState.FAILED.value
         try:
-            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(
-                uid=self.celery_uid
-            )
+            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(uid=self.uid)
             export_task_record.finished_at = timezone.now()
             export_task_record.save()
         except Exception:
@@ -239,16 +237,18 @@ class ExportTask(EventKitBaseTask):
             status = TaskState.CANCELED.value
         export_task_record.status = status
         export_task_record.save()
-        logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
+        logger.debug("Task name: {0} failed, {1}".format(self.task.export_provider_task.name, einfo))
         if self.abort_on_error:
             try:
                 data_provider_task_record = export_task_record.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
                 run = data_provider_task_record.run
-                export_task_error_handler(run_uid=str(run.uid), task_id=self.celery_uid, stage_dir=self.stage_dir)
+                export_task_error_handler(run_uid=str(run.uid), task_id=self.uid, stage_dir=self.stage_dir)
             except Exception:
                 tb = traceback.format_exc()
-                logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
+                logger.error(
+                    "Exception during handling of an error in {}:\n{}".format(self.task.export_provider_task.name, tb)
+                )
         return {"status": status}
 
     def update_task_state(self, result=None):
@@ -260,10 +260,10 @@ class ExportTask(EventKitBaseTask):
 
         try:
             if not self.task:
-                self.task = ExportTaskRecord.objects.get(uid=self.celery_uid)
+                self.task = ExportTaskRecord.objects.get(uid=self.uid)
             result = parse_result(result, "status") or []
             if TaskState.CANCELED.value in [self.task.status, self.task.export_provider_task.status, result]:
-                logging.info("canceling before run %s", self.task.celery_uid)
+                logging.info("canceling before run %s", self.uid)
                 self.task.status = TaskState.CANCELED.value
                 self.task.save()
                 raise CancelException(task_name=self.task.export_provider_task.name)
@@ -279,7 +279,7 @@ class ExportTask(EventKitBaseTask):
             self.task.export_provider_task.run.save()
             logger.debug("Updated task: {0} with uid: {1}".format(self.task.name, self.task.uid))
         except DatabaseError as e:
-            logger.error("Updating task {0} state throws: {1}".format(self.celery_uid, e))
+            logger.error("Updating task {0} state throws: {1}".format(self.uid, e))
             raise e
 
 
@@ -518,12 +518,8 @@ def osm_data_collection_pipeline(
 def osm_data_collection_task(
     self,
     result=None,
-    provider_slug=None,
     overpass_url=None,
-    job_name="no_job_name_specified",
-    bbox=None,
     user_details=None,
-    config=None,
     projection=4326,
     *args,
     **kwargs,
@@ -532,29 +528,29 @@ def osm_data_collection_task(
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    logger.debug("enter run for {0}".format(self.name))
+    logger.debug("enter run for {0}".format(self.task.export_provider_task.name))
     debug_os = None
 
     try:
         # Uncomment debug_os to generate a simple CSV of the progress log that can be used to evaluate the accuracy
         # of ETA estimates
         # debug_os = open("{}_progress_log.csv".format(task_uid), 'w')
-        eta = ETA(task_uid=self.task.celery_uid, debug_os=debug_os)
+        eta = ETA(task_uid=self.uid, debug_os=debug_os)
 
         result = result or {}
 
         selection = parse_result(result, "selection")
         osm_results = osm_data_collection_pipeline(
-            self.task.celery_uid,
+            self.uid,
             self.stage_dir,
-            slug=provider_slug,
-            job_name=job_name,
-            bbox=bbox,
+            slug=self.task.export_provider_task.provider.slug,
+            job_name=self.task.export_provider_task.name,
+            bbox=self.job.extents,
             projection=projection,
             user_details=user_details,
             selection=selection,
             url=overpass_url,
-            config=config,
+            config=self.task.export_provider_task.provider.config,
             eta=eta,
         )
 
@@ -562,7 +558,7 @@ def osm_data_collection_task(
         result["result"] = osm_results.get("gpkg")
         result["source"] = osm_results.get("gpkg")
 
-        logger.debug("exit run for {0}".format(self.name))
+        logger.debug("exit run for {0}".format(self.task.export_provider_task.name))
     finally:
         if debug_os:
             debug_os.close()
@@ -604,7 +600,7 @@ def shp_export_task(
 
     shp_out_dataset = get_export_filepath(self.stage_dir, self.task, projection, "shp")
     selection = parse_result(result, "selection")
-    task_process = TaskProcess(task_uid=self.task.celery_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     shp = convert(
         driver="ESRI Shapefile",
         input_files=shp_in_dataset,
@@ -634,7 +630,7 @@ def kml_export_task(
 
     kml_out_dataset = get_export_filepath(self.stage_dir, self.task, projection, "kml")
 
-    dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=self.task.celerey_uid)
+    dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=self.uid)
     metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
     metadata["projections"] = [4326]
 
@@ -648,7 +644,7 @@ def kml_export_task(
         logger.info("QGIS is not installed, using gdal_utils.utils.gdal.convert.")
         kml_in_dataset = parse_result(result, "source")
         selection = parse_result(result, "selection")
-        task_process = TaskProcess(task_uid=self.task.celerey_uid)
+        task_process = TaskProcess(task_uid=self.uid)
         kml = convert(
             driver="libkml",
             input_files=kml_in_dataset,
@@ -733,12 +729,8 @@ def pbf_export_task(
 def ogcapi_process_export_task(
     self,
     result=None,
-    config=None,
-    bbox=None,
-    service_url=None,
     projection=4326,
     session_token=None,
-    export_format_slug=None,
     **kwargs,
 ):
     """
@@ -749,6 +741,7 @@ def ogcapi_process_export_task(
     result = result or {}
     selection = parse_result(result, "selection")
     output_file = None
+    config = self.task.export_provider_task.provider.config
     if self.task.export_provider_task.provider.data_type == GeospatialDataType.ELEVATION.value:
         output_file = get_export_filepath(self.stage_dir, self.task, projection, "tif")
         driver = "gtiff"
@@ -767,17 +760,17 @@ def ogcapi_process_export_task(
     # TODO: The download path might not be a zip, use the mediatype to determine the file format.
     download_path = get_ogcapi_data(
         config=config,
-        task_uid=self.task.celery_uid,
+        task_uid=self.uid,
         stage_dir=self.stage_dir,
-        bbox=bbox,
-        service_url=service_url,
+        bbox=self.job.extents,
+        service_url=self.task.export_provider_task.provider.url,
         session_token=session_token,
-        export_format_slug=export_format_slug,
+        export_format_slug=self.task.export_provider_task.provider.slug,
         selection=selection,
         download_path=download_path,
     )
 
-    if not export_format_slug:
+    if not self.task.export_provider_task.provider.slug:
         # TODO: Its possible the data is not in a zip, this step should be optional depending on output.
         source_data = find_in_zip(
             zip_filepath=download_path,
@@ -786,7 +779,7 @@ def ogcapi_process_export_task(
             extract=not bool(driver),
         )
         if driver and output_file:
-            task_process = TaskProcess(task_uid=self.task.celery_uid)
+            task_process = TaskProcess(task_uid=self.uid)
             out = convert(
                 driver=driver,
                 input_files=source_data,
@@ -812,10 +805,7 @@ def ogcapi_process_export_task(
 def ogc_result_task(
     self,
     result,
-    export_format_slug=None,
     projection=None,
-    bbox=None,
-    service_url=None,
     session_token=None,
     **kwargs,
 ):
@@ -851,10 +841,10 @@ def ogc_result_task(
 
     download_path = get_ogcapi_data(
         config=data_provider.config,
-        task_uid=self.task.celerey_uid,
+        task_uid=self.uid,
         stage_dir=self.stage_dir,
-        bbox=bbox,
-        service_url=service_url,
+        bbox=self.job.extents,
+        service_url=self.task.export_provider_task.provider.url,
         session_token=session_token,
         export_format_slug=export_format_slug,
         selection=selection,
@@ -888,7 +878,7 @@ def sqlite_export_task(
     sqlite_out_dataset = get_export_filepath(self.stage_dir, self.task, projection, "sqlite")
     selection = parse_result(result, "selection")
 
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     sqlite = convert(
         driver="SQLite",
         input_files=sqlite_in_dataset,
@@ -991,7 +981,7 @@ def mbtiles_export_task(
     selection = parse_result(result, "selection")
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     mbtiles = convert(
         driver="MBTiles",
         input_files=source_dataset,
@@ -1012,7 +1002,6 @@ def geotiff_export_task(
     self,
     result=None,
     projection=4326,
-    config=None,
     **kwargs,
 ):
     """
@@ -1025,12 +1014,12 @@ def geotiff_export_task(
         gtiff_out_dataset = get_export_filepath(self.stage_dir, self.task, projection, "tif")
         selection = parse_result(result, "selection")
 
-        warp_params, translate_params = get_creation_options(config, "gtiff")
+        warp_params, translate_params = get_creation_options(self.task.export_provider_task.provider.config, "gtiff")
 
         if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
             gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-        task_process = TaskProcess(task_uid=self.task.celerey_uid)
+        task_process = TaskProcess(task_uid=self.uid)
         gtiff_out_dataset = convert(
             driver="gtiff",
             input_files=gtiff_in_dataset,
@@ -1068,7 +1057,7 @@ def nitf_export_task(
     if projection != 4326:
         raise Exception("NITF only supports 4236.")
     creation_options = ["ICORDS=G"]
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     nitf = convert(
         driver="nitf",
         input_files=nitf_in_dataset,
@@ -1097,7 +1086,7 @@ def hfa_export_task(
     result = result or {}
     hfa_in_dataset = parse_result(result, "source")
     hfa_out_dataset = get_export_filepath(self.stage_dir, self.task, projection, "img")
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     hfa = convert(
         driver="hfa",
         input_files=hfa_in_dataset,
@@ -1117,9 +1106,7 @@ def hfa_export_task(
 def reprojection_task(
     self,
     result=None,
-    job_name=None,
     projection=None,
-    config=None,
     layer=None,
     **kwargs,
 ):
@@ -1129,6 +1116,7 @@ def reprojection_task(
     result = result or {}
     driver = parse_result(result, "driver")
     selection = parse_result(result, "selection")
+    config = self.task.export_provider_task.provider.config
 
     if parse_result(result, "file_extension"):
         file_extension = parse_result(result, "file_extension")
@@ -1149,7 +1137,7 @@ def reprojection_task(
     else:
         # If you are updating this see the note above about source projection.
         dptr: DataProviderTaskRecord = DataProviderTaskRecord.objects.select_related("run__job").get(
-            tasks__uid__exact=self.task.celerey_uid
+            tasks__uid__exact=self.uid
         )
         metadata = get_metadata(data_provider_task_record_uids=[str(dptr.uid)], source_only=True)
         provider_slug = self.task.export_provider_task.provider.slug
@@ -1171,13 +1159,13 @@ def reprojection_task(
             mp = mapproxy.MapproxyGeopackage(
                 gpkgfile=out_dataset,
                 service_url=out_dataset,
-                name=job_name,
+                name=self.task.export_provider_task.name,
                 config=config,
                 bbox=dptr.run.job.extents,
                 layer=layer,
                 level_from=level_from,
                 level_to=level_to,
-                task_uid=self.task.celerey_uid,
+                task_uid=self.uid,
                 selection=selection,
                 projection=projection,
                 input_gpkg=in_dataset,
@@ -1185,7 +1173,7 @@ def reprojection_task(
             reprojection = mp.convert()
 
         else:
-            task_process = TaskProcess(task_uid=self.task.celerey_uid)
+            task_process = TaskProcess(task_uid=self.uid)
             reprojection = convert(
                 driver=driver,
                 input_files=in_dataset,
@@ -1207,9 +1195,6 @@ def wfs_export_task(
     self,
     result=None,
     layer=None,
-    config=dict(),
-    bbox=None,
-    name=None,
     projection=4326,
     **kwargs,
 ):
@@ -1220,7 +1205,7 @@ def wfs_export_task(
 
     gpkg = get_export_filepath(self.stage_dir, self.task, projection, "gpkg")
 
-    configuration = config
+    configuration = self.task.export_provider_task.provider.config
     if configuration.get("layers"):
         configuration.pop("layers")  # Remove raster layers to prevent download conflict, needs refactor.
     vector_layer_data: LayersDescription = self.task.export_provider_task.provider.layers
@@ -1228,13 +1213,13 @@ def wfs_export_task(
     out = None
     for layer_name, layer in vector_layer_data.items():
         path = get_export_filepath(self.stage_dir, self.task, f"{layer_name}-{projection}", "gpkg")
-        url = get_wfs_query_url(name, layer["url"], layer_name, projection)
+        url = get_wfs_query_url(self.task.export_provider_task.name, layer["url"], layer_name, projection)
         layers[layer_name] = {
-            "task_uid": self.task.celerey_uid,
+            "task_uid": self.uid,
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
-            "bbox": bbox,
+            "bbox": self.job.extents,
             "layer_name": layer_name,
             "projection": 4326,
             "level": layer.get("level", 15),
@@ -1245,13 +1230,13 @@ def wfs_export_task(
     for layer_name, layer in layers.items():
         if not os.path.exists(layer["path"]):
             continue
-        task_process = TaskProcess(task_uid=self.task.celerey_uid)
+        task_process = TaskProcess(task_uid=self.uid)
         out = convert(
             driver="gpkg",
             input_files=layer.get("path"),
             output_file=gpkg,
             projection=projection,
-            boundary=bbox,
+            boundary=self.job.extents,
             layer_name=layer_name,
             access_mode="append",
             executor=task_process.start_process,
@@ -1316,9 +1301,6 @@ def wcs_export_task(
     self,
     result=None,
     layer=None,
-    config=None,
-    bbox=None,
-    service_url=None,
     user_details=None,
     projection=4326,
     **kwargs,
@@ -1330,18 +1312,18 @@ def wcs_export_task(
 
     out = get_export_filepath(self.stage_dir, self.task, projection, "tif")
 
-    eta = ETA(task_uid=self.task.celerey_uid)
+    eta = ETA(task_uid=self.uid)
 
     try:
         wcs_conv = wcs.WCSConverter(
-            config=config,
+            config=self.task.export_provider_task.provider.config,
             out=out,
-            bbox=bbox,
-            service_url=service_url,
+            bbox=self.job.extents,
+            service_url=self.task.export_provider_task.provider.url,
             layer=layer,
             debug=True,
-            name=self.name,
-            task_uid=self.task.celerey_uid,
+            name=self.task.export_provider_task.name,
+            task_uid=self.uid,
             fmt="gtiff",
             slug=self.task.export_provider_task.provider.slug,
             user_details=user_details,
@@ -1362,7 +1344,6 @@ def wcs_export_task(
 def arcgis_feature_service_export_task(
     self,
     result=None,
-    bbox=None,
     projection=4326,
     **kwargs,
 ):
@@ -1386,11 +1367,11 @@ def arcgis_feature_service_export_task(
         path = get_export_filepath(self.stage_dir, self.task, f"{layer.get('name')}-{projection}", "gpkg")
         url = get_arcgis_query_url(layer.get("url"))
         layers[layer_name] = {
-            "task_uid": self.task.celerey_uid,
+            "task_uid": self.uid,
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
-            "bbox": bbox,
+            "bbox": self.job.extents,
             "projection": 4326,
             "layer_name": layer_name,
             "level": layer.get("level", 15),
@@ -1405,7 +1386,7 @@ def arcgis_feature_service_export_task(
     for layer_name, layer in layers.items():
         if not os.path.exists(layer["path"]):
             continue
-        task_process = TaskProcess(task_uid=self.task.celerey_uid)
+        task_process = TaskProcess(task_uid=self.uid)
         out = convert(
             driver="gpkg",
             input_files=layer.get("path"),
@@ -1458,8 +1439,6 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
 def vector_file_export_task(
     self,
     result=None,
-    bbox=None,
-    service_url=None,
     projection=4326,
     **kwargs,
 ):
@@ -1469,16 +1448,16 @@ def vector_file_export_task(
     result = result or {}
     gpkg = get_export_filepath(self.stage_dir, self.task, projection, "gpkg")
 
-    download_data(self.task.celerey_uid, service_url, gpkg)
+    download_data(self.uid, self.task.export_provider_task.provider.url, gpkg)
 
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     out = convert(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
         projection=projection,
         layer_name=list(self.task.export_provider_task.provider.layers.keys())[0],
-        boundary=bbox,
+        boundary=self.job.extents,
         is_raster=False,
         executor=task_process.start_process,
     )
@@ -1495,8 +1474,6 @@ def vector_file_export_task(
 def raster_file_export_task(
     self,
     result=None,
-    bbox=None,
-    service_url=None,
     projection=4326,
     **kwargs,
 ):
@@ -1506,15 +1483,15 @@ def raster_file_export_task(
     result = result or {}
     gpkg = get_export_filepath(self.stage_dir, self.task, projection, "gpkg")
 
-    download_data(self.task.celerey_uid, service_url, gpkg)
+    download_data(self.uid, self.task.export_provider_task.provider.url, gpkg)
 
-    task_process = TaskProcess(task_uid=self.task.celerey_uid)
+    task_process = TaskProcess(task_uid=self.uid)
     out = convert(
         driver="gpkg",
         input_files=gpkg,
         output_file=gpkg,
         projection=projection,
-        boundary=bbox,
+        boundary=self.job.extents,
         is_raster=True,
         executor=task_process.start_process,
     )
@@ -1532,7 +1509,6 @@ def bounds_export_task(
     self,
     result={},
     run_uid=None,
-    provider_slug=None,
     projection=4326,
     **kwargs,
 ):
@@ -1546,9 +1522,11 @@ def bounds_export_task(
     result_gpkg = parse_result(result, "source")
     bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
-    gpkg = os.path.join(self.stage_dir, "{0}-{1}_bounds.gpkg".format(provider_slug, projection))
+    gpkg = os.path.join(
+        self.stage_dir, "{0}-{1}_bounds.gpkg".format(self.task.export_provider_task.provider.slug, projection)
+    )
     gpkg = geopackage.add_geojson_to_geopackage(
-        geojson=bounds, gpkg=gpkg, layer_name="bounds", task_uid=self.task.celerey_uid, user_details=user_details
+        geojson=bounds, gpkg=gpkg, layer_name="bounds", task_uid=self.uid, user_details=user_details
     )
 
     result["result"] = gpkg
@@ -1561,9 +1539,6 @@ def mapproxy_export_task(
     self,
     result=None,
     layer=None,
-    config=None,
-    bbox=None,
-    service_url=None,
     level_from=None,
     level_to=None,
     service_type=None,
@@ -1581,15 +1556,15 @@ def mapproxy_export_task(
     try:
         w2g = mapproxy.MapproxyGeopackage(
             gpkgfile=gpkgfile,
-            bbox=bbox,
-            service_url=service_url,
+            bbox=self.job.extents,
+            service_url=self.task.export_provider_task.provider.url,
             name=self.task.name,
             layer=layer,
-            config=config,
+            config=self.task.export_provider_task.provider.config,
             level_from=level_from,
             level_to=level_to,
             service_type=service_type,
-            task_uid=self.task.celery_uid,
+            task_uid=self.uid,
             selection=selection,
             projection=projection,
         )
@@ -2254,12 +2229,9 @@ def get_creation_options(config: dict, driver: str):
 
 
 def get_ogcapi_data(
-    config=None,
     task_uid=None,
     stage_dir=None,
     bbox=None,
-    service_url=None,
-    session_token=None,
     export_format_slug=None,
     selection=None,
     download_path=None,
