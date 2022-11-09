@@ -22,7 +22,7 @@ const initialTestState = {
     exportInfo: dataCartState.exportInfo,
     geocode: geocodeState,
     importGeom: fileState,
-    user: userState.status,
+    user: userState,
     router: connectRouter(history),
     drawer: uiState.drawer,
     providers: initialStateProviders,

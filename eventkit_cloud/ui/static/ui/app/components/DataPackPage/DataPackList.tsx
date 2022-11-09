@@ -5,7 +5,7 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import DataPackListItem from './DataPackListItem';
@@ -155,11 +155,11 @@ export class DataPackList extends Component<Props, {}> {
                     style={{ height: 'calc(100vh - 236px)', width: '100%' }}
                 >
                     <div style={styles.root} className="qa-DataPackList-root">
-                        <GridList
+                        <ImageList
                             className="qa-DataPackList-GridList"
-                            cellHeight="auto"
+                            rowHeight="auto"
                             cols={1}
-                            spacing={0}
+                            gap={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
                             {this.props.runIds.map(id => (
@@ -173,7 +173,7 @@ export class DataPackList extends Component<Props, {}> {
                                 />
                             ))}
                             {load}
-                        </GridList>
+                        </ImageList>
                     </div>
                 </ScrollBarRefWrap>
             );
