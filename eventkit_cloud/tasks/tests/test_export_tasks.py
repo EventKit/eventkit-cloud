@@ -1623,14 +1623,15 @@ class TestExportTasks(ExportTaskBase):
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         projection = 4326
         expected_provider_slug = "vector-file"
+        service_url = "https://abc.gov/file.geojson"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="vector-file")
         self.provider.slug = expected_provider_slug
         self.provider.config = dict()
+        self.provider.url = service_url
         self.provider.save()
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
-        service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
         mock_download_data.return_value = service_url
@@ -1642,24 +1643,20 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=vector_file_export_task.name
         )
-        vector_file_export_task.update_task_state(
-            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
-        )
-
+        vector_file_export_task.task = saved_export_task
+        vector_file_export_task.task.status = TaskState.RUNNING.value
+        vector_file_export_task.update_task_state()
         self.task_process.return_value = Mock(exitcode=0)
         result = vector_file_export_task.run(
             result=previous_task_result,
-            task_uid=str(saved_export_task.uid),
-            stage_dir=self.stage_dir,
             projection=projection,
-            service_url=service_url,
         )
         mock_convert.assert_called_once_with(
             driver="gpkg",
             input_files=expected_output_path,
             output_file=expected_output_path,
             projection=projection,
-            boundary=None,
+            boundary=(-10.85, 6.25, -10.62, 6.4),
             layer_name=expected_provider_slug,
             is_raster=False,
             executor=self.task_process().start_process,
@@ -1670,7 +1667,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["gpkg"])
 
         mock_download_data.assert_called_once_with(
-            str(saved_export_task.uid),
+            saved_export_task.uid,
             service_url,
             expected_output_path,
         )
