@@ -460,21 +460,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         """
         if self.data_type != GeospatialDataType.VECTOR.value:
             return {}
+        # TODO: Each datatype should just know how to return their layers.
+        # Instead a bunch of random stuff here.
+        if self.export_provider_type.type_name in ["arcgis-feature"]:
+            return self.get_service_client().get_layers()
         if self.config:
             config = clean_config(self.config)
             # As of EK 1.9.0 only vectors support multiple layers in a single provider
             if self.export_provider_type.type_name in ["osm", "osm-generic"]:
                 return config
-            elif config.get("vector_layers"):
-                return config.get("vector_layers", {})
+            if config.get("vector_layers"):
+                return config["vector_layers"]
         # Often layer names are configured using an index number but this number is not very
         # useful when using the data so fall back to the slug which should be more meaningful.
         if not self.layer:  # check for NoneType or empty string
-            # TODO: support other service types
-            if self.export_provider_type.type_name in ["arcgis-feature"]:
-                return self.get_service_client().get_layers()
-            else:
-                return {self.slug: {"url": self.url, "name": self.slug}}
+            return {self.slug: {"url": self.url, "name": self.slug}}
         try:
             int(self.layer)  # noqa
             return {

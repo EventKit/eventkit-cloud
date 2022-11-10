@@ -1,4 +1,6 @@
-from typing import Dict, List, TypedDict
+from typing import Dict, List, TypedDict, Union
+
+from eventkit_cloud.utils.arcgis.types import service_types
 
 
 class LayerConfiguration(TypedDict, total=False):
@@ -10,6 +12,7 @@ class LayerConfiguration(TypedDict, total=False):
     src_srs: int
     dst_src: int
     distinct_field: str
+    service_description: Union[service_types.MapServiceSpecification]
 
 
 class LayerDescription(TypedDict, total=False):

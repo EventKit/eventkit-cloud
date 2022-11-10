@@ -1293,6 +1293,7 @@ def wfs_export_task(
             "layer_name": layer_name,
             "projection": 4326,
             "level": layer.get("level", 15),
+            "service_description": layer.get("service_description"),
         }
 
     download_concurrently(list(layers.values()), **configuration)
@@ -1462,7 +1463,8 @@ def arcgis_feature_service_export_task(
             "src_srs": src_srs,
             "layer_name": layer_slug,
             "level": layer.get("level", 15),
-            "distinct_field": layer.get("distinct_field", "OBJECTID"),
+            "distinct_field": layer.get("distinct_field"),
+            "service_description": layer.get("service_description"),
         }
 
     try:
@@ -1509,7 +1511,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         service_url = service_url.rstrip("/\\")
     finally:
         query_params = {
-            "where": "objectid=objectid",
+            "where": "",
             "outfields": "*",
             "f": "json",
             "geometry": str(bbox).strip("[]"),

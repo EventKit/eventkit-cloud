@@ -869,6 +869,7 @@ def merge_chunks(
     distinct_field=None,
     session=None,
     dst_srs: int = 4326,
+    service_description: dict = None,
     *args,
     **kwargs,
 ):
@@ -885,18 +886,23 @@ def merge_chunks(
         layer_name=layer_name,
         level=level,
         session=session,
+        service_description=service_description,
         *args,
         **kwargs,
     )  # type: ignore
     task_process = TaskProcess(task_uid=task_uid)
     try:
         out = convert(
-            boundary=bbox,
+            # boundary=bbox,
             input_files=chunks,
             output_file=output_file,
             layer_name=layer_name,
             driver="gpkg",
             dst_srs=dst_srs,
+            # Access_mode:
+            #   Append will fail silently if layer doesn't exist.
+            #   Update will fail if layer DOES exist, since this request should be for a new layer,
+            #   update should be fine.
             access_mode="append",
             distinct_field=distinct_field,
             executor=task_process.start_process,
@@ -927,6 +933,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
         feature_data=feature_data,
         level=layer.get("level"),
         distinct_field=layer.get("distinct_field"),
+        service_description=layer.get("service_description"),
         session=session,
     )
 
@@ -1089,30 +1096,12 @@ def download_chunks(
     level=15,
     size=None,
     session=None,
+    service_description=None,
     *args,
     **kwargs,
 ):
     tile_bboxes = get_chunked_bbox(bbox, size=size, level=level)
     chunks = []
-    # TODO: Pass in service description from export_task.
-    service_description = {}
-    if feature_data:
-        service_url = None
-        try:
-            parsed_url = urllib.parse.urlparse(base_url)
-            if "FeatureServer" in base_url or "MapServer" in base_url:
-                service_url = parsed_url._replace(path=parsed_url.path.removesuffix("/query"), query="").geturl()
-                params = urllib.parse.parse_qs(base_url)
-                params["f"] = ["json"]
-                result = session.get(service_url, params=params)
-                result.raise_for_status()
-                service_description = result.json()
-        except requests.exceptions.HTTPError:
-            if service_url:
-                logger.error("Could not get service description for %s", service_url)
-            else:
-                logger.error("There was an error parsing the url to get a description for %s", base_url)
-        logger.info("Making %s requests at level %s for service %s", len(tile_bboxes), level, service_url or base_url)
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
