@@ -111,8 +111,9 @@ class ArcGIS(GisClient):
             }
         else:
             # https://github.com/python/mypy/issues/4122
-            layers = {slugify(cap_doc["name"]): {"url": str(cap_doc["url"]),
-                                                 **self.get_layer_info(cap_doc)}}  # type: ignore
+            layers = {
+                slugify(cap_doc["name"]): {"url": str(cap_doc["url"]), **self.get_layer_info(cap_doc)}  # type: ignore
+            }
         for layer_name, layer in layers.items():
             layer_capabilities = layer.get("service_description")
             if not layer_capabilities:
