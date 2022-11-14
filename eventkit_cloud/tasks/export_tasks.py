@@ -208,7 +208,7 @@ class ExportTask(EventKitBaseTask):
             return self.task_failure(e, args, kwargs, einfo)
 
     @transaction.atomic
-    def task_failure(self, exc, args, kwargs, einfo):
+    def task_failure(self, task_id, args, kwargs, einfo):
         """
         Update the failed task as follows:
 
@@ -221,9 +221,7 @@ class ExportTask(EventKitBaseTask):
         # TODO: If there is a failure before the task was created this will fail to run.
         status = TaskState.FAILED.value
         try:
-            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(
-                uid=self.task.uid
-            )
+            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(uid=task_id)
             export_task_record.finished_at = timezone.now()
             export_task_record.save()
         except Exception:
@@ -239,49 +237,53 @@ class ExportTask(EventKitBaseTask):
             status = TaskState.CANCELED.value
         export_task_record.status = status
         export_task_record.save()
-        logger.debug("Task name: {0} failed, {1}".format(self.task.export_provider_task.name, einfo))
+        logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
         if self.abort_on_error:
             try:
                 data_provider_task_record = export_task_record.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
                 run = data_provider_task_record.run
-                export_task_error_handler(run_uid=str(run.uid), task_id=self.task.uid, stage_dir=self.stage_dir)
+                stage_dir = kwargs["stage_dir"]
+                export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
             except Exception:
                 tb = traceback.format_exc()
-                logger.error(
-                    "Exception during handling of an error in {}:\n{}".format(self.task.export_provider_task.name, tb)
-                )
+                logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
         return {"status": status}
 
-    def update_task_state(self, result=None):
+    def update_task_state(self, result=None, task_status=TaskState.RUNNING.value, task_uid=None):
         """
-        Update the task state.
+        Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
         """
         result = result or {}
 
         try:
-            if not self.task:
-                self.task = ExportTaskRecord.objects.get(uid=self.task.uid)
+            task = ExportTaskRecord.objects.get(uid=task_uid)
+            celery_uid = self.request.id
+            if not celery_uid:
+                raise Exception("Failed to save celery_UID")
+            task.celery_uid = celery_uid
+            task.save()
             result = parse_result(result, "status") or []
-            if TaskState.CANCELED.value in [self.task.status, self.task.export_provider_task.status, result]:
-                logging.info("canceling before run %s", self.task.uid)
-                self.task.status = TaskState.CANCELED.value
-                self.task.save()
-                raise CancelException(task_name=self.task.export_provider_task.name)
+            if TaskState.CANCELED.value in [task.status, task.export_provider_task.status, result]:
+                logging.info("canceling before run %s", celery_uid)
+                task.status = TaskState.CANCELED.value
+                task.save()
+                raise CancelException(task_name=task.export_provider_task.name)
             # The parent ID is actually the process running in celery.
-            self.task.pid = os.getppid()
-            if self.task.status:
-                if TaskState[self.task.status] == TaskState.RUNNING:
-                    self.task.export_provider_task.status = TaskState.RUNNING.value
-                    self.task.export_provider_task.run.status = TaskState.RUNNING.value
+            task.pid = os.getppid()
+            if task_status:
+                task.status = task_status
+                if TaskState[task_status] == TaskState.RUNNING:
+                    task.export_provider_task.status = TaskState.RUNNING.value
+                    task.export_provider_task.run.status = TaskState.RUNNING.value
             # Need to manually call to trigger method overrides.
-            self.task.save()
-            self.task.export_provider_task.save()
-            self.task.export_provider_task.run.save()
-            logger.debug("Updated task: {0} with uid: {1}".format(self.task.name, self.task.uid))
+            task.save()
+            task.export_provider_task.save()
+            task.export_provider_task.run.save()
+            logger.debug("Updated task: {0} with uid: {1}".format(task.name, task.uid))
         except DatabaseError as e:
-            logger.error("Updating task {0} state throws: {1}".format(self.task.uid, e))
+            logger.error("Updating task {0} state throws: {1}".format(task_uid, e))
             raise e
 
 
@@ -1211,7 +1213,7 @@ def wfs_export_task(
         path = get_export_filepath(self.stage_dir, self.task, f"{layer_name}-{projection}", "gpkg")
         url = get_wfs_query_url(self.task.export_provider_task.name, layer["url"], layer_name, projection)
         layers[layer_name] = {
-            "task_uid": self.task.uid,
+            "task_uid": str(self.task.uid),
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
@@ -1363,7 +1365,7 @@ def arcgis_feature_service_export_task(
         path = get_export_filepath(self.stage_dir, self.task, f"{layer.get('name')}-{projection}", "gpkg")
         url = get_arcgis_query_url(layer.get("url"))
         layers[layer_name] = {
-            "task_uid": self.task.uid,
+            "task_uid": str(self.task.uid),
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),

@@ -12,7 +12,7 @@ import celery
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon, fromstr, MultiPolygon
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
@@ -170,6 +170,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=shp_export_task.name
         )
+        shp_export_task.task = saved_export_task
         shp_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         self.task_process.return_value = Mock(exitcode=0)
         result = shp_export_task.run(
@@ -215,6 +216,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=kml_export_task.name
         )
+        kml_export_task.task = saved_export_task
         kml_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         self.task_process.return_value = Mock(exitcode=0)
         result = kml_export_task.run(
@@ -259,6 +261,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=sqlite_export_task.name
         )
+        sqlite_export_task.task = saved_export_task
         sqlite_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         self.task_process.return_value = Mock(exitcode=0)
         result = sqlite_export_task.run(
@@ -324,6 +327,9 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=wfs_export_task.name
         )
+        polygon: MultiPolygon = MultiPolygon(fromstr(Polygon.from_bbox([1, 2, 3, 4])))
+        saved_export_task.export_provider_task.run.job.the_geom = polygon
+        wfs_export_task.task = saved_export_task
         wfs_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         mock_gpkg.check_content_exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
@@ -334,7 +340,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            bbox=[1, 2, 3, 4],
+            bbox=polygon.extent,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -347,7 +353,7 @@ class TestExportTasks(ExportTaskBase):
             stage_dir=self.stage_dir,
             projection=projection,
             service_url=f"{service_url}/",
-            bbox=[1, 2, 3, 4],
+            bbox=polygon.extent,
         )
 
         self.assertEqual(expected_output_path, result_b["result"])
@@ -376,7 +382,7 @@ class TestExportTasks(ExportTaskBase):
                 "url": expected_url_1,
                 "path": expected_path_1,
                 "base_path": expected_base_path,
-                "bbox": [1, 2, 3, 4],
+                "bbox": polygon.extent,
                 "layer_name": layer_1,
                 "projection": projection,
                 "level": 15,
@@ -386,7 +392,7 @@ class TestExportTasks(ExportTaskBase):
                 "url": expected_url_2,
                 "path": expected_path_2,
                 "base_path": expected_base_path,
-                "bbox": [1, 2, 3, 4],
+                "bbox": polygon.extent,
                 "layer_name": layer_2,
                 "projection": projection,
                 "level": 15,
@@ -408,7 +414,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
             service_url=service_url,
             layer=layer,
-            bbox=[1, 2, 3, 4],
+            bbox=polygon.extent,
         )
 
         _, args, _ = mock_download_concurrently.mock_calls[0]
@@ -420,7 +426,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_1,
             output_file=expected_output_path,
             projection=4326,
-            boundary=[1, 2, 3, 4],
+            boundary=polygon.extent,
             access_mode="append",
             layer_name=layer_1,
             executor=self.task_process().start_process,
@@ -431,7 +437,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_path_2,
             output_file=expected_output_path,
             projection=4326,
-            boundary=[1, 2, 3, 4],
+            boundary=polygon.extent,
             access_mode="append",
             layer_name=layer_2,
             executor=self.task_process().start_process,
@@ -460,6 +466,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=mbtiles_export_task.name
         )
+        mbtiles_export_task.task = saved_export_task
         mbtiles_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         self.task_process.return_value = Mock(exitcode=0)
         result = mbtiles_export_task.run(
@@ -695,7 +702,10 @@ class TestExportTasks(ExportTaskBase):
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         self.task_process.return_value = Mock(exitcode=0)
-        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir)
+        geotiff_export_task.task_uid = task_uid
+        geotiff_export_task.stage_dir = self.stage_dir
+        geopackage_export_task.task.export_provider_task.provider.config = {}
+        geotiff_export_task(result=example_result)
         mock_convert.return_value = expected_outfile
         mock_convert.assert_called_once_with(
             boundary=None,
@@ -712,7 +722,10 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.reset_mock()
         example_result = {"source": example_geotiff, "selection": "selection"}
         mock_convert.return_value = expected_outfile
-        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir=self.stage_dir)
+        geotiff_export_task.task_uid = task_uid
+        geotiff_export_task.stage_dir = self.stage_dir
+        geopackage_export_task.task.export_provider_task.provider.config = {}
+        geotiff_export_task(result=example_result)
         mock_convert.assert_called_once_with(
             boundary="selection",
             driver="gtiff",
@@ -802,12 +815,11 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=sqlite_export_task.name
         )
+        sqlite_export_task.task = saved_export_task
         sqlite_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         self.task_process.return_value = Mock(exitcode=0)
         result = sqlite_export_task.run(
             result=previous_task_result,
-            task_uid=str(saved_export_task.uid),
-            stage_dir=self.stage_dir,
             projection=projection,
         )
         mock_convert.assert_called_once_with(
@@ -1124,6 +1136,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=mapproxy_export_task.name
         )
+        mapproxy_export_task.task = saved_export_task
         mapproxy_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         result = mapproxy_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=self.stage_dir)
         service_to_gpkg.convert.assert_called_once()
@@ -1158,7 +1171,7 @@ class TestExportTasks(ExportTaskBase):
             exc_info = sys.exc_info()
         einfo = ExceptionInfo(exc_info=exc_info)
         shp_export_task.task_failure(
-            exc, task_id=test_export_task_record.uid, einfo=einfo, args={}, kwargs={"run_uid": str(self.run.uid)}
+            task_id=test_export_task_record.uid, einfo=einfo, args={}, kwargs={"run_uid": str(self.run.uid)}
         )
         task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
@@ -1252,6 +1265,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=bounds_export_task.name
         )
+        bounds_export_task.task = saved_export_task
         bounds_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
         result = bounds_export_task.run(
             run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=self.stage_dir, provider_slug=job_name
@@ -1644,8 +1658,9 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=vector_file_export_task.name
         )
         vector_file_export_task.task = saved_export_task
-        vector_file_export_task.task.status = TaskState.RUNNING.value
-        vector_file_export_task.update_task_state()
+        vector_file_export_task.update_task_state(
+            task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
+        )
         self.task_process.return_value = Mock(exitcode=0)
         result = vector_file_export_task.run(
             result=previous_task_result,
@@ -1700,6 +1715,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=raster_file_export_task.name
         )
+        raster_file_export_task.task = saved_export_task
         raster_file_export_task.update_task_state(
             task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid)
         )
@@ -1901,6 +1917,7 @@ class TestExportTasks(ExportTaskBase):
         password = "password"
         mock_getenv.return_value = f"{username}:{password}"
         task_uid = str(saved_export_task.uid)
+        ogcapi_process_export_task.task = saved_export_task
         ogcapi_process_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=task_uid)
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
