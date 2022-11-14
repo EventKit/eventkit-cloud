@@ -93,7 +93,7 @@ export class SearchAOIButton extends Component {
 
 SearchAOIButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
-    handleCancel: PropTypes.func,
+    handleCancel: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
 };

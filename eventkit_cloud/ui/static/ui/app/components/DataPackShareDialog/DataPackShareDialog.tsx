@@ -45,7 +45,7 @@ export const DataPackShareDialog = (props: Props) => {
     const canUpdateAdmin = props.canUpdateAdmin ?? false;
     const user = props.user ?? null;
     const warnPublic = props.warnPublic ?? false;
-    let localPermissions: Permissions;
+    let localPermissions: Permissions = new Permissions(props.permissions);
 
     const [view, setView] = useState('groups');
     const [permissions, setPermissions] = useState(null);
@@ -53,6 +53,10 @@ export const DataPackShareDialog = (props: Props) => {
     const [showPublicWarning, setShowPublicWarning] = useState(false);
 
     const handleSave = () => {
+        if (localPermissions == null) {
+            return;
+        }
+
         if (localPermissions.isPrivate()) {
             if (localPermissions.getMemberCount() || localPermissions.getGroupCount()) {
                 localPermissions.makeShared();
