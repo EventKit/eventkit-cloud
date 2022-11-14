@@ -12,6 +12,7 @@ import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
 import { getPermissionUsers } from '../../slices/usersSlice';
 import { PermissionsView } from "./DataPackShareDialog";
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export interface Props {
     public: boolean;
@@ -74,6 +75,7 @@ export class MembersBody extends React.Component<Props, State> {
         this.handleSystemCheckAll = this.handleSystemCheckAll.bind(this);
         this.closeConfirm = this.closeConfirm.bind(this);
         this.loadMore = this.loadMore.bind(this);
+        this.getWidth = this.getWidth.bind(this);
         this.state = {
             search: '',
             memberOrder: 'username',
@@ -100,6 +102,22 @@ export class MembersBody extends React.Component<Props, State> {
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
+
+    getWidth() {
+        const windowWidth = window.innerWidth;
+        let value = 'xs';
+        if (windowWidth >= 1920) {
+            value = 'xl';
+        } else if (windowWidth >= 1280) {
+            value = 'lg';
+        } else if (windowWidth >= 960) {
+            value = 'md';
+        } else if (windowWidth >= 600) {
+            value = 'sm';
+        }
+
+        return value;
+    };
 
     private getPermissions() {
         let permissions;
@@ -354,6 +372,7 @@ export class MembersBody extends React.Component<Props, State> {
                     {shareInfo}
                     <MembersHeaderRow
                         className="qa-MembersBody-MembersHeaderRow"
+                        width={this.getWidth() as Breakpoint}
                         public={this.props.public}
                         memberCount={users.length}
                         selectedCount={visibleCount}

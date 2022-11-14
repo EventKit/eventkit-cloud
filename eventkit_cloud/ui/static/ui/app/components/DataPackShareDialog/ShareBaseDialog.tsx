@@ -13,7 +13,6 @@ import Divider from "@material-ui/core/Divider";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
 import Warning from "@material-ui/icons/Warning";
-import {CUSTOM_BREAKPOINTS} from "../DashboardPage/DashboardPage";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export interface Props {
@@ -81,13 +80,13 @@ export class ShareBaseDialog extends Component<Props, {}> {
     getWidth() {
         const windowWidth = window.innerWidth;
         let value = 'xs';
-        if (windowWidth >= CUSTOM_BREAKPOINTS.xl) {
+        if (windowWidth >= 1920) {
             value = 'xl';
-        } else if (windowWidth >= CUSTOM_BREAKPOINTS.lg) {
+        } else if (windowWidth >= 1280) {
             value = 'lg';
-        } else if (windowWidth >= CUSTOM_BREAKPOINTS.md) {
+        } else if (windowWidth >= 960) {
             value = 'md';
-        } else if (windowWidth >= CUSTOM_BREAKPOINTS.sm) {
+        } else if (windowWidth >= 600) {
             value = 'sm';
         }
 

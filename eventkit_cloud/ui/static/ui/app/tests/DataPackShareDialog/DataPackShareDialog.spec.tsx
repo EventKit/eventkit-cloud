@@ -70,6 +70,7 @@ describe('DataPackPage component', () => {
             user: { username: 'admin' },
             groups: [],
         },
+        membersText: 'membersTest',
         ...(global as any).eventkit_test_props,
     });
 
@@ -115,5 +116,24 @@ describe('DataPackPage component', () => {
         fireEvent.click(saveButton);
         expect(props.onSave.calledOnce).toBe(true);
         expect(props.onSave.calledWith(permissions.getPermissions())).toBe(true);
+    });
+
+    it( 'should toggleView between members and groups', () => {
+        const mButton = screen.getByTestId('membersToggle');
+        fireEvent.click(mButton);
+    });
+
+    it ('should warn public', () => {
+        const p = getProps();
+        p.user.groups = [1, 2, 3];
+        p.permissions.groups = { group_one: '', group_two: '', group_three: '' };
+        p.permissions.members = { user_one: '', user_two: '', user_three: '' };
+        p.permissions.value = 'PUBLIC';
+        p.warnPublic = true;
+        p.submitButtonLabel = 'SAVE NOW'
+        setup(p);
+        const saveButton = screen.getByText('SAVE NOW');
+        fireEvent.click(saveButton);
+        expect(component.getByText(/Sharing with all members/i));
     });
 });

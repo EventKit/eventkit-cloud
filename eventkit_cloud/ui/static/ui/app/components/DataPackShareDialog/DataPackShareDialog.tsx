@@ -1,5 +1,5 @@
 import {connect} from 'react-redux';
-import {useEffect, useState, useRef} from 'react';
+import {useEffect, useState, useRef, createRef, RefObject} from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
@@ -45,7 +45,11 @@ export const DataPackShareDialog = (props: Props) => {
     const canUpdateAdmin = props.canUpdateAdmin ?? false;
     const user = props.user ?? null;
     const warnPublic = props.warnPublic ?? false;
-    let localPermissions: Permissions = new Permissions(props.permissions);
+    let refPerms: RefObject<Permissions> = useRef<Permissions>(new Permissions(props.permissions));
+
+    const getCurrentRefVal = () => {
+        return refPerms.current;
+    }
 
     const [view, setView] = useState('groups');
     const [permissions, setPermissions] = useState(null);
@@ -53,10 +57,7 @@ export const DataPackShareDialog = (props: Props) => {
     const [showPublicWarning, setShowPublicWarning] = useState(false);
 
     const handleSave = () => {
-        if (localPermissions == null) {
-            return;
-        }
-
+        const localPermissions = getCurrentRefVal();
         if (localPermissions.isPrivate()) {
             if (localPermissions.getMemberCount() || localPermissions.getGroupCount()) {
                 localPermissions.makeShared();
@@ -81,6 +82,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleUserCheck = (username: string) => {
+        const localPermissions = getCurrentRefVal();
         if (localPermissions.isPublic()) {
             localPermissions.makeShared();
         }
@@ -93,6 +95,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleGroupCheck = (groupname: string) => {
+        const localPermissions = getCurrentRefVal();
         if (localPermissions.groupHasPermission(groupname)) {
             localPermissions.removeGroupPermissions(groupname);
         } else {
@@ -102,6 +105,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleAdminCheck = (username: string) => {
+        const localPermissions = getCurrentRefVal();
         if (localPermissions.userHasPermission(username, Levels.ADMIN)) {
             localPermissions.setMemberPermission(username, Levels.READ);
         } else {
@@ -111,6 +115,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleAdminGroupCheck = (groupname: string) => {
+        const localPermissions = getCurrentRefVal();
         if (localPermissions.groupHasPermission(groupname, Levels.ADMIN)) {
             localPermissions.setGroupPermission(groupname, Levels.READ);
         } else {
@@ -120,6 +125,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleCurrentCheck = () => {
+        const localPermissions = getCurrentRefVal();
         props.users.forEach((user) => {
             const {username} = user.user;
             if (!localPermissions.userHasPermission(username)) {
@@ -130,11 +136,13 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handlePublicCheck = () => {
+        const localPermissions = getCurrentRefVal();
         localPermissions.makePublic();
         setPermissions(localPermissions.getPermissions());
     };
 
     const handleGroupCheckAll = () => {
+        const localPermissions = getCurrentRefVal();
         props.groups.forEach((group) => {
             const {name} = group;
             if (!localPermissions.groupHasPermission(name)) {
@@ -145,6 +153,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleUncheckAll = () => {
+        const localPermissions = getCurrentRefVal();
         // Retain permissions for users with administrative privileges.
         props.users.forEach((user) => {
             const {username} = user.user;
@@ -159,6 +168,7 @@ export const DataPackShareDialog = (props: Props) => {
     };
 
     const handleGroupUncheckAll = () => {
+        const localPermissions = getCurrentRefVal();
         // Retain permissions for groups with administrative privileges.
         props.groups.forEach((group) => {
             const {name} = group;
@@ -177,15 +187,11 @@ export const DataPackShareDialog = (props: Props) => {
         setShowShareInfo(false);
     };
 
-    const showWarning = () => {
-        setShowPublicWarning(true);
-    };
-
     const hideWarning = () => {
         setShowPublicWarning(false);
     };
 
-const toggleView = () => {
+    const toggleView = () => {
         if (view === 'groups') {
             setView('members');
         } else {
@@ -193,7 +199,7 @@ const toggleView = () => {
         }
     };
 
-const renderSharedPermissions = () => {
+    const renderSharedPermissions = () => {
         if (view === 'groups') {
             return (
                 <GroupsBody
@@ -231,11 +237,11 @@ const renderSharedPermissions = () => {
 
     useEffect(() => {
         // Anything in here is fired on component mount.
-        localPermissions = new Permissions(props.permissions);
-        setPermissions(localPermissions.getPermissions());
+        setPermissions(refPerms.current.getPermissions());
     }, []);
 
     useEffect( () => {
+        const localPermissions = getCurrentRefVal();
         if (localPermissions) {
             localPermissions.setPermissions(props.permissions);
             localPermissions.setUsername(user ? user.user.username : undefined);
@@ -293,9 +299,10 @@ const renderSharedPermissions = () => {
         );
     }
 
-    const groupCount: number = permissions?.groups ? Object.keys(permissions.groups).length : 0;
-    let memberCount: number | string = permissions?.members ? Object.keys(permissions.members).length : 0;
-    if (permissions?.value === 'PUBLIC') {
+    const localPermissions = getCurrentRefVal();
+    const groupCount: number = Object.keys(localPermissions.getGroups()).length;
+    let memberCount: number | string = Object.keys(localPermissions.getMembers()).length;
+    if (localPermissions.isPublic()) {
         memberCount = 'ALL';
     }
 
@@ -317,7 +324,7 @@ const renderSharedPermissions = () => {
                         className="qa-DataPackShareDialog-Button-groups"
                         variant="contained"
                         style={styles.groupsButton}
-
+                        data-testid={'groupsToggle'}
                         onClick={toggleView}
                     >
                         {`GROUPS (${groupCount})`}
@@ -325,6 +332,7 @@ const renderSharedPermissions = () => {
                     <Button
                         className="qa-DataPackShareDialog-Button-members"
                         style={styles.membersButton}
+                        data-testid={'membersToggle'}
                         onClick={toggleView}
                     >
                         {`MEMBERS (${memberCount})`}
@@ -348,6 +356,7 @@ const renderSharedPermissions = () => {
                 overlayStyle={{zIndex: 1501}}
                 actions={[
                     <Button
+                        data-testid={'publicSave'}
                         style={{margin: '0px'}}
                         variant="contained"
                         color="primary"
