@@ -11,6 +11,7 @@ import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
 import { getPermissionUsers } from '../../slices/usersSlice';
+import { PermissionsView } from "./DataPackShareDialog";
 
 export interface Props {
     public: boolean;
@@ -20,7 +21,7 @@ export interface Props {
     userCount: number;
     users: Eventkit.User[];
     selectedMembers: Eventkit.Permissions['members'];
-    view: 'groups' | 'members';
+    view: PermissionsView;
     membersText: any;
     onMemberCheck: (username: string) => void;
     onAdminCheck: (username: string) => void;

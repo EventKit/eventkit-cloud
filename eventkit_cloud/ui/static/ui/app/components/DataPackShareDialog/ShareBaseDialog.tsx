@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
+import {isWidthDown} from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -8,12 +8,13 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../common/CustomScrollbar';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import BaseDialog from "../Dialog/BaseDialog";
 import Divider from "@material-ui/core/Divider";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
 import Warning from "@material-ui/icons/Warning";
+import {CUSTOM_BREAKPOINTS} from "../DashboardPage/DashboardPage";
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export interface Props {
     className?: string;
@@ -24,7 +25,6 @@ export interface Props {
     children: any;
     submitButtonLabel: string;
     theme: Eventkit.Theme & Theme;
-    width: Breakpoint;
     permissionState: Eventkit.Store.UpdatePermissions;
     clearDataCartPermissions: () => void;
 }
@@ -41,6 +41,7 @@ export class ShareBaseDialog extends Component<Props, {}> {
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.clearError = this.clearError.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.getWidth = this.getWidth.bind(this);
         this.state = {
             shareDialogOpen: this.props.onClose,
         };
@@ -77,6 +78,22 @@ export class ShareBaseDialog extends Component<Props, {}> {
         this.setState({shareDialogOpen: false});
     }
 
+    getWidth() {
+        const windowWidth = window.innerWidth;
+        let value = 'xs';
+        if (windowWidth >= CUSTOM_BREAKPOINTS.xl) {
+            value = 'xl';
+        } else if (windowWidth >= CUSTOM_BREAKPOINTS.lg) {
+            value = 'lg';
+        } else if (windowWidth >= CUSTOM_BREAKPOINTS.md) {
+            value = 'md';
+        } else if (windowWidth >= CUSTOM_BREAKPOINTS.sm) {
+            value = 'sm';
+        }
+
+        return value;
+    };
+
     render() {
         const errorMessages = this.getErrorMessage();
 
@@ -85,8 +102,8 @@ export class ShareBaseDialog extends Component<Props, {}> {
         }
 
         const {colors} = this.props.theme.eventkit;
-        const {width} = this.props;
-        const marginSubtract = isWidthDown('sm', width) ? 32 : 96;
+        const width = this.getWidth();
+        const marginSubtract = isWidthDown('sm', width as Breakpoint) ? 32 : 96;
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',
@@ -197,4 +214,4 @@ const mapDispatchToProps = dispatch => (
     }
 );
 
-export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(ShareBaseDialog)));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(ShareBaseDialog));
