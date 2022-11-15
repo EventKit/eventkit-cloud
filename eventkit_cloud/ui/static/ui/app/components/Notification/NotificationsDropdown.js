@@ -5,7 +5,7 @@ import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import Paper from '@material-ui/core/Paper';
 import NotificationGridItem from './NotificationGridItem';
 import { markAllNotificationsAsRead } from '../../actions/notificationsActions';
@@ -116,11 +116,11 @@ export class NotificationsDropdown extends Component {
             );
         } else if (notifications.length > 0) {
             body = (
-                <GridList
+                <ImageList
                     className="qa-NotificationsDropdown-Grid"
-                    cellHeight="auto"
+                    rowHeight="auto"
                     style={styles.gridList}
-                    spacing={0}
+                    gap={0}
                     cols={1}
                 >
                     {notifications.map((notification, index) => (
@@ -135,7 +135,7 @@ export class NotificationsDropdown extends Component {
                             onView={this.props.onNavigate}
                         />
                     ))}
-                </GridList>
+                </ImageList>
             );
         }
 

@@ -1,8 +1,7 @@
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import { DataPackGrid } from '../../components/DataPackPage/DataPackGrid';
-import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 
 describe('DataPackGrid component', () => {
     const getProps = () => ({
@@ -30,12 +29,12 @@ describe('DataPackGrid component', () => {
 
     it('getColumns should return 2, 3, or 4 depending on screensize', () => {
         wrapper.setProps({ width: 'sm' });
-        expect(wrapper.find(GridList).props().cols).toEqual(2);
+        expect(wrapper.find(ImageList).props().cols).toEqual(2);
 
         wrapper.setProps({ width: 'lg' });
-        expect(wrapper.find(GridList).props().cols).toEqual(3);
+        expect(wrapper.find(ImageList).props().cols).toEqual(3);
 
         wrapper.setProps({ width: 'xl' });
-        expect(wrapper.find(GridList).props().cols).toEqual(4);
+        expect(wrapper.find(ImageList).props().cols).toEqual(4);
     });
 });

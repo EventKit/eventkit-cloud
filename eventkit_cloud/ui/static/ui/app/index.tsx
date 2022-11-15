@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
 import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
@@ -21,7 +21,7 @@ axios.interceptors.response.use(function (response) {
     }
 });
 
-const theme = createMuiTheme(ekTheme);
+const theme = createTheme(ekTheme);
 
 const Loading = (args) => {
     if (args.pastDelay) {

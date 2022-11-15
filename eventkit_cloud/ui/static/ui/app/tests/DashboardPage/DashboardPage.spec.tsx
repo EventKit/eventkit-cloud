@@ -1,17 +1,24 @@
-import { shallow } from 'enzyme';
+import * as React from "react";
 import * as sinon from 'sinon';
-import PageLoading from '../../components/common/PageLoading';
+import { screen, fireEvent, within, waitFor } from '@testing-library/react';
+import "@testing-library/jest-dom/extend-expect";
+import * as TestUtils from '../test-utils';
+
+jest.doMock("../../components/DataPackPage/DataPackGridItem", () => {
+    return (props) => (<div className="gridItem" data-testid={props['data-testid']}>{props.children}</div>);
+});
+
+jest.doMock("../../components/DashboardPage/DataPackFeaturedItem", () => {
+    return (props) => (<div className="gridItem" data-testid={props['data-testid']}>{props.children}</div>);
+});
+
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
-import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-import DashboardSection from '../../components/DashboardPage/DashboardSection';
-import NotificationGridItem from '../../components/Notification/NotificationGridItem';
-import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
-import DataPackFeaturedItem from '../../components/DashboardPage/DataPackFeaturedItem';
 import history from '../../utils/history';
+
 
 const mockNotifications = {
     1: {
-        id: '1',
+        id: 1,
         verb: 'run_started',
         actor: {
             details: {
@@ -24,7 +31,7 @@ const mockNotifications = {
         unread: false,
     },
     2: {
-        id: '2',
+        id: 2,
         verb: 'run_completed',
         actor: {
             details: {
@@ -65,9 +72,114 @@ const mockRuns = [
     },
 ];
 
+const user = {
+    data: {
+        user: {
+            username: 'admin'
+        }
+    },
+    meta: {
+        autoLogoutAt: null,
+        autoLogoutWarningAt: null,
+    },
+    status: {
+        patched: false,
+        patching: false,
+        error: null,
+        isLoading: false,
+    },
+};
+
+const mockExports = {
+    data: {
+        runs: {
+            '6870234f-d876-467c-a332-65fdf0399a0d': {
+                uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+                created_at: '2017-03-10T15:52:35.637331Z',
+                job: '7643f806-1484-4446-b498-7ddaa65d011a',
+                expiration: '2017-03-24T15:52:35.637258Z',
+                extent: {type: 'FeatureCollection', features: []}
+            }
+        },
+        jobs: {
+            '7643f806-1484-4446-b498-7ddaa65d011a': {
+                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                name: 'Test1',
+                event: 'Test1 event',
+                description: 'Test1 description',
+                extent: {type: 'FeatureCollection', features: []}
+            }
+        }
+    },
+    viewedInfo: {
+        ids: mockRuns.map(run => run.uid)
+    },
+    featuredInfo: {
+        ids: mockRuns.map(run => run.uid)
+    },
+    ownInfo: {
+        ids: mockRuns.map(run => run.uid)
+    }
+};
+
+
 describe('DashboardPage component', () => {
-    let wrapper;
-    let instance;
+    const getInitialState = (defaultState) => (
+        {
+            ...defaultState,
+            aoiInfo: {
+                geojson: {},
+            },
+            exportInfo: {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                providers: [],
+                providerInfo: {
+                    'osm': {
+                        availability: {
+                            status: 'STAT'
+                        },
+                    }
+                },
+                exportOptions: {
+                    '123': {
+                        minZoom: 0,
+                        maxZoom: 2,
+                    }
+                },
+                projections: [],
+            },
+            user,
+            topics: [],
+            exports: mockExports,
+            notifications: {
+                data: {
+                    notifications: mockNotifications,
+                    notificationsSorted: [],
+                },
+                status: {
+                    fetching: null,
+                    fetched: null,
+                    deleting: null,
+                    deleted: null,
+                    error: null,
+                    cancelSource: null,
+                },
+                unreadCount: {
+                    status: {
+                        fetching: null,
+                        fetched: null,
+                        error: null,
+                        cancelSource: null,
+                    },
+                    data: {
+                        unreadCount: 0,
+                    },
+                },
+            }
+        }
+    );
 
     function defaultProps() {
         return {
@@ -116,25 +228,12 @@ describe('DashboardPage component', () => {
             getProviders: sinon.spy(),
             getNotifications: sinon.spy(),
             ...(global as any).eventkit_test_props,
-        };
-    }
-
-    function setup(propsOverride = {}) {
-        const props = {
-            ...defaultProps(),
-            ...propsOverride,
-        };
-        wrapper = shallow(<DashboardPage {...props} />);
-        instance = wrapper.instance();
-
-        instance.joyride = {
-            reset: sinon.spy(),
+            history,
         };
     }
 
     function loadEmptyData() {
-        wrapper.setProps({
-            ...instance.props,
+        return {
             ownIds: [],
             runsFetched: true,
             featuredIds: [],
@@ -158,13 +257,11 @@ describe('DashboardPage component', () => {
                 fetched: true,
                 groups: {},
             },
-        });
+        };
     }
 
-    function loadData() {
-        wrapper.setProps({
-
-            ...instance.props,
+    function loadedProps() {
+        return {
             ownIds: mockRuns.map(run => run.uid),
             runsFetched: true,
             featuredIds: mockRuns.map(run => run.uid),
@@ -190,242 +287,121 @@ describe('DashboardPage component', () => {
                 fetching: false,
                 fetched: true,
             },
-        });
+            runDeletion: {
+                deleting: false
+            },
+            updatePermission: {
+                updating: false
+            }
+        };
     }
 
-    beforeEach(setup);
-
-    it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [
-            {
-                text: 'im the step',
-            },
-        ];
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.joyrideAddSteps(steps);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ steps }));
-        stateStub.restore();
-    });
-
-    it('callback function stops tour if close is clicked', () => {
-        const callbackData = {
-            action: 'close',
-            index: 2,
-            step: {
-                position: 'bottom',
-                selector: '.select',
-                style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
-                title: 'Create DataPack',
-            },
-            type: 'step:before',
-        };
-        const stateSpy = sinon.stub(DashboardPage.prototype, 'setState');
-        instance.callback(callbackData);
-        expect(stateSpy.calledWith({ isRunning: false }));
-        stateSpy.restore();
-    });
-
-    it('callback sets location hash if step has a scrollToId', () => {
-        const callbackData = {
-            action: 'next',
-            index: 3,
-            step: {
-                scrollToId: 'test-id',
-                position: 'bottom',
-                selector: '.select',
-                style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
-                title: 'Create DataPack',
-            },
-            type: 'step:before',
-        };
-        expect(window.location.hash).toEqual('');
-        instance.callback(callbackData);
-        expect(window.location.hash).toEqual('#test-id');
-    });
-
     describe('when it mounts', () => {
-        let refreshSpy;
-
         beforeEach(() => {
-            refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
             jest.useFakeTimers();
-            setup();
-            instance.componentDidMount();
         });
-
         afterEach(() => {
-            refreshSpy.restore();
+            jest.useRealTimers();
         });
-
         it('requests providers', () => {
-            expect(instance.props.getProviders.callCount).toBe(2);
+            const props = {
+                ...defaultProps(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
+            expect(props.getProviders.callCount).toBe(1);
         });
 
         it('requests notifications', () => {
-            expect(instance.props.getNotifications.callCount).toBe(2);
-        });
-
-        it('refreshes the page periodically', () => {
-            expect(instance.autoRefreshIntervalId).not.toBe(null);
-            expect(refreshSpy.callCount).toBe(2);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(4);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(6);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(8);
-        });
-
-        describe('then it unmounts', () => {
-            beforeEach(() => {
-                instance.componentWillUnmount();
-            });
-
-            it('stops auto refreshing', () => {
-                expect(instance.autoRefreshIntervalId).toBe(undefined);
-                expect(refreshSpy.callCount).toBe(2);
-                jest.runOnlyPendingTimers();
-                expect(refreshSpy.callCount).toBe(3);
-            });
-        });
-    });
-
-    describe('initial state', () => {
-        it('renders loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(1);
-        });
-
-        it('does not render any dashboard sections', () => {
-            expect(wrapper.find(DashboardSection)).toHaveLength(0);
-        });
-
-        it('does not render share dialog', () => {
-            expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+            const props = {
+                ...defaultProps(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
+            expect(props.getNotifications.callCount).toBe(2);
         });
     });
 
     describe('when data has loaded', () => {
         beforeEach(() => {
-            loadData();
+            jest.useFakeTimers();
+            const props = {
+                ...defaultProps(),
+                ...loadedProps(),
+            };
+            const defaultState = TestUtils.getDefaultTestState();
+            const initialState = getInitialState(defaultState);
+            TestUtils.renderComponent(<DashboardPage {...props} />, {
+                includeToastContainer: false,
+                initialState,
+            });
+            jest.runOnlyPendingTimers();
         });
-
-        it('does not render loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(0);
+        afterEach(() => {
+            jest.useRealTimers();
         });
-
         it('renders Notifications section', () => {
-            expect(wrapper.find('.qa-DashboardSection-Notifications')).toHaveLength(1);
+            expect(screen.getByText("Notifications"));
         });
 
-        it('renders Recently Viewed section', () => {
-            expect(wrapper.find('.qa-DashboardSection-RecentlyViewed')).toHaveLength(1);
+        it('renders Recently Viewed section',  () => {
+            expect(screen.getByText("Recently Viewed"));
         });
 
         it('renders Featured section', () => {
-            expect(wrapper.find('.qa-DashboardSection-Featured')).toHaveLength(1);
+            expect(screen.getByText("Featured"));
         });
 
         it('renders My DataPacks section', () => {
-            expect(wrapper.find('.qa-DashboardSection-MyDataPacks')).toHaveLength(1);
+            expect(screen.getByText("My DataPacks"));
         });
 
         it('renders notifications', () => {
-            const notificationItems = wrapper.find('.qa-DashboardSection-Notifications').children().find(NotificationGridItem);
-            const notificationsSorted = instance.props.notificationsData.notificationsSorted;
-            expect(notificationItems).not.toHaveLength(0);
-            expect(notificationItems).toHaveLength(notificationsSorted.length);
-            notificationsSorted.forEach((notification, i) => {
-                expect(notificationItems.at(i).props().notification).toBe(notificationsSorted[i]);
-            });
+            const notifications = screen.getAllByTestId("notification");
+            expect(notifications).not.toHaveLength(0);
+            expect(notifications).toHaveLength(Object.keys(mockNotifications).length);
         });
 
         it('renders recently viewed datapacks', () => {
-            const recentlyViewedItems = wrapper.find('.qa-DashboardSection-RecentlyViewed').children().find(DataPackGridItem);
-            const viewedJobs = instance.props.viewedIds;
-            expect(recentlyViewedItems).not.toHaveLength(0);
-            expect(recentlyViewedItems).toHaveLength(viewedJobs.length);
-            viewedJobs.forEach((id, i) => {
-                expect(recentlyViewedItems.at(i).props().runId).toBe(id);
-            });
+            const viewedItems = screen.getAllByTestId("viewed");
+            expect(viewedItems).not.toHaveLength(0);
+            expect(viewedItems).toHaveLength(mockRuns.length);
         });
 
         it('renders featured datapacks', () => {
-            const featuredItems = wrapper.find('.qa-DashboardSection-Featured').children().find(DataPackFeaturedItem);
-            const featuredRuns = instance.props.featuredIds;
+            const featuredItems = screen.getAllByTestId("featured");
             expect(featuredItems).not.toHaveLength(0);
-            expect(featuredItems).toHaveLength(featuredRuns.length);
-            featuredRuns.forEach((id, i) => {
-                expect(featuredItems.at(i).props().runId).toBe(id);
-            });
+            expect(featuredItems).toHaveLength(mockRuns.length);
         });
 
         it('renders my datapacks', () => {
-            const myDataPacksItems = wrapper.find('.qa-DashboardSection-MyDataPacks').children().find(DataPackGridItem);
-            const runs = instance.props.ownIds;
+            const myDataPacksItems = screen.getAllByTestId("pack");
             expect(myDataPacksItems).not.toHaveLength(0);
-            expect(myDataPacksItems).toHaveLength(runs.length);
-            runs.forEach((id, i) => {
-                expect(myDataPacksItems.at(i).props().runId).toBe(id);
-            });
-        });
-
-        it('does not render Notifications "no data" element', () => {
-            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').shallow();
-            expect(notificationsSection.find('.qa-DashboardSection-Notifications-NoData')).toHaveLength(0);
-        });
-
-        it('does not render Recently Viewed "no data" element', () => {
-            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').shallow();
-            expect(recentlyViewedSection.find('.qa-DashboardSection-RecentlyViewed-NoData')).toHaveLength(0);
-        });
-
-        it('does not render My DataPacks "no data" element', () => {
-            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').shallow();
-            expect(myDataPacksSection.find('.qa-DashboardSection-MyDataPacks-NoData')).toHaveLength(0);
+            expect(myDataPacksItems).toHaveLength(mockRuns.length);
         });
     });
 
     describe('when empty data has loaded', () => {
         beforeEach(() => {
-            loadEmptyData();
-        });
-
-        it('should not be loading', () => {
-            expect(instance.isLoading()).toBe(false);
-        });
-
-        it('does not render loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(0);
+            const props = {
+                ...defaultProps(),
+                ...loadEmptyData(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
         });
 
         it('renders Notifications section', () => {
-            expect(wrapper.find('.qa-DashboardSection-Notifications')).toHaveLength(1);
+            expect(screen.getByText("Notifications"));
         });
 
         it('renders Recently Viewed section', () => {
-            expect(wrapper.find('.qa-DashboardSection-RecentlyViewed')).toHaveLength(1);
+            expect(screen.getByText("Recently Viewed"));
         });
 
         it('does not render Featured section', () => {
-            expect(wrapper.find('.qa-DashboardSection-Featured')).toHaveLength(0);
+            expect(screen.queryByText("Featured")).toBeNull();
         });
 
         it('renders My DataPacks section', () => {
-            expect(wrapper.find('.qa-DashboardSection-MyDataPacks')).toHaveLength(1);
-        });
-    });
-
-    describe('when automatically refreshing', () => {
-        beforeEach(() => {
-            loadData();
-            instance.autoRefresh();
-        });
-
-        it('does not render loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(0);
+            expect(screen.getByText("My DataPacks"));
         });
     });
 
@@ -434,7 +410,11 @@ describe('DashboardPage component', () => {
 
         beforeEach(() => {
             browserHistoryPushStub = sinon.stub(history, 'push');
-            instance.handleNotificationsViewAll();
+            const props = {
+                ...defaultProps(),
+                ...loadedProps(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
         });
 
         afterEach(() => {
@@ -442,6 +422,9 @@ describe('DashboardPage component', () => {
         });
 
         it('navigates to "/notifications"', () => {
+            const nEle = screen.getByText("Notifications");
+            const vAll = within(nEle.parentElement).getByText("View All");
+            fireEvent.click(vAll);
             expect(browserHistoryPushStub.callCount).toBe(1);
             expect(browserHistoryPushStub.calledWith('/notifications')).toBe(true);
         });
@@ -451,8 +434,13 @@ describe('DashboardPage component', () => {
         let browserHistoryPushStub;
 
         beforeEach(() => {
+            jest.useFakeTimers();
             browserHistoryPushStub = sinon.stub(history, 'push');
-            instance.handleFeaturedViewAll();
+            const props = {
+                ...defaultProps(),
+                ...loadedProps(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
         });
 
         afterEach(() => {
@@ -460,6 +448,9 @@ describe('DashboardPage component', () => {
         });
 
         it('navigates to "/exports"', () => {
+            const nEle = screen.getByText("Featured");
+            const vAll = within(nEle.parentElement).getByText("View All");
+            fireEvent.click(vAll);
             expect(browserHistoryPushStub.callCount).toBe(1);
             expect(browserHistoryPushStub.calledWith('/exports')).toBe(true);
         });
@@ -469,8 +460,13 @@ describe('DashboardPage component', () => {
         let browserHistoryPushStub;
 
         beforeEach(() => {
+            jest.useFakeTimers();
             browserHistoryPushStub = sinon.stub(history, 'push');
-            instance.handleMyDataPacksViewAll();
+            const props = {
+                ...defaultProps(),
+                ...loadedProps(),
+            };
+            TestUtils.renderComponent(<DashboardPage {...props} />);
         });
 
         afterEach(() => {
@@ -478,69 +474,11 @@ describe('DashboardPage component', () => {
         });
 
         it('navigates to "/exports?collection=myDataPacks"', () => {
+            const nEle = screen.getByText("My DataPacks");
+            const vAll = within(nEle.parentElement).getByText("View All");
+            fireEvent.click(vAll);
             expect(browserHistoryPushStub.callCount).toBe(1);
             expect(browserHistoryPushStub.calledWith('/exports?collection=admin')).toBe(true);
-        });
-    });
-
-    describe('when a datapack is being deleted', () => {
-        let setupA;
-
-        beforeEach(() => {
-            setupA = () => {
-                loadData();
-                instance.refresh = sinon.spy();
-                wrapper.setProps({
-                    runDeletion: {
-                        deleting: true,
-                        deleted: false,
-                    },
-                });
-            };
-            setupA();
-        });
-
-        it('renders loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(1);
-        });
-
-        describe('then it is successfully deleted', () => {
-            beforeEach(() => {
-                setupA();
-                wrapper.setProps({
-                    runDeletion: {
-                        deleting: false,
-                        deleted: true,
-                    },
-                });
-            });
-
-            it('does not render loading spinner', () => {
-                expect(wrapper.find(PageLoading)).toHaveLength(0);
-            });
-
-            it('refreshes the page', () => {
-                expect(instance.refresh.callCount).toBe(1);
-            });
-        });
-    });
-
-    describe('when permissions are updated', () => {
-        beforeEach(() => {
-            instance.refresh = sinon.spy();
-            wrapper.setProps({
-                updatePermission: {
-                    updated: true,
-                },
-            });
-        });
-
-        it('refreshes page', () => {
-            expect(instance.refresh.callCount).toBe(1);
-        });
-
-        it('renders loading spinner', () => {
-            expect(wrapper.find(PageLoading)).toHaveLength(1);
         });
     });
 });

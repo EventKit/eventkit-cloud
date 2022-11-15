@@ -1,17 +1,15 @@
-import * as PropTypes from 'prop-types';
-import { Component } from 'react';
+import * as React from "react";
 import { connect } from 'react-redux';
 import { withTheme, Theme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
 import { Link } from 'react-router-dom';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import moment from 'moment';
 import { makeFullRunSelector } from '../../selectors/runSelector';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import {MapView} from "../common/MapView";
-import {MapLayer} from "../CreateDataPack/CreateExport";
+import { MapView } from "../common/MapView";
+import { MapLayer } from "../CreateDataPack/CreateExport";
+import { useAppContext } from "../ApplicationContext";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     card: {
@@ -131,7 +129,6 @@ interface OwnProps {
     index: number;
     height?: string;
     theme: Eventkit.Theme & Theme;
-    width: Breakpoint;
 }
 
 interface StateProps {
@@ -140,99 +137,90 @@ interface StateProps {
 
 export type Props = StyledComponentProps & OwnProps & StateProps;
 
-export class DataPackFeaturedItem extends Component<Props, {}> {
-    static contextTypes = {
-        config: PropTypes.object,
+export const DataPackFeaturedItem = (props: Props) => {
+    const { BASEMAP_COPYRIGHT, BASEMAP_URL } = useAppContext();
+
+    const  getMapId = () => {
+            let mapId = '';
+            if (props.gridName !== undefined) {
+                mapId += `${props.gridName}_`;
+            }
+            mapId += `${props.run.uid}_`;
+            if (props.index !== undefined) {
+                mapId += `${props.index}_`;
+            }
+            mapId += 'map';
+
+            return mapId;
     };
 
-    constructor(props: Props) {
-        super(props);
-        this.getMapId = this.getMapId.bind(this);
-    }
+    const { classes } = props;
+    const selectedBasemap = { mapUrl: BASEMAP_URL } as MapLayer;
 
-    private getMapId() {
-        let mapId = '';
-        if (this.props.gridName !== undefined) {
-            mapId += `${this.props.gridName}_`;
-        }
-        mapId += `${this.props.run.uid}_`;
-        if (this.props.index !== undefined) {
-            mapId += `${this.props.index}_`;
-        }
-        mapId += 'map';
-
-        return mapId;
-    }
-
-    render() {
-        const { classes } = this.props;
-        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
-
-        return (
-            <Card
-                className={classes.card}
-                style={{ height: this.props.height }}
-                key={this.props.run.uid}
-            >
-                <div className={classes.content} style={{ height: this.props.height }}>
-                    <div className={classes.map}>
-                        <MapView
-                            id={this.getMapId()}
-                            selectedBaseMap={selectedBasemap}
-                            copyright={this.context.config.BASEMAP_COPYRIGHT}
-                            geojson={this.props.run.job.extent}
-                            minZoom={2}
-                            maxZoom={20}
-                        />
-                    </div>
-                    <div className={classes.info}>
-                        <CardHeader
-                            className={classes.cardHeader}
-                            title={
-                                <div>
-                                    <div className={classes.cardTitle}>
-                                        <Link
-                                            to={`/status/${this.props.run.job.uid}`}
-                                            href={`/status/${this.props.run.job.uid}`}
-                                            className={classes.titleLink}
-                                        >
-                                            {this.props.run.job.name}
-                                        </Link>
-                                    </div>
-                                </div>
-                            }
-                            subheader={
-                                <div className={classes.cardSubtitle}>
-                                    <div
-                                        className="qa-DataPackFeaturedItem-Subtitle-Event"
-                                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                                    >
-                                        {`Event: ${this.props.run.job.event}`}
-                                    </div>
-                                    <span className="qa-DataPackFeaturedItem-Subtitle-Added">
-                                        {`Added: ${moment(this.props.run.created_at).format('M/D/YY')}`}
-                                    </span>
-                                    <br />
-                                    <span className="qa-DataPackFeaturedItem-Subtitle-Expires">
-                                        {`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}
-                                    </span>
-                                    <br />
-                                </div>
-                            }
-                        />
-                        <CardContent
-                            className={classes.cardTextContainer}
-                        >
-                            <span className={classes.cardText}>
-                                {this.props.run.job.description}
-                            </span>
-                        </CardContent>
-                    </div>
+    return (
+        <Card
+            className={classes.card}
+            style={{ height: props.height }}
+            key={props.run.uid}
+        >
+            <div className={classes.content} style={{ height: props.height }}>
+                <div className={classes.map}>
+                    <MapView
+                        id={getMapId()}
+                        selectedBaseMap={selectedBasemap}
+                        copyright={BASEMAP_COPYRIGHT}
+                        geojson={props.run.job.extent}
+                        minZoom={2}
+                        maxZoom={20}
+                    />
                 </div>
-            </Card>
-        );
-    }
-}
+                <div className={classes.info}>
+                    <CardHeader
+                        className={classes.cardHeader}
+                        title={
+                            <div>
+                                <div className={classes.cardTitle}>
+                                    <Link
+                                        to={`/status/${props.run.job.uid}`}
+                                        href={`/status/${props.run.job.uid}`}
+                                        className={classes.titleLink}
+                                    >
+                                        {props.run.job.name}
+                                    </Link>
+                                </div>
+                            </div>
+                        }
+                        subheader={
+                            <div className={classes.cardSubtitle}>
+                                <div
+                                    className="qa-DataPackFeaturedItem-Subtitle-Event"
+                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                >
+                                    {`Event: ${props.run.job.event}`}
+                                </div>
+                                <span className="qa-DataPackFeaturedItem-Subtitle-Added">
+                                        {`Added: ${moment(props.run.created_at).format('M/D/YY')}`}
+                                    </span>
+                                <br />
+                                <span className="qa-DataPackFeaturedItem-Subtitle-Expires">
+                                        {`Expires: ${moment(props.run.expiration).format('M/D/YY')}`}
+                                    </span>
+                                <br />
+                            </div>
+                        }
+                    />
+                    <CardContent
+                        className={classes.cardTextContainer}
+                    >
+                            <span className={classes.cardText}>
+                                {props.run.job.description}
+                            </span>
+                    </CardContent>
+                </div>
+            </div>
+        </Card>
+    );
+};
 
 const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
@@ -244,7 +232,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withWidth()(
-    withTheme(
-        withStyles(jss)(
-            connect(makeMapStateToProps)(DataPackFeaturedItem))));
+export default withTheme(withStyles(jss)(connect(makeMapStateToProps)(DataPackFeaturedItem)));
