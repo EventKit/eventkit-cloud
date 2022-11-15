@@ -1815,11 +1815,7 @@ class TestExportTasks(ExportTaskBase):
 
         reprojection_task.run(
             result=previous_task_result,
-            task_uid=task_uid,
-            stage_dir=self.stage_dir,
-            job_name=job_name,
             projection=None,
-            config=None,
         )
         # test reprojection is skipped
         mock_os.rename.assert_called_once_with(expected_infile, expected_output_path)
@@ -1828,11 +1824,7 @@ class TestExportTasks(ExportTaskBase):
         self.task_process.return_value = Mock(exitcode=0)
         reprojection_task.run(
             result=previous_task_result,
-            task_uid=task_uid,
-            stage_dir=self.stage_dir,
-            job_name=job_name,
             projection=out_projection,
-            config=config,
         )
 
         # test reprojecting
@@ -1863,22 +1855,13 @@ class TestExportTasks(ExportTaskBase):
         mock_parse_result.side_effect = [driver, selection, None, expected_input_path]
         reprojection_task.run(
             result=previous_task_result,
-            task_uid=task_uid,
-            stage_dir=self.stage_dir,
-            job_name=job_name,
             projection=out_projection,
-            config=config,
         )
 
         mock_mapproxy.assert_called_once_with(
             gpkgfile=expected_output_path,
-            service_url=expected_output_path,
-            name=job_name,
-            config=config,
-            bbox=ANY,
             level_from=level_from,
             level_to=level_to,
-            task_uid=task_uid,
             selection=selection,
             projection=out_projection,
             input_gpkg=expected_input_path,
