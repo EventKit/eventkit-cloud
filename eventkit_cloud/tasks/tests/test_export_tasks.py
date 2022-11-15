@@ -938,6 +938,7 @@ class TestExportTasks(ExportTaskBase):
             status=TaskState.PENDING.value,
             name=arcgis_feature_service_export_task.name,
         )
+        arcgis_feature_service_export_task.task = saved_export_task
         mock_geopackage.check_content_exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
 
@@ -1786,6 +1787,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
+        reprojection_task.task = saved_export_task
         task_uid = str(saved_export_task.uid)
         config = {"cert_info": {"cert_path": "/path/to/cert", "cert_pass_var": "fake_pass"}}
         selection = "selection.geojson"
