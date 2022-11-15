@@ -747,11 +747,10 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_not_called()
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
-    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     def test_nitf_export_task(
-        self, mock_convert, mock_get_export_task_record, mock_export_task_record, mock_get_export_filepath
+        self, mock_convert, mock_get_export_task_record, mock_get_export_filepath
     ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         mock_get_export_task_record.return_value = Mock(
@@ -760,7 +759,7 @@ class TestExportTasks(ExportTaskBase):
                 provider=Mock(slug="nitf-generic", data_type="vector", label="label"),
             )
         )
-        nitf_export_task.task = mock_export_task_record
+        nitf_export_task.task = mock_get_export_task_record
         example_nitf = "example.nitf"
         example_result = {"source": example_nitf}
         task_uid = "1234"
@@ -1081,7 +1080,6 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_result, output_selection_geojson_task.run(selection='{"geojson": "here"}'))
 
     @patch("eventkit_cloud.tasks.export_tasks.convert")
-    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
@@ -1094,7 +1092,6 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_task_record,
         mock_get_export_filepath,
         mock_task_process,
-        mock_export_task_record,
         mock_convert,
     ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
@@ -1107,14 +1104,13 @@ class TestExportTasks(ExportTaskBase):
                 provider=Mock(slug="hfa-generic", data_type="vector", label="label"),
             )
         )
-        hfa_export_task.task = mock_export_task_record
+        hfa_export_task.task = mock_get_export_task_record
         mock_parse_result.return_value = file_path
         mock_convert.return_value = file_path
         expected_result = {"file_extension": "img", "result": file_path, "driver": "hfa", "hfa": file_path}
         self.assertEqual(expected_result, hfa_export_task.run())
 
     @patch("eventkit_cloud.tasks.export_tasks.wcs")
-    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.parse_result")
@@ -1125,7 +1121,6 @@ class TestExportTasks(ExportTaskBase):
         mock_parse_result,
         mock_get_export_task_record,
         mock_get_export_filepath,
-        mock_export_task_record,
         mock_wcs,
     ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
@@ -1138,7 +1133,7 @@ class TestExportTasks(ExportTaskBase):
                 provider=Mock(slug="wcs-generic", data_type="vector", label="label"),
             )
         )
-        wcs_export_task.task = mock_export_task_record
+        wcs_export_task.task = mock_get_export_task_record
         mock_parse_result.return_value = file_path
         mock_wcs.WCSConverter().convert.return_value = file_path
         expected_result = {"source": file_path, "result": file_path}
