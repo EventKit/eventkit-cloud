@@ -129,7 +129,7 @@ class ExportTaskBase(TestCase):
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
-        bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        bbox = Polygon.from_bbox((1, 2, 3, 4))
         tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.assertEqual(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
@@ -704,7 +704,6 @@ class TestExportTasks(ExportTaskBase):
         self.task_process.return_value = Mock(exitcode=0)
         geotiff_export_task.task_uid = task_uid
         geotiff_export_task.stage_dir = self.stage_dir
-        geopackage_export_task.task.export_provider_task.provider.config = {}
         geotiff_export_task(result=example_result)
         mock_convert.return_value = expected_outfile
         mock_convert.assert_called_once_with(
@@ -722,9 +721,6 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.reset_mock()
         example_result = {"source": example_geotiff, "selection": "selection"}
         mock_convert.return_value = expected_outfile
-        geotiff_export_task.task_uid = task_uid
-        geotiff_export_task.stage_dir = self.stage_dir
-        geopackage_export_task.task.export_provider_task.provider.config = {}
         geotiff_export_task(result=example_result)
         mock_convert.assert_called_once_with(
             boundary="selection",
@@ -801,7 +797,6 @@ class TestExportTasks(ExportTaskBase):
         )
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        projection = 4326
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
@@ -820,7 +815,7 @@ class TestExportTasks(ExportTaskBase):
         self.task_process.return_value = Mock(exitcode=0)
         result = sqlite_export_task.run(
             result=previous_task_result,
-            projection=projection,
+            projection=4326,
         )
         mock_convert.assert_called_once_with(
             driver="SQLite",
@@ -913,7 +908,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath.return_value = expected_output_path
 
         service_url = "https://abc.gov/arcgis/services/x"
-        bbox = [1, 2, 3, 4]
+        bbox = Polygon.from_bbox((1, 2, 3, 4)).extent
         query_string = "query?where=objectid=objectid&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
         expected_input_url = (
             "https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
@@ -993,7 +988,7 @@ class TestExportTasks(ExportTaskBase):
                 "url": expected_url_1,
                 "path": expected_path_1,
                 "base_path": expected_base_path,
-                "bbox": [1, 2, 3, 4],
+                "bbox": bbox,
                 "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_1,
@@ -1004,7 +999,7 @@ class TestExportTasks(ExportTaskBase):
                 "url": expected_url_2,
                 "path": expected_path_2,
                 "base_path": expected_base_path,
-                "bbox": [1, 2, 3, 4],
+                "bbox": bbox,
                 "level": 15,
                 "projection": projection,
                 "layer_name": layer_name_2,
@@ -1255,7 +1250,7 @@ class TestExportTasks(ExportTaskBase):
     def test_run_bounds_export_task(self, mock_geopackage, mock_request):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        job_name = self.job.name.lower()
+        # job_name = self.job.name.lower()
         provider_slug = "provider_slug"
         mock_geopackage.add_geojson_to_geopackage.return_value = os.path.join(
             self.stage_dir, "{}_bounds.gpkg".format(provider_slug)
@@ -1266,10 +1261,9 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=bounds_export_task.name
         )
         bounds_export_task.task = saved_export_task
+        bounds_export_task.stage_dir = self.stage_dir
         bounds_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=str(saved_export_task.uid))
-        result = bounds_export_task.run(
-            run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=self.stage_dir, provider_slug=job_name
-        )
+        result = bounds_export_task.run(run_uid=self.run.uid)
         self.assertEqual(expected_output_path, result["result"])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
@@ -1671,7 +1665,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_output_path,
             output_file=expected_output_path,
             projection=projection,
-            boundary=(-10.85, 6.25, -10.62, 6.4),
+            boundary=Polygon.from_bbox((1, 2, 3, 4)).extent,
             layer_name=expected_provider_slug,
             is_raster=False,
             executor=self.task_process().start_process,
@@ -1693,17 +1687,17 @@ class TestExportTasks(ExportTaskBase):
     @patch("celery.app.task.Task.request")
     def test_raster_file_export_task(self, mock_request, mock_convert, mock_download_data, mock_get_export_filepath):
         celery_uid = str(uuid.uuid4())
+        service_url = "https://abc.gov/file.geojson"
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         projection = 4326
         expected_provider_slug = "raster-file"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="raster-file")
         self.provider.slug = expected_provider_slug
         self.provider.config = dict()
+        self.provider.url = service_url
         self.provider.save()
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
-
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
-        service_url = "https://abc.gov/file.geojson"
 
         mock_convert.return_value = expected_output_path
         mock_download_data.return_value = service_url
@@ -1733,7 +1727,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_output_path,
             output_file=expected_output_path,
             projection=projection,
-            boundary=None,
+            boundary=Polygon.from_bbox((1, 2, 3, 4)).extent,
             is_raster=True,
             executor=self.task_process().start_process,
         )
@@ -1743,7 +1737,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["gpkg"])
 
         mock_download_data.assert_called_once_with(
-            str(saved_export_task.uid),
+            saved_export_task.uid,
             service_url,
             expected_output_path,
         )
@@ -1888,7 +1882,7 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         projection = 4326
-        bbox = [1, 2, 3, 4]
+        bbox = Polygon.from_bbox((1, 2, 3, 4)).extent
         example_geojson = "/path/to/geo.json"
         example_result = {"selection": example_geojson}
         expected_provider_slug = "ogc_api_proc"
@@ -1916,25 +1910,27 @@ class TestExportTasks(ExportTaskBase):
         username = "user"
         password = "password"
         mock_getenv.return_value = f"{username}:{password}"
-        task_uid = str(saved_export_task.uid)
+        task_uid = saved_export_task.uid
         ogcapi_process_export_task.task = saved_export_task
+        ogcapi_process_export_task.stage_dir = self.stage_dir
+        ogcapi_process_export_task.task.export_provider_task.provider.slug = example_format_slug
         ogcapi_process_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=task_uid)
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
-        cred_var = "USER_PASS_ENV_VAR"
-        config = {
-            "ogcapi_process": {
-                "id": "eventkit",
-                "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
-                "outputs": {"format": {"mediaType": "application/zip"}},
-                "output_file_ext": ".gpkg",
-                "download_credentials": {"cred_var": cred_var},
-            },
-            "cred_var": cred_var,
-        }
+        # cred_var = "USER_PASS_ENV_VAR"
+        # config = {
+        #     "ogcapi_process": {
+        #         "id": "eventkit",
+        #         "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
+        #         "outputs": {"format": {"mediaType": "application/zip"}},
+        #         "output_file_ext": ".gpkg",
+        #         "download_credentials": {"cred_var": cred_var},
+        #     },
+        #     "cred_var": cred_var,
+        # }
 
-        service_url = "http://example.test/v1/"
-        session_token = "_some_token_"
+        # service_url = "http://example.test/v1/"
+        # session_token = "_some_token_"
 
         mock_get_ogcapi_data.return_value = expected_outzip_path
 
@@ -1946,23 +1942,13 @@ class TestExportTasks(ExportTaskBase):
 
         result = ogcapi_process_export_task.run(
             result=example_result,
-            task_uid=task_uid,
-            stage_dir=self.stage_dir,
             projection=projection,
-            service_url=service_url,
-            config=config,
-            bbox=bbox,
-            session_token=session_token,
-            export_format_slug=example_format_slug,
         )
 
         mock_get_ogcapi_data.assert_called_with(
-            config=config,
             task_uid=task_uid,
             stage_dir=self.stage_dir,
             bbox=bbox,
-            service_url=service_url,
-            session_token=session_token,
             export_format_slug=example_format_slug,
             selection=example_geojson,
             download_path=expected_outzip_path,
@@ -1981,13 +1967,7 @@ class TestExportTasks(ExportTaskBase):
         self.task_process.return_value = Mock(exitcode=0)
         result = ogcapi_process_export_task.run(
             result=example_result,
-            task_uid=task_uid,
-            stage_dir=self.stage_dir,
             projection=projection,
-            service_url=service_url,
-            config=config,
-            bbox=bbox,
-            session_token=session_token,
         )
 
         expected_result = {
@@ -2024,7 +2004,7 @@ class TestExportTasks(ExportTaskBase):
         mock_extract_metadata_files,
         mock_get_export_task_record,
     ):
-        bbox = [1, 2, 3, 4]
+        bbox = Polygon.from_bbox((1, 2, 3, 4)).extent
         example_geojson = "/path/to/geo.json"
         example_format_slug = "fmt"
 
@@ -2054,12 +2034,9 @@ class TestExportTasks(ExportTaskBase):
         mock_client.get_process_session.return_value = mock_session
         mock_download_data.return_value = example_download_path
         result = get_ogcapi_data(
-            config=config,
             task_uid=task_uid,
             stage_dir=self.stage_dir,
             bbox=bbox,
-            service_url=service_url,
-            session_token=session_token,
             export_format_slug=example_format_slug,
             selection=example_geojson,
             download_path=example_download_path,
