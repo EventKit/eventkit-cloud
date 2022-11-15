@@ -12,7 +12,7 @@ import celery
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon, fromstr, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon, fromstr
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
@@ -1184,7 +1184,6 @@ class TestExportTasks(ExportTaskBase):
         try:
             raise ValueError("some unexpected error")
         except ValueError as e:
-            exc = e
             exc_info = sys.exc_info()
         einfo = ExceptionInfo(exc_info=exc_info)
         shp_export_task.task_failure(
