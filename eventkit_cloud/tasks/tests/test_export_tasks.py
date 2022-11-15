@@ -699,13 +699,10 @@ class TestExportTasks(ExportTaskBase):
         warp_params = {"warp": "params"}
         translate_params = {"translate": "params"}
         mock_get_creation_options.return_value = warp_params, translate_params
-        expected_provider_slug = "geotiff-generic"
-        expected_event = "event"
-        expected_label = "label"
         mock_get_export_task_record.return_value = Mock(
             export_provider_task=Mock(
-                run=Mock(job=Mock(event=expected_event)),
-                provider=Mock(slug=expected_provider_slug, data_type="elevation", label=expected_label),
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="geotiff-generic", data_type="elevation", label="label"),
             )
         )
 
@@ -752,8 +749,17 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
-    def test_nitf_export_task(self, mock_convert, mock_get_export_task_record, mock_get_export_filepath):
+    def test_nitf_export_task(
+        self, mock_convert, mock_get_export_task_record, mock_export_task_record, mock_get_export_filepath
+    ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        mock_get_export_task_record.return_value = Mock(
+            export_provider_task=Mock(
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="nitf-generic", data_type="vector", label="label"),
+            )
+        )
+        nitf_export_task.task = mock_export_task_record
         example_nitf = "example.nitf"
         example_result = {"source": example_nitf}
         task_uid = "1234"
@@ -796,17 +802,14 @@ class TestExportTasks(ExportTaskBase):
         self, mock_request, mock_convert, mock_get_export_task_record, mock_get_export_filepath
     ):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
-        expected_provider_slug = "osm-generic"
-        expected_event = "event"
-        expected_label = "label"
-        mock_get_export_task_record.return_value = Mock(
-            export_provider_task=Mock(
-                run=Mock(job=Mock(event=expected_event)),
-                provider=Mock(slug=expected_provider_slug, data_type="vector", label=expected_label),
-            )
-        )
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
+        mock_get_export_task_record.return_value = Mock(
+            export_provider_task=Mock(
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="sqlite-generic", data_type="vector", label="label"),
+            )
+        )
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
 
         expected_output_path = os.path.join(self.stage_dir, expected_outfile)
@@ -845,13 +848,10 @@ class TestExportTasks(ExportTaskBase):
     def test_gpx_export_task(self, mock_convert, mock_get_export_task_record, mock_get_export_filepath):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
-        expected_provider_slug = "osm-generic"
-        expected_event = "event"
-        expected_label = "label"
         mock_get_export_task_record.return_value = Mock(
             export_provider_task=Mock(
-                run=Mock(job=Mock(event=expected_event)),
-                provider=Mock(slug=expected_provider_slug, data_type="vector", label=expected_label),
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="gpx-generic", data_type="vector", label="label"),
             )
         )
         example_source = "example.pbf"
@@ -1080,6 +1080,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_result, output_selection_geojson_task.run(selection='{"geojson": "here"}'))
 
     @patch("eventkit_cloud.tasks.export_tasks.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.export_tasks.TaskProcess")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
@@ -1092,11 +1093,20 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_task_record,
         mock_get_export_filepath,
         mock_task_process,
+        mock_export_task_record,
         mock_convert,
     ):
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         file_path = "/path/file.img"
+        mock_get_export_task_record.return_value = Mock(
+            export_provider_task=Mock(
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="hfa-generic", data_type="vector", label="label"),
+            )
+        )
+        hfa_export_task.task = mock_export_task_record
         mock_parse_result.return_value = file_path
         mock_convert.return_value = file_path
         expected_result = {"file_extension": "img", "result": file_path, "driver": "hfa", "hfa": file_path}
@@ -1117,9 +1127,17 @@ class TestExportTasks(ExportTaskBase):
         mock_export_task_record,
         mock_wcs,
     ):
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         file_path = "/path/file.tif"
+        mock_get_export_task_record.return_value = Mock(
+            export_provider_task=Mock(
+                run=Mock(job=Mock(event="event")),
+                provider=Mock(slug="wcs-generic", data_type="vector", label="label"),
+            )
+        )
+        wcs_export_task.task = mock_export_task_record
         mock_parse_result.return_value = file_path
         mock_wcs.WCSConverter().convert.return_value = file_path
         expected_result = {"source": file_path, "result": file_path}
