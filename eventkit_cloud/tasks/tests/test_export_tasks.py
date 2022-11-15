@@ -747,6 +747,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_not_called()
 
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
+    @patch("eventkit_cloud.tasks.export_tasks.ExportTaskRecord")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
     def test_nitf_export_task(
