@@ -749,9 +749,7 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.get_export_filepath")
     @patch("eventkit_cloud.tasks.export_tasks.get_export_task_record")
     @patch("eventkit_cloud.tasks.export_tasks.convert")
-    def test_nitf_export_task(
-        self, mock_convert, mock_get_export_task_record, mock_get_export_filepath
-    ):
+    def test_nitf_export_task(self, mock_convert, mock_get_export_task_record, mock_get_export_filepath):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         mock_get_export_task_record.return_value = Mock(
             export_provider_task=Mock(
@@ -1787,8 +1785,9 @@ class TestExportTasks(ExportTaskBase):
         in_projection = "4326"
         out_projection = "3857"
         expected_provider_slug = "some_provider"
+        config = {"cert_info": {"cert_path": "/path/to/cert", "cert_pass_var": "fake_pass"}}
         self.provider.slug = expected_provider_slug
-        self.provider.config = dict()
+        self.provider.config = config
         self.provider.save()
         date = default_format_time(timezone.now())
         driver = "tif"
@@ -1798,12 +1797,12 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run, status=TaskState.PENDING.value, provider=self.provider
         )
+        export_provider_task.name = "testjob"
         saved_export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task, status=TaskState.PENDING.value, name=reprojection_task.name
         )
         reprojection_task.task = saved_export_task
-        task_uid = str(saved_export_task.uid)
-        config = {"cert_info": {"cert_path": "/path/to/cert", "cert_pass_var": "fake_pass"}}
+        task_uid = saved_export_task.uid
         selection = "selection.geojson"
         metadata = {"data_sources": {expected_provider_slug: {"type": "something"}}}
         mock_get_metadata.return_value = metadata
@@ -1860,8 +1859,13 @@ class TestExportTasks(ExportTaskBase):
 
         mock_mapproxy.assert_called_once_with(
             gpkgfile=expected_output_path,
+            service_url=expected_output_path,
+            name=job_name,
+            config=config,
+            bbox=ANY,
             level_from=level_from,
             level_to=level_to,
+            task_uid=task_uid,
             selection=selection,
             projection=out_projection,
             input_gpkg=expected_input_path,
@@ -1897,8 +1901,16 @@ class TestExportTasks(ExportTaskBase):
         example_format_slug = "fmt"
         self.provider.export_provider_type = DataProviderType.objects.get(type_name="ogcapi-process")
         self.provider.slug = expected_provider_slug
-        # self.provider.config = yaml.dump({"ogcapi_process": {"id": "test"}}, Dumper=CDumper)
-        self.provider.config = {"ogcapi_process": {"id": "test"}}
+        self.provider.config = {
+            "ogcapi_process": {
+                "id": "eventkit-test",
+                "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
+                "outputs": {"format": {"mediaType": "application/zip"}},
+                "output_file_ext": ".gpkg",
+                "download_credentials": {"cred_var": "USER_PASS_ENV_VAR"},
+            },
+            "cred_var": "USER_PASS_ENV_VAR",
+        }
         self.provider.save()
 
         expected_outfile = "/path/to/file.ext"
@@ -1923,29 +1935,12 @@ class TestExportTasks(ExportTaskBase):
         ogcapi_process_export_task.stage_dir = self.stage_dir
         ogcapi_process_export_task.task.export_provider_task.provider.slug = example_format_slug
         ogcapi_process_export_task.update_task_state(task_status=TaskState.RUNNING.value, task_uid=task_uid)
+
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
-        # cred_var = "USER_PASS_ENV_VAR"
-        # config = {
-        #     "ogcapi_process": {
-        #         "id": "eventkit",
-        #         "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
-        #         "outputs": {"format": {"mediaType": "application/zip"}},
-        #         "output_file_ext": ".gpkg",
-        #         "download_credentials": {"cred_var": cred_var},
-        #     },
-        #     "cred_var": cred_var,
-        # }
-
-        # service_url = "http://example.test/v1/"
-        # session_token = "_some_token_"
-
         mock_get_ogcapi_data.return_value = expected_outzip_path
-
         mock_convert.return_value = expected_output_path
-
         mock_find_in_zip.return_value = source_file
-
         mock_get_export_filepath.side_effect = [expected_output_path, expected_outzip_path]
 
         result = ogcapi_process_export_task.run(
@@ -1973,6 +1968,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath.side_effect = [expected_output_path, expected_outzip_path]
 
         self.task_process.return_value = Mock(exitcode=0)
+        ogcapi_process_export_task.task.export_provider_task.provider.slug = None
         result = ogcapi_process_export_task.run(
             result=example_result,
             projection=projection,
