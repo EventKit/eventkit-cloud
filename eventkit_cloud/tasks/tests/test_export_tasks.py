@@ -699,11 +699,21 @@ class TestExportTasks(ExportTaskBase):
         warp_params = {"warp": "params"}
         translate_params = {"translate": "params"}
         mock_get_creation_options.return_value = warp_params, translate_params
+        expected_provider_slug = "geotiff-generic"
+        expected_event = "event"
+        expected_label = "label"
+        mock_get_export_task_record.return_value = Mock(
+            export_provider_task=Mock(
+                run=Mock(job=Mock(event=expected_event)),
+                provider=Mock(slug=expected_provider_slug, data_type="elevation", label=expected_label),
+            )
+        )
 
         mock_get_export_filepath.return_value = expected_outfile = "/path/to/file.ext"
         self.task_process.return_value = Mock(exitcode=0)
         geotiff_export_task.task_uid = task_uid
         geotiff_export_task.stage_dir = self.stage_dir
+        geotiff_export_task.task = mock_get_export_task_record
         geotiff_export_task(result=example_result)
         mock_convert.return_value = expected_outfile
         mock_convert.assert_called_once_with(
@@ -928,7 +938,6 @@ class TestExportTasks(ExportTaskBase):
             status=TaskState.PENDING.value,
             name=arcgis_feature_service_export_task.name,
         )
-
         mock_geopackage.check_content_exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
 
@@ -2012,19 +2021,18 @@ class TestExportTasks(ExportTaskBase):
         mock_geometry = Mock()
         mock_get_geometry.return_value = mock_geometry
 
-        config = {
-            "ogcapi_process": {
-                "id": "eventkit",
-                "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
-                "outputs": {"format": {"mediaType": "application/zip"}},
-                "output_file_ext": ".gpkg",
-                "download_credentials": {"cert_info": {"cert_path": "something", "cert_pass": "something"}},
-            },
-            "cert_info": {"cert_path": "something", "cert_pass": "something"},
-        }
-
-        service_url = "http://example.test/v1/"
-        session_token = "_some_token_"
+        # config = {
+        #     "ogcapi_process": {
+        #         "id": "eventkit",
+        #         "inputs": {"input": {"value": "random"}, "format": {"value": "gpkg"}},
+        #         "outputs": {"format": {"mediaType": "application/zip"}},
+        #         "output_file_ext": ".gpkg",
+        #         "download_credentials": {"cert_info": {"cert_path": "something", "cert_pass": "something"}},
+        #     },
+        #     "cert_info": {"cert_path": "something", "cert_pass": "something"},
+        # }
+        # service_url = "http://example.test/v1/"
+        # session_token = "_some_token_"
         example_download_url = "https://example.test/path.zip"
         example_download_path = "/example/file.gpkg"
         mock_client = MagicMock()
