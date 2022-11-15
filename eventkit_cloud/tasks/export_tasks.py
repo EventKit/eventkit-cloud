@@ -733,7 +733,6 @@ def ogcapi_process_export_task(
     self,
     result=None,
     projection=4326,
-    session_token=None,
     **kwargs,
 ):
     """
