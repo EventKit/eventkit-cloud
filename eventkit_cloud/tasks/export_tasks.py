@@ -107,11 +107,13 @@ class ExportTask(EventKitBaseTask):
     task: ExportTaskRecord = None
 
     def __call__(self, *args, **kwargs) -> dict:
+        task_uid = kwargs.get("task_uid")
+
         try:
             self.task = (
                 ExportTaskRecord.objects.select_related("export_provider_task__run__job")
                 .select_related("export_provider_task__provider")
-                .get(uid=self.task.uid)
+                .get(uid=task_uid)
             )
 
             self.task.hide_download = self.hide_download
