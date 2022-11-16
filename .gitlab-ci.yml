@@ -167,7 +167,7 @@ integration-tests:
     - branch_diff || docker-compose up -d && docker-compose stop celery webpack flower httpd && BIND_MOUNT_LOCATION=$PWD docker-compose run --rm -d --user=root --name=celery_worker celery || echo $?
     - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py migrate'
     - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py loaddata admin_user osm_provider datamodel_presets' || echo $?
-    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_all eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_cancel_osm_run'; EXIT_CODE=$?; exit $EXIT_CODE || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit $EXIT_CODE
+    - branch_diff || docker-compose exec -T eventkit bash -c 'source activate conda_env && python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_all'; EXIT_CODE=$?; exit $EXIT_CODE || docker-compose ps; docker logs --tail 200 celery_worker; docker-compose logs --no-log-prefix --tail=200 eventkit; exit $EXIT_CODE
 
 pass-tests:
   when: on_success

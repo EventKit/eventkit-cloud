@@ -386,7 +386,7 @@ class TestJob(TestCase):
                 {"provider": "eventkit-integration-test-wms", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "osm-generic",
                 #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                {"provider": "osm", "formats": ["gpkg", "shp"]},
+                # {"provider": "osm", "formats": ["gpkg", "shp"]},
                 {"provider": "eventkit-integration-test-wmts", "formats": ["gpkg", "gtiff"]},
                 # {"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]},
                 # Commented out because the service is down.
