@@ -240,16 +240,6 @@ export const DataPackShareDialog = (props: Props) => {
         setPermissions(refPerms.current.getPermissions());
     }, []);
 
-    useEffect( () => {
-        const localPermissions = getCurrentRefVal();
-        if (localPermissions) {
-            localPermissions.setPermissions(props.permissions);
-            localPermissions.setUsername(user ? user.user.username : undefined);
-            localPermissions.extractCurrentUser();
-            setPermissions(localPermissions.getPermissions());
-        }
-    }, [props.show, props.user]);
-
     if (!props.show) {
         return null;
     }
