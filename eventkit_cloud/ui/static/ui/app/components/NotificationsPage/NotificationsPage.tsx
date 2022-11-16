@@ -3,7 +3,7 @@ import { Component } from 'react';
 import {connect} from 'react-redux';
 import {Theme, withTheme} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import Paper from '@material-ui/core/Paper';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
@@ -203,11 +203,11 @@ export class NotificationsPage extends Component<Props, State> {
                                                     />
                                                 )
                                                 : (
-                                                    <GridList
+                                                    <ImageList
                                                         className="qa-NotificationsPage-Content-Notifications-Grid"
-                                                        cellHeight="auto"
+                                                        rowHeight="auto"
                                                         style={styles.gridList}
-                                                        spacing={2}
+                                                        gap={2}
                                                         cols={1}
                                                     >
                                                         {notifications.map(notification => (
@@ -217,7 +217,7 @@ export class NotificationsPage extends Component<Props, State> {
                                                                 history={this.props.history}
                                                             />
                                                         ))}
-                                                    </GridList>
+                                                    </ImageList>
                                                 )
                                             }
                                             <LoadButtons

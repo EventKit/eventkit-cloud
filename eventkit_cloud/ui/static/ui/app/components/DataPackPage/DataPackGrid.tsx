@@ -1,5 +1,5 @@
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
@@ -67,11 +67,11 @@ export function DataPackGrid(props: Props) {
             style={{height: 'calc(100vh - 236px)', width: '100%'}}
         >
             <div style={styles.root} className="qa-div-root">
-                <GridList
+                <ImageList
                     className="qa-DataPackGrid-GridList"
-                    cellHeight="auto"
+                    rowHeight="auto"
                     style={styles.gridList}
-                    spacing={isWidthUp('md', props.width) ? 7 : 2}
+                    gap={isWidthUp('md', props.width) ? 7 : 2}
                     cols={getColumns()}
                 >
                     {props.runIds.map((id, index) => (
@@ -88,7 +88,7 @@ export function DataPackGrid(props: Props) {
                             showFeaturedFlag
                         />
                     ))}
-                </GridList>
+                </ImageList>
             </div>
             <LoadButtons
                 range={props.range}

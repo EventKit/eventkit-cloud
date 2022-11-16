@@ -4,7 +4,7 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-import GridList from '@material-ui/core/GridList';
+import ImageList from '@material-ui/core/ImageList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import { DataPackList } from '../../components/DataPackPage/DataPackList';
@@ -41,14 +41,14 @@ describe('DataPackList component', () => {
 
     it('should render list items as part of the mobile view', () => {
         wrapper.setProps({ width: 'xs' });
-        expect(wrapper.find(GridList)).toHaveLength(1);
+        expect(wrapper.find(ImageList)).toHaveLength(1);
         expect(wrapper.find(DataPackListItem)).toHaveLength(3);
         expect(wrapper.find(Table)).toHaveLength(0);
     });
 
     it('should render table items as part of the desktop view', () => {
         wrapper.setProps({ width: 'lg' });
-        expect(wrapper.find(GridList)).toHaveLength(0);
+        expect(wrapper.find(ImageList)).toHaveLength(0);
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(Table).first().find(TableRow)).toHaveLength(1);
