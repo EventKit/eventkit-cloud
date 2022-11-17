@@ -30,11 +30,11 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template
 from django.utils import timezone
-from gdal_utils import convert
+from gdal_utils import convert, convert_bbox
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.core.helpers import NotificationLevel, NotificationVerb, sendnotification
-from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.feature_selection.feature_selection import FeatureSelection, slugify
 from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.jobs.models import DataProvider, MapImageSnapshot, ProxyFormat, clean_config
 from eventkit_cloud.tasks import set_cache_value
@@ -1223,6 +1223,7 @@ def wfs_export_task(
             "layer_name": layer_name,
             "projection": 4326,
             "level": layer.get("level", 15),
+            "service_description": layer.get("service_description"),
         }
 
     download_concurrently(list(layers.values()), **configuration)
@@ -1344,7 +1345,7 @@ def wcs_export_task(
 def arcgis_feature_service_export_task(
     self,
     result=None,
-    projection=4326,
+    projection=None,
     **kwargs,
 ):
     """
@@ -1364,18 +1365,23 @@ def arcgis_feature_service_export_task(
     out = gpkg
     for layer_name, layer in vector_layer_data.items():
         # TODO: using wrong signature for filepath, however pipeline counts on projection-provider_slug.ext.
-        path = get_export_filepath(self.stage_dir, self.task, f"{layer.get('name')}-{projection}", "gpkg")
+        layer_slug = slugify(layer_name)
+        path = get_export_filepath(self.stage_dir, self.task, f"{layer_slug}-{projection}", "gpkg")
+        src_srs = layer.get("src_srs") or 4326
+        src_bbox = convert_bbox(self.task.export_provider_task.run.job.extents, to_projection=src_srs)
         url = get_arcgis_query_url(layer.get("url"))
-        layers[layer_name] = {
+
+        layers[layer_slug] = {
             "task_uid": str(self.task.uid),
             "url": url,
             "path": path,
             "base_path": os.path.dirname(path),
-            "bbox": self.task.export_provider_task.run.job.extents,
-            "projection": 4326,
-            "layer_name": layer_name,
+            "bbox": src_bbox,
+            "src_srs": src_srs,
+            "layer_name": layer_slug,
             "level": layer.get("level", 15),
-            "distinct_field": layer.get("distinct_field", "OBJECTID"),
+            "distinct_field": layer.get("distinct_field"),
+            "service_description": layer.get("service_description"),
         }
 
     try:
@@ -1422,7 +1428,7 @@ def get_arcgis_query_url(service_url: str, bbox: list = None) -> str:
         service_url = service_url.rstrip("/\\")
     finally:
         query_params = {
-            "where": "objectid=objectid",
+            "where": "",
             "outfields": "*",
             "f": "json",
             "geometry": str(bbox).strip("[]"),

@@ -143,7 +143,7 @@ class ArcGISLayer:
                 return [self.get_cim_solid_fill(ts)]
             case {"type": "esriSMS"}:
                 sms: service_types.SimpleMarkerSymbol = cast(service_types.SimpleMarkerSymbol, service_symbol)
-                return [self.get_cim_solid_stroke(sms), self.get_cim_solid_fill(sms)]
+                return [self.get_cim_vector_marker(sms)]
             case {"type": "esriPMS"}:
                 pms: service_types.PictureMarkerSymbol = cast(service_types.PictureMarkerSymbol, service_symbol)
                 return [self.get_cim_picture_marker(pms)]
@@ -156,7 +156,7 @@ class ArcGISLayer:
     def get_cim_marker_graphic(self, service_symbol: service_types.SimpleMarkerSymbol) -> cim_types.CIMMarkerGraphic:
         poly_symbol: cim_types.CIMPolygonSymbol = {
             "type": "CIMPolygonSymbol",
-            "symbolLayers": self.get_symbol_layers(service_symbol),
+            "symbolLayers": [self.get_cim_solid_stroke(service_symbol), self.get_cim_solid_fill(service_symbol)],
         }
         graphic: cim_types.CIMMarkerGraphic = {
             "type": "CIMMarkerGraphic",
