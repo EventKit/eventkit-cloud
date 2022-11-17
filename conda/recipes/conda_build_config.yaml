@@ -111,7 +111,7 @@ freexl:
 gdal:
 - 3.4.2
 gdalutils:
-- 1.0.4
+- 1.0.5
 gdbm:
 - '1.18'
 geos:
@@ -281,7 +281,7 @@ nss:
 numpy:
 - 1.22.3
 openjpeg:
-- 2.5.0
+- 2.4.0
 openldap:
 - 2.4.59
 openssl:

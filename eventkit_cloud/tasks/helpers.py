@@ -859,7 +859,6 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
 def merge_chunks(
     output_file,
     layer_name,
-    projection,
     task_uid: str,
     bbox: list,
     stage_dir: str,
@@ -869,6 +868,8 @@ def merge_chunks(
     level=15,
     distinct_field=None,
     session=None,
+    dst_srs: int = 4326,
+    service_description: dict = None,
     *args,
     **kwargs,
 ):
@@ -876,17 +877,32 @@ def merge_chunks(
     # mypy complains when keyword arguments are passed alongside a **kwargs
     # it believes that session could be getting passed in twice (it could, but shouldn't)
     chunks = download_chunks(
-        task_uid, bbox, stage_dir, base_url, task_points, feature_data, level=level, session=session, *args, **kwargs
+        task_uid,
+        bbox,
+        stage_dir,
+        base_url,
+        task_points,
+        feature_data,
+        layer_name=layer_name,
+        level=level,
+        session=session,
+        service_description=service_description,
+        *args,
+        **kwargs,
     )  # type: ignore
     task_process = TaskProcess(task_uid=task_uid)
     try:
         out = convert(
-            driver="gpkg",
+            # boundary=bbox,
             input_files=chunks,
             output_file=output_file,
-            boundary=bbox,
             layer_name=layer_name,
-            projection=projection,
+            driver="gpkg",
+            dst_srs=dst_srs,
+            # Access_mode:
+            #   Append will fail silently if layer doesn't exist.
+            #   Update will fail if layer DOES exist, since this request should be for a new layer,
+            #   update should be fine.
             access_mode="append",
             distinct_field=distinct_field,
             executor=task_process.start_process,
@@ -907,7 +923,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
     merge_chunks(
         output_file=layer.get("path"),
         layer_name=layer.get("layer_name"),
-        projection=layer.get("projection"),
+        src_srs=layer.get("src_srs"),
         task_uid=layer.get("task_uid"),
         bbox=layer.get("bbox"),
         stage_dir=base_path,
@@ -917,6 +933,7 @@ def download_chunks_concurrently(layer, task_points, feature_data, *args, **kwar
         feature_data=feature_data,
         level=layer.get("level"),
         distinct_field=layer.get("distinct_field"),
+        service_description=layer.get("service_description"),
         session=session,
     )
 
@@ -972,7 +989,7 @@ def get_zoom_level_from_scale(scale: Optional[int], limit: int = 20) -> int:
 def parse_arcgis_feature_response(file_path: str) -> dict:
     with open(file_path) as f:
         try:
-            json_response = json.load(f)
+            json_response = json.loads(f.read())
         except JSONDecodeError:
             logger.error("Unable to read JSON from file")
             logger.info("The file contents are:")
@@ -983,12 +1000,12 @@ def parse_arcgis_feature_response(file_path: str) -> dict:
             logger.error(json_response)
             raise Exception("The service did not receive a valid response.")
 
-        if "features" not in json_response:
-            # If no features are returned it would be good to let user know, but failing and retrying here
-            # doesn't seem to be the best approach.
-            # Without features and fields gdal will blow up.
-            json_response["features"] = []
-            json_response["fields"] = []
+        for field_name in ["features", "fields"]:
+            if field_name not in json_response:
+                # If no features are returned it would be good to let user know, but failing and retrying here
+                # doesn't seem to be the best approach.
+                # Without features and fields gdal will blow up.
+                json_response[field_name] = []
     return json_response
 
 
@@ -1053,8 +1070,8 @@ def download_arcgis_feature_data(
                     json_response["features"].extend(feature_response["features"])
                     result_offset = result_offset + result_record_count
                     exceeded_transfer_limit = bool(feature_response.get("exceededTransferLimit"))
-        else:
-            out_file = download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
+        if not json_response:
+            download_data(task_uid, input_url, out_file, session=session, task_points=task_points)
             json_response = parse_arcgis_feature_response(out_file)
         with open(out_file, "w") as f:
             json.dump(json_response, f)
@@ -1063,7 +1080,9 @@ def download_arcgis_feature_data(
             logger.info(json_response)
         logger.error(f"Feature data download error: {e}")
         raise e
-    return out_file
+    #  Use prefix to disambiguate drivers, https://gdal.org/drivers/vector/esrijson.html#datasource
+    esri_json_file = f"ESRIJSON:{out_file}"
+    return esri_json_file
 
 
 def download_chunks(
@@ -1073,37 +1092,24 @@ def download_chunks(
     base_url: str,
     task_points=100,
     feature_data=False,
+    layer_name=None,
     level=15,
     size=None,
     session=None,
+    service_description=None,
     *args,
     **kwargs,
 ):
     tile_bboxes = get_chunked_bbox(bbox, size=size, level=level)
     chunks = []
-    # TODO: Pass in service description from export_task.
-    service_description = {}
-    if feature_data:
-        service_url = None
-        try:
-            parsed_url = urllib.parse.urlparse(base_url)
-            service_url = parsed_url._replace(path=parsed_url.path.removesuffix("/query")).geturl()
-            result = session.get(service_url, params={"f": "json"})
-            result.raise_for_status()
-            service_description = result.json()
-        except requests.exceptions.HTTPError:
-            if service_url:
-                logger.error("Could not get service description for %s", service_url)
-            else:
-                logger.error("There was an error parsing the url to get a description for %s", base_url)
-        logger.info("Making %s requests at level %s for service %s", len(tile_bboxes), level, service_url or base_url)
     for _index, _tile_bbox in enumerate(tile_bboxes):
         # Replace bbox placeholder here, allowing for the bbox as either a list or tuple
         url = base_url.replace("BBOX_PLACEHOLDER", urllib.parse.quote(str([*_tile_bbox]).strip("[]")))
-        outfile = os.path.join(stage_dir, f"chunk{_index}.json")
-
+        if layer_name:
+            base_name = f"{layer_name}-chunk-{_index}.json"
+        outfile = os.path.join(stage_dir, base_name)
         download_function = download_arcgis_feature_data if feature_data else download_data
-        outfile = download_function(
+        downloaded_file = download_function(
             task_uid,
             url,
             outfile,
@@ -1113,8 +1119,8 @@ def download_chunks(
             *args,
             **kwargs,
         )
-        if outfile:
-            chunks.append(outfile)
+        if downloaded_file:
+            chunks.append(downloaded_file)
     return chunks
 
 
