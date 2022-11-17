@@ -210,7 +210,7 @@ class ExportTask(EventKitBaseTask):
             return self.task_failure(e, args, kwargs, einfo)
 
     @transaction.atomic
-    def task_failure(self, task_id, args, kwargs, einfo):
+    def task_failure(self, args, kwargs, einfo):
         """
         Update the failed task as follows:
 
@@ -223,7 +223,9 @@ class ExportTask(EventKitBaseTask):
         # TODO: If there is a failure before the task was created this will fail to run.
         status = TaskState.FAILED.value
         try:
-            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(uid=task_id)
+            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(
+                uid=self.task.uid
+            )
             export_task_record.finished_at = timezone.now()
             export_task_record.save()
         except Exception:
@@ -245,14 +247,13 @@ class ExportTask(EventKitBaseTask):
                 data_provider_task_record = export_task_record.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
                 run = data_provider_task_record.run
-                stage_dir = kwargs["stage_dir"]
-                export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
+                export_task_error_handler(run_uid=str(run.uid), task_id=self.task.uid, stage_dir=self.stage_dir)
             except Exception:
                 tb = traceback.format_exc()
                 logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
         return {"status": status}
 
-    def update_task_state(self, result=None, task_status=TaskState.RUNNING.value, task_uid=None):
+    def update_task_state(self, result=None, task_status=TaskState.RUNNING.value):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -260,7 +261,7 @@ class ExportTask(EventKitBaseTask):
         result = result or {}
 
         try:
-            task = ExportTaskRecord.objects.get(uid=task_uid)
+            task = ExportTaskRecord.objects.get(uid=self.task.uid)
             celery_uid = self.request.id
             if not celery_uid:
                 raise Exception("Failed to save celery_UID")
@@ -285,7 +286,7 @@ class ExportTask(EventKitBaseTask):
             task.export_provider_task.run.save()
             logger.debug("Updated task: {0} with uid: {1}".format(task.name, task.uid))
         except DatabaseError as e:
-            logger.error("Updating task {0} state throws: {1}".format(task_uid, e))
+            logger.error("Updating task {0} state throws: {1}".format(self.task.uid, e))
             raise e
 
 
@@ -1826,7 +1827,7 @@ def zip_files(files, run_zip_file_uid, meta_files={}, file_path=None, metadata=N
 class FinalizeRunBase(EventKitBaseTask):
     name = "Finalize Export Run"
 
-    def run(self, result=None, run_uid=None, stage_dir=None):
+    def run(self, result=None, run_uid=None):
         """
          Finalizes export run.
 
@@ -1846,7 +1847,7 @@ class FinalizeRunBase(EventKitBaseTask):
         #    this waits until all provider tasks have finished before continuing.
         if any(getattr(TaskState, task.status, None) == TaskState.PENDING for task in provider_tasks):
             finalize_run_task.retry(
-                result=result, run_uid=run_uid, stage_dir=stage_dir, interval_start=4, interval_max=10
+                result=result, run_uid=run_uid, stage_dir=self.stage_dir, interval_start=4, interval_max=10
             )
 
         # mark run as incomplete if any tasks fail
@@ -1884,11 +1885,11 @@ class FinalizeRunBase(EventKitBaseTask):
         except Exception as e:
             logger.error("Encountered an error when sending status email: {}".format(e))
 
-        result["stage_dir"] = stage_dir
+        result["stage_dir"] = self.stage_dir
         return result
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
+    def after_return(self, status, retval, args, kwargs, einfo):
+        super(FinalizeRunBase, self).after_return(status, retval, self.task.uid, args, kwargs, einfo)
         stage_dir = None if retval is None else retval.get("stage_dir")
         try:
             if stage_dir and os.path.isdir(stage_dir):
@@ -1971,7 +1972,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None):
 
 
 @app.task(name="Export Task Error Handler", bind=True, base=EventKitBaseTask)
-def export_task_error_handler(self, result=None, run_uid=None, task_id=None, stage_dir=None, *args, **kwargs):
+def export_task_error_handler(self, result=None, run_uid=None, *args, **kwargs):
     """
     Handles un-recoverable errors in export tasks.
     """
@@ -1979,11 +1980,11 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     try:
         run = ExportRun.objects.get(uid=run_uid)
         try:
-            if stage_dir is not None and os.path.isdir(stage_dir):
+            if self.stage_dir is not None and os.path.isdir(self.stage_dir):
                 if not os.getenv("KEEP_STAGE", False):
-                    shutil.rmtree(stage_dir)
+                    shutil.rmtree(self.stage_dir)
         except IOError:
-            logger.error("Error removing {0} during export finalize".format(stage_dir))
+            logger.error("Error removing {0} during export finalize".format(self.stage_dir))
 
         site_url = settings.SITE_URL
         url = "{0}/status/{1}".format(site_url.rstrip("/"), run.job.uid)
@@ -1992,7 +1993,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-        ctx = {"url": url, "task_id": task_id, "job_name": run.job.name}
+        ctx = {"url": url, "task_id": self.task.uid, "job_name": run.job.name}
         text = get_template("email/error_email.txt").render(ctx)
         html = get_template("email/error_email.html").render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
