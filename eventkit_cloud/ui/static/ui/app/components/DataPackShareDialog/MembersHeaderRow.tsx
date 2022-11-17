@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { isWidthUp } from '@material-ui/core/withWidth';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Menu from '@material-ui/core/Menu';
@@ -258,4 +258,4 @@ export class MembersHeaderRow extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme(MembersHeaderRow));
+export default withTheme(MembersHeaderRow);

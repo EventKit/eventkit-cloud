@@ -1,5 +1,5 @@
 import {connect} from 'react-redux';
-import { Component } from 'react';
+import {useEffect, useState, useRef, createRef, RefObject} from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
@@ -14,387 +14,364 @@ export interface Props {
     show: boolean;
     onClose: () => void;
     onSave: (perms: Eventkit.Permissions) => void;
-    user: Eventkit.User;
+    user?: Eventkit.User;
     groups: Eventkit.Group[];
     users: Eventkit.User[];
     permissions: Eventkit.Permissions;
     permissionState: Eventkit.Store.UpdatePermissions;
-    groupsText: any;
-    membersText: any;
-    canUpdateAdmin: boolean;
-    submitButtonLabel: string;
-    title: any;
-    warnPublic: boolean;
+    groupsText?: any;
+    membersText?: any;
+    canUpdateAdmin?: boolean;
+    submitButtonLabel?: string;
+    title?: any;
+    warnPublic?: boolean;
     theme: Eventkit.Theme & Theme;
 }
 
+export type PermissionsView = 'groups' | 'members';
+
 export interface State {
-    view: 'groups' | 'members';
+    view: PermissionsView;
     permissions: Eventkit.Permissions;
     showShareInfo: boolean;
     showPublicWarning: boolean;
 }
 
-export class DataPackShareDialog extends Component<Props, State> {
-    static defaultProps = {
-        submitButtonLabel: 'SAVE',
-        title: 'SHARE',
-        groupsText: '',
-        membersText: '',
-        canUpdateAdmin: false,
-        user: null,
-        warnPublic: false,
-    };
+export const DataPackShareDialog = (props: Props) => {
+    const submitButtonLabel = props.submitButtonLabel ?? 'SAVE';
+    const title = props.title ?? 'SHARE';
+    const groupsText = props.groupsText ?? '';
+    const membersText = props.membersText ?? '';
+    const canUpdateAdmin = props.canUpdateAdmin ?? false;
+    const user = props.user ?? null;
+    const warnPublic = props.warnPublic ?? false;
+    let refPerms: RefObject<Permissions> = useRef<Permissions>(new Permissions(props.permissions));
 
-    private permissions: Permissions;
-
-    constructor(props: Props) {
-        super(props);
-        this.handleSave = this.handleSave.bind(this);
-        this.handleUserCheck = this.handleUserCheck.bind(this);
-        this.handleGroupCheck = this.handleGroupCheck.bind(this);
-        this.handleAdminCheck = this.handleAdminCheck.bind(this);
-        this.handleAdminGroupCheck = this.handleAdminGroupCheck.bind(this);
-        this.handleCurrentCheck = this.handleCurrentCheck.bind(this);
-        this.handlePublicCheck = this.handlePublicCheck.bind(this);
-        this.handleGroupCheckAll = this.handleGroupCheckAll.bind(this);
-        this.handleUncheckAll = this.handleUncheckAll.bind(this);
-        this.handleGroupUncheckAll = this.handleGroupUncheckAll.bind(this);
-        this.showShareInfo = this.showShareInfo.bind(this);
-        this.hideShareInfo = this.hideShareInfo.bind(this);
-        this.showPublicWarning = this.showPublicWarning.bind(this);
-        this.hidePublicWarning = this.hidePublicWarning.bind(this);
-        this.toggleView = this.toggleView.bind(this);
-        this.renderSharedPermissions = this.renderSharedPermissions.bind(this);
-        this.state = {
-            view: 'groups',
-            // Make a copy of the permissions so we can modify it locally
-            permissions: null,
-            showShareInfo: false,
-            showPublicWarning: false,
-        };
+    const getCurrentRefVal = () => {
+        return refPerms.current;
     }
 
-    componentDidMount() {
-        this.permissions = new Permissions(this.props.permissions);
-        this.setState({
-            permissions: this.permissions.getPermissions()
-        });
-    }
+    const [view, setView] = useState('groups');
+    const [permissions, setPermissions] = useState(null);
+    const [showShareInfo, setShowShareInfo] = useState(false);
+    const [showPublicWarning, setShowPublicWarning] = useState(false);
 
-    componentDidUpdate(prevProps: Props, prevState: State) {
-        if (!prevProps.show && this.props.show) {
-            this.permissions.setPermissions(this.props.permissions);
-            this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
-            this.permissions.extractCurrentUser();
-            this.setState({permissions: this.permissions.getPermissions()});
-        }
-    }
-
-    private handleSave() {
-        if (this.permissions.isPrivate()) {
-            if (this.permissions.getMemberCount() || this.permissions.getGroupCount()) {
-                this.permissions.makeShared();
+    const handleSave = () => {
+        const localPermissions = getCurrentRefVal();
+        if (localPermissions.isPrivate()) {
+            if (localPermissions.getMemberCount() || localPermissions.getGroupCount()) {
+                localPermissions.makeShared();
             }
-        } else if (this.permissions.isShared()) {
-            if (!this.permissions.getMemberCount() && !this.permissions.getGroupCount()) {
-                this.permissions.makePrivate();
+        } else if (localPermissions.isShared()) {
+            if (!localPermissions.getMemberCount() && !localPermissions.getGroupCount()) {
+                localPermissions.makePrivate();
             }
-        } else if (this.props.warnPublic) {
-            if (!this.state.showPublicWarning) {
-                this.setState({showPublicWarning: true});
+        } else if (warnPublic) {
+            if (!showPublicWarning) {
+                setShowPublicWarning(true);
                 return;
             }
-            this.setState({showPublicWarning: false});
+            setShowPublicWarning(false);
         }
 
-        if (this.permissions.getUserPermissions()) {
-            this.permissions.insertCurrentUser();
+        if (localPermissions.getUserPermissions()) {
+            localPermissions.insertCurrentUser();
         }
 
-        this.props.onSave(this.permissions.getPermissions());
-    }
+        props.onSave(localPermissions.getPermissions());
+    };
 
-    private handleUserCheck(username: string) {
-        if (this.permissions.isPublic()) {
-            this.permissions.makeShared();
+    const handleUserCheck = (username: string) => {
+        const localPermissions = getCurrentRefVal();
+        if (localPermissions.isPublic()) {
+            localPermissions.makeShared();
         }
-        if (this.permissions.userHasPermission(username)) {
-            this.permissions.removeMemberPermission(username);
+        if (localPermissions.userHasPermission(username)) {
+            localPermissions.removeMemberPermission(username);
         } else {
-            this.permissions.setMemberPermission(username, Levels.READ);
+            localPermissions.setMemberPermission(username, Levels.READ);
         }
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleGroupCheck(groupname: string) {
-        if (this.permissions.groupHasPermission(groupname)) {
-            this.permissions.removeGroupPermissions(groupname);
+    const handleGroupCheck = (groupname: string) => {
+        const localPermissions = getCurrentRefVal();
+        if (localPermissions.groupHasPermission(groupname)) {
+            localPermissions.removeGroupPermissions(groupname);
         } else {
-            this.permissions.setGroupPermission(groupname, Levels.READ);
+            localPermissions.setGroupPermission(groupname, Levels.READ);
         }
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleAdminCheck(username: string) {
-        if (this.permissions.userHasPermission(username, Levels.ADMIN)) {
-            this.permissions.setMemberPermission(username, Levels.READ);
+    const handleAdminCheck = (username: string) => {
+        const localPermissions = getCurrentRefVal();
+        if (localPermissions.userHasPermission(username, Levels.ADMIN)) {
+            localPermissions.setMemberPermission(username, Levels.READ);
         } else {
-            this.permissions.setMemberPermission(username, Levels.ADMIN);
+            localPermissions.setMemberPermission(username, Levels.ADMIN);
         }
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleAdminGroupCheck(groupname: string) {
-        if (this.permissions.groupHasPermission(groupname, Levels.ADMIN)) {
-            this.permissions.setGroupPermission(groupname, Levels.READ);
+    const handleAdminGroupCheck = (groupname: string) => {
+        const localPermissions = getCurrentRefVal();
+        if (localPermissions.groupHasPermission(groupname, Levels.ADMIN)) {
+            localPermissions.setGroupPermission(groupname, Levels.READ);
         } else {
-            this.permissions.setGroupPermission(groupname, Levels.ADMIN);
+            localPermissions.setGroupPermission(groupname, Levels.ADMIN);
         }
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleCurrentCheck() {
-        this.props.users.forEach((user) => {
+    const handleCurrentCheck = () => {
+        const localPermissions = getCurrentRefVal();
+        props.users.forEach((user) => {
             const {username} = user.user;
-            if (!this.permissions.userHasPermission(username)) {
-                this.permissions.setMemberPermission(username, Levels.READ);
+            if (!localPermissions.userHasPermission(username)) {
+                localPermissions.setMemberPermission(username, Levels.READ);
             }
         });
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handlePublicCheck() {
-        this.permissions.makePublic();
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+    const handlePublicCheck = () => {
+        const localPermissions = getCurrentRefVal();
+        localPermissions.makePublic();
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleGroupCheckAll() {
-        this.props.groups.forEach((group) => {
+    const handleGroupCheckAll = () => {
+        const localPermissions = getCurrentRefVal();
+        props.groups.forEach((group) => {
             const {name} = group;
-            if (!this.permissions.groupHasPermission(name)) {
-                this.permissions.setGroupPermission(name, Levels.READ);
+            if (!localPermissions.groupHasPermission(name)) {
+                localPermissions.setGroupPermission(name, Levels.READ);
             }
         });
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleUncheckAll() {
+    const handleUncheckAll = () => {
+        const localPermissions = getCurrentRefVal();
         // Retain permissions for users with administrative privileges.
-        this.props.users.forEach((user) => {
+        props.users.forEach((user) => {
             const {username} = user.user;
-            if (!this.permissions.userHasPermission(username, Levels.ADMIN)) {
-                this.permissions.removeMemberPermission(username);
+            if (!localPermissions.userHasPermission(username, Levels.ADMIN)) {
+                localPermissions.removeMemberPermission(username);
             }
         });
-        if (this.permissions.isPublic()) {
-            this.permissions.makeShared();
+        if (localPermissions.isPublic()) {
+            localPermissions.makeShared();
         }
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private handleGroupUncheckAll() {
+    const handleGroupUncheckAll = () => {
+        const localPermissions = getCurrentRefVal();
         // Retain permissions for groups with administrative privileges.
-        this.props.groups.forEach((group) => {
+        props.groups.forEach((group) => {
             const {name} = group;
-            if (!this.permissions.groupHasPermission(name, Levels.ADMIN)) {
-                this.permissions.removeGroupPermissions(name);
+            if (!localPermissions.groupHasPermission(name, Levels.ADMIN)) {
+                localPermissions.removeGroupPermissions(name);
             }
         });
-        this.setState({permissions: this.permissions.getPermissions()});
-    }
+        setPermissions(localPermissions.getPermissions());
+    };
 
-    private showShareInfo() {
-        this.setState({showShareInfo: true});
-    }
+    const showInfo = () => {
+        setShowShareInfo(true);
+    };
 
-    private hideShareInfo() {
-        this.setState({showShareInfo: false});
-    }
+    const hideInfo = () => {
+        setShowShareInfo(false);
+    };
 
-    private showPublicWarning() {
-        this.setState({showPublicWarning: true});
-    }
+    const hideWarning = () => {
+        setShowPublicWarning(false);
+    };
 
-    private hidePublicWarning() {
-        this.setState({showPublicWarning: false});
-    }
-
-    private toggleView() {
-        if (this.state.view === 'groups') {
-            this.setState({view: 'members'});
+    const toggleView = () => {
+        if (view === 'groups') {
+            setView('members');
         } else {
-            this.setState({view: 'groups'});
+            setView('groups');
         }
-    }
+    };
 
-    private renderSharedPermissions() {
-        if (this.state.view === 'groups') {
+    const renderSharedPermissions = () => {
+        if (view === 'groups') {
             return (
                 <GroupsBody
-                    view={this.state.view}
-                    job={this.props.job}
-                    selectedGroups={this.state.permissions.groups}
-                    groupsText={this.props.groupsText}
-                    onGroupCheck={this.handleGroupCheck}
-                    onAdminCheck={this.handleAdminGroupCheck}
-                    onCheckAll={this.handleGroupCheckAll}
-                    onUncheckAll={this.handleGroupUncheckAll}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
+                    view={view}
+                    job={props.job}
+                    selectedGroups={permissions?.groups}
+                    groupsText={groupsText}
+                    onGroupCheck={handleGroupCheck}
+                    onAdminCheck={handleAdminGroupCheck}
+                    onCheckAll={handleGroupCheckAll}
+                    onUncheckAll={handleGroupUncheckAll}
+                    canUpdateAdmin={canUpdateAdmin}
+                    handleShowShareInfo={showInfo}
                 />
             );
         } else {
             return (
                 <MembersBody
-                    view={this.state.view}
-                    job={this.props.job}
-                    public={this.state.permissions.value === 'PUBLIC'}
-                    selectedMembers={this.state.permissions.members}
-                    membersText={this.props.membersText}
-                    onMemberCheck={this.handleUserCheck}
-                    onAdminCheck={this.handleAdminCheck}
-                    onCheckCurrent={this.handleCurrentCheck}
-                    onCheckAll={this.handlePublicCheck}
-                    onUncheckAll={this.handleUncheckAll}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
+                    view={view as PermissionsView}
+                    job={props.job}
+                    public={permissions?.value === 'PUBLIC'}
+                    selectedMembers={permissions?.members}
+                    membersText={membersText}
+                    onMemberCheck={handleUserCheck}
+                    onAdminCheck={handleAdminCheck}
+                    onCheckCurrent={handleCurrentCheck}
+                    onCheckAll={handlePublicCheck}
+                    onUncheckAll={handleUncheckAll}
+                    canUpdateAdmin={canUpdateAdmin}
+                    handleShowShareInfo={showInfo}
                 />
             );
         }
     }
 
-    render() {
-        if (!this.props.show || !this.permissions) {
-            return null;
-        }
+    useEffect(() => {
+        // Anything in here is fired on component mount.
+        setPermissions(refPerms.current.getPermissions());
+    }, []);
 
-        const {colors} = this.props.theme.eventkit;
+    if (!props.show) {
+        return null;
+    }
 
-        const styles = {
-            fixedHeader: {
-                position: 'sticky' as 'sticky',
-                top: 0,
-                left: 0,
-                backgroundColor: colors.white,
-                zIndex: 15,
-                padding: '0px 10px',
-            },
-            groupsButton: {
-                flex: '1 1 auto',
-                borderRadius: '0px',
-                backgroundColor: this.state.view === 'groups' ? colors.primary : colors.secondary,
-                boxShadow: 'none',
-                color: this.state.view === 'groups' ? colors.white : colors.primary,
-            },
-            membersButton: {
-                flex: '1 1 auto',
-                borderRadius: '0px',
-                backgroundColor: this.state.view === 'members' ? colors.primary : colors.secondary,
-                boxShadow: 'none',
-                color: this.state.view === 'members' ? colors.white : colors.primary,
-            },
-        };
+    const {colors} = props.theme.eventkit;
 
-        if (this.state.showShareInfo) {
-            return (
-                <ShareBaseDialog
-                    show={this.props.show}
-                    onClose={this.props.onClose}
-                    handleSave={this.handleSave}
-                    title={this.props.title}
-                    submitButtonLabel={this.props.submitButtonLabel}
-                    className="qa-DataPackShareDialog"
-                >
-                    <ShareInfoBody
-                        view={this.state.view}
-                        onReturn={this.hideShareInfo}
-                    />
-                </ShareBaseDialog>
-            );
-        }
+    const styles = {
+        fixedHeader: {
+            position: 'sticky' as 'sticky',
+            top: 0,
+            left: 0,
+            backgroundColor: colors.white,
+            zIndex: 15,
+            padding: '0px 10px',
+        },
+        groupsButton: {
+            flex: '1 1 auto',
+            borderRadius: '0px',
+            backgroundColor: view === 'groups' ? colors.primary : colors.secondary,
+            boxShadow: 'none',
+            color: view === 'groups' ? colors.white : colors.primary,
+        },
+        membersButton: {
+            flex: '1 1 auto',
+            borderRadius: '0px',
+            backgroundColor: view === 'members' ? colors.primary : colors.secondary,
+            boxShadow: 'none',
+            color: view === 'members' ? colors.white : colors.primary,
+        },
+    };
 
-        const groupCount: number = Object.keys(this.permissions.getGroups()).length;
-        let memberCount: number | string = Object.keys(this.permissions.getMembers()).length;
-        if (this.permissions.isPublic()) {
-            memberCount = 'ALL';
-        }
-
+    if (showShareInfo) {
         return (
             <ShareBaseDialog
-                show={this.props.show}
-                onClose={this.props.onClose}
-                handleSave={this.handleSave}
-                title={this.props.title}
-                submitButtonLabel={this.props.submitButtonLabel}
+                show={props.show}
+                onClose={props.onClose}
+                handleSave={handleSave}
+                title={title}
+                submitButtonLabel={submitButtonLabel}
                 className="qa-DataPackShareDialog"
             >
-                <div style={styles.fixedHeader} className="qa-DataPackShareDialog-container">
-                    <div
-                        className="qa-DataPackShareDialog-headers"
-                        style={{display: 'flex', flexWrap: 'wrap'}}
-                    >
-                        <Button
-                            className="qa-DataPackShareDialog-Button-groups"
-                            variant="contained"
-                            style={styles.groupsButton}
-
-                            onClick={this.toggleView}
-                        >
-                            {`GROUPS (${groupCount})`}
-                        </Button>
-                        <Button
-                            className="qa-DataPackShareDialog-Button-members"
-                            style={styles.membersButton}
-                            onClick={this.toggleView}
-                        >
-                            {`MEMBERS (${memberCount})`}
-                        </Button>
-                        <div
-                            className="qa-DataPackShareDialog-buttonUnderline"
-                            style={{
-                                height: '2px',
-                                width: '100%',
-                                backgroundColor: colors.primary,
-                                flex: '0 0 auto',
-                            }}
-                        />
-                    </div>
-                </div>
-                {this.props.job && this.renderSharedPermissions()}
-                <BaseDialog
-                    show={this.state.showPublicWarning}
-                    onClose={this.hidePublicWarning}
-                    title="SHARE WITH ALL MEMBERS"
-                    overlayStyle={{zIndex: 1501}}
-                    actions={[
-                        <Button
-                            style={{margin: '0px'}}
-                            variant="contained"
-                            color="primary"
-                            onClick={this.handleSave}
-                            key="save"
-                        >
-                            SHARE
-                        </Button>,
-                        <Button
-                            style={{margin: '0px', float: 'left'}}
-                            variant="text"
-                            color="primary"
-                            onClick={this.hidePublicWarning}
-                            key="edit"
-                        >
-                            CONTINUE EDITING
-                        </Button>,
-                    ]}
-                >
-                    Sharing with all members will make this DataPack visible to everyone with an EventKit account.
-                    Are you sure you want to share it with everyone?
-                </BaseDialog>
+                <ShareInfoBody
+                    view={view as PermissionsView}
+                    onReturn={hideInfo}
+                />
             </ShareBaseDialog>
         );
     }
-}
+
+    const localPermissions = getCurrentRefVal();
+    const groupCount: number = Object.keys(localPermissions.getGroups()).length;
+    let memberCount: number | string = Object.keys(localPermissions.getMembers()).length;
+    if (localPermissions.isPublic()) {
+        memberCount = 'ALL';
+    }
+
+    return (
+        <ShareBaseDialog
+            show={props.show}
+            onClose={props.onClose}
+            handleSave={handleSave}
+            title={title}
+            submitButtonLabel={submitButtonLabel}
+            className="qa-DataPackShareDialog"
+        >
+            <div style={styles.fixedHeader} className="qa-DataPackShareDialog-container">
+                <div
+                    className="qa-DataPackShareDialog-headers"
+                    style={{display: 'flex', flexWrap: 'wrap'}}
+                >
+                    <Button
+                        className="qa-DataPackShareDialog-Button-groups"
+                        variant="contained"
+                        style={styles.groupsButton}
+                        data-testid={'groupsToggle'}
+                        onClick={toggleView}
+                    >
+                        {`GROUPS (${groupCount})`}
+                    </Button>
+                    <Button
+                        className="qa-DataPackShareDialog-Button-members"
+                        style={styles.membersButton}
+                        data-testid={'membersToggle'}
+                        onClick={toggleView}
+                    >
+                        {`MEMBERS (${memberCount})`}
+                    </Button>
+                    <div
+                        className="qa-DataPackShareDialog-buttonUnderline"
+                        style={{
+                            height: '2px',
+                            width: '100%',
+                            backgroundColor: colors.primary,
+                            flex: '0 0 auto',
+                        }}
+                    />
+                </div>
+            </div>
+            {props.job && renderSharedPermissions()}
+            <BaseDialog
+                show={showPublicWarning}
+                onClose={hideWarning}
+                title="SHARE WITH ALL MEMBERS"
+                overlayStyle={{zIndex: 1501}}
+                actions={[
+                    <Button
+                        data-testid={'publicSave'}
+                        style={{margin: '0px'}}
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSave}
+                        key="save"
+                    >
+                        SHARE
+                    </Button>,
+                    <Button
+                        style={{margin: '0px', float: 'left'}}
+                        variant="text"
+                        color="primary"
+                        onClick={hideWarning}
+                        key="edit"
+                    >
+                        CONTINUE EDITING
+                    </Button>,
+                ]}
+            >
+                Sharing with all members will make this DataPack visible to everyone with an EventKit account.
+                Are you sure you want to share it with everyone?
+            </BaseDialog>
+        </ShareBaseDialog>
+    );
+};
 
 const mapStateToProps = state => (
     {
