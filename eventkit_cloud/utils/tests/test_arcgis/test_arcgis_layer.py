@@ -130,28 +130,32 @@ class TestCreateArcgisLayer(TestCase):
     def test_get_symbol_layers(self):
         stroke = {"type": "CIMSolidStroke"}
         fill = {"type": "CIMSolidFill"}
+        vector_marker = {"type": "CIMVectorMarker"}
         self.arcgis_layer.get_cim_solid_stroke = Mock(return_value=stroke)
         self.arcgis_layer.get_cim_solid_fill = Mock(return_value=fill)
+        self.arcgis_layer.get_cim_vector_marker = Mock(return_value=vector_marker)
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSLS"}), [stroke])
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSFS", "outline": "<SLS>"}), [stroke, fill])
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriTS"}), [fill])
-        self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSMS"}), [stroke, fill])
+        self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "esriSMS"}), [vector_marker])
         self.assertEqual(self.arcgis_layer.get_symbol_layers({"type": "bad"}), [])
         with self.settings(DEBUG=True), self.assertRaises(NotImplementedError):
             self.arcgis_layer.get_symbol_layers({"type": "bad"})
 
     def test_get_cim_marker_graphic(self):
         symbol = Mock()
-        symbol_layers = [Mock()]
+        mock_solid_stroke = Mock()
+        mock_solid_fill = Mock()
         geometry = Mock()
         expected_marker = {
             "type": "CIMMarkerGraphic",
             "geometry": geometry,
-            "symbol": {"type": "CIMPolygonSymbol", "symbolLayers": symbol_layers},
+            "symbol": {"type": "CIMPolygonSymbol", "symbolLayers": [mock_solid_stroke, mock_solid_fill]},
         }
         with patch("eventkit_cloud.utils.arcgis.arcgis_layer.get_marker_geometry") as mock_get_marker_geometry:
             mock_get_marker_geometry.return_value = geometry
-            self.arcgis_layer.get_symbol_layers = Mock(return_value=symbol_layers)
+            self.arcgis_layer.get_cim_solid_stroke = Mock(return_value=mock_solid_stroke)
+            self.arcgis_layer.get_cim_solid_fill = Mock(return_value=mock_solid_fill)
             self.assertEqual(expected_marker, self.arcgis_layer.get_cim_marker_graphic(symbol))
 
     def test_get_envelope(self):

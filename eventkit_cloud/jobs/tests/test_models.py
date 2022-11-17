@@ -472,7 +472,7 @@ class TestDataProvider(TestCase):
 
         # Test multilayer feature service
         layers = ["layer1", "layer2"]
-        example_layers = {"vector_layers": [{"name": layer} for layer in layers]}
+        example_layers = {"vector_layers": {layer: {"name": layer} for layer in layers}}
         expected_layers = {"layer1": {"name": "layer1"}, "layer2": {"name": "layer2"}}
 
         self.data_provider.export_provider_type.type_name = "wfs"

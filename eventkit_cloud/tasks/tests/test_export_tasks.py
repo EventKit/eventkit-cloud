@@ -379,6 +379,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_1,
                 "projection": projection,
+                "service_description": None,
                 "level": 15,
             },
             layer_2: {
@@ -389,6 +390,7 @@ class TestExportTasks(ExportTaskBase):
                 "bbox": [1, 2, 3, 4],
                 "layer_name": layer_2,
                 "projection": projection,
+                "service_description": None,
                 "level": 15,
             },
         }
@@ -902,9 +904,9 @@ class TestExportTasks(ExportTaskBase):
 
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, 3, 4]
-        query_string = "query?where=objectid=objectid&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
+        query_string = "query?where=&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
         expected_input_url = (
-            "https://abc.gov/arcgis/services/x/query?where=objectid=objectid&"
+            "https://abc.gov/arcgis/services/x/query?where=&"
             "outfields=*&f=json&geometry=2.0%2C%202.0%2C%203.0%2C%203.0"
         )
         mock_convert.return_value = expected_output_path
@@ -932,10 +934,10 @@ class TestExportTasks(ExportTaskBase):
         layer_name_1 = "foo"
         layer_name_2 = "bar"
         expected_field = "baz"
-
+        service_description = {"name": "service"}
         mock_layers.return_value = {
             layer_name_1: {"name": layer_name_1, "url": url_1},
-            layer_name_2: {"name": layer_name_2, "url": url_2},
+            layer_name_2: {"name": layer_name_2, "url": url_2, "distinct_field": "OBJECTID"},
         }
 
         # test without trailing slash
@@ -965,7 +967,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result_b["source"])
 
         vector_layers = {
-            layer_name_1: {"name": layer_name_1, "url": url_1},
+            layer_name_1: {"name": layer_name_1, "url": url_1, "service_description": service_description},
             layer_name_2: {"name": layer_name_2, "url": url_2, "distinct_field": expected_field},
         }
 
@@ -983,9 +985,10 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "level": 15,
-                "projection": projection,
+                "src_srs": projection,
+                "service_description": service_description,
                 "layer_name": layer_name_1,
-                "distinct_field": "OBJECTID",
+                "distinct_field": None,
             },
             layer_name_2: {
                 "task_uid": str(saved_export_task.uid),
@@ -994,7 +997,8 @@ class TestExportTasks(ExportTaskBase):
                 "base_path": expected_base_path,
                 "bbox": [1, 2, 3, 4],
                 "level": 15,
-                "projection": projection,
+                "src_srs": projection,
+                "service_description": None,
                 "layer_name": layer_name_2,
                 "distinct_field": expected_field,
             },
