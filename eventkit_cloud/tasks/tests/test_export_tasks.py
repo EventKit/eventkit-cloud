@@ -129,7 +129,7 @@ class ExportTaskBase(TestCase):
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
-        bbox = Polygon.from_bbox((1, 2, 3, 4))
+        bbox = Polygon.from_bbox((1.0, 2.0, 3.0, 4.0))
         tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.assertEqual(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
@@ -912,7 +912,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_export_filepath.return_value = expected_output_path
 
         service_url = "https://abc.gov/arcgis/services/x"
-        bbox = (1, 2, 3, 4)
+        bbox = [1.0, 2.0, 3.0, 4.0]
         query_string = "query?where=&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
         expected_input_url = (
             "https://abc.gov/arcgis/services/x/query?where=&"
@@ -1179,7 +1179,7 @@ class TestExportTasks(ExportTaskBase):
             exc_info = sys.exc_info()
         einfo = ExceptionInfo(exc_info=exc_info)
         shp_export_task.task_failure(
-            task_id=test_export_task_record.uid, einfo=einfo, args={}, kwargs={"run_uid": str(self.run.uid)}
+            task_uid=test_export_task_record.uid, einfo=einfo, args={}, kwargs={"run_uid": str(self.run.uid)}
         )
         task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
@@ -1325,12 +1325,12 @@ class TestExportTasks(ExportTaskBase):
             status="SUCCESS",
             name="Default Shapefile Export",
         )
-        finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, run_uid, (), {}, "Exception Info")
+        finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, run_uid, "Exception Info")
         isdir.assert_called_with(self.stage_dir)
         rmtree.assert_called_with(self.stage_dir)
 
         rmtree.side_effect = IOError()
-        finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, run_uid, (), {}, "Exception Info")
+        finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, run_uid, "Exception Info")
 
         rmtree.assert_called_with(self.stage_dir)
         self.assertRaises(IOError, rmtree)
@@ -1388,7 +1388,7 @@ class TestExportTasks(ExportTaskBase):
                 name="Default Shapefile Export",
             )
             self.assertEqual("Export Task Error Handler", export_task_error_handler.name)
-            export_task_error_handler.run(run_uid=run_uid, task_id=task_id, stage_dir=self.stage_dir)
+            export_task_error_handler.run(run_uid=run_uid)
             isdir.assert_any_call(self.stage_dir)
             rmtree.assert_called_once_with(self.stage_dir)
             email().send.assert_called_once()
@@ -1677,7 +1677,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_output_path,
             output_file=expected_output_path,
             projection=projection,
-            boundary=(1, 2, 3, 4),
+            boundary=(1.0, 2.0, 3.0, 4.0),
             layer_name=expected_provider_slug,
             is_raster=False,
             executor=self.task_process().start_process,
@@ -1739,7 +1739,7 @@ class TestExportTasks(ExportTaskBase):
             input_files=expected_output_path,
             output_file=expected_output_path,
             projection=projection,
-            boundary=(1, 2, 3, 4),
+            boundary=(1.0, 2.0, 3.0, 4.0),
             is_raster=True,
             executor=self.task_process().start_process,
         )
@@ -1940,7 +1940,7 @@ class TestExportTasks(ExportTaskBase):
         mock_get_ogcapi_data.assert_called_with(
             task_uid=task_uid,
             stage_dir=self.stage_dir,
-            bbox=(1, 2, 3, 4),
+            bbox=(1.0, 2.0, 3.0, 4.0),
             export_format_slug=example_format_slug,
             selection=example_geojson,
             download_path=expected_outzip_path,
@@ -2015,7 +2015,7 @@ class TestExportTasks(ExportTaskBase):
         result = get_ogcapi_data(
             task_uid=task_uid,
             stage_dir=self.stage_dir,
-            bbox=(1, 2, 3, 4),
+            bbox=[1.0, 2.0, 3.0, 4.0],
             export_format_slug=example_format_slug,
             selection=example_geojson,
             download_path=example_download_path,

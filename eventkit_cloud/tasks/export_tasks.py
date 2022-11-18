@@ -253,7 +253,7 @@ class ExportTask(EventKitBaseTask):
                 logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))
         return {"status": status}
 
-    def update_task_state(self, result=None, task_status=TaskState.RUNNING.value):
+    def update_task_state(self, task_uid=None, result=None, task_status=TaskState.RUNNING.value):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -261,30 +261,31 @@ class ExportTask(EventKitBaseTask):
         result = result or {}
 
         try:
-            task = ExportTaskRecord.objects.get(uid=self.task.uid)
+            if task_uid:
+                self.task = ExportTaskRecord.objects.get(uid=task_uid)
             celery_uid = self.request.id
             if not celery_uid:
                 raise Exception("Failed to save celery_UID")
-            task.celery_uid = celery_uid
-            task.save()
+            self.task.celery_uid = celery_uid
+            self.task.save()
             result = parse_result(result, "status") or []
-            if TaskState.CANCELED.value in [task.status, task.export_provider_task.status, result]:
+            if TaskState.CANCELED.value in [self.task.status, self.task.export_provider_task.status, result]:
                 logging.info("canceling before run %s", celery_uid)
-                task.status = TaskState.CANCELED.value
-                task.save()
-                raise CancelException(task_name=task.export_provider_task.name)
+                self.task.status = TaskState.CANCELED.value
+                self.task.save()
+                raise CancelException(task_name=self.task.export_provider_task.name)
             # The parent ID is actually the process running in celery.
-            task.pid = os.getppid()
+            self.task.pid = os.getppid()
             if task_status:
-                task.status = task_status
+                self.task.status = task_status
                 if TaskState[task_status] == TaskState.RUNNING:
-                    task.export_provider_task.status = TaskState.RUNNING.value
-                    task.export_provider_task.run.status = TaskState.RUNNING.value
+                    self.task.export_provider_task.status = TaskState.RUNNING.value
+                    self.task.export_provider_task.run.status = TaskState.RUNNING.value
             # Need to manually call to trigger method overrides.
-            task.save()
-            task.export_provider_task.save()
-            task.export_provider_task.run.save()
-            logger.debug("Updated task: {0} with uid: {1}".format(task.name, task.uid))
+            self.task.save()
+            self.task.export_provider_task.save()
+            self.task.export_provider_task.run.save()
+            logger.debug("Updated task: {0} with uid: {1}".format(self.task.name, self.task.uid))
         except DatabaseError as e:
             logger.error("Updating task {0} state throws: {1}".format(self.task.uid, e))
             raise e
