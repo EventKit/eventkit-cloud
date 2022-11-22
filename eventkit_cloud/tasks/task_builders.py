@@ -9,7 +9,7 @@ from django.db import DatabaseError
 from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat, ProxyFormat
 from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.export_tasks import create_datapack_preview, reprojection_task
-from eventkit_cloud.tasks.helpers import get_celery_queue_group, get_default_projection, normalize_name
+from eventkit_cloud.tasks.helpers import get_celery_queue_group, get_default_projection
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
@@ -74,7 +74,6 @@ class TaskChainBuilder(object):
             .get(uid=provider_task_uid)
         )
         data_provider: DataProvider = data_provider_task.provider
-        job = run.job
 
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get("user_details")
@@ -83,7 +82,6 @@ class TaskChainBuilder(object):
 
             user_details = get_user_details(user)
 
-        job_name = normalize_name(job.name)
         # get the formats to export
         formats: List[ExportFormat] = list(data_provider_task.formats.all())
 
@@ -143,8 +141,6 @@ class TaskChainBuilder(object):
             )
             export_tasks[export_format] = (export_task_record, export_task)
 
-        bbox = run.job.extents
-
         """
         Create a celery chain which gets the data & runs export formats
         """
@@ -164,24 +160,13 @@ class TaskChainBuilder(object):
 
                 subtasks.append(
                     export_task.s(
-                        run_uid=run.uid,
-                        stage_dir=stage_dir,
-                        job_name=job_name,
                         task_uid=export_task_record.uid,
                         user_details=user_details,
                         locking_task_key=export_task_record.uid,
-                        config=data_provider.config,
-                        service_url=data_provider.url,
                         export_format_slug=current_format.slug,
-                        bbox=bbox,
                         session_token=session_token,
                         projection=default_projection,
-                        provider_slug=data_provider.slug,
-                        export_provider_task_record_uid=data_provider_task_record.uid,
                         worker=worker,
-                        selection=job.the_geom.geojson,
-                        layer=data_provider.layer,
-                        service_type=service_type,
                     ).set(queue=queue_group, routing_key=queue_group)
                 )
 
@@ -200,14 +185,10 @@ class TaskChainBuilder(object):
                     )
                     subtasks.append(
                         reprojection_task.s(
-                            run_uid=run.uid,
-                            stage_dir=stage_dir,
-                            job_name=job_name,
                             task_uid=projection_task.uid,
                             user_details=user_details,
                             locking_task_key=data_provider_task_record.uid,
                             projection=projection,
-                            config=data_provider.config,
                         ).set(queue=queue_group, routing_key=queue_group)
                     )
 
@@ -229,28 +210,11 @@ class TaskChainBuilder(object):
 
         # Set custom zoom levels if available, otherwise use the provider defaults.
 
-        min_zoom = data_provider_task.min_zoom if data_provider_task.min_zoom else data_provider.level_from
-        max_zoom = data_provider_task.max_zoom if data_provider_task.max_zoom else data_provider.level_to
-
         primary_export_task_signature = primary_export_task.s(
             name=data_provider.slug,
-            run_uid=run.uid,
-            provider_slug=data_provider.slug,
-            overpass_url=data_provider.url,
-            stage_dir=stage_dir,
-            export_provider_task_record_uid=data_provider_task_record.uid,
             worker=worker,
-            job_name=job_name,
-            bbox=bbox,
-            selection=job.the_geom.geojson,
             user_details=user_details,
             task_uid=primary_export_task_record.uid,
-            layer=data_provider.layer,
-            level_from=min_zoom,
-            level_to=max_zoom,
-            service_type=service_type,
-            service_url=data_provider.url,
-            config=data_provider.config,
             session_token=session_token,
             projection=default_projection,
         )
