@@ -232,7 +232,7 @@ class ExportTask(EventKitBaseTask):
                 data_provider_task_record = self.task.export_provider_task
                 fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
                 run = data_provider_task_record.run
-                export_task_error_handler(run_uid=str(run.uid), task_id=self.task.uid, stage_dir=self.stage_dir)
+                export_task_error_handler(run_uid=str(run.uid), task_id=self.task.uid)
             except Exception:
                 tb = traceback.format_exc()
                 logger.error("Exception during handling of an error in {}:\n{}".format(self.name, tb))

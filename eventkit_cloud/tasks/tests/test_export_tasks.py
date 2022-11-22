@@ -128,7 +128,7 @@ class ExportTaskBase(TestCase):
         with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
-        bbox = Polygon.from_bbox((1, 2, 3, 4))
+        bbox = Polygon.from_bbox((1.0, 2.0, 3.0, 4.0))
         tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.assertEqual(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
@@ -599,7 +599,6 @@ class TestExportTasks(ExportTaskBase):
         self, mock_download_concurrently, mock_geopackage, mock_makedirs, mock_exists
     ):
         self.input_file = self.output_file  # The source and the result are the same.
-
         query_string = "query?where=&outfields=*&f=json&geometry=BBOX_PLACEHOLDER"
         mock_exists.return_value = True
 
@@ -878,6 +877,7 @@ class TestExportTasks(ExportTaskBase):
 
         rmtree.side_effect = IOError()
         finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, self.run.uid, (), {}, "Exception Info")
+
 
         rmtree.assert_called_with(self.stage_dir)
         self.assertRaises(IOError, rmtree)
