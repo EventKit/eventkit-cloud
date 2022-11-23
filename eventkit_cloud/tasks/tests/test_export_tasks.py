@@ -54,7 +54,7 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task,
     zip_files,
 )
-from eventkit_cloud.tasks.helpers import get_run_staging_dir
+from eventkit_cloud.tasks.helpers import get_run_staging_dir, normalize_name
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -153,10 +153,12 @@ class TestExportTasks(ExportTaskBase):
         self.bbox = [1.0, 2.0, 3.0, 4.0]
         self.service_url = "http://service.test/x"
         self.layers = self.layers if hasattr(self, "layers") else {slug: {"url": self.service_url}}
+        job_mock = Mock(event="event", extents=self.bbox)
+        job_mock.name = "job_name"
         return Mock(
             uid=str(uuid.uuid4()),
             export_provider_task=Mock(
-                run=Mock(job=Mock(event="event", extents=self.bbox, name="job_name")),
+                run=Mock(job=job_mock),
                 provider=Mock(
                     slug=slug,
                     data_type=data_type,
@@ -1106,8 +1108,7 @@ class TestExportTasks(ExportTaskBase):
                     "Data is grouped into separate tables (e.g. water, roads...).",
                     "file_path": "data/osm/test-osm-20181101.gpkg",
                     "file_type": ".gpkg",
-                    "full_file_path": f"{self.stage_dir}/osm/"
-                    "test.gpkg",
+                    "full_file_path": f"{self.stage_dir}/osm/" "test.gpkg",
                     "last_update": "2018-10-29T04:35:02Z\n",
                     "metadata": "https://overpass-server.com/overpass/interpreter",
                     "name": "OpenStreetMap Data (Themes)",
@@ -1269,7 +1270,7 @@ class TestExportTasks(ExportTaskBase):
         mock_mapproxy.assert_called_once_with(
             gpkgfile=self.output_file,
             service_url=self.output_file,
-            name=self.task.export_provider_task.name,
+            name=normalize_name(self.task.export_provider_task.run.job.name),
             config=self.config,
             bbox=self.bbox,
             level_from=level_from,
