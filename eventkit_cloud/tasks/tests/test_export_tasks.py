@@ -878,7 +878,6 @@ class TestExportTasks(ExportTaskBase):
         rmtree.side_effect = IOError()
         finalize_run_task.after_return("status", {"stage_dir": self.stage_dir}, self.run.uid, (), {}, "Exception Info")
 
-
         rmtree.assert_called_with(self.stage_dir)
         self.assertRaises(IOError, rmtree)
         logger.error.assert_called_once()
@@ -1066,7 +1065,6 @@ class TestExportTasks(ExportTaskBase):
     @patch("eventkit_cloud.tasks.export_tasks.zip_files")
     @patch("eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document")
     @patch("eventkit_cloud.tasks.export_tasks.get_style_files")
-    @patch("eventkit_cloud.tasks.export_tasks.json")
     @patch("eventkit_cloud.tasks.export_tasks.generate_qgs_style")
     @patch("os.path.join", side_effect=lambda *args: args[-1])
     @patch("eventkit_cloud.tasks.export_tasks.DataProviderTaskRecord")
@@ -1075,7 +1073,6 @@ class TestExportTasks(ExportTaskBase):
         mock_DataProviderTaskRecord,
         join,
         mock_generate_qgs_style,
-        mock_json,
         mock_get_style_files,
         mock_get_human_readable_metadata_document,
         mock_zip_files,
@@ -1095,10 +1092,8 @@ class TestExportTasks(ExportTaskBase):
         meta_files.update(qgis_file)
 
         include_files = {
-            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg":
-                "osm/test.gpkg",
-            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson":
-                "osm/osm_selection.geojson",
+            f"{self.stage_dir}/osm/test.gpkg": "osm/test.gpkg",
+            f"{self.stage_dir}/osm/osm_selection.geojson": "osm/osm_selection.geojson",
         }
         include_files.update(meta_files)
         metadata = {
@@ -1111,7 +1106,7 @@ class TestExportTasks(ExportTaskBase):
                     "Data is grouped into separate tables (e.g. water, roads...).",
                     "file_path": "data/osm/test-osm-20181101.gpkg",
                     "file_type": ".gpkg",
-                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/"
+                    "full_file_path": f"{self.stage_dir}/osm/"
                     "test.gpkg",
                     "last_update": "2018-10-29T04:35:02Z\n",
                     "metadata": "https://overpass-server.com/overpass/interpreter",

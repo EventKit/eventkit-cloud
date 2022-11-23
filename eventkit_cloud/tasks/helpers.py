@@ -1030,11 +1030,12 @@ def download_arcgis_feature_data(
     service_description = service_description or dict()
     pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
     result_record_count = service_description.get("maxRecordCount", 1000)
+    json_response = None
     try:
-        total_expected_features = session.get(f"{input_url}&returnCountOnly=true").json()["count"]
+        count_response = session.get(f"{input_url}&returnCountOnly=true").json()
+        total_expected_features = count_response.get("count")
         if total_expected_features and int(total_expected_features):
             logger.info("Downloading %s features", total_expected_features)
-            json_response = None
         else:
             logger.info("Skipping request no features.")
             # Need to create and return a response template, so that the tables appear and don't cause "missing"

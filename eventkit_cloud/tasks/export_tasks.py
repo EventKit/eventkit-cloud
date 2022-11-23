@@ -10,7 +10,7 @@ import time
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Type, Union, cast, Any
+from typing import Any, List, Type, Union, cast
 from urllib.parse import urlencode
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -1497,10 +1497,8 @@ def bounds_export_task(
 def mapproxy_export_task(
     self,
     result=None,
-    layer=None,
     level_from=None,
     level_to=None,
-    service_type=None,
     projection=4326,
     **kwargs,
 ):
@@ -1518,11 +1516,11 @@ def mapproxy_export_task(
             bbox=self.task.export_provider_task.run.job.extents,
             service_url=self.task.export_provider_task.provider.url,
             name=self.task.name,
-            layer=layer,
+            layer=self.task.export_provider_task.provider.layer or "imagery",
             config=self.task.export_provider_task.provider.config,
             level_from=level_from,
             level_to=level_to,
-            service_type=service_type,
+            service_type=self.task.export_provider_task.provider.export_provider_type.type_name,
             task_uid=self.task.uid,
             selection=selection,
             projection=projection,
