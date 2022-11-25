@@ -181,6 +181,10 @@ class MapproxyGeopackage(object):
         """
         self.gpkgfile = gpkgfile
         self.bbox = bbox
+        if not self.bbox:
+            raise Exception("Mapproxy currently requires a bounding box because of a bug reading geometry files")
+        # Currently having errors with mapproxy.
+        # See https://github.com/mapproxy/mapproxy/issues/511 for more information
         self.service_url = service_url
         self.debug = debug
         self.name = name

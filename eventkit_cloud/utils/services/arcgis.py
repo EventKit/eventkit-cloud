@@ -105,7 +105,7 @@ class ArcGIS(GisClient):
             # this will need to change or be subclassed to separate raster/feature services.
             # https://github.com/python/mypy/issues/4122
             layers = {
-                slugify(layer["name"]): {"url": str(cap_doc["url"]), **self.get_layer_info(layer)}  # type: ignore
+                slugify(layer["name"]): {"url": str(layer["url"]), **self.get_layer_info(layer)}  # type: ignore
                 for layer in (cap_doc.get("subLayers", []) or cap_doc.get("layers", []))
                 if "Feature" in layer["type"]
             }
