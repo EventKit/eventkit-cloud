@@ -1326,8 +1326,8 @@ def arcgis_feature_service_export_task(
         layer_slug = slugify(layer_name)
         path = get_export_filepath(self.stage_dir, self.task, f"{layer_slug}-{projection}", "gpkg")
         src_srs = layer.get("src_srs") or 4326
-        src_bbox = convert_bbox(self.task.export_provider_task.run.job.extents, to_projection=src_srs)
-        url = get_arcgis_query_url(layer.get("url"))
+        src_bbox = convert_bbox(bbox, to_projection=src_srs)
+        url = get_arcgis_query_url(layer.get("service_description", {}).get("url") or layer.get("url"))
 
         layers[layer_slug] = {
             "task_uid": str(self.task.uid),
