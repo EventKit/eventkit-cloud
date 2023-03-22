@@ -3,9 +3,9 @@
 
 import itertools
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 
-from celery import chain
+from celery import Task, chain
 from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
@@ -207,9 +207,7 @@ class TaskFactory:
                     selection_task = create_task(
                         data_provider_task_record_uid=provider_task_record_uid,
                         worker=worker,
-                        stage_dir=stage_dir,
                         task=output_selection_geojson_task,
-                        selection=job.the_geom.geojson,
                         user_details=user_details,
                     )
 
@@ -322,15 +320,12 @@ def check_job_permissions(job: Job, user: DjangoUserType = None) -> Tuple[Job, D
 
 
 def create_task(
-    data_provider_task_record_uid=None,
-    data_provider_task_record_uids=None,
-    run_zip_file_uid=None,
-    worker=None,
-    stage_dir=None,
-    selection=None,
-    task=None,
-    job_name=None,
-    user_details=None,
+    task: Task,
+    worker: str,
+    run_zip_file_uid: Optional[str] = None,
+    data_provider_task_record_uid: Optional[str] = None,
+    data_provider_task_record_uids: Optional[list[str]] = None,
+    user_details: dict = None,
 ):
     """
     Create a new task to export the bounds for an DataProviderTaskRecord
@@ -339,15 +334,10 @@ def create_task(
     :param selection: A geojson dict for the area being processed.
     :param task: The celery task to link to this task record.
     :param job_name: The name of the job, provided by the user.
-    :param user_details: Some meta data relating to the user request.
+    :param user_details: Some metadata relating to the user request.
     :return: A celery task signature.
     """
     export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
-
-    if export_provider_task.provider:
-        export_provider_task_slug = export_provider_task.provider.slug
-    else:
-        export_provider_task_slug = export_provider_task.slug
 
     export_task = create_export_task_record(
         task_name=task.name,
@@ -358,17 +348,12 @@ def create_task(
     run_uid = export_provider_task.run.uid
     queue_group = get_celery_queue_group(run_uid=run_uid)
     return task.s(
-        run_uid=run_uid,
         task_uid=export_task.uid,
-        selection=selection,
-        provider_slug=export_provider_task_slug,
+        #  DPTR uids needed to know which providers need to be rerun in some cases.
         data_provider_task_record_uid=data_provider_task_record_uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file_uid,
-        job_name=job_name,
-        stage_dir=stage_dir,
         user_details=user_details,
-        bbox=export_provider_task.run.job.extents,
         locking_task_key=data_provider_task_record_uid,
     ).set(queue=queue_group, routing_key=queue_group)
 
