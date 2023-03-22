@@ -1030,25 +1030,34 @@ def download_arcgis_feature_data(
     service_description = service_description or dict()
     pagination = service_description.get("advancedQueryCapabilities", {}).get("supportsPagination", False)
     result_record_count = service_description.get("maxRecordCount", 1000)
+    json_response = None
     try:
-        total_expected_features = session.get(f"{input_url}&returnCountOnly=true").json()["count"]
-        if total_expected_features and int(total_expected_features):
-            logger.info("Downloading %s features", total_expected_features)
-            json_response = None
-        else:
-            logger.info("Skipping request no features.")
-            # Need to create and return a response template, so that the tables appear and don't cause "missing"
-            # sources in the client software.
-            json_response = {
-                "displayFieldName": service_description.get("displayField") or "NAME",
-                "fields": service_description.get("fields") or [],
-                "fieldAliases": {
-                    field.get("alias"): field.get("name") for field in service_description.get("fields") or {}
-                },
-                "spatialReference": {"wkid": (service_description.get("sourceSpatialReference") or {}).get("wkid")},
-                "geometryType": service_description.get("geometryType"),
-                "features": [],
-            }
+        feature_count_url = f"{input_url}&returnCountOnly=true"
+        total_expected_features_response = None
+        try:
+            total_expected_features_response = session.get(feature_count_url)
+            total_expected_features = session.get(feature_count_url).json()["count"]
+            if total_expected_features and int(total_expected_features):
+                logger.info("Downloading %s features", total_expected_features)
+        except Exception:
+            logger.error(
+                "Could not parse feature count from %s: \n %s",
+                feature_count_url,
+                total_expected_features_response.content,
+                exc_info=True,
+            )
+            logger.error("No count was provided for the current request %s", feature_count_url)
+            total_expected_features = 1  # we need to set this to something so we can just proceed since we don't know
+        json_response = {
+            "displayFieldName": service_description.get("displayField") or "NAME",
+            "fields": service_description.get("fields") or [],
+            "fieldAliases": {
+                field.get("alias"): field.get("name") for field in service_description.get("fields") or {}
+            },
+            "spatialReference": {"wkid": (service_description.get("sourceSpatialReference") or {}).get("wkid")},
+            "geometryType": service_description.get("geometryType"),
+            "features": [],
+        }
         if pagination and total_expected_features:
             result_offset = 0
             exceeded_transfer_limit: bool = True
