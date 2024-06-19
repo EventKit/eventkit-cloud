@@ -22,13 +22,12 @@ Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/o
 
 ### Installation
 
-Prior to using the EventKit docker setup, two variables must be set in the environment running docker, `SITE_NAME` and `SITE_IP`.
+Prior to using the EventKit docker setup, two variables must be set in the environment running docker, `SITE_NAME` where SITE_NAME resolves to the host machine that is running docker. 
+While using localhost may work for SITE_NAME, you may run into issues when using integration tests where localhost resolves to the container running the test instead of the docker host. 
 
-Typically `SITE_NAME` is set to `host.docker.internal` and `SITE_IP` is `127.0.0.1`.
+If needing to run the integration tests, then `SITE_IP` must be set to a different IP available on the system, on windows when using Docker Desktop it will configure `host.docker.internal` to a local ip `192.168.X.X` or `10.0.X.X`.  If using WSL2 and docker engine directly on wsl (not docker desktop install on windows), you will want to use the main IP address from within your WSL instance.  Usually found using something like `ip addr` using the eth0 interface.
 
-If needing to run the integration tests, then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-
-This is usually done by using
+You can set that environment variable usually by using:
 
 - `export SITE_NAME=host.docker.internal` on OSX/Linux
 - or
@@ -49,7 +48,7 @@ After you have the above steps completed you can proceed on to either the Makefi
 
 ## Quick Start
 
-> A note for Windows WSL users, having the project be located on the WSL side will improve build and load times
+> A note for Windows WSL users, having the project be located on the WSL side will improve build and load times (i.e. NOT in the /mnt/c/users... pathing) 
 
 A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux and WSL hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
 

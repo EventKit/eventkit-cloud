@@ -1,12 +1,8 @@
-berkeleydb
-osmctools
 django-audit-logging
-django-auth-ldap
 swapper
 django-notifications-hq
 django-storages
 django-timezone-field
 gdalutils
 mapproxy
-memcached
 eventkit-cloud

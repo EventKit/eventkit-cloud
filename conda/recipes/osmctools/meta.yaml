@@ -20,6 +20,7 @@ requirements:
     - {{ compiler('c') }}
     - automake
     - autoconf
+    - make
   host:
     - zlib {% if zlib is defined %} {{ zlib }} {% endif %}
   run:

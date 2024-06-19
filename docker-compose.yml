@@ -1,13 +1,107 @@
-version: "3"
+version: "3.4"
+
+x-app: &default-app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: eventkit/eventkit-base:1.15.0-2
+  user: eventkit
+  restart: always
+  stop_grace_period: "3s"
+  extra_hosts:
+    - "${SITE_NAME}:host-gateway"
+  healthcheck:
+    interval: 1m
+    timeout: 10s
+    retries: 3
+    start_period: 10s
+
+x-common-variables: &common-variables
+  DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+  BROKER_URL: amqp://guest:guest@rabbitmq:5672/
+  BROKER_API_URL: http://guest:guest@rabbitmq:15672/api/
+  MEMCACHED: memcached:11211
+  CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
+  CELERY_GROUP_NAME:
+  CELERY_SCALE_BY_RUN: True
+  QT_QPA_PLATFORM: offscreen
+  DATAPACKS_DEFAULT_SHARED:
+  MAPPROXY_LOGS_REQUESTS:
+  MAPPROXY_LOGS_VERBOSE:
+  MAPPROXY_LOGS_SILENT:
+  SERVE_ESTIMATES:
+  CONTENT_SECURITY_POLICY:
+  SITE_NAME:
+  SITE_IP:
+  TERM:
+  DEBUG:
+  PRODUCTION:
+  DJANGO_LOG_LEVEL:
+  LOG_LEVEL:
+  EXPORT_DOWNLOAD_ROOT:
+  PYTHONWARNINGS:
+  SSL_VERIFICATION:
+  MAX_EXPORTRUN_EXPIRATION_DAYS:
+  AWS_ENDPOINT_URL:
+  AWS_STORAGE_BUCKET_NAME:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  CONTAINER_CODE_PATH:
+  DEV_MACHINE_CODE_PATH:
+  DJANGO_MODEL_LOGIN: True
+  LOGIN_DISCLAIMER:
+  BANNER_TEXT:
+  BANNER_TEXT_COLOR:
+  BANNER_BACKGROUND_COLOR:
+  GEOCODING_API_URL:
+  GEOCODING_API_TYPE:
+  REVERSE_GEOCODING_API_URL:
+  GEOCODING_UPDATE_URL:
+  CONVERT_API_URL:
+  BASEMAP_URL:
+  GEOCODING_AUTH_CERT:
+  GEOCODING_AUTH_URL:
+  PROVIDER_CHECK_INTERVAL:
+  TILE_CACHE_DIR:
+  ROCKETCHAT_NOTIFICATIONS:
+  LAND_DATA_URL:
+  BASE_URL:
+  MATOMO_URL:
+  MATOMO_CUSTOM_DIM_ID:
+  MATOMO_CUSTOM_VAR_ID:
+  MATOMO_CUSTOM_VAR_NAME:
+  MATOMO_CUSTOM_VAR_SCOPE:
+  MATOMO_SITE_ID:
+  MATOMO_APPNAME:
+  SECRET_KEY:
+  CONDA_REPO:
+  EVENTKIT_CRED:
+  EVENTKIT_CERT_PASS:
+  DATA_UPLOAD_MAX_MEMORY_SIZE: 10000000
+  OAUTH_NAME:
+  OAUTH_AUTHORIZATION_URL:
+  OAUTH_TOKEN_URL:
+  OAUTH_PROFILE_URL:
+  OAUTH_REDIRECT_URI:
+  OAUTH_PROFILE_SCHEMA:
+  OAUTH_RESPONSE_TYPE:
+  OAUTH_SCOPE:
+  OAUTH_TOKEN_KEY:
+  OAUTH_CLIENT_ID:
+  OAUTH_CLIENT_SECRET:
+  OAUTH_LOGOUT_URL:
+  OVERPASS_API_URL:
+  ENABLE_ADMIN:
+  ENABLE_ADMIN_LOGIN:
+  ADMIN_ROOT:
+  JOB_MAX_EXTENT: 1000000
+  GRID_TOKEN:
+
 services:
   eventkit:
-    build:
-      context: .
-      dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.15.0-2
+    <<: *default-app
     volumes:
-      - ./:/var/lib/eventkit/
-    user: eventkit
+      -  ./:/var/lib/eventkit/
     depends_on:
       - postgis
       - rabbitmq
@@ -22,96 +116,16 @@ services:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
-      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
-      - MEMCACHED=memcached:11211
-      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
-      - CELERY_GROUP_NAME
-      - CELERY_SCALE_BY_RUN=True
-      - QT_QPA_PLATFORM=offscreen
-      - DATAPACKS_DEFAULT_SHARED
-      - MAPPROXY_LOGS_REQUESTS
-      - MAPPROXY_LOGS_VERBOSE
-      - MAPPROXY_LOGS_SILENT
-      - SERVE_ESTIMATES
-      - CONTENT_SECURITY_POLICY
-      - SITE_NAME
-      - SITE_IP
-      - TERM
-      - DEBUG
-      - PRODUCTION
-      - DJANGO_LOG_LEVEL
-      - LOG_LEVEL
-      - EXPORT_DOWNLOAD_ROOT
-      - PYTHONWARNINGS
-      - SSL_VERIFICATION
-      - MAX_EXPORTRUN_EXPIRATION_DAYS
-      - AWS_ENDPOINT_URL
-      - AWS_STORAGE_BUCKET_NAME
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - CONTAINER_CODE_PATH
-      - DEV_MACHINE_CODE_PATH
-      - DJANGO_MODEL_LOGIN=True
-      - LOGIN_DISCLAIMER
-      - BANNER_TEXT
-      - BANNER_TEXT_COLOR
-      - BANNER_BACKGROUND_COLOR
-      - GEOCODING_API_URL
-      - GEOCODING_API_TYPE
-      - REVERSE_GEOCODING_API_URL
-      - GEOCODING_UPDATE_URL
-      - CONVERT_API_URL
-      - BASEMAP_URL
-      - GEOCODING_AUTH_CERT
-      - GEOCODING_AUTH_URL
-      - PROVIDER_CHECK_INTERVAL
-      - TILE_CACHE_DIR
-      - ROCKETCHAT_NOTIFICATIONS
-      - LAND_DATA_URL
-      - BASE_URL
-      - MATOMO_URL
-      - MATOMO_CUSTOM_DIM_ID
-      - MATOMO_CUSTOM_VAR_ID
-      - MATOMO_CUSTOM_VAR_NAME
-      - MATOMO_CUSTOM_VAR_SCOPE
-      - MATOMO_SITE_ID
-      - MATOMO_APPNAME
-      - SECRET_KEY
-      - CONDA_REPO
-      - EVENTKIT_CRED
-      - EVENTKIT_CERT_PASS
-      - DATA_UPLOAD_MAX_MEMORY_SIZE=10000000
-      - OAUTH_NAME
-      - OAUTH_AUTHORIZATION_URL
-      - OAUTH_TOKEN_URL
-      - OAUTH_PROFILE_URL
-      - OAUTH_REDIRECT_URI
-      - OAUTH_PROFILE_SCHEMA
-      - OAUTH_RESPONSE_TYPE
-      - OAUTH_SCOPE
-      - OAUTH_TOKEN_KEY
-      - OAUTH_CLIENT_ID
-      - OAUTH_CLIENT_SECRET
-      - OAUTH_LOGOUT_URL
-      - OVERPASS_API_URL
-      - ENABLE_ADMIN
-      - ENABLE_ADMIN_LOGIN
-      - ADMIN_ROOT
-      - JOB_MAX_EXTENT=1000000
-      - GRID_TOKEN
-    extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      <<: *common-variables
+
   map:
-    image: eventkit/eventkit-base:1.15.0-2
+    <<: *default-app
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./manage.py:/var/lib/eventkit/manage.py
       - ./config:/var/lib/eventkit/config
-    user: eventkit
     depends_on:
       - postgis
       - memcached
@@ -122,43 +136,20 @@ services:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application -c eventkit_cloud/gunicorn.py --bind 0.0.0.0:6080 --worker-class gevent --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
     environment:
-      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
-      - MEMCACHED=memcached:11211
-      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
-      - SITE_NAME
-      - SITE_IP
-      - TERM
-      - DEBUG
-      - PRODUCTION
-      - DJANGO_LOG_LEVEL
-      - LOG_LEVEL
-      - EXPORT_DOWNLOAD_ROOT
-      - PYTHONWARNINGS
-      - SSL_VERIFICATION
-      - AWS_ENDPOINT_URL
-      - AWS_STORAGE_BUCKET_NAME
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - TILE_CACHE_DIR
-      - SECRET_KEY
-      - EVENTKIT_CERT_PASS
-    extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      <<: *common-variables
+
   memcached:
-    image: eventkit/eventkit-base:1.15.0-2
+    <<: *default-app
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate conda_env && memcached -m 2048 -I 25m"
   celery:
-    image: eventkit/eventkit-base:1.15.0-2
+    <<: *default-app
     volumes:
       - ./:/var/lib/eventkit/
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/run-celery-beat.sh:/var/lib/eventkit/scripts/run-celery-beat.sh
-    user: eventkit
     depends_on:
       - postgis
       - rabbitmq
@@ -168,59 +159,14 @@ services:
       - postgis
       - rabbitmq
     environment:
-      - AWS_ENDPOINT_URL
-      - AWS_STORAGE_BUCKET_NAME
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
-      - MEMCACHED=memcached:11211
-      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
-      - CELERY_GROUP_NAME
-      - CONCURRENCY=1
-      - CELERY_SCALE_BY_RUN=True
-      - RUNS_CONCURRENCY
-      - SITE_NAME
-      - SITE_IP
-      - TERM
-      - DEBUG
-      - PRODUCTION
-      - DJANGO_LOG_LEVEL
-      - LOG_LEVEL
-      - EXPORT_DOWNLOAD_ROOT
-      - PYTHONWARNINGS
-      - SSL_VERIFICATION
-      - MAX_EXPORTRUN_EXPIRATION_DAYS
-      - CONTAINER_CODE_PATH
-      - DEV_MACHINE_CODE_PATH
-      - SECRET_KEY
-      - BIND_MOUNT_LOCATION
-      - EVENTKIT_CRED
-      - OAUTH_NAME
-      - OAUTH_AUTHORIZATION_URL
-      - OAUTH_TOKEN_URL
-      - OAUTH_PROFILE_URL
-      - OAUTH_REDIRECT_URI
-      - OAUTH_PROFILE_SCHEMA
-      - OAUTH_RESPONSE_TYPE
-      - OAUTH_SCOPE
-      - OAUTH_TOKEN_KEY
-      - OAUTH_CLIENT_ID
-      - OAUTH_CLIENT_SECRET
-      - OAUTH_LOGOUT_URL
-      - ROCKETCHAT_NOTIFICATIONS
-      - JOB_MAX_EXTENT=1000000
-      - GRID_TOKEN
-    extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      <<: *common-variables
     command: bash ./scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:14
     environment:
-      - POSTGRES_USER=eventkit
-      - POSTGRES_PASS=eventkit_exports
-      - POSTGRES_DBNAME=eventkit_exports
+      POSTGRES_USER: eventkit
+      POSTGRES_PASS: eventkit_exports
+      POSTGRES_DBNAME: eventkit_exports
     expose:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
@@ -261,10 +207,10 @@ services:
       - "80:80"
       - "9229:9229"
     environment:
-      - SITE_NAME=${SITE_NAME}
-      - LOG_LEVEL=warn
+      SITE_NAME: ${SITE_NAME}
+      LOG_LEVEL: warn
   flower:
-    image: eventkit/eventkit-base:1.15.0-2
+    <<: *default-app
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -278,40 +224,24 @@ services:
     ports:
       - "49555:5555"
     command: celery flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
-    extra_hosts:
-      - "${SITE_NAME}:host-gateway"
     environment:
-      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
-      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
-      - SITE_NAME
-      - SITE_IP
-      - TERM
-      - DEBUG
-      - PRODUCTION
-      - DJANGO_LOG_LEVEL
-      - LOG_LEVEL
-      - EXPORT_DOWNLOAD_ROOT
-      - PYTHONWARNINGS
-      - SSL_VERIFICATION
-      - SECRET_KEY
+      <<: *common-variables
   webpack:
     image: eventkit/eventkit-webpack:1.15.0-1
     build:
       context: .
-      dockerfile: config/Dockerfile_webpack
+      dockerfile: webpack.Dockerfile
     volumes:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./coverage:/var/lib/eventkit/coverage
       - ./package.json:/var/lib/eventkit/package.json
-      - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
-      - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
-      - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
-      - ./config/ui/babel.config.js:/var/lib/eventkit/babel.config.js
-      - ./config/ui/setupFile.js:/var/lib/eventkit/setupFile.js
-      - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
-      - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
+      - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
+      - ./.eslintignore:/var/lib/eventkit/.eslintignore
+      - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
+      - ./babel.config.js:/var/lib/eventkit/babel.config.js
+      - ./setupFile.js:/var/lib/eventkit/setupFile.js
+      - ./tsconfig.json:/var/lib/eventkit/tsconfig.json
+      - ./tslint.json:/var/lib/eventkit/tslint.json
       - ./.git:/var/lib/eventkit/.git
     user: eventkit
     ports:
@@ -319,7 +249,7 @@ services:
     expose:
       - "9229"
     extra_hosts:
-      - "${SITE_NAME}:host-gateway"
+      -  "${SITE_NAME}:host-gateway"
     #if wishing to use the dev server uncomment this or run it via the command line
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
   minio:
@@ -331,8 +261,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=AWS_ID
-      - MINIO_ROOT_PASSWORD=AWS_SECRET
+      MINIO_ROOT_USER: AWS_ID
+      MINIO_ROOT_PASSWORD: AWS_SECRET
 volumes:
   postgis_database:
   rabbitmq:

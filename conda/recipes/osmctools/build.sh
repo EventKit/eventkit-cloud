@@ -12,7 +12,8 @@ autoreconf --install
 ./configure --prefix="${PREFIX}" \
             --bindir="${BIN_DIR}" \
             --datarootdir="${OSMCTOOLS_SHARE}" \
-            --docdir="${OSMCTOOLS_DOC}"
+            --docdir="${OSMCTOOLS_DOC}" \
+            --disable-dependency-tracking
 make
 make install
 

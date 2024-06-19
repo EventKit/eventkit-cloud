@@ -179,25 +179,6 @@ if os.getenv("OAUTH_AUTHORIZATION_URL"):
     OAUTH_PROFILE_SCHEMA = os.getenv("OAUTH_PROFILE_SCHEMA")
     OAUTH_PROFILE_URL = os.getenv("OAUTH_PROFILE_URL")
 
-if os.getenv("LDAP_SERVER_URI"):
-    import ldap
-    from django_auth_ldap.config import LDAPSearch
-
-    AUTH_LDAP_SERVER_URI = os.getenv("LDAP_SERVER_URI")
-    AUTH_LDAP_BIND_PASSWORD = os.getenv("LDAP_BIND_PASSWORD")
-    AUTH_LDAP_USER_DN_TEMPLATE = os.getenv("LDAP_USER_DN_TEMPLATE")
-    LDAP_SEARCH_DN = os.getenv("LDAP_SEARCH_DN")
-    AUTH_LDAP_USER = os.getenv("LDAP_USER")
-    AUTH_LDAP_BIND_DN = os.getenv("LDAP_BIND_DN")
-    AUTHENTICATION_BACKENDS += ("django_auth_ldap.backend.LDAPBackend",)
-
-    AUTH_LDAP_USER_ATTR_MAP = {
-        "first_name": "givenName",
-        "last_name": "sn",
-        "email": "mail",
-    }
-    AUTH_LDAP_USER_SEARCH = LDAPSearch(LDAP_SEARCH_DN, ldap.SCOPE_SUBTREE, AUTH_LDAP_USER)
-
 DJANGO_MODEL_LOGIN = os.getenv("DJANGO_MODEL_LOGIN")
 AUTHENTICATION_BACKENDS += ("django.contrib.auth.backends.ModelBackend",)
 
