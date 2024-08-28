@@ -57,9 +57,9 @@ if os.getenv("VCAP_SERVICES"):
                 print(e)
                 continue
 if not EXPORT_STAGING_ROOT:
-    EXPORT_STAGING_ROOT = os.getenv("EXPORT_STAGING_ROOT", "/var/lib/eventkit/exports_stage/")
+    EXPORT_STAGING_ROOT = os.getenv("EXPORT_STAGING_ROOT", "/app/exports_stage/")
 if not TILE_CACHE_DIR:
-    TILE_CACHE_DIR = os.getenv("TILE_CACHE_DIR", "/var/lib/eventkit/tile_cache/")
+    TILE_CACHE_DIR = os.getenv("TILE_CACHE_DIR", "/app/tile_cache/")
 
 # where map image snapshots are stored (e.g. thumbnails)
 IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, "images")

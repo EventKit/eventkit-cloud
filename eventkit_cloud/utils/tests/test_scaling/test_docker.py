@@ -24,7 +24,7 @@ class TestDocker(TestCase):
         bind_mount_location = "/tmp/test"
         volumes = {
             bind_mount_location: {
-                "bind": "/var/lib/eventkit/",
+                "bind": "/app/",
                 "mode": "rw",
             },
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},

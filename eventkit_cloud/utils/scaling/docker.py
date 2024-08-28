@@ -40,7 +40,7 @@ class Docker(ScaleClient):
 
         volumes = {
             os.getenv("BIND_MOUNT_LOCATION"): {
-                "bind": "/var/lib/eventkit/",
+                "bind": "/app/",
                 "mode": "rw",
             },
             "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},

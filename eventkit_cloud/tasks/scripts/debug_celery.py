@@ -5,7 +5,7 @@ from django.core.wsgi import get_wsgi_application
 
 from eventkit_cloud.tasks.scripts.debug import run_chain
 
-proj_path = "/var/lib/eventkit"
+proj_path = "/app"
 sys.path.append(proj_path)
 os.chdir(proj_path)
 

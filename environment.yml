@@ -1,5 +1,6 @@
 name: eventkit-cloud
 dependencies:
-  - eventkit-cloud=1.15.0=py310h9580275_2
-  - memcached=1.6.9
-  - python=3.10
+  - sqlite=3.46.0
+  - eventkit-cloud
+  - libmemcached
+  - python

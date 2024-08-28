@@ -144,6 +144,29 @@ To start using the application, continue to the [Next Steps](#next-steps)
 
 ## For Developers
 
+### Docker Permissions
+
+In order to mount the container without root permissions but not have permissions conflicts from the host, the run user/group is set as to EK_UID/EK_GID.
+An easy way to work with this is add something like this to your user profile or bashrc file. 
+```bash
+export JD_UID="$(id -u)"
+export JD_GID="$(id -g)"
+```
+For development it can be helpful to make your own conda environment, `conda env create --file ./environment.yml -n ek_env`, 
+that you can start with a shortcut, and a shortcut to run this specific docker environment.
+```
+alias eventkit="cd ~/eventkit/eventkit-cloud && conda activate ek_env"
+ekdc() {
+    export BIND_MOUNT_LOCATION=~/eventkit-cloud
+    export SITE_NAME=eventkit.local.test
+    export EK_UID="$(id -u)"
+    export EK_GID="$(id -g)"
+    cd ~/eventkit/eventkit-cloud
+    docker compose $@
+    cd -
+}
+```
+
 ### Debugging
 
 When debugging file conversion issues it can be helpful to use the environment settings `KEEP_STAGE=True`,

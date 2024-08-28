@@ -1,0 +1,594 @@
+_libgcc_mutex:
+- '0.1'
+_openmp_mutex:
+- '4.5'
+_sysroot_linux_64_curr_repodata_hack:
+- '3'
+amqp:
+- 5.2.0
+archspec:
+- 0.2.3
+asgiref:
+- 3.8.1
+attrs:
+- 23.2.0
+aws_c_auth:
+- 0.7.22
+aws_c_cal:
+- 0.7.0
+aws_c_common:
+- 0.9.23
+aws_c_compression:
+- 0.2.18
+aws_c_event_stream:
+- 0.4.2
+aws_c_http:
+- 0.8.2
+aws_c_io:
+- 0.14.10
+aws_c_mqtt:
+- 0.10.4
+aws_c_s3:
+- 0.6.0
+aws_c_sdkutils:
+- 0.1.16
+aws_checksums:
+- 0.1.18
+aws_crt_cpp:
+- 0.27.3
+aws_sdk_cpp:
+- 1.11.329
+azure_core_cpp:
+- 1.12.0
+azure_identity_cpp:
+- 1.8.0
+azure_storage_blobs_cpp:
+- 12.11.0
+azure_storage_common_cpp:
+- 12.6.0
+backports_zoneinfo:
+- 0.2.1
+beautifulsoup4:
+- 4.12.3
+billiard:
+- 4.2.0
+blosc:
+- 1.21.6
+boltons:
+- 24.0.0
+boto3:
+- 1.34.144
+botocore:
+- 1.34.144
+brotli_python:
+- 1.1.0
+bzip2:
+- 1.0.8
+c_ares:
+- 1.28.1
+ca_certificates:
+- 2024.7.4
+cairo:
+- 1.18.0
+celery:
+- 5.3.6
+certifi:
+- 2024.6.2
+cffi:
+- 1.16.0
+cfitsio:
+- 4.4.0
+chardet:
+- 5.2.0
+charset_normalizer:
+- 3.3.2
+click:
+- 8.1.7
+click_didyoumean:
+- 0.3.1
+click_plugins:
+- 1.1.1
+click_repl:
+- 0.3.0
+colorama:
+- 0.4.6
+conda:
+- 24.5.0
+conda_build:
+- 24.5.1
+conda_index:
+- 0.5.0
+conda_libmamba_solver:
+- 24.1.0
+conda_package_handling:
+- 2.2.0
+conda_package_streaming:
+- 0.9.0
+cryptography:
+- 42.0.8
+distro:
+- 1.9.0
+dj_database_url:
+- 2.1.0
+django:
+- 5.0.7
+django_audit_logging:
+- 0.3.1
+django_celery_beat:
+- 2.2.1
+django_extensions:
+- 3.2.3
+django_filter:
+- '24.2'
+django_model_utils:
+- 4.5.1
+django_notifications_hq:
+- 1.7.0
+django_storages:
+- 1.12.3
+django_timezone_field:
+- 4.1.2
+djangorestframework:
+- 3.15.2
+djangorestframework_gis:
+- '1.0'
+eventkit_cloud:
+- 1.15.0
+expat:
+- 2.6.2
+filelock:
+- 3.15.4
+fmt:
+- 10.2.1
+font_ttf_dejavu_sans_mono:
+- '2.37'
+font_ttf_inconsolata:
+- '3.000'
+font_ttf_source_code_pro:
+- '2.038'
+font_ttf_ubuntu:
+- '0.83'
+fontconfig:
+- 2.14.2
+fonts_conda_ecosystem:
+- '1'
+fonts_conda_forge:
+- '1'
+freetype:
+- 2.12.1
+freexl:
+- 2.0.0
+frozendict:
+- 2.4.4
+gdal:
+- 3.9.0
+gdalutils:
+- 1.0.5
+gdbm:
+- '1.18'
+geos:
+- 3.12.1
+geotiff:
+- 1.7.3
+gettext:
+- 0.22.5
+gettext_tools:
+- 0.22.5
+gevent:
+- 23.9.0.post1
+giflib:
+- 5.2.2
+gmp:
+- 6.3.0
+greenlet:
+- 3.0.3
+gunicorn:
+- 22.0.0
+hdf4:
+- 4.2.15
+hdf5:
+- 1.14.3
+icu:
+- '73.2'
+idna:
+- '3.6'
+importlib_metadata:
+- 8.0.0
+importlib_resources:
+- 6.4.0
+jinja2:
+- 3.1.4
+jmespath:
+- 1.0.1
+json_c:
+- '0.17'
+jsonfield:
+- 3.1.0
+jsonpatch:
+- '1.33'
+jsonpointer:
+- 3.0.0
+jsonschema:
+- 4.22.0
+jsonschema_specifications:
+- 2023.12.1
+kealib:
+- 1.5.3
+kernel_headers_linux_64:
+- 3.10.0
+keyutils:
+- 1.6.1
+kombu:
+- 5.3.7
+krb5:
+- 1.21.2
+lcms2:
+- '2.16'
+ld_impl_linux_64:
+- '2.40'
+lerc:
+- 4.0.0
+libabseil:
+- '20240116.2'
+libaec:
+- 1.1.3
+libarchive:
+- 3.7.4
+libasprintf:
+- 0.22.5
+libasprintf_devel:
+- 0.22.5
+libblas:
+- 3.9.0
+libboost_headers:
+- 1.85.0
+libcblas:
+- 3.9.0
+libcrc32c:
+- 1.1.2
+libcurl:
+- 8.8.0
+libdeflate:
+- '1.20'
+libdrm_cos7_x86_64:
+- 2.4.97
+libedit:
+- 3.1.20191231
+libev:
+- '4.33'
+libevent:
+- 2.1.12
+libexpat:
+- 2.6.2
+libffi:
+- 3.4.2
+libgcc_ng:
+- 13.2.0
+libgdal:
+- 3.9.0
+libgettextpo:
+- 0.22.5
+libgettextpo_devel:
+- 0.22.5
+libgfortran5:
+- 13.2.0
+libgfortran_ng:
+- 13.2.0
+libglib:
+- 2.80.2
+libglvnd_cos7_x86_64:
+- 1.0.1
+libglvnd_glx_cos7_x86_64:
+- 1.0.1
+libgomp:
+- 13.2.0
+libgoogle_cloud:
+- 2.26.0
+libgoogle_cloud_storage:
+- 2.26.0
+libgrpc:
+- 1.62.2
+libiconv:
+- '1.17'
+libidn2:
+- 2.3.7
+libjpeg_turbo:
+- 3.0.0
+libkml:
+- 1.3.0
+liblapack:
+- 3.9.0
+liblief:
+- 0.14.1
+libmagic:
+- '5.39'
+libmamba:
+- 1.5.8
+libmambapy:
+- 1.5.8
+libnetcdf:
+- 4.9.2
+libnghttp2:
+- 1.58.0
+libnsl:
+- 2.0.1
+libopenblas:
+- 0.3.27
+libpng:
+- 1.6.43
+libpq:
+- '16.3'
+libprotobuf:
+- 4.25.3
+libre2_11:
+- 2023.09.01
+librttopo:
+- 1.1.0
+libsolv:
+- 0.7.30
+libspatialite:
+- 5.1.0
+libsqlite:
+- 3.46.0
+libssh2:
+- 1.11.0
+libstdcxx_ng:
+- 13.2.0
+libtiff:
+- 4.6.0
+libunistring:
+- 0.9.10
+libuuid:
+- 2.38.1
+libuv:
+- 1.48.0
+libwebp_base:
+- 1.4.0
+libxcb:
+- '1.16'
+libxcrypt:
+- 4.4.36
+libxml2:
+- 2.12.7
+libzip:
+- 1.10.1
+libzlib:
+- 1.3.1
+lz4_c:
+- 1.9.4
+lzo:
+- '2.10'
+mamba:
+- 1.5.8
+mapproxy:
+- 1.13.2
+markupsafe:
+- 2.1.5
+menuinst:
+- 2.1.1
+mesa_libgl_cos7_x86_64:
+- 18.3.4
+mesa_libglapi_cos7_x86_64:
+- 18.3.4
+minizip:
+- 4.0.7
+more_itertools:
+- 10.3.0
+ncurses:
+- '6.5'
+nspr:
+- '4.35'
+nss:
+- '3.102'
+numpy:
+- 1.26.4
+openjpeg:
+- 2.5.2
+openssl:
+- 3.3.1
+osmctools:
+- 0.9.0
+packaging:
+- '24.0'
+patch:
+- 2.7.6
+patchelf:
+- 0.17.2
+pcre2:
+- '10.43'
+pillow:
+- 10.4.0
+pip:
+- '24.0'
+pixman:
+- 0.43.2
+pkginfo:
+- 1.11.1
+pkgutil_resolve_name:
+- 1.3.10
+platformdirs:
+- 4.2.0
+pluggy:
+- 1.4.0
+poppler:
+- 24.04.0
+poppler_data:
+- 0.4.12
+postgresql:
+- '16.3'
+proj:
+- 9.4.0
+prompt_toolkit:
+- 3.0.47
+psutil:
+- 6.0.0
+psycopg2:
+- 2.9.9
+pthread_stubs:
+- '0.4'
+py_lief:
+- 0.14.1
+pybind11_abi:
+- '4'
+pycosat:
+- 0.6.6
+pycparser:
+- '2.22'
+pyjwt:
+- 2.8.0
+pymemcache:
+- 4.0.0
+pyopenssl:
+- 24.0.0
+pyparsing:
+- 3.1.2
+pyproj:
+- 3.6.1
+pysocks:
+- 1.7.1
+python:
+- 3.11.9
+python_abi:
+- '3.11'
+python_crontab:
+- 3.2.0
+python_dateutil:
+- 2.9.0
+python_libarchive_c:
+- '5.1'
+python_magic:
+- 0.4.27
+python_memcached:
+- '1.62'
+python_tzdata:
+- '2024.1'
+pytz:
+- '2024.1'
+pyyaml:
+- 6.0.1
+re2:
+- 2023.09.01
+readline:
+- '8.2'
+referencing:
+- 0.35.1
+reproc:
+- 14.2.4.post0
+reproc_cpp:
+- 14.2.4.post0
+requests:
+- 2.31.0
+requests_pkcs12:
+- '1.14'
+ripgrep:
+- 14.1.0
+rpds_py:
+- 0.18.1
+ruamel_yaml:
+- 0.18.6
+ruamel_yaml_clib:
+- 0.2.8
+ruby:
+- 3.3.3
+s2n:
+- 1.4.17
+s3transfer:
+- 0.10.2
+setuptools:
+- 69.5.1
+shapely:
+- 2.0.4
+six:
+- 1.16.0
+snappy:
+- 1.2.1
+soupsieve:
+- '2.5'
+spdlog:
+- 1.13.0
+sqlite:
+- 3.46.0
+sqlparse:
+- 0.5.0
+swapper:
+- 1.3.0
+sysroot_linux_64:
+- '2.17'
+tiledb:
+- 2.23.1
+tk:
+- 8.6.13
+tqdm:
+- 4.66.2
+truststore:
+- 0.8.0
+typing_extensions:
+- 4.12.2
+tzcode:
+- 2024a
+tzdata:
+- 2024a
+uriparser:
+- 0.9.8
+uritemplate:
+- 4.1.1
+urllib3:
+- 2.2.1
+vine:
+- 5.1.0
+waitress:
+- 3.0.0
+wcwidth:
+- 0.2.13
+webob:
+- 1.8.7
+webtest:
+- 3.0.0
+wget:
+- 1.21.4
+wheel:
+- 0.43.0
+whitenoise:
+- 6.7.0
+xerces_c:
+- 3.2.5
+xorg_kbproto:
+- 1.0.7
+xorg_libice:
+- 1.1.1
+xorg_libsm:
+- 1.2.4
+xorg_libx11:
+- 1.8.9
+xorg_libxau:
+- 1.0.11
+xorg_libxdmcp:
+- 1.1.3
+xorg_libxext:
+- 1.3.4
+xorg_libxrender:
+- 0.9.11
+xorg_renderproto:
+- 0.11.1
+xorg_xextproto:
+- 7.3.0
+xorg_xproto:
+- 7.0.31
+xz:
+- 5.2.6
+yaml:
+- 0.2.5
+yaml_cpp:
+- 0.8.0
+zipp:
+- 3.19.2
+zlib:
+- 1.3.1
+zope_event:
+- '5.0'
+zope_interface:
+- 6.4.post2
+zstandard:
+- 0.22.0
+zstd:
+- 1.5.6

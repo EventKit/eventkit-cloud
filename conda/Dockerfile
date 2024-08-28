@@ -16,7 +16,13 @@ RUN curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Mi
     export root=$root && \
     conda config --add channels conda-forge && \
     conda config --add channels local && \
-    echo "y" | conda install python=3.10 && \
+    # Let the solver install the geospatial libraries as their dependencies are the hardest to reconcile later.
+    echo "y" | conda install "python<=3.11" \
+                             "django=5" \
+                             "geos>=3.8,<3.13" \
+                             "proj>=5,<10" \
+                             "gdal>=3,<3.8" \
+                             "postgis>=3,<3.5" && \
     conda init bash && \
     echo "y" | conda install "conda-build"
 

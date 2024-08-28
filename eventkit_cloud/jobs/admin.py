@@ -5,7 +5,7 @@ import os
 import yaml
 from django import forms
 from django.contrib import admin, messages
-from django.contrib.gis.admin import OSMGeoAdmin
+from django.contrib.gis.admin import GISModelAdmin
 from django.shortcuts import render
 from django.urls import re_path
 from django.utils.html import format_html
@@ -37,7 +37,7 @@ from eventkit_cloud.jobs.models import (
 logger = logging.getLogger(__name__)
 
 
-class JobAdmin(OSMGeoAdmin):
+class JobAdmin(GISModelAdmin):
     """
     Admin model for editing Jobs in the admin interface.
     """

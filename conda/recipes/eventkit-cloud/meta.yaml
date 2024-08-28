@@ -23,7 +23,7 @@ requirements:
     - nodejs>=16
     - ruby
   run_constrained:
-    - memcached {% if memcached is defined %} {{ memcached }} {% endif %}
+    - libmemcached {% if libmemcached is defined %} {{ libmemcached }} {% endif %}
     - qgis
   run:
     - python {% if python is defined %} {{ python }} {% endif %}
@@ -31,7 +31,7 @@ requirements:
     - osmctools {% if osmctools is defined %} {{ osmctools }} {% endif %}
     - proj {% if proj is defined %} {{ proj }} {% endif %}
     {% for req in run_requirements -%}
-      - {{ req }}
+    - {{ req }}
     {% endfor %}
 about:
   home: https://github.com/eventkit/eventkit-cloud

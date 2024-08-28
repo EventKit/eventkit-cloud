@@ -3,7 +3,7 @@
 When running `docker-compose up` add the following env variable settings:
 
 - `DEV_MACHINE_CODE_PATH` the absolute path to your eventkit-cloud directory (For example `/home/jivan/.projects/eventkit-cloud`)
-- `CONTAINER_CODE_PATH` the absolute path to the path in the container (Currently /var/lib/eventkit)
+- `CONTAINER_CODE_PATH` the absolute path to the path in the container (Currently /app)
 
 Add this to your code shortly before where you would like to break
     `from pydevd import settrace; settrace('<host_ip_from_container>')`

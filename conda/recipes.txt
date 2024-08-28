@@ -1,8 +1,9 @@
+gdalutils
+osmctools
 django-audit-logging
 swapper
 django-notifications-hq
 django-storages
 django-timezone-field
-gdalutils
 mapproxy
 eventkit-cloud

@@ -5,9 +5,12 @@ x-app: &default-app
     context: .
     dockerfile: Dockerfile
   image: eventkit/eventkit-base:1.15.0-2
-  user: eventkit
+  user: ${EK_UID}:${EK_GID}
   restart: always
   stop_grace_period: "3s"
+  depends_on:
+    postgis:
+      condition: service_healthy
   extra_hosts:
     - "${SITE_NAME}:host-gateway"
   healthcheck:
@@ -101,7 +104,7 @@ services:
   eventkit:
     <<: *default-app
     volumes:
-      -  ./:/var/lib/eventkit/
+      -  ./:/app/
     depends_on:
       - postgis
       - rabbitmq
@@ -122,10 +125,10 @@ services:
     <<: *default-app
     volumes:
       # using the root directory here will break mapproxy tile locks.
-      - ./scripts:/var/lib/eventkit/scripts
-      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./manage.py:/var/lib/eventkit/manage.py
-      - ./config:/var/lib/eventkit/config
+      - ./scripts:/app/scripts
+      - ./eventkit_cloud:/app/eventkit_cloud
+      - ./manage.py:/app/manage.py
+      - ./config:/app/config
     depends_on:
       - postgis
       - memcached
@@ -139,17 +142,17 @@ services:
       <<: *common-variables
 
   memcached:
-    <<: *default-app
+    image: "memcached:1.6.29"
     expose:
       - "11211"
-    entrypoint: >
-      /bin/bash -c "source activate conda_env && memcached -m 2048 -I 25m"
+    command: memcached -m 2048 -I 25m
+
   celery:
     <<: *default-app
     volumes:
-      - ./:/var/lib/eventkit/
+      - ./:/app/
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./scripts/run-celery-beat.sh:/var/lib/eventkit/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/app/scripts/run-celery-beat.sh
     depends_on:
       - postgis
       - rabbitmq
@@ -167,6 +170,8 @@ services:
       POSTGRES_USER: eventkit
       POSTGRES_PASS: eventkit_exports
       POSTGRES_DBNAME: eventkit_exports
+    healthcheck:
+      test: pg_isready -U $$POSTGRES_USER
     expose:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
@@ -195,9 +200,9 @@ services:
     image: httpd:2.4.23
     volumes:
       - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
-      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./exports_stage:/var/lib/eventkit/exports_stage
-      - ./site:/var/lib/eventkit/site
+      - ./eventkit_cloud:/app/eventkit_cloud
+      - ./exports_stage:/app/exports_stage
+      - ./site:/app/site
     links:
       - eventkit
       - map
@@ -212,7 +217,7 @@ services:
   flower:
     <<: *default-app
     volumes:
-      - ./:/var/lib/eventkit/
+      - ./:/app/
     user: eventkit
     depends_on:
       - rabbitmq
@@ -232,17 +237,17 @@ services:
       context: .
       dockerfile: webpack.Dockerfile
     volumes:
-      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./coverage:/var/lib/eventkit/coverage
-      - ./package.json:/var/lib/eventkit/package.json
-      - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
-      - ./.eslintignore:/var/lib/eventkit/.eslintignore
-      - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
-      - ./babel.config.js:/var/lib/eventkit/babel.config.js
-      - ./setupFile.js:/var/lib/eventkit/setupFile.js
-      - ./tsconfig.json:/var/lib/eventkit/tsconfig.json
-      - ./tslint.json:/var/lib/eventkit/tslint.json
-      - ./.git:/var/lib/eventkit/.git
+      - ./eventkit_cloud:/app/eventkit_cloud
+      - ./coverage:/app/coverage
+      - ./package.json:/app/package.json
+      - ./.eslintrc.json:/app/.eslintrc.json
+      - ./.eslintignore:/app/.eslintignore
+      - ./webpack.config.js:/app/webpack.config.js
+      - ./babel.config.js:/app/babel.config.js
+      - ./setupFile.js:/app/setupFile.js
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tslint.json:/app/tslint.json
+      - ./.git:/app/.git
     user: eventkit
     ports:
       - "8080:8080"

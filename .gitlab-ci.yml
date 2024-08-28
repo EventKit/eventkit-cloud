@@ -154,7 +154,7 @@ integration-tests:
     CELERY_RESULT_BACKEND: cache+memcached://memcached:11211
     DATABASE_URL: postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     DEBUG: "false"
-    EXPORT_DOWNLOAD_ROOT: /var/lib/eventkit/exports_download
+    EXPORT_DOWNLOAD_ROOT: /app/exports_download
     LOG_LEVEL: INFO
     PYTHONWARNINGS: ignore
   before_script:

@@ -61,7 +61,7 @@ class TestGeopackage(TransactionTestCase):
         patch_https,
     ):
         with self.settings(SSL_VERIFICATION=True):
-            gpkgfile = "/var/lib/eventkit/test.gpkg"
+            gpkgfile = "/app/test.gpkg"
             config = {
                 "layers": [{"name": "default", "title": "imagery", "sources": ["default"]}],
                 "sources": {
@@ -78,7 +78,7 @@ class TestGeopackage(TransactionTestCase):
             bbox = [-2, -2, 2, 2]
             cache_template.return_value = {
                 "sources": ["default"],
-                "cache": {"type": "geopackage", "filename": "/var/lib/eventkit/test.gpkg"},
+                "cache": {"type": "geopackage", "filename": "/app/test.gpkg"},
                 "grids": ["default"],
             }
             seed_template.return_value = {
@@ -118,7 +118,7 @@ class TestGeopackage(TransactionTestCase):
             json_config["caches"] = {
                 "default": {
                     "sources": ["default"],
-                    "cache": {"type": "geopackage", "filename": "/var/lib/eventkit/test.gpkg"},
+                    "cache": {"type": "geopackage", "filename": "/app/test.gpkg"},
                     "grids": ["default"],
                 }
             }

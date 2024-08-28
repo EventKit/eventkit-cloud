@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
-                ('file', models.FileField(storage=django.core.files.storage.FileSystemStorage(base_url='/export_run_files/', location='/var/lib/eventkit/exports_stage/export_run_files'), upload_to='', verbose_name='File')),
+                ('file', models.FileField(storage=django.core.files.storage.FileSystemStorage(base_url='/export_run_files/', location='/app/exports_stage/export_run_files'), upload_to='', verbose_name='File')),
                 ('directory', models.CharField(blank=True, help_text='An optional directory name to store the file in.', max_length=100, null=True)),
                 ('style_type', models.CharField(blank=True, choices=[('arcgis_layer', 'ArcGIS Layer'), ('qgis_layer', 'QGIS Layer'), ('mapbox', 'Mapbox'), ('sld', 'SLD'), ('kml', 'KML')], default='', help_text='The type of style provided (e.g. arcgis, qgis, mapbox)', max_length=20, null=True, verbose_name='Style Type')),
                 ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='styles', to='jobs.dataprovider')),

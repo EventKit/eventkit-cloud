@@ -415,7 +415,7 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
             grouped into separate tables (e.g. water, roads...).",
             "files": [{"file_path": "data/osm/test-osm-20181101.gpkg",
                        "file_ext": ".gpkg",
-                       "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269
+                       "full_file_path": "/app/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269
                        /osm/test.gpkg",
                        "band_stats":
                        "ramp_shader_steps":}]
@@ -433,8 +433,8 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False) -
     "has_elevation": False,
     "has_raster": True,
     "include_files": [
-        "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
-        "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"
+        "/app/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+        "/app/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"
     ],
     "name": "test",
     "project": "Test",

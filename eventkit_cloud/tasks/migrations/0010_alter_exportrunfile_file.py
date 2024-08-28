@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 storage=django.core.files.storage.FileSystemStorage(
                     base_url="/export_run_files/",
-                    location="/var/lib/eventkit/exports_stage/export_run_files",
+                    location="/app/exports_stage/export_run_files",
                 ),
                 upload_to="",
                 verbose_name="File",

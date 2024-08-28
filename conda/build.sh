@@ -2,17 +2,17 @@
 
 set -e
 
-export PATH="$HOME/miniconda3/bin:$PATH"
+export PATH="$HOME/miniforge/bin:$PATH"
 export CONDA_NPY=$(cat /eventkit-cloud/requirements.txt | grep -e "numpy==" | grep -oEi [0-9].+)
 echo "Building using Numpy ==$CONDA_NPY"
 echo "Clearing out conda-bld"
-rm -rf /root/miniconda3/conda-bld
-rm -rf /root/miniconda3/pkgs
+rm -rf /root/miniforge/conda-bld
+rm -rf /root/miniforge/pkgs
 
 echo "Rebuilding conda-bld"
-mkdir -p /root/miniconda3/conda-bld/linux-64
-mkdir -p /root/miniconda3/conda-bld/noarch
-conda index /root/miniconda3/conda-bld
+mkdir -p /root/miniforge/conda-bld/linux-64
+mkdir -p /root/miniforge/conda-bld/noarch
+conda index /root/miniforge/conda-bld
 
 echo "Adding channels"
 conda config --remove channels defaults || echo "Defaults already removed."
@@ -31,8 +31,8 @@ function create_index {
 
   echo "Move files and create index"
   echo "Copying files..."
-  find /root/miniconda3/ -type f -name "*.tar.bz2" -exec cp {} /root/repo/linux-64/ \; || echo "No .tar.bz2 files to move"
-  find /root/miniconda3/ -type f -name "*.conda" -exec cp {} /root/repo/linux-64/ \; || echo "No .conda files to move"
+  find /root/miniforge/ -type f -name "*.tar.bz2" -exec cp {} /root/repo/linux-64/ \; || echo "No .tar.bz2 files to move"
+  find /root/miniforge/ -type f -name "*.conda" -exec cp {} /root/repo/linux-64/ \; || echo "No .conda files to move"
   echo "Ensuring repo channel is priority"
   conda config --add channels file://root/repo/
 
@@ -63,18 +63,18 @@ echo "***Building $RECIPES with $COMMAND...***"
 for RECIPE in $RECIPES; do
   for i in 1; do
     echo "Building: ${RECIPE}"
-    $COMMAND build $RECIPE --strict-verify --merge-build-host --skip-existing && create_index \
+    $COMMAND build $RECIPE --strict-verify --merge-build-host && create_index \
     && echo "Installing: ${RECIPE}" \
     && echo "y" | $COMMAND install --no-update-deps $RECIPE && create_index \
     && s=0 && break || s=$? && sleep 5;
   done; (exit $s)
 done
 
-echo "Creating a fresh environment to download dependencies."
-eval "$(conda shell.bash hook)"
-conda env create -f /eventkit-cloud/environment.yml -n deps
-conda activate deps
-create_index
+#echo "Creating a fresh environment to download dependencies."
+#eval "$(conda shell.bash hook)"
+#conda env create -f /eventkit-cloud/environment.yml -n deps
+#conda activate deps
+#create_index
 
 echo "Updating the conda_build_config.yaml"
 python /root/output_config_yaml.py /root/recipes
